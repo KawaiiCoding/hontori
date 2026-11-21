@@ -581,6 +581,7 @@
   var CSS = [
     '.hb{position:absolute;inset:0;z-index:45;background:#0b0c1c;font-family:Nunito,"M PLUS Rounded 1c",system-ui,sans-serif;color:#f4f1e8;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;opacity:0;transition:opacity .35s}',
     '.hb.on{opacity:1}',
+    '.hb [hidden]{display:none!important}',
     '.hb canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}',
     '.hb-card{position:absolute;width:min(58%,230px);box-sizing:border-box;padding:7px 11px 8px;border-radius:14px;background:rgba(14,16,36,.84);border:2px solid rgba(255,255,255,.16);box-shadow:0 6px 18px rgba(0,0,0,.4);pointer-events:none}',
     '.hb-card .nm{font-weight:900;font-size:14px;display:flex;justify-content:space-between;gap:8px;line-height:1.15}',
@@ -599,10 +600,10 @@
     '@keyframes hbp{50%{transform:scale(1.08)}}',
     '.hb-msg{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 132px);text-align:center;font-weight:900;font-size:clamp(14px,4.2vmin,19px);text-shadow:0 2px 0 rgba(0,0,0,.7),0 0 8px rgba(0,0,0,.6);pointer-events:none;min-height:24px}',
     '.hb-moves{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);display:grid;grid-template-columns:repeat(3,1fr);gap:6px}',
-    '.hb-mv{position:relative;border:0;border-radius:14px;padding:7px 6px 6px;min-height:66px;text-align:left;font:inherit;color:#fff;cursor:pointer;background:linear-gradient(180deg,color-mix(in srgb,var(--mc) 55%,#1a1c38),#14162e);box-shadow:inset 0 0 0 2px var(--mc),0 3px 0 rgba(0,0,0,.45);touch-action:manipulation}',
+    '.hb-mv{position:relative;border:0;border-radius:14px;padding:7px 6px 6px;min-height:66px;overflow:hidden;text-align:left;font:inherit;color:#fff;cursor:pointer;background:linear-gradient(180deg,color-mix(in srgb,var(--mc) 55%,#1a1c38),#14162e);box-shadow:inset 0 0 0 2px var(--mc),0 3px 0 rgba(0,0,0,.45);touch-action:manipulation}',
     '.hb-mv b{display:block;font-size:13px;font-weight:900;line-height:1.1}',
     '.hb-mv i{display:block;font-style:normal;font-size:10px;font-weight:700;opacity:.85;line-height:1.15;margin-top:3px}',
-    '.hb-mv em{position:absolute;top:-7px;right:6px;font-style:normal;font-size:10px;font-weight:900;padding:1px 6px;border-radius:8px;background:#ffd24a;color:#3a2400}',
+    '.hb-mv em{position:absolute;top:3px;right:4px;font-style:normal;font-size:10px;font-weight:900;padding:1px 6px;border-radius:8px;background:#ffd24a;color:#3a2400}',
     '.hb-mv em.weak{background:#8a90a8;color:#14162e}',
     '.hb-mv.off{filter:grayscale(.85) brightness(.6)}',
     '.hb-mv .cd{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;background:rgba(10,10,24,.55)}',
@@ -662,7 +663,7 @@
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function specOf(key) { return (H.spirits && H.spirits.list.filter(function (s) { return s.key === key; })[0]) || { key: key, element: key === 'hontori' ? 'fire' : (ELS.indexOf(key) >= 0 ? key : 'fire'), name: key }; }
   function sfx(n) { try { H.audio && H.audio.sfx(n); } catch (e) {} }
-  var styled = false, sheetOpen = false;
+  var styled = false, sheetOpen = false; // cheat-sheet starts collapsed
 
   function start(opts) {
     opts = opts || {};
@@ -698,7 +699,7 @@
     var banner = mk('div', 'hb-banner', el);
     var endBtn = mk('button', 'hb-end', el, 'Continue'); endBtn.hidden = true;
     requestAnimationFrame(function () { el.classList.add('on'); });
-    sheet.hidden = !sheetOpen;
+    sheetOpen = false; sheet.hidden = true;
     sheetBtn.addEventListener('click', function () { sheetOpen = sheet.hidden; sheet.hidden = !sheetOpen; });
 
     // spell cheat-sheet
@@ -1121,7 +1122,7 @@
     // ---------------- input: draw spells
     function pt(e) { var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / L, (e.clientY - r.top) / L]; }
     var pid = null, castable = ORDER.filter(function (k) { return known.indexOf(k) >= 0; });
-    cv.addEventListener('pointerdown', function (e) { if (busy || done) return; pid = e.pointerId; try { cv.setPointerCapture(pid); } catch (_) {} drawing = true; ink.trail = [pt(e)]; ink.col = '#ffe6b0'; ink.n = 0; e.preventDefault(); });
+    cv.addEventListener('pointerdown', function (e) { if (!sheet.hidden) { sheet.hidden = true; sheetOpen = false; } if (busy || done) return; pid = e.pointerId; try { cv.setPointerCapture(pid); } catch (_) {} drawing = true; ink.trail = [pt(e)]; ink.col = '#ffe6b0'; ink.n = 0; e.preventDefault(); });
     cv.addEventListener('pointermove', function (e) {
       if (!drawing || e.pointerId !== pid) return; var p = pt(e), l = ink.trail[ink.trail.length - 1];
       if (Math.hypot(p[0] - l[0], p[1] - l[1]) < 0.7) return; ink.add(p);
