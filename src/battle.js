@@ -746,9 +746,14 @@
       c.innerHTML = h; var st = c.querySelector('.st');
       try { var b = H.ui.elementBadge(f.el); b.style.marginLeft = '0'; st.appendChild(b); } catch (e) { mk('span', 'hb-tag', st, cap(f.el)); }
       if (f === me) mk('span', '', st, '&nbsp;' + f.hp + ' / ' + f.max);
-      if (f === foe) { var m = matrix(me.el, foe.el), m2 = matrix(foe.el, me.el); if (m > 1) tag(st, 'Weak to yours', '#ffd24a'); else if (m2 > 1) tag(st, 'Strong vs yours', '#ff8a7a'); }
+      if (f === foe) { var m = matrix(me.el, foe.el), m2 = matrix(foe.el, me.el); var ic = document.createElement('span'); ic.innerHTML = edgeIcon(m, m2, 24); ic.style.display = 'inline-flex'; st.appendChild(ic); }
       Object.keys(tags).forEach(function (k) { if (f[k]) tag(st, tags[k][0], tags[k][1]); });
       if (f === me && f.hp <= 0) tag(st, 'Fainted', '#ff8a7a');
+    }
+    function edgeIcon(m, m2, px) {
+      px = px || 22; var up = m > 1, down = !up && m2 > 1, col = up ? '#57d07a' : down ? '#ff6a5a' : '#8a90a8';
+      var path = up ? 'M12 5 L19 14 L14 14 L14 19 L10 19 L10 14 L5 14 Z' : down ? 'M12 19 L19 10 L14 10 L14 5 L10 5 L10 10 L5 10 Z' : 'M6 9 H18 V11 H6 Z M6 13 H18 V15 H6 Z';
+      return '<svg class="hb-edge" width="' + px + '" height="' + px + '" viewBox="0 0 24 24" style="vertical-align:middle;flex:none"><circle cx="12" cy="12" r="11" fill="' + col + '" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/><path d="' + path + '" fill="#fff"/></svg>';
     }
     function tag(p, t, c) { var s = mk('span', 'hb-tag', p, t); s.style.background = rgba(c, 0.25); s.style.color = c; }
     function renderUI() {
@@ -759,7 +764,7 @@
       var fainted = me.hp <= 0;
       MOV.forEach(function (m, i) {
         var b = mvBtns[i], cd = me.cd[m.id] || 0, mx = matrix(me.el, foe.el), mark = '';
-        if (m.pow) mark = mx > 1 ? '<em>Strong</em>' : mx < 1 ? '<em class="weak">Weak</em>' : '';
+        if (m.pow && mx !== 1) mark = '<span style="position:absolute;top:5px;right:6px">' + edgeIcon(mx, mx < 1 ? 2 : 1, 20) + '</span>';
         var ico = ''; try { ico = '<img class="ic" alt="" src="' + H.icons.url(m.el || me.el, 2) + '">'; } catch (e) {}
         b.innerHTML = mark + '<b>' + ico + m.name + '</b><span class="kind">' + (m.pow ? 'Attack' : 'Support') + '</span><i>' + (m.pow ? 'Power ' + m.pow + '. ' : '') + m.desc.replace(/ Rests 2 turns\./, '') + '</i>' + (cd > 0 ? '<span class="cd">Rest ' + cd + '</span>' : fainted ? '<span class="cd">Fainted</span>' : me.asleep ? '<span class="cd">Asleep</span>' : '');
         b.classList.toggle('off', cd > 0 || fainted || busy || done);
@@ -874,9 +879,7 @@
     function showBanner() {
       var m = matrix(me.el, foe.el), m2 = matrix(foe.el, me.el), wm = weatherMul(me.el, env), wf = weatherMul(foe.el, env);
       var b1 = '', b2 = ''; try { b1 = H.ui.elementBadge(me.el).outerHTML; b2 = H.ui.elementBadge(foe.el).outerHTML; } catch (e) { b1 = cap(me.el); b2 = cap(foe.el); }
-      var edge = m > 1 ? ['You have the edge', '#ffd24a'] : m2 > 1 ? ['It has the edge. Be careful', '#ff9a8a'] : ['An even match', '#dfe6ff'];
-      var wx = wm !== 1 ? weatherWhy(me.el, env) + (wm > 1 ? ', it helps you' : ', it holds you back') : wf !== 1 ? weatherWhy(foe.el, env) + (wf > 1 ? ', it helps the foe' : ', it slows the foe') : '';
-      banner.innerHTML = '<div class="vs">' + b1 + '<span class="x">vs</span>' + b2 + '</div><div class="ed" style="color:' + edge[1] + '">' + edge[0] + '</div>' + (wx ? '<div class="wx">' + wx + '</div>' : '');
+      banner.innerHTML = '<div class="vs">' + b1 + edgeIcon(m, m2, 34) + b2 + '</div>';
       banner.classList.add('on'); setTimeout(function () { banner.classList.remove('on'); }, 2300);
     }
 
@@ -966,8 +969,7 @@
       float(B.x, B.y - 14, '-' + r.dmg, def === me ? '#ff9a8a' : r.mx > 1 ? '#ffd24a' : '#ffffff', true);
       var notes = [];
       if (r.crit) notes.push('Critical!');
-      if (r.mx > 1) notes.push('Strong!'); else if (r.mx < 1) notes.push('Weak...');
-      if (r.wm > 1) notes.push('Weather helps'); else if (r.wm < 1) notes.push('Weather hinders');
+      // matchup is shown by the edge icon only; no repeated words on each hit
       if (r.shielded) notes.push('Warded');
       if (def.guard) notes.push('Guarded');
       notes.forEach(function (t, i) { setTimeout(function () { float(B.x + (i % 2 ? 10 : -10), B.y - 26 - i * 2, t, t === 'Strong!' ? '#ffd24a' : t === 'Weak...' ? '#a8b0c8' : '#cfe9ff'); }, 120 + i * 160); });

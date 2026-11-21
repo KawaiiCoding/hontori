@@ -100,6 +100,8 @@ window.H = window.H || {};
   function wheel(c) {
     return sorrel(c, 'Every element is strong against two and weak against others.')
       .then(function () { return sorrel(c, 'Study the wheel on the board. Tap a spirit to see its matches.'); })
+      .then(function () { return sorrel(c, 'In battle, a green arrow up means you have the edge.'); })
+      .then(function () { return sorrel(c, 'A red arrow down means the foe has it. A grey bar is even.'); })
       .then(function () { return H.closeup && H.closeup.blackboard ? P(H.closeup.blackboard()) : null; })
       .then(function () { var s = st(); if (!s.academyLessons.wheel) { s.academyLessons.wheel = true; save(); toast(c, 'Studied: Element Wheel'); } });
   }
