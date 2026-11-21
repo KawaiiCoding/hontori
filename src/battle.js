@@ -1066,9 +1066,7 @@
     function matName(k) { return { ember_dust: 'Ember Dust', tide_pearl: 'Tide Pearl', spirit_snack: 'Spirit Snack' }[k]; }
     function matFor() { var id = matKey(); return (GS.items || []).filter(function (i) { return i.id === id && (i.n == null || i.n > 0); })[0]; }
     function hintLine() {
-      if (tut === 0) return 'Tip: tap a move to attack.';
-      if (tut === 1) return 'Tip: draw a circle anywhere to Mend.';
-      if (tut === 2) return 'Tip: watch the sign at the top. It shows the foe\'s next move.';
+      // first-time teaching is done by the fox guide; no repeated tip lines here
       if (me.hp <= 0) return can('revive') ? 'It fainted. Draw the Phoenix Star.' : 'It fainted.';
       if (me.asleep) return 'It is asleep. Cast a spell, then tap a move to wait.';
       if (!TR && can('bind') && foe.hp / foe.max <= 0.35 && mana >= 2 && !spellUsed) return (GS.flags && GS.flags.boundOnce) ? 'It is weak. Draw a spiral to bind it.' : 'It is weak. Draw the spiral to bind it, and it can travel with you.';
