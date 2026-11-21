@@ -796,7 +796,10 @@
     var endBtn = mk('button', 'hb-end', el, 'Continue'); endBtn.hidden = true;
     requestAnimationFrame(function () { el.classList.add('on'); });
     sheetOpen = false; sheet.hidden = true;
-    sheetBtn.addEventListener('click', function () { sheetOpen = sheet.hidden; sheet.hidden = !sheetOpen; el.classList.toggle('sheet-open', sheetOpen); });
+    function HL(id, t, x, ic) { if (H.ui && H.ui.helper) H.ui.helper(id, t, x, ic); }
+    HL('turn', 'Turns', 'The pill at the top shows whose turn it is. Pick a move on your turn.', 'star');
+    HL('mana', 'Mana', 'The blue orbs are your mana. Each spell costs some, and it refills slowly.', 'crystal');
+    sheetBtn.addEventListener('click', function () { HL('bspells', 'Spells', 'The spells you know. Draw a sigil on the field to cast one, once per turn.', 'wand'); sheetOpen = sheet.hidden; sheet.hidden = !sheetOpen; el.classList.toggle('sheet-open', sheetOpen); });
     new MutationObserver(function () { el.classList.toggle('sheet-open', !sheet.hidden); }).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
 
     // spell cheat-sheet
@@ -1276,6 +1279,7 @@
     }
     swBtn.addEventListener('click', function () {
       if (done) return;
+      HL('switch', 'Switch', 'Call another hontori in. It uses your turn.', 'swap');
       if (!strip.hidden) { if (!forced) strip.hidden = true; return; }
       if (busy || !alive().length) return;
       openStrip(false);
@@ -1289,6 +1293,7 @@
     escBtn.addEventListener('click', function () {
       if (done) return;
       if (TR) { say('No escape from a duel.'); return; }
+      HL('escape', 'Escape', 'Running is a chance, not a sure thing. A failed try costs your turn.', 'run');
       if (busy) return;
       if (!(GS.flags = GS.flags || {}).tipEscape && !escArmed) { escArmed = true; say('The bars show your chance. Tap again to run.'); return; }
       GS.flags.tipEscape = 1; escArmed = false;
@@ -1366,6 +1371,7 @@
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     herbBtn.addEventListener('click', function () {
       if (busy || done) return; var it = (GS.items || []).filter(function (i) { return i.id === 'herb'; })[0]; if (!it || mana >= maxMana) return;
+      HL('herb', 'Herb', 'Restores one mana in battle.', 'sprout');
       it.n = (it.n || 1) - 1; if (it.n <= 0) GS.items.splice(GS.items.indexOf(it), 1);
       mana++; sfx('sparkle'); burst(POS.me.x, POS.me.y, '#9fd0ff', 16, 1); float(POS.me.x, POS.me.y - 18, '+1 mana', '#9fd0ff', true); say('The herb restores a little mana.'); renderUI();
     });
@@ -1373,6 +1379,7 @@
     // bread: once per battle, calms a wild foe so a binding holds more easily
     breadBtn.addEventListener('click', function () {
       if (busy || done || breadUsed || TR) return; var it = (GS.items || []).filter(function (i) { return i.id === 'bread'; })[0]; if (!it) return;
+      HL('bread', 'Bread', 'Calms a wild hontori once each battle. A binding holds more easily.', 'heart');
       it.n = (it.n || 1) - 1; if (it.n <= 0) GS.items.splice(GS.items.indexOf(it), 1);
       breadUsed = true; calm = 0.15; sfx('sparkle'); burst(POS.foe.x, POS.foe.y, '#ffd890', 14, 1);
       if (!(GS.flags = GS.flags || {}).tipBread) { GS.flags.tipBread = true; say('It nibbles the bread and calms down. A binding holds more easily now.'); } else say('It nibbles the bread and calms down.');

@@ -9,6 +9,7 @@
     '.hm{position:absolute;inset:0;pointer-events:none;font-family:Nunito,"M PLUS Rounded 1c",system-ui,sans-serif;color:#f4f1e8;z-index:30}',
     '.hm *{box-sizing:border-box}',
     '.hm-top{position:absolute;right:calc(env(safe-area-inset-right,0px) + 10px);top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;gap:8px;pointer-events:auto}',
+    '.hm-btn.off{opacity:.45}',
     '.hm-btn{width:44px;height:44px;border-radius:14px;background:rgba(18,20,40,.82);border:2px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.35)}',
     '.hm-btn:active{transform:translateY(2px)}',
     '.hm-btn canvas.cog{transition:transform .5s cubic-bezier(.3,1.5,.5,1)}.hm-btn:hover canvas.cog,.hm-btn:active canvas.cog{transform:rotate(45deg)}',
@@ -175,6 +176,7 @@
     var g = H.game, st = g.state, mm = st.maxMana || 3, mn = st.mana == null ? mm : st.mana;
     if (mending || mn < 1 || p.hp >= p.maxHp) return;
     mending = true; hide();
+    H.ui && H.ui.helper && H.ui.helper('mend', 'Mend', 'Draw a circle to heal a hontori. It costs 1 mana.', 'mend');
     var ask = H.gesture && H.gesture.prompt ? Promise.resolve(H.gesture.prompt('mend', 'Draw a circle to mend')) : Promise.resolve();
     ask.then(function () {
       var cur = st.mana == null ? mm : st.mana;
@@ -335,7 +337,15 @@
     }
     kb(acts(), { icon: 'back', label: 'Back', kind: 'alt', onClick: function () { sel = null; swapPick = false; render(); } });
   }
-  function show(what) { open = what; render(); els.shade.classList.add('on'); els.sheet.classList.add('on'); }
+  var HELP = {
+    bag: ['Backpack', 'Your things. Tap one to see what it does.', 'backpack'],
+    menu: ['Menu', 'Your wand, saving and sound live here.', 'cog'],
+    party: ['Your hontori', 'Up to five travel with you. The first one walks beside you.', 'paw'],
+    sanctum: ['Wand Sanctum', 'Extra hontori rest inside your wand. Swap them in any time.', 'crystal'],
+    spells: ['Spell Loadout', 'Pick the four spells you bring into battle.', 'book'],
+    moves: ['Moves', 'Pick up to four moves. New ones come with levels.', 'claw']
+  };
+  function show(what) { open = what; render(); els.shade.classList.add('on'); els.sheet.classList.add('on'); var h = HELP[what]; if (h && H.ui && H.ui.helper) H.ui.helper(what, h[0], h[1], h[2]); }
   function hide() { open = null; els.shade.classList.remove('on'); els.sheet.classList.remove('on'); }
 
   H.menu = { init: init, refresh: refresh, show: show, hide: hide, isOpen: function () { return !!open; } };

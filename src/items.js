@@ -29,7 +29,12 @@ window.H = window.H || {};
   function toast(t) { H.ui && H.ui.toast(t); }
   function sfx(n) { try { H.audio && H.audio.sfx(n); } catch (e) {} }
   function save() { try { H.game && H.game.save(); } catch (e) {} }
-  function once(k, t) { if (F()['tip:' + k]) return false; F()['tip:' + k] = true; if (t) toast(t); save(); return true; }
+  // first use of a thing: the rule 48 helper card (falls back to a toast)
+  function once(k, t) {
+    if (F()['tip:' + k]) return false; F()['tip:' + k] = true;
+    if (t) { if (H.ui && H.ui.helper) H.ui.helper('item:' + k, SPOT[k] ? meta(k).name : 'Wind', t, SPOT[k] ? iconUrl(k) : 'wind'); else toast(t); }
+    save(); return true;
+  }
   function night(env) { var h = env ? env.time : 12; return h >= 19.5 || h < 5.5; }
   var urls = {};
   function iconUrl(id) {
@@ -76,7 +81,7 @@ window.H = window.H || {};
       if (i !== 0) return base();
       sfx('sizzle'); if (c && c.emit) c.emit('smoke', c.x, c.y - 12, 6);
       (S().party || []).forEach(function (p) { p.hp = Math.min(p.maxHp, p.hp + Math.ceil(p.maxHp / 2)); });
-      H.menu && H.menu.refresh(); save(); toast('Party healed');
+      H.menu && H.menu.refresh(); save(); toast('Party healed'); once('cookbook', 'Cook at any stove to heal your party by half.');
       return a.say('kid', 'A warm meal from the cookbook.');
     });
   }
@@ -88,7 +93,7 @@ window.H = window.H || {};
       if (i !== 0) return base();
       used[k] = st.day || 0; sfx('pickup'); if (c.emit) c.emit('dust', c.x, c.y - 14, 6);
       (st.party || []).forEach(function (p) { p.hp = Math.min(p.maxHp, p.hp + 5); });
-      H.menu && H.menu.refresh(); save(); toast('Apple: party +5 health');
+      H.menu && H.menu.refresh(); save(); toast('Apple: party +5 health'); once('slingshot', 'One apple from each fruit tree, once a day.');
       return a.say('kid', 'One good shot, one red apple.');
     });
   }
@@ -175,7 +180,7 @@ window.H = window.H || {};
     }
     if (++frame % 20) return;
     // map button only once the kid has the map
-    var mb = document.querySelector('.hm-map'); if (mb) mb.hidden = !has('map');
+    var mb = document.querySelector('.hm-map'); if (mb) mb.classList.toggle('off', !has('map'));
     // bag counter while at home
     if (!pill) { pill = document.createElement('div'); pill.style.cssText = 'position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 172px);z-index:30;padding:5px 12px;border-radius:12px;background:rgba(18,20,40,.82);border:2px solid rgba(255,255,255,.22);color:#f4f1e8;font:900 14px Nunito,system-ui,sans-serif;pointer-events:none'; (document.getElementById('root') || document.body).appendChild(pill); }
     var show = mapName === 'home' && active(); pill.hidden = !show;

@@ -36,7 +36,7 @@ window.H = window.H || {};
     '.hui-ch button.sel{background:rgba(159,211,255,.22);border-color:#9fd3ff}',
     '.hui-ch button.sel:before{content:"";position:absolute;left:13px;top:50%;transform:translateY(-50%);border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:10px solid #9fd3ff}',
     /* toast below the HUD pill so it never covers it */
-    '.hui-toast{position:absolute;top:calc(var(--sa-t) + clamp(50px,calc(var(--u)*12),70px));left:50%;transform:translate(-50%,-16px);padding:10px 20px;border-radius:16px;background:rgba(255,236,170,.97);color:#2a1d05;font-weight:900;font-size:clamp(16px,calc(var(--u)*4.2),22px);box-shadow:0 6px 18px rgba(0,0,0,.45),0 0 0 3px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;max-width:calc(100% - 32px);text-align:center}',
+    '.hui-toast{position:absolute;top:calc(var(--sa-t) + clamp(132px,calc(var(--u)*30),150px));width:max-content;left:50%;transform:translate(-50%,-16px);padding:10px 20px;border-radius:16px;background:rgba(255,236,170,.97);color:#2a1d05;font-weight:900;font-size:clamp(16px,calc(var(--u)*4.2),22px);box-shadow:0 6px 18px rgba(0,0,0,.45),0 0 0 3px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;max-width:calc(100% - 32px);text-align:center}',
     '.hui-toast.on{opacity:1;transform:translate(-50%,0)}',
     '.hui-fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}',
     /* element badge */
@@ -491,4 +491,47 @@ window.H = window.H || {};
     return h;
   }
   H.kit = { css: css, img: img, btn: btn, x: x, header: header };
+})();
+
+// H.ui.helper: rule 48 first-touch card. Shown once per id (state.flags['help:' + id]); tap anywhere on it to close.
+// H.ui.blocked(text): the one-line "not yet, learn it at ..." note for things shown but not open yet.
+(function () {
+  'use strict';
+  var H = window.H, card = null, queue = [];
+  var CSS = '.hh-card{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translate(-50%,-10px);width:min(340px,calc(100% - 32px));z-index:9000;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}' +
+    '.hh-card.on{opacity:1;transform:translate(-50%,0)}' +
+    '.hh-card img{width:32px;height:32px;image-rendering:pixelated;flex:none;margin-top:2px}' +
+    '.hh-card b{display:block;font-size:16px;font-weight:900;color:#ffe7a8;margin-bottom:2px}' +
+    '.hh-card p{margin:0;font-size:14px;font-weight:700;line-height:1.35;color:#f4f1e8}' +
+    '.hh-card i{display:block;font-style:normal;font-size:11px;font-weight:800;opacity:.55;margin-top:6px;text-align:right}';
+  function css() { if (document.getElementById('hh-style')) return; var s = document.createElement('style'); s.id = 'hh-style'; s.textContent = CSS; document.head.appendChild(s); }
+  function flags() { var st = H.game && H.game.state; if (!st) return null; return (st.flags = st.flags || {}); }
+  function seen(id) { var f = flags(); return !!(f && f['help:' + id]); }
+  function helper(id, title, text, icon) {
+    var f = flags(); if (!f || f['help:' + id]) return Promise.resolve(false);
+    f['help:' + id] = 1;
+    try { H.game.save && H.game.save(); } catch (e) {}
+    return new Promise(function (res) { queue.push({ title: title, text: text, icon: icon, res: res }); if (!card) next(); });
+  }
+  function next() {
+    var o = queue.shift(); if (!o) { card = null; return; }
+    css(); if (H.kit) H.kit.css();
+    var root = document.getElementById('root') || document.body;
+    card = document.createElement('div'); card.className = 'hh-card hk-panel';
+    if (o.icon && /^data:|\//.test(o.icon)) { var im = document.createElement('img'); im.alt = ''; im.src = o.icon; card.appendChild(im); }
+    else if (o.icon && H.kit) card.appendChild(H.kit.img(o.icon));
+    var t = document.createElement('div'), b = document.createElement('b'), p = document.createElement('p'), i = document.createElement('i');
+    b.textContent = o.title; p.textContent = o.text; i.textContent = 'Tap to close';
+    t.appendChild(b); t.appendChild(p); t.appendChild(i); card.appendChild(t); root.appendChild(card);
+    var c = card, gone = false;
+    function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; c.classList.remove('on'); setTimeout(function () { if (c.parentNode) c.parentNode.removeChild(c); o.res(true); next(); }, 200); }
+    c.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+    c.addEventListener('click', close);
+    void c.offsetWidth; c.classList.add('on');
+  }
+  function blocked(text) { if (H.ui && H.ui.toast) H.ui.toast(text); }
+  // the game layers never scroll: a focused input or scrollIntoView must not shift the screen (Safari)
+  document.addEventListener('scroll', function (e) { var t = e.target; if (t && t.nodeType === 1 && (t.id === 'root' || t.classList.contains('hb')) && (t.scrollTop || t.scrollLeft)) { t.scrollTop = 0; t.scrollLeft = 0; } }, true);
+  H.ui = H.ui || {};
+  H.ui.helper = helper; H.ui.helperSeen = seen; H.ui.blocked = blocked;
 })();

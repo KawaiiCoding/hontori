@@ -270,6 +270,7 @@ window.H = window.H || {};
   }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function openLog() {
+    H.ui && H.ui.helper && H.ui.helper('quest', 'Quests', 'What to do next. The top line is your main goal.', 'scroll');
     style(); sfx('page');
     var s = S(), cur = current(), act = [], done = [];
     order.forEach(function (id) { var st = s.quests[id]; if (st) (st.status === 'done' ? done : act).push(id); });
