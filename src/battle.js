@@ -264,7 +264,11 @@
           // dashed glyph guide + a dot travelling along it
           g.save(); g.lineCap = 'round'; g.lineJoin = 'round'; g.setLineDash([6, 10]); g.lineWidth = 4; g.strokeStyle = rgba(col, 0.45);
           g.beginPath(); guide.forEach(function (q, i) { var x = cx + q[0] * s * 0.85, y = cy + q[1] * s * 0.85; if (i) g.lineTo(x, y); else g.moveTo(x, y); }); g.stroke(); g.restore();
-          var k = Math.floor((t / 1.8 % 1) * (guide.length - 1)), q = guide[k];
+          // glide smoothly along the guide by path length (slow, to help the player follow)
+          if (!guide._len) { guide._acc = [0]; for (var gi = 1; gi < guide.length; gi++) guide._acc.push(guide._acc[gi - 1] + Math.hypot(guide[gi][0] - guide[gi - 1][0], guide[gi][1] - guide[gi - 1][1])); guide._len = guide._acc[guide._acc.length - 1] || 1; }
+          var dist0 = (t / 3.2 % 1) * guide._len, seg = 1; while (seg < guide.length - 1 && guide._acc[seg] < dist0) seg++;
+          var sa = guide._acc[seg - 1], sb = guide._acc[seg], fr0 = sb > sa ? (dist0 - sa) / (sb - sa) : 0;
+          var q = [guide[seg - 1][0] + (guide[seg][0] - guide[seg - 1][0]) * fr0, guide[seg - 1][1] + (guide[seg][1] - guide[seg - 1][1]) * fr0];
           g.globalCompositeOperation = 'lighter'; g.fillStyle = rgba(col, 0.35); g.beginPath(); g.arc(cx + q[0] * s * 0.85, cy + q[1] * s * 0.85, 12, 0, 7); g.fill();
           g.fillStyle = '#fff'; g.beginPath(); g.arc(cx + q[0] * s * 0.85, cy + q[1] * s * 0.85, 5, 0, 7); g.fill(); g.globalCompositeOperation = 'source-over';
         } else {
