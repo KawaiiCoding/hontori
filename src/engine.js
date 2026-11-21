@@ -329,7 +329,7 @@
     if (!st.intro) return;
     const mm = st.maxMana || 3; if (st.mana == null) st.mana = mm;
     // a long jump forward in time means a night in bed: mana is full again
-    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6) { (H.onSleep || []).forEach(fn => { try { fn(env, mapName); } catch (e) { console.warn(e); } }); if (st.mana < (st.maxMana || 3)) st.mana = st.maxMana || 3; } }
+    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6) { (H.onSleep || []).forEach(fn => { try { fn(env, mapName); } catch (e) { console.warn(e); } }); if (st.mana < (st.maxMana || 3)) st.mana = st.maxMana || 3; (st.party || []).forEach(p => { if (p.maxHp) p.hp = p.maxHp; }); H.menu && H.menu.refresh && H.menu.refresh(); } }
     lastTime = env.time;
     if (busy || menuOpen || st.mana >= mm) { if (st.mana >= mm) manaT = 0; return; }
     manaT += dt;
@@ -462,8 +462,13 @@
   };
 
   // ---------- battles
+  let faintMsgT = 0;
   async function startBattle(enemy, wild) {
     if (busy || !H.battle || !H.game.state.party.length) return;
+    if (H.game.state.party.every(p => p.hp != null && p.hp <= 0)) {
+      if (!faintMsgT || env.t - faintMsgT > 20) { faintMsgT = env.t; busy = true; await say('hontori', H.spiritName || 'Fire Hontori', 'Too tired to fight tonight. A bed or a bowl would set it right.'); busy = false; }
+      return;
+    }
     busy = true; sfx('spell');
     // what kind of place we are in, from the tiles and props around the player
     let water = 0, trees = 0, tall = 0;

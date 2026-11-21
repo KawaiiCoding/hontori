@@ -1,3 +1,8 @@
 .DS_Store
 node_modules/
 *.log
+
+# music that must not be published (copyrighted covers)
+*pokemon*.mp3
+51383504-*.mp3
+*.mp3

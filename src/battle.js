@@ -818,7 +818,17 @@
       c.innerHTML = sigilSVG(k, S.col, false) + S.name + '<span class="d">' + (SHORT[k] || '') + '</span><span class="c">' + new Array(costOf(k) + 1).join('&#9679;') + '</span><span class="ms">' + pips + '</span>';
     }
     ORDER.forEach(function (k) { chips[k] = mk('div', 'hb-sp', sheet); fillChip(k); });
-    var sheetNote = mk('div', '', sheet); sheetNote.hidden = true;
+    // Spell guide (on by default): tap a known spell to see its shape traced on the arena.
+    var guideKind = null, guideT = 0;
+    GS.flags = GS.flags || {};
+    var sheetNote = mk('div', 'hb-sp hb-guide', sheet);
+    function paintGuideBtn() { sheetNote.innerHTML = '<span style="display:block;font-size:22px;line-height:34px">' + (GS.flags.spellGuideOff ? '&#9675;' : '&#9679;') + '</span>Guide<span class="d">' + (GS.flags.spellGuideOff ? 'Off' : 'On') + '</span>'; }
+    paintGuideBtn();
+    sheetNote.addEventListener('click', function (e) { e.stopPropagation(); GS.flags.spellGuideOff = !GS.flags.spellGuideOff; if (GS.flags.spellGuideOff) guideKind = null; paintGuideBtn(); try { H.game.save(); } catch (_) {} });
+    ORDER.forEach(function (k) { chips[k].addEventListener('click', function (e) {
+      e.stopPropagation(); if (GS.flags.spellGuideOff || known.indexOf(k) < 0) return;
+      guideKind = k; guideT = 0; sheet.hidden = true; el.classList.remove('sheet-open'); sfx('blip');
+    }); });
 
     // move buttons
     var mvBtns = [];
@@ -976,6 +986,17 @@
       for (var j = floats.length - 1; j >= 0; j--) { var f = floats[j]; f.y -= 0.22; f.l -= 0.011; if (f.l <= 0) { floats.splice(j, 1); continue; }
         g.globalAlpha = Math.min(1, f.l * 2); g.font = (f.big ? 'bold 11px' : 'bold 7px') + ' Nunito, system-ui, sans-serif'; g.textAlign = 'center'; g.lineWidth = 2; g.strokeStyle = 'rgba(0,0,0,.7)'; g.strokeText(f.t, f.x, f.y); g.fillStyle = f.c; g.fillText(f.t, f.x, f.y); }
       g.globalAlpha = 1;
+      if (guideKind && !done) { // dashed shape + a dot gliding along it, to trace
+        guideT += dt; var gp = glyphPts(guideKind), gs = Math.min(W, Hh) * 0.3, gx = W / 2, gy = Hh * 0.46, gc = (SPELLS[guideKind] || {}).col || '#ffd98a';
+        g.save(); g.globalAlpha = Math.min(1, guideT * 2) * 0.8; g.setLineDash([3, 4]); g.lineWidth = 1.6; g.strokeStyle = gc; g.lineCap = 'round'; g.lineJoin = 'round';
+        g.beginPath(); gp.forEach(function (q, i) { var x = gx + q[0] * gs, y = gy + q[1] * gs; if (i) g.lineTo(x, y); else g.moveTo(x, y); }); g.stroke(); g.setLineDash([]);
+        if (!gp._acc) { gp._acc = [0]; for (var gi = 1; gi < gp.length; gi++) gp._acc.push(gp._acc[gi - 1] + Math.hypot(gp[gi][0] - gp[gi - 1][0], gp[gi][1] - gp[gi - 1][1])); gp._len = gp._acc[gp._acc.length - 1] || 1; }
+        var dd = (guideT / 3.2 % 1) * gp._len, sg = 1; while (sg < gp.length - 1 && gp._acc[sg] < dd) sg++;
+        var fa = gp._acc[sg - 1], fb = gp._acc[sg], ff = fb > fa ? (dd - fa) / (fb - fa) : 0;
+        var dx0 = gx + (gp[sg - 1][0] + (gp[sg][0] - gp[sg - 1][0]) * ff) * gs, dy0 = gy + (gp[sg - 1][1] + (gp[sg][1] - gp[sg - 1][1]) * ff) * gs;
+        g.fillStyle = gc; g.globalAlpha = 0.35; g.beginPath(); g.arc(dx0, dy0, 4, 0, 7); g.fill(); g.globalAlpha = 1; g.fillStyle = '#fff'; g.beginPath(); g.arc(dx0, dy0, 1.8, 0, 7); g.fill();
+        g.restore();
+      }
       ink.draw(g, 1);
       if (flash.a > 0) { g.globalAlpha = flash.a; g.fillStyle = flash.c; g.fillRect(0, 0, W, Hh); g.globalAlpha = 1; flash.a = Math.max(0, flash.a - dt * 2.5); }
       updateTurn(); requestAnimationFrame(frame);
@@ -1314,8 +1335,10 @@
     }
     var closeNow = function () {};
     function saveHp() {
-      if (me.src) me.src.hp = Math.max(TR ? me.src.maxHp : 1, me.hp);
-      fought.forEach(function (i) { var m = party[i]; if (!m) return; if (TR) m.hp = m.maxHp; else if (m.hp != null && m.hp <= 0) m.hp = 1; });
+      // health carries over; a fainted hontori stays fainted until it rests (bed, ramen) or is revived.
+      // practice duels end gently: nobody is left fainted, but nobody is healed for free either.
+      if (me.src) me.src.hp = Math.max(TR ? 1 : 0, me.hp);
+      fought.forEach(function (i) { var m = party[i]; if (!m) return; if (TR && m.hp != null && m.hp <= 0) m.hp = 1; });
       result.participants = fought.slice(); result.active = act;
     }
 
@@ -1367,6 +1390,7 @@
       tr.forEach(function (q) { minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); });
       cx = (minx + maxx) / 2; cy = (miny + maxy) / 2;
       var why = !kind ? 'The ink crumbles. Try again.' : spellUsed ? 'One spell each turn.' : mana < costOf(kind) ? 'Not enough mana for the ' + SPELLS[kind].name + '.' : canCast(kind);
+      guideKind = null;
       if (kind === 'bind' && (TR || opts.noCapture)) { repelHand(); ink.ash(); return; } // another person's hontori: they push the spell away
       if (why !== true) { say(why); ink.ash(); sfx('bump'); return; }
       ink.trail = [];
