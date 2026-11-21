@@ -36,6 +36,7 @@
 
   function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
   function spiritDraw(cv, key, opts, sc) {
+    if (!sc) sc = (opts.stage || 1) >= 4 ? 1.4 : (opts.stage || 1) === 3 ? 1.7 : 2; // big forms fit their box
     live.push({ cv, draw(g) { g.save(); g.scale(sc || 2, sc || 2); H.spirits.draw(g, key, cv.width / (2 * (sc || 2)), cv.height / (2 * (sc || 2)) + 4, env, opts); g.restore(); } });
   }
   function charDraw(cv, key, dir, frameFn) {

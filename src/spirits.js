@@ -591,7 +591,7 @@ window.H = window.H || {};
   // ---------- evolution stages ----------
   // Stage 1 is the base body. Stages 2-5 add element structures in four layers around the same body:
   //   'behind' (glow, unoutlined) | 'back' (outlined, behind body) | 'front' (outlined, over body) | 'fx' (glow, over everything).
-  var SS = [1, 1.1, 1.25, 1.4, 1.6], SM = 8; // stage scale, extra logical margin for stages 2-5
+  var SS = [1, 1.1, 1.25, 1.4, 1.6], SM = 14; // stage scale, extra logical margin for stages 2-5
   var STAGES = {
     hontori: [['Hontori', 'A small fire fox kit with a warm ember on its brow.'], ['Cindrel', 'Its tail now burns at the tip and its ruff has grown thick.'],
       ['Brandtail', 'A bold young fox that splits its flame into two tails.'], ['Pyrevane', 'Four blazing tails and gold-marked fur; embers circle where it walks.'],
@@ -1152,7 +1152,7 @@ window.H = window.H || {};
       }
       bg2.putImageData(bid, 0, 0);
     }
-    if (st > 1) { enrich(body, st); c.getContext('2d').drawImage(body, 0, 0); }
+    if (st > 1) { enrich(body, st); var cg = c.getContext('2d'); cg.save(); cg.setTransform(1, 0, 0, 1, 0, 0); cg.drawImage(body, 0, 0); cg.restore(); } // body and layers share the same margin offset
     pc.warp = false; aura(pc, key, f);
     if (st > 1) STG[key](pc, f, st, 'fx');
     return (arr[f] = c);
@@ -1222,7 +1222,7 @@ window.H = window.H || {};
       g.fillStyle = 'rgba(' + col + ',' + a.toFixed(3) + ')';
       g.fillRect(x, y, 2, 2);
     }
-    if (st > 1) g.drawImage(frame(key, 2, false, 0, 0, 'idle', st), 0, 0); else g.drawImage(frame(key, 3, false, 0, 0, 'idle'), 0, 4);
+    if (st > 1) g.drawImage(frame(key, 2, false, 0, 0, 'idle', st), 0, 0, 96, 96); else g.drawImage(frame(key, 3, false, 0, 0, 'idle'), 0, 4);
     return (pcache[pk] = c);
   }
 
