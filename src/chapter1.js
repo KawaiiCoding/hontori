@@ -39,7 +39,7 @@ window.H = window.H || {};
   ] });
 
   ST.defineQuest({ id: 'woods', icon: 'sprout', title: 'Beyond the Trees', desc: 'The south road leads to Whisperwood.', steps: [
-    { id: 'gate', text: 'Ask Guard Bram to open the south gate', done: function () { return ST.isDone('academy'); } },
+    { id: 'gate', text: 'Finish the Academy so Guard Bram opens the south gate', done: function () { return ST.isDone('academy'); } },
     { id: 'wood', text: 'Walk the south road into Whisperwood', done: function (s) { return ST.isDone('academy') && !!s.flags['visited:whisperwood']; } }
   ] });
 
