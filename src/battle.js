@@ -630,7 +630,7 @@
     '.hb-pip.on{background:radial-gradient(circle at 35% 35%,#fff,#7fc8ff 50%,#3a7ad8);box-shadow:0 0 6px #7fc8ff}',
     '.hb-btn{border:0;border-radius:12px;background:rgba(14,16,36,.84);color:#fff;font:inherit;font-weight:900;font-size:12px;padding:9px 11px;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.14)}',
     '.hb-btn.hot{box-shadow:inset 0 0 0 2px #ffd98a,0 0 10px #ffd98a}',
-    '.hb-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 160px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;border-radius:14px;background:rgba(10,10,26,.9);border:2px solid rgba(255,217,138,.25)}',
+    '.hb-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 160px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;border-radius:14px;background:#0c0d20;border:2px solid rgba(255,217,138,.25)}',
     '.hb-sp{text-align:center;font-size:10px;font-weight:800;line-height:1.1;padding:2px 0 3px;border-radius:10px}',
     '.hb-sp svg{display:block;margin:0 auto 2px;width:40px;height:40px}',
     '.hb-sp .c{display:block;margin-top:2px;letter-spacing:1px;color:#9fd0ff;font-size:9px}',
@@ -723,10 +723,11 @@
     var chips = {};
     ORDER.forEach(function (k) {
       var S = SPELLS[k], kn = known.indexOf(k) >= 0, c = mk('div', 'hb-sp' + (kn ? '' : ' lock'), sheet);
-      c.innerHTML = sigilSVG(k, S.col, !kn) + S.name + '<span class="d">' + S.desc + '</span><span class="c">' + (kn ? new Array(S.cost + 1).join('o ').trim().replace(/o/g, '&#9679;') + ' mana' : 'Learn at Academy') + '</span>';
+      var SHORT = { mend: 'Heal', shield: 'Block', boost: 'Power up', stun: 'Stun', sleep: 'Sleep', bind: 'Capture', revive: 'Revive', veil: 'Lift veil' };
+      c.innerHTML = sigilSVG(k, S.col, !kn) + (kn ? S.name + '<span class="d">' + (SHORT[k] || '') + '</span><span class="c">' + new Array(S.cost + 1).join('o').replace(/o/g, '&#9679;') + '</span>' : '');
       chips[k] = c;
     });
-    var sheetNote = mk('div', 'hb-sp', sheet, '<span style="display:block;padding-top:8px;opacity:.8;font-size:10px">Draw a sigil anywhere. One spell each turn.</span>');
+    var sheetNote = mk('div', '', sheet); sheetNote.hidden = true;
 
     // move buttons
     var mvBtns = MOV.map(function (m, i) {
