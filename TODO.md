@@ -3,6 +3,15 @@
 Live: https://kawaiicoding.github.io/hontori/  (deploys from `main`)
 Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CONTRACT.md.
 
+## QA pass (stable-qa)
+- Done: rule 48 fox guide (H.ui.helper(id, title, text, icon, target), once per id in state.flags['help:'+id]) on backpack, menu, party, Sanctum, loadout, moves, Mend, map, quest icon, quest log, battle (moves, foe intent, turn, mana, Spells, Switch, Escape, Bread, Herb) and every home item's first use.
+- Done: map button shown but blocked until the Map is found; toasts sit below the quest icon; game layers never scroll (Safari focus / scrollIntoView shift in battle).
+- Done: quest pill is a scroll icon with popover, 3 s peek on a new step and a dot; quest log fits phone and desktop frame, shows only the current step (no spoilers); compass arrow small and fading.
+- Done: area map shows place names for discovered places (skips colliding labels); Pip renamed to Tobin (flag ids kept); home items are solid and walking into one opens Take / Leave.
+- Open: Ember Dust shows the backpack icon and Spirit Wand / Ember Dust have no one-line use in the bag.
+- Open: Wren's house, Bridge and Road to Whisperwood labels can be skipped by collisions at the whole-map zoom; check at closer zoom.
+- Open: full Chapter 1 replay (duel, Binding, pond capture, Elder, letter) was not re-run in this pass; previous agent's run still stands. Landscape and WebKit only smoke-tested.
+
 ## Verify first (built in parallel at the end, needs one full play-through on iPhone Safari)
 - Battle redesign (src/battle.js, src/moves.js): hontori moves vs drawn wand spells, mana, enemy intents, matchup banner, capture only via Binding Spiral, escape as a real action, switching hontori, loadouts, drawing quality grades, spell mastery, trainer duels.
 - Progression (src/progress.js, src/menu.js): EXP and levels, 4 evolutions, wand levels, Wand Sanctum storage, loadout screens.
