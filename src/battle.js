@@ -938,7 +938,7 @@
       if (tut === 2) return 'Tip: watch the sign at the top. It shows the foe\'s next move.';
       if (me.hp <= 0) return known.indexOf('revive') >= 0 ? 'It fainted. Draw the Phoenix Star.' : 'It fainted.';
       if (me.asleep) return 'It is asleep. Cast a spell, then tap a move to wait.';
-      if (!TR && known.indexOf('bind') >= 0 && foe.hp / foe.max <= 0.35 && mana >= 2 && !spellUsed) return 'It is weak. Draw a spiral to bind it.';
+      if (!TR && known.indexOf('bind') >= 0 && foe.hp / foe.max <= 0.35 && mana >= 2 && !spellUsed) return (GS.flags && GS.flags.boundOnce) ? 'It is weak. Draw a spiral to bind it.' : 'It is weak. Draw the spiral to bind it, and it can travel with you.';
       if (!TR && known.indexOf('bind') < 0 && foe.hp / foe.max <= 0.35) return 'It is weak. Learn the Binding Spiral at the Academy to catch it.';
       if (intent === 'charge' && known.indexOf('shield') >= 0) return 'It is charging. A ward would help next turn.';
       if (intent === 'unleash' && known.indexOf('shield') >= 0 && !me.shield && !spellUsed) return 'A big hit is coming. Draw the Aegis Ward.';
@@ -1138,6 +1138,7 @@
       finish();
     }
     function captured() {
+      GS.flags = GS.flags || {}; GS.flags.boundOnce = true;
       done = true; sfx('wand'); result.captured = true; result.won = true; say('Bound into your wand!');
       GS.seen = GS.seen || []; if (GS.seen.indexOf(foe.key) < 0) GS.seen.push(foe.key);
       var joined = H.game && H.game.addHontori ? H.game.addHontori(foe.key) : false;
