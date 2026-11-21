@@ -86,6 +86,7 @@
     function go(e) {
       if (btn.hidden) return;
       if (e) e.preventDefault();
+      try { H.audio && H.audio.unlock && H.audio.unlock(); } catch (_) {} // start sound inside the tap (required on iPhone)
       overlay.classList.add('out');
       setTimeout(function () { live = false; overlay.remove(); }, 650);
       resolveReady();

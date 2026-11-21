@@ -482,7 +482,25 @@ window.H = window.H || {};
   };
 
   // ------------------------------------------------------------------ unlock
+  // iOS: web audio follows the ring/silent switch unless the page is in "playback" mode.
+  // Declaring the session type (Safari 17+) and looping a silent <audio> element both switch it.
+  var silentEl = null;
+  function iosPlayback() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    if (silentEl) return;
+    try {
+      var rate = 8000, n = rate / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+      var w = function (o, str) { for (var i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+      w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+      silentEl = document.createElement('audio');
+      silentEl.src = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+      silentEl.loop = true; silentEl.setAttribute('playsinline', ''); silentEl.setAttribute('x-webkit-airplay', 'deny');
+      var pr = silentEl.play(); if (pr && pr.catch) pr.catch(function () { silentEl = null; });
+    } catch (e) { silentEl = null; }
+  }
   function unlock() {
+    iosPlayback();
     if (!ctx && !setup()) { removeUnlock(); return; }
     if (ctx.state !== 'running' && ctx.resume) {
       var p = ctx.resume();
@@ -498,13 +516,14 @@ window.H = window.H || {};
     if (lastEnv) applyAmbience(lastEnv);
     tick();
   }
-  var EVTS = ['pointerdown', 'keydown', 'touchstart', 'touchend', 'mousedown'];
+  var EVTS = ['pointerdown', 'keydown', 'touchstart', 'touchend', 'mousedown', 'click'];
   function removeUnlock() {
     for (var i = 0; i < EVTS.length; i++) window.removeEventListener(EVTS[i], unlock, true);
   }
 
   // ------------------------------------------------------------------ public api
   var api = {
+    unlock: function () { unlock(); },
     init: function () {
       if (inited) return;
       inited = true;
@@ -513,8 +532,8 @@ window.H = window.H || {};
       if (typeof document !== 'undefined' && document.addEventListener) {
         document.addEventListener('visibilitychange', function () {
           if (!ctx) return;
-          if (document.hidden) { if (ctx.suspend) ctx.suspend(); }
-          else if (ctx.resume) ctx.resume();
+          if (document.hidden) { if (ctx.suspend) ctx.suspend(); if (silentEl) silentEl.pause(); }
+          else { if (ctx.resume) ctx.resume(); if (silentEl) { var pr = silentEl.play(); if (pr && pr.catch) pr.catch(function () {}); } }
         });
       }
     },

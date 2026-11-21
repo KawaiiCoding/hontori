@@ -1,21 +1,20 @@
-// Short, funny intro — overrides the long one in maps.js. Keep lines brief.
-// The fox's voice: wise old rhymes... that keep going wrong.
+// Intro script — overrides the long one in maps.js.
+// Voice: short and calm. The hontori speaks in gentle rhyme.
 window.H = window.H || {};
 H.script = H.script || {};
 H.script.intro = [
   { do: 'fade' },
   { do: 'shake' },
-  { say: ['kid', 'You', 'Is... the fireplace coughing?'] },
+  { say: ['kid', 'You', 'A sound... in the fireplace?'] },
   { do: 'spiritAppear' },
-  { say: ['hontori', 'Hontori', 'Behold! A spirit, ancient and wise! ...Ow. Soot in my eyes.'] },
-  { say: ['kid', 'You', 'A fox. Made of fire. On our rug.'] },
-  { say: ['hontori', 'Hontori', 'Fire hontori! Rug is fine. Mostly. Smells toasty.'] },
-  { say: ['hontori', 'Hontori', 'Magic is real, as old as the sea... or the moon? Big. Old. Trust me.'] },
-  { say: ['kid', 'You', 'Mom and Dad will freak!'] },
-  { say: ['hontori', 'Hontori', 'Then shh! Wise spirits are silent... *hrk* ...HURK!'] },
+  { say: ['hontori', 'Hontori', 'From ash and flame, to you I came.'] },
+  { say: ['kid', 'You', 'A fox... made of fire?'] },
+  { say: ['hontori', 'Hontori', 'A hontori, a spirit true. The world has magic, old and new.'] },
+  { say: ['hontori', 'Hontori', 'Most eyes are veiled and cannot see. But yours are open. Come with me.'] },
+  { say: ['kid', 'You', 'My parents will freak.'] },
+  { say: ['hontori', 'Hontori', 'Then soft and slow, so none may know.'] },
   { do: 'giveWand' },
-  { say: ['kid', 'You', 'Did you just cough up a stick?'] },
-  { say: ['hontori', 'Hontori', 'A sacred wand! I kept it safe. In my belly. Say: Velum Aperi!'] },
+  { say: ['hontori', 'Hontori', 'Take this wand. Say Velum Aperi, and let the veil fall free.'] },
   { do: 'spell' },
-  { say: ['hontori', 'Hontori', 'The veil is lifted! I planned that. Mostly. Snacks?'] },
+  { say: ['hontori', 'Hontori', 'The veil is thin, the path is wide. At dawn we go, side by side.'] },
 ];
