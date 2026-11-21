@@ -14,7 +14,7 @@ H.script.intro = [
   { say: ['kid', 'You', 'My parents will freak.'] },
   { say: ['hontori', 'Hontori', 'Then soft and slow, so none may know.'] },
   { do: 'giveWand' },
-  { say: ['hontori', 'Hontori', 'Take this wand. Say Velum Aperi, and let the veil fall free.'] },
+  { say: ['hontori', 'Hontori', 'Take this wand. Draw a V, and say Velum Aperi.'] },
   { do: 'spell' },
   { say: ['hontori', 'Hontori', 'The veil is thin, the path is wide. At dawn we go, side by side.'] },
 ];

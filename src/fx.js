@@ -239,7 +239,7 @@ window.H = window.H || {};
       } else if (wx === 'snow') {
         for (j = 0; j < flakes.length; j++) {
           p = flakes[j]; p.p += dt * 1.5;
-          p.y += p.v * p.z * dt; p.x += (Math.sin(p.p) * 8 + wind * 30) * p.z * dt;
+          p.y += p.v * p.z * dt; p.x += (Math.sin(p.p) * 6 + wind * 14) * p.z * dt;
           if (p.y > h + 2) { p.y = -2; p.x = rnd(0, w); }
           p.x = mod(p.x, w);
         }
@@ -247,7 +247,7 @@ window.H = window.H || {};
       if (wx === 'wind' || wind > 0.45) {
         for (j = 0; j < leaves.length; j++) {
           p = leaves[j]; p.p += dt * 4;
-          p.x += (p.vx * (0.5 + wind)) * p.z * dt; p.y += (p.vy + Math.sin(p.p) * 18) * dt;
+          p.x += (p.vx * (0.25 + wind * 0.5)) * p.z * dt; p.y += (p.vy + Math.sin(p.p) * 18) * dt;
           if (p.x > w + 10) { p.x = -10; p.y = rnd(-10, h); }
           if (p.y > h + 10) p.y = -10; else if (p.y < -12) p.y = h + 8;
         }

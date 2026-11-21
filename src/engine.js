@@ -140,12 +140,12 @@
       else if (st.do === 'shake') { shake = 0.8; sfx('cough'); emit('smoke', fx, fy, 20); emit('ember', fx, fy, 20); await wait(700); }
       else if (st.do === 'spiritAppear') await spiritEntrance(fp);
       else if (st.do === 'giveWand') { sfx('wand'); emit('magic', player.x, player.y - 20, 40); H.ui && H.ui.toast('Received: Spirit Wand'); await wait(900); }
-      else if (st.do === 'spell') { sfx('spell'); emit('magic', player.x, player.y - 16, 90); emit('sparkle', player.x, player.y - 16, 60); flash = 1; await wait(1200); }
+      else if (st.do === 'spell') { if (H.gesture && H.gesture.prompt) await H.gesture.prompt('veil', 'Draw a V to lift the veil'); sfx('spell'); emit('magic', player.x, player.y - 16, 90); emit('sparkle', player.x, player.y - 16, 60); flash = 1; await wait(1200); }
       else if (st.do === 'fade') { if (H.ui) await H.ui.fade(600); }
     }
     H.game.state.intro = true;
     if (!H.game.state.party.length) H.game.state.party.push(mkMember('hontori'));
-    H.game.addItem('wand', 'Spirit Wand', 'wand'); H.game.save();
+    H.game.addItem('wand', 'Spirit Wand', 'wand'); H.game.addItem('ember_dust', 'Ember Dust', 'backpack'); H.game.save();
     busy = false;
   }
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -248,7 +248,7 @@
   // ---------- update
   function update(dt) {
     env.t += dt;
-    const targetWind = env.weather === 'wind' ? 0.9 : env.weather === 'rain' ? 0.5 : 0.15;
+    const targetWind = env.weather === 'wind' ? 0.45 : env.weather === 'rain' ? 0.3 : 0.1;
     env.wind += (targetWind + Math.sin(env.t * 0.4) * 0.1 - env.wind) * dt * 0.8;
     const inp = readInput();
     const menuOpen = !!(H.menu && H.menu.isOpen());
