@@ -96,7 +96,7 @@ window.H = window.H || {};
       'Sleeping again? Adventuring is tiring.'
     ])).then(function () { sfx(c, 'sleep'); return fade(c, 700); })
       .then(function () {
-        if (c.setTime) c.setTime(7);
+        if (c.setTime) c.setTime(((c.env && c.env.time) || 22) + 8 >= 24 ? (((c.env && c.env.time) || 22) + 8) % 24 : ((c.env && c.env.time) || 22) + 8); // sleeping skips 8 hours
         emit(c, 'sparkle', 6, 0, -8);
         toast(c, 'Morning. 7:00 am.');
         return c.hasSpirit ? fox(c, pick(['Up with the sun, the day has begun!', 'You snore like a kettle. I mean that well.']))

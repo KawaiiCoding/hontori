@@ -1112,13 +1112,12 @@
 
     // ---------------- endings
     async function win() {
-      done = true; busy = true; renderUI(); sfx('wand'); say('It calms down.');
+      done = true; busy = true; renderUI(); sfx('wand'); say('');
       for (var i = 0; i < 6; i++) { burst(POS.foe.x, POS.foe.y, '#fff2a8', 12, 1); await wait(110); }
       foe.fx.alpha = 0.6; result.won = true;
       if (!TR) { GS.seen = GS.seen || []; if (GS.seen.indexOf(foe.key) < 0) GS.seen.push(foe.key); }
       await wait(500);
-      say(TR ? (TR.name || 'Trainer') + ': Well fought. You learn fast.' : RHYMES[Math.floor(Math.random() * RHYMES.length)]);
-      if (!TR) setTimeout(function () { if (!ended) say('Your wand remembers it.'); }, 3200);
+      say(TR ? (TR.name || 'Trainer') + ': Well fought.' : '');
       finish();
     }
     function captured() {

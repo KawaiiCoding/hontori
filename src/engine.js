@@ -35,7 +35,7 @@
 
   let map, grid, solid, tileset, camX = 0, camY = 0, shake = 0, busy = false, mapName;
   const player = { key: 'kid', tx: 0, ty: 0, x: 0, y: 0, dir: 0, moving: false, fx: 0, fy: 0, prog: 0, frame: 0, steps: 0 };
-  let spirit = null, trialSpirit = null, camFocus = null, ambient = null, fcx = 0, fcy = 0, camSnap = true; // {key,x,y}
+  let envStarted = false, spirit = null, trialSpirit = null, camFocus = null, ambient = null, fcx = 0, fcy = 0, camSnap = true; // {key,x,y}
   const trail = [];
   let npcs = [];
 
@@ -50,7 +50,9 @@
     mapName = name; map = H.maps[name];
     tileset = map.tileset === 'indoor' ? H.tilesIndoor : H.tilesOutdoor;
     env.indoor = map.tileset === 'indoor';
-    if (map.env) { env.time = map.env.time; env.weather = map.env.weather || 'clear'; }
+    // time and weather carry over between areas; a map's env only sets them when the game starts
+    if (map.env && !envStarted) { env.time = map.env.time; env.weather = map.env.weather || 'clear'; }
+    envStarted = true;
     grid = map.ground.map(r => [...r].map(ch => map.legend[ch] || Object.values(map.legend)[0]));
     solid = grid.map(r => r.map(id => !!(tileset && tileset.solid && tileset.solid[id])));
     const block = (x, y) => { if (solid[y] && x >= 0 && x < map.w) solid[y][x] = true; };
@@ -427,6 +429,7 @@
     busy = false;
   }
   H.game.battle = startBattle;
+  H.game.currentMap = () => ({ name: mapName, map, player });
 
   let last = performance.now();
   function loop(now) { checkSize(); const dt = Math.min(0.05, (now - last) / 1000); last = now; update(dt); render(); requestAnimationFrame(loop); }
