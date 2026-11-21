@@ -16,13 +16,22 @@ window.H = window.H || {};
     earth:    { f: { rock: 2.5, path: 0.5, sand: 0.6, wall: 1.2, field: 0.8 }, day: 1, night: 0.8, wx: { rain: 0.8 }, rare: 0.9 },
     hontori:  { f: { warm: 3, open: 0.4, path: 0.3 }, day: 1.3, night: 0.25, wx: { clear: 1.4, rain: 0.25, snow: 0.3, fog: 0.6 }, rare: 0.4 },
     dark:     { f: { shade: 1.3, mushroom: 3, tree: 0.4 }, day: 0.08, night: 2.6, wx: { fog: 2.2, rain: 1.1 }, rare: 0.8 },
-    light:    { f: { flowers: 1.4, statue: 5, open: 0.4 }, day: 1.2, night: 0.08, wx: { clear: 1.4, rain: 0.4, fog: 0.5 }, rare: 0.3 }
+    light:    { f: { flowers: 1.4, statue: 5, open: 0.4 }, day: 1.2, night: 0.08, wx: { clear: 1.4, rain: 0.4, fog: 0.5 }, rare: 0.3 },
+    // second wave
+    frog:       { f: { lilypad: 3, reeds: 2.2, water: 1.4, tallgrass: 0.3 }, day: 0.8, night: 1.3, wx: { rain: 2.6, fog: 1.3, clear: 0.8 }, rare: 0.8 },
+    salamander: { f: { warm: 2.4, rock: 1, log: 1 }, day: 0.9, night: 0.9, wx: { clear: 1.3, rain: 0.2, snow: 0.3 }, rare: 0.35 },
+    squirrel:   { f: { tree: 1.4, fruit: 2, open: 0.5, chime: 1.5 }, day: 1.2, night: 0.3, wx: { wind: 2.6, rain: 0.6 }, rare: 0.7 },
+    tortoise:   { f: { garden: 1.4, tallgrass: 0.8, water: 0.6, mushroom: 1, shade: 1 }, day: 1, night: 0.6, wx: { rain: 1.5, fog: 1.2 }, rare: 0.45 },
+    hamster:    { f: { lamp: 2, field: 1.6, garden: 0.8, metal: 1 }, day: 0.9, night: 0.9, wx: { rain: 2.2, wind: 1.4, clear: 0.7 }, rare: 0.4 },
+    crab:       { f: { sand: 3, rock: 1.5, water: 0.6 }, day: 1, night: 0.9, wx: { rain: 1.2 }, rare: 0.6 },
+    raven:      { f: { tree: 1.2, shade: 1.4, field: 1, statue: 0.8 }, day: 0.12, night: 2.2, wx: { fog: 2, rain: 1.2 }, rare: 0.6 },
+    firefly:    { f: { tallgrass: 1.2, flowers: 1.4, water: 0.8, reeds: 1.2, lamp: 1 }, day: 0.1, night: 2.4, wx: { clear: 1.3, rain: 0.3, fog: 0.8 }, rare: 0.35 }
   };
   var PROPF = {
     tree: 'tree', pine: 'tree', cherry_tree: 'tree', fruit_tree: 'fruit', bush: 'bush', butterfly_bush: 'bush',
     rock: 'rock', stone_wall_h: 'wall', mushroom_ring: 'mushroom', flower_patch: 'flowers', flowerbed: 'flowers',
     reeds: 'reeds', lilypad: 'lilypad', statue: 'statue', lamp: 'lamp', lantern_string: 'lamp', windchime: 'chime',
-    log_pile: 'warm', barrel: 'metal', cart: 'metal', mailbox: 'metal', fence_h: 'field', fence_v: 'field',
+    log_pile: 'warm', campfire: 'warm', fireplace: 'warm', barrel: 'metal', cart: 'metal', mailbox: 'metal', fence_h: 'field', fence_v: 'field',
     hay_bale: 'field', garden_bed: 'garden', pumpkin: 'garden', well: 'metal'
   };
   var TILEF = { water: 'water', sand: 'sand', bridge: 'bridge', tallgrass: 'tallgrass', flowers: 'flowers', path: 'path', cobble: 'path' };
@@ -65,6 +74,7 @@ window.H = window.H || {};
     var hab = habitat(map), o = (hab[ty] && hab[ty][tx]) || {}, res = {};
     var night = isNight(env), dusk = isDusk(env), wx = (env && env.weather) || 'clear';
     for (var key in HAB) {
+      if (H.spirits && H.spirits.list && !H.spirits.list.some(function (q) { return q.key === key; })) continue;
       var sp = HAB[key], s = 0.05;
       for (var f in sp.f) if (o[f]) s += Math.min(3, o[f]) * sp.f[f];
       if (o['z_' + key]) s += o['z_' + key];
