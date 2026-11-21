@@ -249,6 +249,7 @@ window.H = window.H || {};
   var old = H.maps.village || {};
   H.maps.village = {
     name: old.name || 'Emberbrook Village',
+    labels: [{ x: 7, y: 7, name: 'The pond' }, { x: riverX(22), y: 21, name: 'Bridge' }],
     w: W, h: HT, tileset: 'outdoor',
     ground: g.map(function (r) { return r.join(''); }),
     legend: { g: 'grass', t: 'tallgrass', f: 'flowers', p: 'path', c: 'cobble', w: 'water', s: 'sand', b: 'bridge' },

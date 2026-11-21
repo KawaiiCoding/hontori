@@ -109,6 +109,39 @@
     g.putImageData(im, 0, 0); return cv;
   }
 
+  // ---------- place names: only where the kid has been (not under fog); a label that would overlap another is skipped
+  function labelsOf(name, map) {
+    var seen = bits(name, map), out = [], have = {};
+    function add(x, y, t) {
+      if (!t || have[t] || x < 0 || y < 0 || x >= map.w || y >= map.h) return;
+      var ok = false; for (var dy = -1; dy <= 1 && !ok; dy++) for (var dx = -1; dx <= 1 && !ok; dx++) { var xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < map.w && yy < map.h && seen[yy * map.w + xx]) ok = true; }
+      if (ok) { have[t] = 1; out.push({ x: x, y: y, t: t }); }
+    }
+    (map.doors || []).forEach(function (d) {
+      var t = d.to === 'home' ? 'Your home' : d.to === 'whisperwood' ? 'Road to Whisperwood' : d.to === 'village' ? 'Road to Emberbrook' : (H.maps && H.maps[d.to] && H.maps[d.to].tileset === 'indoor' ? H.maps[d.to].name : null);
+      add(d.x, d.y, t);
+    });
+    (map.labels || []).forEach(function (l) { add(l.x, l.y, l.name); });
+    return out;
+  }
+  function drawLabels(g, labs, ox, oy, q, W, Hh) {
+    if (!labs.length) return;
+    g.save(); g.font = '800 11px Nunito, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    var placed = [];
+    labs.forEach(function (l) {
+      var x = ox + (l.x + 0.5) * q, y = oy + (l.y + 0.5) * q - Math.max(10, q * 0.9), w = g.measureText(l.t).width + 10, h = 16;
+      if (y - h / 2 < 2) y = oy + (l.y + 0.5) * q + Math.max(10, q * 0.9); // no room above: put it below
+      var r = { x: Math.max(2, Math.min(W - w - 2, x - w / 2)), y: y - h / 2, w: w, h: h }; x = r.x + w / 2;
+      if (r.x + r.w < 0 || r.y + r.h < 0 || r.x > W || r.y > Hh) return;
+      if (placed.some(function (o) { return r.x < o.x + o.w + 2 && o.x < r.x + r.w + 2 && r.y < o.y + o.h + 2 && o.y < r.y + r.h + 2; })) return;
+      placed.push(r);
+      g.fillStyle = 'rgba(250,240,214,.92)'; g.strokeStyle = 'rgba(74,52,32,.7)'; g.lineWidth = 1;
+      g.beginPath(); if (g.roundRect) g.roundRect(r.x, r.y, r.w, r.h, 6); else g.rect(r.x, r.y, r.w, r.h); g.fill(); g.stroke();
+      g.fillStyle = '#3a2814'; g.fillText(l.t, x, y + 0.5);
+    });
+    g.restore();
+  }
+
   function show() {
     var m = H.game && H.game.currentMap && H.game.currentMap();
     if (!m || !m.map || document.querySelector('.hmap')) return;
@@ -130,7 +163,7 @@
       .concat(questTarget(m.name, map) ? [['#ffcf3a', 'Quest']] : []).forEach(function (l) {
         var s = document.createElement('span'), i = document.createElement('i'); i.style.background = l[0]; i.style.boxShadow = 'inset 0 0 0 1px rgba(0,0,0,.35)'; s.appendChild(i); s.appendChild(document.createTextNode(l[1])); lg.appendChild(s);
       });
-    var S = 8, base = paintBase(map, S), fog = paintFog(map, bits(m.name, map)), qt = questTarget(m.name, map);
+    var S = 8, base = paintBase(map, S), fog = paintFog(map, bits(m.name, map)), qt = questTarget(m.name, map), labs = labelsOf(m.name, map);
     var g = cv.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1), W = 0, Hh = 0, fit = 1, z = 1, ox = 0, oy = 0, live = true;
     function size() {
       var bw = box.clientWidth - 20, maxH = Math.max(160, window.innerHeight * 0.62);
@@ -156,6 +189,7 @@
       var q = S * z;
       if (qt) { var qx = ox + (qt.x + 0.5) * q, qy = oy + (qt.y + 0.5) * q, qr = Math.max(5, q * 0.6) * (1 + 0.12 * Math.sin(t / 260));
         g.fillStyle = '#ffcf3a'; g.strokeStyle = '#4a3010'; g.lineWidth = 2; g.beginPath(); g.moveTo(qx, qy - qr); g.lineTo(qx + qr * 0.7, qy); g.lineTo(qx, qy + qr); g.lineTo(qx - qr * 0.7, qy); g.closePath(); g.fill(); g.stroke(); }
+      drawLabels(g, labs, ox, oy, q, W, Hh);
       var px = ox + (m.player.tx + 0.5) * q, py = oy + (m.player.ty + 0.5) * q, r = Math.max(4, q * 0.5) * (0.9 + 0.15 * Math.sin(t / 200));
       g.fillStyle = 'rgba(255,60,40,.3)'; g.beginPath(); g.arc(px, py, r * 2, 0, 7); g.fill();
       g.fillStyle = '#ff3c28'; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(px, py, r, 0, 7); g.fill(); g.stroke();

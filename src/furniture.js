@@ -51,7 +51,7 @@ window.H = window.H || {};
     src._hd = out; out._hd = out;
     return out;
   }
-  function blit(ctx, c, x, y) { var hc = up2(c); ctx.drawImage(hc, x, y, hc.width / 2, hc.height / 2); }
+  function blit(ctx, c, x, y) { if (!c) return; var hc = up2(c); ctx.drawImage(hc, x, y, hc.width / 2, hc.height / 2); }
   function mk2(w, h) { var s = mk(w * 2, h * 2); s.c._hd = s.c; return s; }
   // rounded rectangle (pixel-stepped corners, radius r)
   function rr(g, x, y, w, h, r, col) {

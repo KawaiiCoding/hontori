@@ -212,19 +212,26 @@ window.H = window.H || {};
 
   // ---------- quest pill + Quest Log sheet
   var CSS = [
-    '.hq-pill{position:absolute;z-index:31;left:calc(env(safe-area-inset-left,0px) + 60px);top:calc(env(safe-area-inset-top,0px) + 62px);max-width:calc(100% - 60px - 66px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px));height:36px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:4px 12px 4px 6px;border-radius:14px;background:rgba(14,16,32,.82);border:2px solid rgba(255,214,120,.35);color:#f4f1e8;font:800 13px/1.2 Nunito,"M PLUS Rounded 1c",system-ui,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.4);cursor:pointer;transition:opacity .2s,transform .2s;-webkit-user-select:none;user-select:none}',
+    '.hq-pill{position:absolute;z-index:31;left:calc(env(safe-area-inset-left,0px) + 60px);top:calc(env(safe-area-inset-top,0px) + 62px);max-width:calc(100% - 60px - 66px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px));height:40px;min-width:40px;box-sizing:border-box;display:flex;align-items:center;gap:0;padding:0 7px;border-radius:14px;background:rgba(14,16,32,.82);border:2px solid rgba(255,214,120,.35);color:#f4f1e8;font:800 13px/1.2 Nunito,"M PLUS Rounded 1c",system-ui,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.4);cursor:pointer;transition:opacity .2s,transform .2s;-webkit-user-select:none;user-select:none}',
     '.hq-pill[hidden]{display:none}',
     '.hq-pill:active{transform:translateY(2px)}',
     '.hq-pill .ic{flex:none;width:22px;height:22px;image-rendering:pixelated;filter:drop-shadow(0 0 4px rgba(255,176,74,.6))}',
     '.hq-pill .tx{min-width:0}',
     '.hq-pill b{display:none}',
-    '.hq-pill span{display:block;font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.hq-pill span{display:block;font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;opacity:0;transition:max-width .35s ease,opacity .25s,margin .35s}',
+    '.hq-pill.open span{max-width:300px;opacity:1;margin:0 5px 0 6px}',
+    '.hq-pill.new:after{content:"";position:absolute;right:-2px;top:-2px;width:10px;height:10px;border-radius:50%;background:#ffcf3a;box-shadow:0 0 0 2px rgba(14,16,32,.9)}',
+    '.hq-pop{position:absolute;z-index:32;left:calc(env(safe-area-inset-left,0px) + 60px);top:calc(env(safe-area-inset-top,0px) + 108px);width:min(300px,calc(100% - 136px));padding:10px 12px;opacity:0;transform:translateY(-6px);transition:opacity .18s,transform .18s;pointer-events:none}',
+    '.hq-pop.on{opacity:1;transform:none;pointer-events:auto}',
+    '.hq-pop b{display:block;font-size:12px;font-weight:900;color:#ffe7a8;margin-bottom:2px}',
+    '.hq-pop p{margin:0 0 8px;font-size:14px;font-weight:700;line-height:1.3}',
     '.hq-pill.flash{animation:hqf 1s ease-out}@keyframes hqf{0%{box-shadow:0 0 0 0 rgba(255,200,100,.8)}100%{box-shadow:0 0 0 14px rgba(255,200,100,0)}}',
     '.hq-shade{position:absolute;inset:0;z-index:46;background:rgba(5,6,14,.6);opacity:0;transition:opacity .2s}',
     '.hq-shade.on{opacity:1}',
     '.hq-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px);display:flex;flex-direction:column;overflow:hidden;padding:12px 12px 10px;box-sizing:border-box;transform:translateY(30px);transition:transform .22s}',
     '.hq-shade.on .hq-sheet{transform:none}',
-    '@media (min-width:640px){.hq-sheet{left:50%;right:auto;width:560px;margin-left:-280px}}',
+    '.hq-sheet{max-width:560px;margin:0 auto}',
+    '.hq-sheet *{box-sizing:border-box}',
     '.hq-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}',
     '.hq-h h2{margin:0;font-size:22px;font-weight:900}',
     '.hq-x{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.1);border:0;color:#fff;font:900 18px Nunito,system-ui;cursor:pointer}',
@@ -245,7 +252,13 @@ window.H = window.H || {};
     '.hq-q li.ok i{background:#6fe08a;border-color:#6fe08a}',
     '.hq-empty{opacity:.6;padding:16px 4px;text-align:center}'
   ].join('\n');
-  var pill = null, styled = false, lastPill = '';
+  var pill = null, pop = null, styled = false, lastPill = '', popT = null, peekT = null;
+  // the pill is a small scroll icon; tapping it shows the current step and a way into the full log
+  function togglePop(on) {
+    if (!pop) return; if (on == null) on = !pop.classList.contains('on');
+    if (on) { var id = current(), st = id && nextStep(id); if (!id) return; pop.querySelector('b').textContent = quests[id].title; pop.querySelector('p').textContent = st ? (typeof st.text === 'function' ? st.text(S()) : st.text) : ''; H.ui && H.ui.helper && H.ui.helper('quest', 'Quests', 'Tap the scroll to see what to do next.', 'scroll'); }
+    pop.classList.toggle('on', on);
+  }
   function style() { if (styled) return; var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); styled = true; }
   function buildPill() {
     if (pill || !document.getElementById('root')) return;
@@ -253,8 +266,13 @@ window.H = window.H || {};
     pill = document.createElement('div'); pill.className = 'hq-pill'; pill.hidden = true;
     pill.innerHTML = '<img class="ic" alt=""><div class="tx"><b></b><span></span></div>';
     pill.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); });
-    pill.addEventListener('click', function (e) { e.stopPropagation(); openLog(); });
+    pill.addEventListener('click', function (e) { e.stopPropagation(); pill.classList.remove('new'); togglePop(); });
     document.getElementById('root').appendChild(pill);
+    pop = document.createElement('div'); pop.className = 'hq-pop hk-panel'; pop.innerHTML = '<b></b><p></p>';
+    pop.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+    if (H.kit) H.kit.btn(pop, { icon: 'scroll', label: 'Quest log', kind: 'alt', sm: true, wide: true, onClick: function (e) { e.stopPropagation(); togglePop(false); openLog(); } });
+    document.getElementById('root').appendChild(pop);
+    document.addEventListener('pointerdown', function (e) { if (pop.classList.contains('on') && !pop.contains(e.target) && !pill.contains(e.target)) togglePop(false); }, true);
     renderPill();
   }
   function renderPill() {
@@ -262,18 +280,19 @@ window.H = window.H || {};
     var id = current(), st = id && nextStep(id);
     var key = id ? id + '|' + (st ? st.id : '') : '';
     pill.hidden = !id || !(H.game && H.game.state && H.game.state.intro);
-    if (!id) { lastPill = ''; return; }
+    if (!id) { lastPill = ''; if (pop) pop.classList.remove('on'); return; }
     var q = quests[id], txt = st ? (typeof st.text === 'function' ? st.text(S()) : st.text) : '';
     pill.querySelector('b').textContent = q.title;
     var ic = pill.querySelector('.ic'), want = q.icon || 'scroll';
     if (ic.getAttribute('data-k') !== want) { ic.setAttribute('data-k', want); try { ic.src = H.icons.url(want, 2); } catch (e) {} }
     pill.querySelector('span').textContent = txt || q.title; pill.title = q.title; pill.setAttribute('aria-label', q.title + ': ' + (txt || ''));
-    if (key !== lastPill && lastPill) { pill.classList.remove('flash'); void pill.offsetWidth; pill.classList.add('flash'); }
+    // a new task or step: slide the line out from the icon for a few seconds, then fold back; a dot stays until tapped
+    if (key !== lastPill && !pill.hidden) { pill.classList.remove('flash'); void pill.offsetWidth; pill.classList.add('flash', 'open'); if (lastPill) pill.classList.add('new'); clearTimeout(peekT); peekT = setTimeout(function () { pill.classList.remove('open'); }, 3000); }
     lastPill = key;
   }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function openLog() {
-    H.ui && H.ui.helper && H.ui.helper('quest', 'Quests', 'What to do next. The top line is your main goal.', 'scroll');
+    H.ui && H.ui.helper && H.ui.helper('questlog', 'Quest log', 'Your open tasks. Only the next step is shown.', 'scroll');
     style(); sfx('page');
     var s = S(), cur = current(), act = [], done = [];
     order.forEach(function (id) { var st = s.quests[id]; if (st) (st.status === 'done' ? done : act).push(id); });

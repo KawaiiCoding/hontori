@@ -170,6 +170,7 @@ window.H = window.H || {};
 
   H.maps.whisperwood = {
     name: 'Whisperwood',
+    labels: [{ x: CL.x, y: CL.y - 4, name: 'Stone circle' }, { x: HL.x, y: HL.y - 4, name: 'Breezy Knoll' }, { x: RK.x, y: RK.y + 3, name: 'Rocky ledge' }],
     w: W, h: HT, tileset: 'outdoor',
     ground: g.map(function (r) { return r.join(''); }),
     legend: { g: 'grass', t: 'tallgrass', f: 'flowers', p: 'path', c: 'cobble', w: 'water', s: 'sand', b: 'bridge' },
