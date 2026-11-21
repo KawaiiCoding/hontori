@@ -143,13 +143,13 @@ window.H = window.H || {};
     if (mapName === 'home' && active()) Object.keys(SPOT).forEach(function (id) {
       if (!onFloor(id)) return;
       var s = SPOT[id], px = s[0] * T, py = s[1] * T, ph = env.t * 2 + s[0] * 0.7 + s[1];
-      lights.push({ x: px + 8, y: py + 8, r: 14, color: '#ffe6a0', flicker: true });
+      lights.push({ x: px + 8, y: py + 8, r: 20, color: '#ffe6a0', flicker: true });
       ents.push({ y: (s[2] || s[1]) * T + T + 1, d: function () {
-        var bob = Math.round(Math.sin(ph) * 1);
-        var gr = ctx.createRadialGradient(px + 8, py + 10, 1, px + 8, py + 10, 9);
-        gr.addColorStop(0, 'rgba(255,230,150,' + (0.45 + Math.sin(ph * 1.3) * 0.12) + ')'); gr.addColorStop(1, 'rgba(255,230,150,0)');
-        ctx.fillStyle = gr; ctx.fillRect(px - 2, py, 20, 20);
-        ctx.save(); ctx.translate(px + 2, py + 2 + bob); ctx.scale(0.75, 0.75); H.items.draw(ctx, id, 0, 0); ctx.restore();
+        var bob = Math.round(Math.sin(ph) * 1.5);
+        var gr = ctx.createRadialGradient(px + 8, py + 10, 1, px + 8, py + 10, 12);
+        gr.addColorStop(0, 'rgba(255,230,150,' + (0.6 + Math.sin(ph * 1.3) * 0.12) + ')'); gr.addColorStop(1, 'rgba(255,230,150,0)');
+        ctx.fillStyle = gr; ctx.fillRect(px - 4, py - 2, 24, 24);
+        ctx.save(); ctx.translate(px + 1, py + 1 + bob); ctx.scale(0.88, 0.88); H.items.draw(ctx, id, 0, 0); ctx.restore();
         var tw = (Math.sin(ph * 1.7) + 1) / 2; if (tw > 0.8) { ctx.fillStyle = 'rgba(255,255,230,' + ((tw - 0.8) * 5) + ')'; ctx.fillRect(px + 12, py + 2 + bob, 1, 1); ctx.fillRect(px + 11, py + 3 + bob, 3, 0.6); }
       } });
     });

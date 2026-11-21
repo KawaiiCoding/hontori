@@ -82,7 +82,8 @@
   }
 
   const tileAt = (x, y) => (grid[y] && grid[y][x]) || (env.indoor ? 'void' : 'grass');
-  const blocked = (x, y) => x < 0 || y < 0 || x >= map.w || y >= map.h || solid[y][x] || npcs.some(n => n.x === x && n.y === y);
+  const blocked = (x, y) => x < 0 || y < 0 || x >= map.w || y >= map.h || solid[y][x] || npcs.some(n => n.x === x && n.y === y) || !!(H.pickups && H.pickups.at(mapName, x, y));
+  let pickBump = ''; // the home item the kid last walked into (so holding the stick does not reopen the choice)
   const DIRS = [[0, 1], [0, -1], [-1, 0], [1, 0]];
 
   // ---------- input
@@ -314,7 +315,8 @@
       academyTrial().catch(e => { console.warn(e); return false; }).then(ok => { busy = false; if (ok) { player.moving = true; player.fx = player.tx; player.fy = player.ty; player.tx = nx; player.ty = ny; player.prog = 0; } });
       return;
     }
-    if (!blocked(nx, ny) || door) { player.moving = true; player.fx = player.tx; player.fy = player.ty; player.tx = nx; player.ty = ny; player.prog = carry || 0; }
+    if (!blocked(nx, ny) || door) { pickBump = ''; player.moving = true; player.fx = player.tx; player.fy = player.ty; player.tx = nx; player.ty = ny; player.prog = carry || 0; }
+    else if (H.pickups && H.pickups.at(mapName, nx, ny) && pickBump !== nx + ',' + ny) { pickBump = nx + ',' + ny; player.frame = 0; interactAt(nx, ny); }
     else { player.frame = 0; if (bumpT <= 0) { sfx('bump'); bumpT = 0.4; } }
   }
 
