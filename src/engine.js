@@ -26,7 +26,14 @@
   resize(); addEventListener('resize', resize);
   // Phones report the new size late after rotating, so also check the real size every frame.
   let lastRW = 0, lastRH = 0;
-  function checkSize() { const r = document.getElementById('root'); if (r.clientWidth !== lastRW || r.clientHeight !== lastRH) { lastRW = r.clientWidth; lastRH = r.clientHeight; resize(); } }
+  // Only rebuild for real size changes (rotation, window resize). The phone address bar showing/hiding
+  // while walking changes the height a little; rebuilding then caused a visible glitch.
+  function checkSize() {
+    const r = document.getElementById('root'), w = r.clientWidth, h = r.clientHeight;
+    if (w === lastRW && h === lastRH) return;
+    const big = w !== lastRW || Math.abs(h - lastRH) > lastRH * 0.18 || (w > h) !== (lastRW > lastRH);
+    if (big) { lastRW = w; lastRH = h; resize(); }
+  }
   addEventListener('orientationchange', () => setTimeout(resize, 250));
   const particles = H.fx && H.fx.createParticles ? H.fx.createParticles() : null;
   const emit = (k, x, y, n) => particles && particles.emit(k, x, y, n);
@@ -321,7 +328,7 @@
     }
     if (player.moving) {
       const run = keys.shift || ((H.ui && H.ui.input && (H.ui.input.run || H.ui.input.back)) ? true : false);
-      player.prog += dt / (run ? 0.15 : 0.28);
+      player.prog += dt / (run ? 0.14 : 0.24);
       if (player.prog >= 1) {
         const left = player.prog - 1; player.moving = false; player.steps++; sfx('step');
         player.x = player.tx * T + 8; player.y = player.ty * T + 15;
