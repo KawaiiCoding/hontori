@@ -455,5 +455,43 @@
   }
   function hexA(h, a) { var n = parseInt(h.slice(1), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
 
-  H.moves = { MOVES: MOVES, ANIM: ANIM, COL: COL, linger: linger, charge: charge, guard: guard, hex: hex, heal: heal, glow: glow, blob: blob, ring: ring, hexA: hexA };
+  // ---------------------------------------------------------------- pools (grow with level)
+  // The first three keep their old order (battle foes use [0] basic and [1] signature).
+  var LEARN = [1, 4, 1];
+  var EXTRA = {
+    fire: [['cinder_dash', 'Cinder Dash', 6, 0, 'ember_nip', 'A dash of hot sparks.'], ['blaze_crown', 'Blaze Crown', 11, 4, 'flare_tail', 'A crown of fire falls.'], ['spark_rush', 'Spark Rush', 7, 2, 'ember_nip', 'Two fast fiery bites.']],
+    water: [['ripple_slap', 'Ripple Slap', 6, 0, 'curl_wave', 'A quick slap of water.'], ['tidal_crash', 'Tidal Crash', 11, 4, 'torrent_jet', 'The whole tide crashes.'], ['bubble_burst', 'Bubble Burst', 7, 2, 'curl_wave', 'Bubbles pop in a row.']],
+    wind: [['gust_cut', 'Gust Cut', 6, 0, 'crescent_blade', 'A thin cut of air.'], ['sky_rend', 'Sky Rend', 11, 4, 'spiral_gale', 'The sky splits open.'], ['feather_storm', 'Feather Storm', 7, 2, 'crescent_blade', 'A storm of sharp air.']],
+    grass: [['seed_shot', 'Seed Shot', 6, 0, 'leaf_volley', 'Hard seeds, fired fast.'], ['bramble_wall', 'Bramble Crush', 11, 4, 'thorn_lash', 'Brambles close in.'], ['petal_dance', 'Petal Dance', 7, 2, 'leaf_volley', 'A whirl of petals.']],
+    electric: [['jolt', 'Jolt', 6, 0, 'arc_crackle', 'A small sharp jolt.'], ['storm_lance', 'Storm Lance', 11, 4, 'sky_fork', 'A spear of lightning.'], ['chain_spark', 'Chain Spark', 7, 2, 'arc_crackle', 'Sparks leap twice.']],
+    earth: [['pebble_shot', 'Pebble Shot', 6, 0, 'boulder_toss', 'A rain of pebbles.'], ['quake', 'Quake', 11, 4, 'stone_eruption', 'The ground heaves.'], ['rock_roll', 'Rock Roll', 7, 2, 'boulder_toss', 'A rolling stone.']],
+    dark: [['dusk_bite', 'Dusk Bite', 6, 0, 'shadow_claw', 'A bite from the shade.'], ['abyss_grip', 'Abyss Grip', 11, 4, 'night_tendrils', 'The deep dark grips.'], ['shade_flurry', 'Shade Flurry', 7, 2, 'shadow_claw', 'Quick shadow cuts.']],
+    light: [['glint', 'Glint', 6, 0, 'halo_burst', 'A sharp flash of light.'], ['sunfall', 'Sunfall', 11, 4, 'dawn_beam', 'Sunlight falls hard.'], ['prism_ray', 'Prism Ray', 7, 2, 'halo_burst', 'Light split in colours.']]
+  };
+  var EXTRA_LV = [7, 13, 19];
+  var POOL = {}, BY_ID = {};
+  Object.keys(MOVES).forEach(function (el) {
+    MOVES[el].forEach(function (m, i) { m.learnLevel = LEARN[i]; m.el = m.el || el; });
+    var list = MOVES[el].slice();
+    (EXTRA[el] || []).forEach(function (e, i) {
+      var m = { id: e[0], name: e[1], pow: e[2], desc: e[5], learnLevel: EXTRA_LV[i], el: el };
+      if (e[3]) m.cd = e[3];
+      ANIM[m.id] = ANIM[e[4]];
+      list.push(m);
+    });
+    list.sort(function (a, b) { return a.learnLevel - b.learnLevel; });
+    POOL[el] = list; list.forEach(function (m) { BY_ID[m.id] = m; });
+  });
+  // per-species pools (none differ yet); anything not listed uses its element's pool
+  var SPECIES = {};
+  function elementOf(key) {
+    var l = (H.spirits && H.spirits.list) || [];
+    for (var i = 0; i < l.length; i++) if (l[i].key === key) return l[i].element;
+    return MOVES[key] ? key : 'fire';
+  }
+  function pool(key) { return (SPECIES[key] || POOL[elementOf(key)] || POOL.fire).slice(); }
+  function learned(m) { var lv = (m && m.level) || 1; return pool(m && m.key).filter(function (x) { return x.learnLevel <= lv; }); }
+  function byId(id) { return BY_ID[id] || null; }
+
+  H.moves = { pool: pool, learned: learned, byId: byId, POOL: POOL, MOVES: MOVES, ANIM: ANIM, COL: COL, linger: linger, charge: charge, guard: guard, hex: hex, heal: heal, glow: glow, blob: blob, ring: ring, hexA: hexA };
 })();
