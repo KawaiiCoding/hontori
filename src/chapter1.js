@@ -222,8 +222,8 @@ window.H = window.H || {};
     var start0 = H.battle.start;
     H.battle.start = function (o) {
       var self = this, args = arguments, wild = !(o && o.trainer);
-      return tip('tip:move', 'Tap a move and I will fight. Stay close, and we will be all right.')
-        .then(function () { return start0.apply(self, args); })
+      // moves are taught by the fox guide inside the battle; no extra tip before it
+      return Promise.resolve().then(function () { return start0.apply(self, args); })
         .then(function (r) {
           var p = Promise.resolve();
           if (r && r.won && !r.captured && wild && spells().indexOf('bind') < 0)
