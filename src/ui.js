@@ -357,9 +357,10 @@ window.H = window.H || {};
     var w = env.weather || 'clear';
     if (!/^(clear|cloudy|rain|storm|wind|snow|fog)$/.test(w)) w = 'clear';
     // a clear sky at night is already told by the moon icon
-    var showW = !(w === 'clear' && ti === 'night');
+    // the time icon already shows sun or moon; only show real weather, and never indoors
+    var showW = w !== 'clear' && !env.indoor;
     var timeStr = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-    var key = (placeName || '') + '|' + timeStr + '|' + ti + '|' + w + '|' + (H.icons ? 1 : 0);
+    var key = (placeName || '') + '|' + timeStr + '|' + ti + '|' + w + '|' + (env.indoor ? 1 : 0) + '|' + (H.icons ? 1 : 0);
     if (key === lastHud) return;
     lastHud = key;
     els.hud.style.display = placeName === null ? 'none' : 'flex';
