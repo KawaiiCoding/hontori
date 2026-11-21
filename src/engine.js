@@ -79,7 +79,9 @@
   });
   addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
   let touchActionPrev = false;
+  let started = !H.title; if (H.title) H.title.ready.then(() => { started = true; actionQueued = false; });
   function readInput() {
+    if (!started) { actionQueued = false; return { dx: 0, dy: 0, act: false }; }
     const ti = (H.ui && H.ui.input) || { dx: 0, dy: 0, action: false };
     let dx = (keys.arrowright || keys.d ? 1 : 0) - (keys.arrowleft || keys.a ? 1 : 0) + (ti.dx || 0);
     let dy = (keys.arrowdown || keys.s ? 1 : 0) - (keys.arrowup || keys.w ? 1 : 0) + (ti.dy || 0);
@@ -359,7 +361,7 @@
     loadMap(Q.get('scene') || 'home', Q.get('tx') ? +Q.get('tx') : undefined, Q.get('ty') ? +Q.get('ty') : undefined);
     if (Q.get('time')) env.time = +Q.get('time'); if (Q.get('weather')) env.weather = Q.get('weather');
     if (Q.get('nointro')) { H.game.state.party = [mkMember('hontori')]; H.game.state.intro = true; spirit = { key: 'hontori', x: player.x + 14, y: player.y - 10 }; }
-    else setTimeout(runIntro, 800);
+    else (H.title ? H.title.ready : Promise.resolve()).then(() => setTimeout(runIntro, 500));
   }
   H.menu && H.menu.init(document.getElementById('root'));
   requestAnimationFrame(loop);
