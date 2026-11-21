@@ -224,6 +224,7 @@
         var bs = mk('div', 'hm-btns', card);
         var why = p.hp >= p.maxHp ? 'Already well' : mn < 1 ? 'No mana left' : null;
         var md = kb(bs, { icon: 'mend', label: 'Mend', desc: why || 'Heal, 1 mana', kind: 'alt', sm: true, onClick: function () { mend(p); } }); md.disabled = !!why;
+        kb(bs, { icon: 'feather', label: 'Name', desc: 'Give it a name', kind: 'alt', sm: true, onClick: function () { H.naming && H.naming.ask(p.nick || '', portrait(p.key), 'Name your hontori').then(function (v) { if (v) { p.nick = v; g.save && g.save(); refresh(); } }); } });
         if (i > 0) kb(bs, { icon: 'star', label: 'Lead', desc: 'Walks with you', kind: 'alt', sm: true, onClick: function () { st.party.splice(i, 1); st.party.unshift(p); g.partyChanged && g.partyChanged(); refresh(); } });
         if (P()) kb(bs, { icon: 'claw', label: 'Moves', desc: 'Pick 4 for battle', kind: 'alt', sm: true, onClick: function () { moveFor = p; show('moves'); } });
         if (st.party.length > 1 && P()) kb(bs, { icon: 'crystal', label: 'Rest', desc: 'Into the Sanctum', kind: 'alt', sm: true, onClick: function () { P().toSanctum(i); } });
@@ -304,6 +305,7 @@
       return;
     }
     header(displayName(m), 'crystal', 'Resting in the Sanctum');
+    kb(els.sheet, { icon: 'feather', label: 'Name', desc: 'Give it a name', kind: 'alt', sm: true, onClick: function () { H.naming && H.naming.ask(m.nick || '', portrait(m.key), 'Name your hontori').then(function (v) { if (v) { m.nick = v; H.game.save && H.game.save(); render(); } }); } });
     var d = mk('div', 'hm-det', els.sheet), pc = copyCanvas(portrait(m.key, m.stage), 96); d.appendChild(pc);
     var inf = mk('div', 'inf', d); inf.style.flex = '1';
     var nm = mk('div', '', inf); nm.style.cssText = 'font-size:17px;font-weight:900;display:flex;gap:8px;align-items:center;flex-wrap:wrap';

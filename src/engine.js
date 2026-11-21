@@ -117,6 +117,9 @@
   };
   const COLORS = { hontori: '#ffb04a', kid: '#7cc8ff', mom: '#ff9fc2', dad: '#9fe0a0' };
   // 'hontori' is the word for all spirits (a kind, not a name). The companion is nameless until the player names it.
+  try { Object.defineProperty(H, 'spiritName', { configurable: true, get() {
+    const st = H.game && H.game.state; if (!st) return null;
+    const m = (st.party || []).concat(st.sanctum || []).find(p => p && p.key === 'hontori'); return (m && m.nick) || null; } }); } catch (e) {}
   async function say(key, name, text) { if (key === 'hontori') name = H.spiritName || 'Fire Hontori'; if (H.ui) await H.ui.say(name, text, portrait(key), COLORS[key] || '#ffe08a'); }
 
   // Chimney entrance: camera to the hearth, the fox drops down the flue, shakes off soot, then walks to the kid.
@@ -166,6 +169,11 @@
     }
     H.game.state.intro = true;
     if (!H.game.state.party.length) H.game.state.party.push(mkMember('hontori'));
+    if (H.naming && !H.game.state.party[0].nick) {
+      await say('hontori', 'Fire Hontori', 'A name for me, if you would. Something warm, something good.');
+      const nm = await H.naming.ask('', portrait('hontori'), 'Name your fire hontori');
+      if (nm) { H.game.state.party[0].nick = nm; await say('hontori', nm, nm + ' it is. I like the ring of it.'); }
+    }
     H.game.addItem('wand', 'Spirit Wand', 'wand'); H.game.addItem('ember_dust', 'Ember Dust', 'backpack'); H.game.save();
     busy = false;
   }
