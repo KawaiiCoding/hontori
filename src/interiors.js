@@ -125,8 +125,8 @@ window.H = window.H || {};
     name: 'Fenn\'s House', w: 14, h: 11, floor: 'F', door: 7,
     fills: [[8, 2, 12, 4, 'S'], [2, 5, 6, 8, 'R']],
     props: [
-      pr('picture', 2, 1), pr('window', 4, 1), pr('window', 9, 1), pr('notice_board', 11, 1),
-      pr('bookshelf', 1, 2), pr('fireplace', 9, 2), pr('clock', 12, 2),
+      pr('window', 4, 1), pr('picture', 6, 1), pr('window', 12, 1),
+      pr('bookshelf', 1, 2), pr('fireplace', 9, 2), pr('clock', 7, 2),
       pr('sofa', 3, 6), pr('floor_lamp', 1, 6), pr('table', 9, 6), pr('chair', 8, 6), pr('chair', 11, 7),
       pr('bed', 12, 4), pr('bookstack', 1, 9), pr('flower_vase', 12, 9), pr('plant', 5, 9)
     ],
