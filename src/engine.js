@@ -172,7 +172,7 @@
     if (H.naming && !H.game.state.party[0].nick) {
       await say('hontori', 'Fire Hontori', 'A name for me, if you would. Something warm, something good.');
       const nm = await H.naming.ask('', portrait('hontori'), 'Name your fire hontori');
-      if (nm) { H.game.state.party[0].nick = nm; await say('hontori', nm, nm + ' it is. I like the ring of it.'); }
+      if (nm) { H.game.state.party[0].nick = nm; await say('hontori', nm, nm + ' it is. A name to keep, awake or asleep.'); }
     }
     H.game.addItem('wand', 'Spirit Wand', 'wand'); H.game.addItem('ember_dust', 'Ember Dust', 'backpack'); H.game.save();
     busy = false;
