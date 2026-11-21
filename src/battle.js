@@ -940,7 +940,7 @@
       busy = false; renderUI(); say(hintLine());
       mvBtns.forEach(function (b) { b.classList.toggle('hot', tut === 0); });
       if (tut === 1) { sheetBtn.classList.add('hot'); chips.mend.classList.add('hot'); }
-      if (TR && TR.lesson && round === 1 && SPELLS[TR.lesson]) setTimeout(function () { if (!busy && !done) say((TR.name || 'Trainer') + ': try the ' + SPELLS[TR.lesson].name + ' (' + SPELLS[TR.lesson].how + ').'); }, 50);
+      if (TR && TR.lesson && round === 1 && SPELLS[TR.lesson] && known.indexOf(TR.lesson) >= 0) setTimeout(function () { if (!busy && !done) say((TR.name || 'Trainer') + ': try the ' + SPELLS[TR.lesson].name + ' (' + SPELLS[TR.lesson].how + ').'); }, 50);
     }
 
     // ---------------- damage
