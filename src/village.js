@@ -51,74 +51,63 @@ window.H = window.H || {};
   }
   var x, y;
 
-  // ---------- river: constant 3-wide water, 1-tile sand banks, two gentle bends ----------
-  function riverX(yy) { return yy <= 10 ? 40 : yy <= 26 ? 41 : 42; }
+  // ================= LAYOUT =================
+  // river (east, gentle bends) - 3 wide water with 1-tile sand banks
+  function riverX(yy) { return yy <= 12 ? 48 : yy <= 30 ? 49 : 48; }
   for (y = 0; y < HT; y++) {
     var cx = riverX(y);
     set(cx - 2, y, 's'); set(cx + 2, y, 's');
     for (x = cx - 1; x <= cx + 1; x++) set(x, y, 'w');
   }
-  // fill the bank corners at each bend so the sand strip stays continuous
-  [[10, 40], [26, 41]].forEach(function (bd) { var yy = bd[0], c0 = bd[1]; set(c0 + 2, yy + 1, 'w'); set(c0 + 3, yy, 's'); set(c0 - 2, yy + 1, 's'); });
-  // ---------- pond (south-west): compact rounded blob ----------
-  for (y = 28; y <= 39; y++) for (x = 1; x <= 15; x++) {
-    var pdx = (x - 8) / 5.2, pdy = (y - 33.5) / 3.7, pd = pdx * pdx + pdy * pdy;
-    if (pd < 0.5) set(x, y, 'w'); else if (pd < 0.95) set(x, y, 's');
+  set(46, 13, 's'); set(50, 12, 'w'); set(51, 12, 's'); set(47, 13, 'w'); set(47, 30, 's');
+  set(50, 31, 's'); set(49, 31, 'w'); set(48, 30, 'w'); set(46, 31, 's'); set(51, 30, 's');
+  // pond: calm north-west corner
+  for (y = 2; y <= 12; y++) for (x = 1; x <= 14; x++) {
+    var pdx = (x - 7.5) / 4.8, pdy = (y - 7) / 3.2, pd = pdx * pdx + pdy * pdy + (hash(x, y, 3) - 0.5) * 0.12;
+    if (pd < 0.55) set(x, y, 'w'); else if (pd < 0.95) set(x, y, 's');
   }
-  // ---------- meadows: compact patches ----------
-  soft(52, 16.5, 5.5, 3.2, 5, function (x, y, d) { if (d < 1 && get(x, y) === 'g') set(x, y, 'f'); });
-  soft(53, 35, 5, 3.2, 7, function (x, y, d) { if (d < 1 && get(x, y) === 'g') set(x, y, 't'); });
-  soft(5, 24.5, 3.2, 2.6, 8, function (x, y, d) { if (d < 1) set(x, y, 't'); });
-  soft(32, 35.5, 4.5, 2.4, 12, function (x, y, d) { if (d < 1 && get(x, y) === 'g') set(x, y, 'f'); });
-  soft(20, 36, 3.5, 2, 14, function (x, y, d) { if (d < 1) set(x, y, 'f'); });
-  soft(35, 6, 3, 2.2, 15, function (x, y, d) { if (d < 1) set(x, y, 't'); });
-  soft(57, 30.5, 2.2, 2.2, 16, function (x, y, d) { if (d < 1) set(x, y, 't'); });
-  soft(13, 21.5, 3, 1.4, 17, function (x, y, d) { if (d < 1) set(x, y, 'f'); });
+  // flower meadow (east of river, north) and wildflower verges
+  soft(55, 9, 3.6, 4.2, 5, function (x, y, d) { if (d < 1 && get(x, y) === 'g') set(x, y, 'f'); });
+  soft(40, 36, 3, 1.6, 12, function (x, y, d) { if (d < 1 && get(x, y) === 'g') set(x, y, 'f'); });
+  // tall grass (encounter zones) - edges only, away from houses
+  soft(55.5, 31, 3.2, 4.5, 7, function (x, y, d) { if (d < 1 && get(x, y) === 'g') set(x, y, 't'); });
+  soft(17, 5, 3.4, 2.2, 8, function (x, y, d) { if (d < 1 && get(x, y) === 'g') set(x, y, 't'); });
+  soft(42.5, 4.5, 2.6, 2.4, 9, function (x, y, d) { if (d < 1 && get(x, y) === 'g') set(x, y, 't'); });
 
-  // ---------- buildings ----------
+  // buildings
   var FP = { house_player: [6, 4], house_a: [5, 4], tavern: [8, 5], shop: [6, 4], school: [10, 6] };
   var buildings = [
-    { type: 'school', x: 22, y: 3 },
-    { type: 'house_player', x: 6, y: 11 },
-    { type: 'house_a', x: 14, y: 11 },
-    { type: 'house_a', x: 47, y: 9 },
-    { type: 'house_a', x: 50, y: 26 },
-    { type: 'tavern', x: 12, y: 24 },
-    { type: 'shop', x: 30, y: 24 }
+    { type: 'school', x: 25, y: 4 },
+    { type: 'house_player', x: 4, y: 29 },
+    { type: 'house_a', x: 13, y: 29 },
+    { type: 'house_a', x: 21, y: 29 },
+    { type: 'house_a', x: 35, y: 29 },
+    { type: 'tavern', x: 13, y: 16 },
+    { type: 'shop', x: 38, y: 17 }
   ];
   function doorOf(b) { var f = FP[b.type]; return { x: b.x + Math.floor(f[0] / 2), y: b.y + f[1] - 1 }; }
 
-  // ---------- plaza: clean cobble rectangle with clipped corners ----------
-  rect(22, 15, 33, 22, 'c');
-  set(22, 15, 'g'); set(33, 15, 'g'); set(22, 22, 'g'); set(33, 22, 'g');
-  rect(26, 9, 28, 14, 'c');                  // school forecourt walk
-
-  // ---------- roads (2 wide) and garden paths (1 wide), straight with right angles ----------
-  trail([[0, 18], [21, 18]], 2, 'p');                       // west road, straight past the house row
-  trail([[34, 18], [59, 18]], 2, 'p');                      // east road + bridge
-  trail([[9, 15], [9, 17]], 1, 'p');                        // player house
-  trail([[16, 15], [16, 17]], 1, 'p');                      // house_a 1
-  trail([[49, 13], [49, 17]], 1, 'p');                      // house_a 2
-  trail([[52, 30], [48, 30], [48, 20]], 1, 'p');            // house_a 3
-  trail([[24, 23], [24, 30]], 1, 'p');                      // plaza -> south lane
-  trail([[12, 30], [37, 30]], 1, 'p');                      // south lane
-  trail([[16, 29], [16, 30]], 1, 'p');                      // tavern
-  trail([[33, 28], [33, 30]], 1, 'p');                      // shop
-  trail([[37, 30], [37, 33], [50, 33], [50, 36]], 1, 'p');  // footbridge into the wild meadow
-  trail([[4, 17], [4, 9], [6, 9], [6, 6]], 1, 'p');         // up to west orchard
-  trail([[50, 13], [55, 13], [55, 5]], 1, 'p');             // to cherry grove
-  trail([[25, 9], [17, 9], [17, 7]], 1, 'p');               // school side lane to the old garden
-
-  // ground under buildings
+  // plaza + school terrace
+  rect(23, 16, 36, 24, 'c');
+  set(23, 16, 'g'); set(36, 16, 'g'); set(23, 24, 'g'); set(36, 24, 'g');
+  rect(27, 10, 32, 11, 'c');                      // school forecourt
+  rect(29, 12, 30, 15, 'c');                      // steps down to the plaza
+  // roads (2 wide) and lanes
+  trail([[29, 25], [29, 39]], 2, 'p');            // main road from the south gate
+  trail([[0, 22], [22, 22]], 2, 'p');             // west road past the tavern
+  trail([[37, 22], [59, 22]], 2, 'p');            // east road over the bridge
+  trail([[3, 33], [44, 33]], 2, 'p');             // residential lane
+  trail([[54, 21], [54, 14]], 1, 'p');            // meadow path
+  trail([[2, 21], [2, 13]], 1, 'p');              // orchard path to the pond
+  // ground under buildings, path below every door
   buildings.forEach(function (b) { var f = FP[b.type]; rect(b.x, b.y, b.x + f[0] - 1, b.y + f[1] - 1, 'g'); });
-  // tiles just below doors must be walkable path
-  buildings.forEach(function (b) { var d = doorOf(b); if (get(d.x, d.y + 1) !== 'c') set(d.x, d.y + 1, 'p'); });
+  buildings.forEach(function (b) { var d = doorOf(b); for (var yy = d.y + 1; yy < HT && get(d.x, yy) === 'g'; yy++) set(d.x, yy, 'p'); });
 
-  // ---------- occupancy ----------
+  // occupancy
   var occ = []; for (y = 0; y < HT; y++) { occ.push([]); for (x = 0; x < W; x++) occ[y].push(0); }
   function res(x0, y0, x1, y1) { for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) if (occ[y] && x >= 0 && x < W) occ[y][x] = 1; }
   buildings.forEach(function (b) { var f = FP[b.type]; res(b.x, Math.max(0, b.y - 3), b.x + f[0] - 1, b.y + f[1] - 1); var d = doorOf(b); res(d.x - 1, d.y + 1, d.x + 1, d.y + 2); });
-  for (y = 0; y < HT; y++) for (x = 0; x < W; x++) { var ch = g[y][x]; if (ch === 'p' || ch === 'b') occ[y][x] = 1; }
+  for (y = 0; y < HT; y++) for (x = 0; x < W; x++) { var ch = g[y][x]; if (ch === 'p' || ch === 'b' || ch === 'c') occ[y][x] = 1; }
 
   var INFO = (H.propsOutdoor && H.propsOutdoor.info) || {};
   var props = [];
@@ -126,7 +115,6 @@ window.H = window.H || {};
   function okGround(t, c) {
     if (t === 'lilypad') return c === 'w';
     if (t === 'reeds') return c === 's' || c === 'w';
-    if (t === 'stepping_stone') return c === 'g' || c === 's' || c === 'f' || c === 't';
     return c === 'g' || c === 'f' || c === 't' || c === 's';
   }
   function put(t, x, y, any) {
@@ -141,102 +129,109 @@ window.H = window.H || {};
     return true;
   }
 
-  // ---------- villagers (reserve their tiles + approach) ----------
+  // villagers: every look is unique, each fits its spot
   var npcs = [
-    { key: 'elder', x: 25, y: 17, dir: 0, lines: [['Elder Wisteria', 'Soot on your nose? Chimney children are lucky.'], ['Elder Wisteria', 'The old well hums when nobody is listening.']] },
-    { key: 'innkeeper', x: 20, y: 29, dir: 2, lines: [['Big Bo', 'Ramen is on! Best broth this side of the river.'], ['Big Bo', 'Something keeps stealing my fish cakes. Wet pawprints!']] },
-    { key: 'shopkeeper', x: 35, y: 28, dir: 2, lines: [['Nettle', 'Potions, packs and practical things!'], ['Nettle', 'I crossed Whistling Pass twice. Lost a boot, found a friend.']] },
-    { key: 'girl', x: 12, y: 32, dir: 2, lines: [['Mira', 'Stay still and the pond sparkles back at you.'], ['Mira', 'Grandma says sunlight. But sunlight does not giggle.']] },
-    { key: 'boy', x: 47, y: 32, dir: 2, lines: [['Tobin', 'Never walk the tall grass without a buddy.'], ['Tobin', 'A spark with ears zapped my kite string!']] },
-    { key: 'girl', x: 56, y: 9, dir: 2, lines: [['Pell', 'I count falling petals. Ninety-one so far today.'], ['Pell', 'At night the blossoms glow. Nobody believes me.']] },
-    { key: 'elder', x: 37, y: 13, dir: 3, lines: [['Old Oru', 'Fifty years fishing. One fish. His name is Gerald.'], ['Old Oru', 'The river rose this spring. Something stirs upstream.']] },
-    { key: 'boy', x: 29, y: 11, dir: 0, lines: [['Kip', 'The Academy only takes kids who see hidden things.'], ['Kip', 'I squinted for a week. Just got headaches.']] }
+    { key: 'elder', x: 33, y: 12, dir: 0, lines: [['Elder Wisteria', 'The Academy sees what others miss.'], ['Elder Wisteria', 'Soot on your nose is a lucky sign.']] },
+    { key: 'baker', x: 25, y: 19, dir: 3, lines: [['Rosa', 'Fresh buns, still warm.'], ['Rosa', 'Something nibbles my crusts at night.']] },
+    { key: 'innkeeper', x: 22, y: 19, dir: 0, lines: [['Big Bo', 'Ramen is on all day.'], ['Big Bo', 'Wet pawprints keep stealing fish cakes.']] },
+    { key: 'shopkeeper', x: 45, y: 20, dir: 2, lines: [['Nettle', 'Potions and packs, fair prices.'], ['Nettle', 'Never travel without a spare boot.']] },
+    { key: 'fisher', x: 46, y: 9, dir: 3, lines: [['Old Oru', 'The river is quiet today.'], ['Old Oru', 'Something big stirs upstream.']] },
+    { key: 'grandma', x: 11, y: 12, dir: 1, lines: [['Grandma Fen', 'I feed the ducks every morning.'], ['Grandma Fen', 'The pond sparkles back if you wait.']] },
+    { key: 'farmer', x: 7, y: 17, dir: 0, lines: [['Farmer Hob', 'Apples are nearly ripe.'], ['Farmer Hob', 'Help yourself to a windfall.']] },
+    { key: 'guard', x: 32, y: 37, dir: 0, lines: [['Guard Bram', 'The south gate is open.'], ['Guard Bram', 'Take a friend into the tall grass.']] },
+    { key: 'gardener', x: 57, y: 13, dir: 2, lines: [['Ivy', 'These flowers hum at dusk.'], ['Ivy', 'Please step around the seedlings.']] },
+    { key: 'traveler', x: 56, y: 24, dir: 2, lines: [['Wren', 'I walked here from Whistling Pass.'], ['Wren', 'Your village feels warm.']] },
+    { key: 'kid2', x: 19, y: 36, dir: 0, lines: [['Kip', 'I am racing the snails today.'], ['Kip', 'The slow one always wins.']] },
+    { key: 'boy', x: 52, y: 28, dir: 3, lines: [['Tobin', 'Never walk the tall grass alone.'], ['Tobin', 'A spark with ears zapped my kite.']] },
+    { key: 'girl', x: 34, y: 26, dir: 0, lines: [['Mira', 'The well hums when it is quiet.'], ['Mira', 'Grandma says that is just the wind.']] }
   ];
   npcs.forEach(function (n) { res(n.x - 1, n.y - 1, n.x + 1, n.y + 1); });
 
-  // ---------- plaza ----------
-  put('well', 27, 18, true);
-  put('market_stall', 22, 16, true); put('market_stall', 31, 16, true); put('market_stall', 31, 21, true);
-  put('statue', 23, 21, true);
-  put('lamp', 25, 15, true); put('lamp', 30, 15, true); put('lamp', 22, 19, true); put('lamp', 33, 20, true);
-  put('bench', 28, 22, true);
-  put('flowerbed', 25, 13); put('flowerbed', 29, 13);
-  put('lantern_string', 26, 15, true);
-  put('crate', 21, 17); put('barrel', 34, 17); put('cart', 34, 22);
-  put('sign', 29, 9); put('windchime', 24, 10);
-  // ---------- home garden (player) ----------
-  put('mailbox', 8, 15); put('flowerbed', 11, 15);
-  put('garden_bed', 2, 15); put('garden_bed', 2, 17); put('pumpkin', 5, 15); put('pumpkin', 5, 17);
-  put('birdbath', 12, 16); put('laundry_line', 11, 9, true);
-  for (x = 1; x <= 4; x++) put('fence_h', x, 14);
-  put('fence_v', 0, 15); put('fence_v', 0, 16); put('fence_v', 0, 17);
-  put('hay_bale', 1, 19 - 1); put('butterfly_bush', 13, 17);
-  // neighbour house_a 1
-  put('mailbox', 15, 15); put('flowerbed', 18, 15); put('barrel', 19, 13); put('log_pile', 19, 16);
-  // ---------- west orchard (apples) ----------
-  [[1, 4], [4, 3], [7, 4], [2, 7], [6, 8], [9, 6], [11, 3]].forEach(function (p) { put('fruit_tree', p[0], p[1]); });
-  put('hay_bale', 8, 1); put('crate', 4, 5); put('cart', 7, 9 - 0);
-  // ---------- old garden behind school lane ----------
-  put('garden_bed', 15, 4); put('garden_bed', 18, 5); put('pumpkin', 14, 7); put('pumpkin', 20, 4); put('birdbath', 13, 4);
-  // ---------- tavern & shop ----------
-  put('barrel', 20, 27); put('barrel', 20, 28); put('crate', 11, 27); put('crate', 11, 28); put('bench', 13, 30 - 0);
-  put('lantern_string', 13, 29 + 0, true);
-  put('crate', 36, 25); put('crate', 37, 25); put('barrel', 36, 27); put('sign', 29, 27); put('flowerbed', 30, 28);
-  put('lamp', 21, 25); put('lamp', 29, 29); put('lamp', 15, 21); put('lamp', 36, 21); put('lamp', 46, 22);
-  // ---------- river: reeds, rocks, fishing spot ----------
+  // ---- plaza: well centre, stalls, benches, lamps at the corners ----
+  put('well', 29, 19, true);
+  put('market_stall', 24, 17, true); put('market_stall', 33, 17, true);
+  put('bench', 24, 23, true); put('bench', 34, 23, true);
+  put('lamp', 23, 17, true); put('lamp', 36, 17, true); put('lamp', 23, 23, true); put('lamp', 36, 23, true);
+  put('flowerbed', 26, 21, true); put('flowerbed', 32, 21, true);
+  put('lantern_string', 28, 16, true);
+  put('statue', 31, 23, true);
+  // ---- school terrace: low wall with a stair gap, framed by trees ----
+  for (x = 21; x <= 38; x++) if (x < 29 || x > 30) put('stone_wall_h', x, 12);
+  put('flowerbed', 27, 11, true); put('flowerbed', 31, 11, true);
+  put('lamp', 28, 14); put('lamp', 31, 14);
+  put('sign', 32, 15);
+  [[22, 5], [23, 8], [21, 10], [36, 5], [37, 8], [38, 10], [24, 2], [35, 2]].forEach(function (p, i) { put(i % 2 ? 'pine' : 'tree', p[0], p[1]); });
+  put('bush', 24, 10); put('bush', 35, 10);
+  // ---- tavern: barrels & crates at its sides ----
+  put('barrel', 12, 19); put('barrel', 12, 20); put('crate', 21, 20); put('barrel', 21, 21 - 1 + 1);
+  put('bench', 14, 21 + 0); put('lantern_string', 14, 15, true);
+  put('lamp', 11, 21); put('sign', 20, 21);
+  // ---- shop: crates by the side, sign ----
+  put('crate', 44, 18); put('crate', 44, 19); put('barrel', 37, 19); put('barrel', 37, 20); put('sign', 39, 21); put('cart', 42, 15);
+  // ---- lamps along roads ----
+  [[28, 27], [31, 30], [28, 35], [31, 38]].forEach(function (p) { put('lamp', p[0], p[1]); });
+  [[6, 21], [16, 24], [43, 21], [52, 24], [57, 21]].forEach(function (p) { put('lamp', p[0], p[1]); });
+  [[10, 32], [18, 35], [26, 32], [40, 35], [33, 35]].forEach(function (p) { put('lamp', p[0], p[1]); });
+  // ---- house row: mailboxes + small fenced gardens across the lane ----
+  buildings.forEach(function (b) {
+    if (b.type !== 'house_a' && b.type !== 'house_player') return;
+    var d = doorOf(b);
+    put('mailbox', d.x + 2, d.y + 1);
+    var gx = b.x, gy = 35;
+    for (var xx = gx; xx < gx + 5; xx++) put('fence_h', xx, gy + 2);
+    put('fence_v', gx, gy); put('fence_v', gx, gy + 1); put('fence_v', gx + 4, gy); put('fence_v', gx + 4, gy + 1);
+    put('garden_bed', gx + 1, gy); put('pumpkin', gx + 3, gy); put('flower_patch', gx + 2, gy + 1, true);
+  });
+  put('laundry_line', 10, 30, true); put('birdbath', 11, 31); put('log_pile', 19, 31); put('butterfly_bush', 26, 31);
+  put('hay_bale', 41, 31); put('barrel', 34, 31);
+  // ---- orchard (west, tidy rows) ----
+  for (y = 14; y <= 18; y += 2) for (x = 4; x <= 10; x += 3) if (!(x === 7 && y === 16)) put('fruit_tree', x + (y === 16 ? 1 : 0), y);
+  put('crate', 5, 20); put('hay_bale', 9, 20); put('cart', 3, 26 - 1);
+  // ---- pond: lilypads, reeds, bench ----
+  [[5, 6], [9, 7], [7, 8], [10, 5]].forEach(function (p) { put('lilypad', p[0], p[1]); });
+  for (y = 2; y <= 12; y++) for (x = 1; x <= 14; x++) if (g[y][x] === 's' && hash(x, y, 40) < 0.2) put('reeds', x, y);
+  put('bench', 6, 11 + 1); put('rock', 13, 4); put('stepping_stone', 12, 9, true);
+  // ---- river: reeds, lilypads, a fishing spot ----
   for (y = 0; y < HT; y++) {
     var rx = riverX(y);
-    if (y > 17 && y < 23) continue;
-    if (hash(1, y, 31) < 0.35) put('reeds', rx - 2, y);
+    if (y > 19 && y < 25) continue;
+    if (hash(1, y, 31) < 0.3) put('reeds', rx - 2, y);
     if (hash(2, y, 32) < 0.3) put('reeds', rx + 2, y);
-    if (hash(3, y, 33) < 0.12) put('lilypad', rx, y);
+    if (hash(3, y, 33) < 0.1) put('lilypad', rx, y);
   }
-  put('rock', 36, 11); put('crate', 36, 14); put('bench', 34, 12);
-  // ---------- pond: lilypads, reeds, stepping stones ----------
-  [[6, 33], [9, 34], [5, 35], [10, 32], [8, 36]].forEach(function (p) { put('lilypad', p[0], p[1]); });
-  for (y = 29; y <= 38; y++) for (x = 1; x <= 15; x++) if (g[y][x] === 's' && hash(x, y, 40) < 0.22) put('reeds', x, y);
-  put('stepping_stone', 11, 31, true); put('stepping_stone', 15, 33); put('rock', 2, 31); put('bench', 4, 38);
-  // ---------- east meadow ----------
-  for (y = 13; y <= 21; y++) for (x = 45; x <= 58; x++) if ((g[y][x] === 'f' || g[y][x] === 'g') && hash(x, y, 50) < 0.16) put('flower_patch', x, y);
-  put('butterfly_bush', 53, 15); put('butterfly_bush', 56, 18); put('windchime', 51, 13); put('mailbox', 47, 14);
-  for (x = 52; x <= 57; x++) put('stone_wall_h', x, 23);
-  put('hay_bale', 55, 25); put('hay_bale', 57, 25); put('log_pile', 56, 28);
-  // ---------- cherry grove (north-east) ----------
-  [[50, 3], [53, 2], [57, 3], [52, 6], [57, 7], [49, 6], [58, 10], [54, 12]].forEach(function (p) { put('cherry_tree', p[0], p[1]); });
-  put('statue', 56, 5); put('lantern_string', 51, 8, true); put('bench', 52, 10 - 0);
-  // ---------- south ----------
-  put('mushroom_ring', 26, 35, true); put('mushroom_ring', 56, 37, true);
-  [[24, 33], [29, 37], [17, 38], [22, 38], [36, 37]].forEach(function (p) { put('cherry_tree', p[0], p[1]); });
-  put('sign', 37, 32); put('sign', 50, 32); put('rock', 34, 33); put('log_pile', 25, 32);
-  for (y = 31; y <= 38; y++) for (x = 28; x <= 38; x++) if (g[y][x] === 'f' && hash(x, y, 55) < 0.3) put('flower_patch', x, y);
-  [[17, 22], [12, 22], [7, 22], [34, 30], [41, 24], [10, 37], [19, 35]].forEach(function (p) { put('flower_patch', p[0], p[1]); });
-  put('mushroom_ring', 8, 27, true); put('mushroom_ring', 20, 10, true);
-  put('stepping_stone', 22, 34); put('stepping_stone', 23, 35);
+  put('crate', 45, 10); put('rock', 45, 7);
+  // ---- meadow: flowers, butterflies, windchime ----
+  for (y = 4; y <= 14; y++) for (x = 52; x <= 58; x++) if (g[y][x] === 'f' && hash(x, y, 50) < 0.22) put('flower_patch', x, y);
+  put('butterfly_bush', 53, 8); put('butterfly_bush', 57, 6); put('windchime', 56, 15); put('bench', 55, 17);
+  [[52, 3], [57, 2]].forEach(function (p) { put('cherry_tree', p[0], p[1]); });
+  // ---- east: stone wall edging the wild grass ----
+  for (x = 53; x <= 58; x++) put('stone_wall_h', x, 25);
+  put('sign', 52, 26);
+  // ---- south: gate trees + meadow verge ----
+  put('sign', 31, 36); put('mushroom_ring', 42, 37, true); put('mushroom_ring', 15, 26, true);
+  for (y = 34; y <= 38; y++) for (x = 36; x <= 44; x++) if (g[y][x] === 'f' && hash(x, y, 55) < 0.3) put('flower_patch', x, y);
+  // a few calm accents on open grass
+  [[19, 26], [42, 27], [8, 26], [26, 14], [40, 13]].forEach(function (p, i) { put(i % 2 ? 'bush' : 'tree', p[0], p[1]); });
+  [[45, 14], [20, 11]].forEach(function (p) { put('rock', p[0], p[1]); });
 
-  // ---------- forest edges: mixed species, irregular ----------
-  var KINDS = ['tree', 'pine', 'tree', 'fruit_tree', 'bush', 'pine', 'butterfly_bush', 'tree'];
-  for (y = 0; y < HT; y++) for (x = 0; x < W; x++) {
-    var e = Math.min(x, y, W - 1 - x, HT - 1 - y);
-    var ch2 = e === 0 ? 0.6 : e === 1 ? 0.4 : e === 2 ? 0.14 : e <= 4 ? 0.03 : 0;
-    if (hash(x, y, 60) >= ch2) continue;
-    var k = hash(x, y, 61), t = KINDS[Math.floor(k * KINDS.length)];
-    if (x > 44 && y > 30) t = k < 0.6 ? 'pine' : 'tree';
-    if (x < 12 && y > 30) t = k < 0.4 ? 'pine' : k < 0.8 ? 'tree' : 'bush';
-    if (t === 'tree' || t === 'pine' || t === 'fruit_tree') { if (!free3(x, y)) continue; }
-    put(t, x, y);
-  }
+  // ---- dense forest border (no void at the edges) ----
+  var KINDS = ['tree', 'pine', 'tree', 'pine', 'tree', 'bush'];
   function free3(x, y) {
     for (var yy = y - 2; yy <= y; yy++) for (var xx = x - 1; xx <= x + 1; xx++) if (yy >= 0 && xx >= 0 && xx < W && occ[yy] && occ[yy][xx]) return false;
     return true;
   }
-  // scattered inner groves, bushes, rocks
-  [[19, 13], [7, 21], [34, 6], [35, 3], [20, 23], [44, 14], [38, 9], [58, 14], [44, 27], [38, 25], [27, 26], [3, 28], [17, 33]]
-    .forEach(function (p, i) { put(i % 4 === 3 ? 'pine' : i % 4 === 1 ? 'fruit_tree' : 'tree', p[0], p[1]); });
-  [[20, 12], [36, 8], [45, 6], [10, 23], [26, 27], [39, 28], [33, 9], [19, 22], [5, 21], [44, 29], [28, 33]]
-    .forEach(function (p, i) { put(i % 3 === 0 ? 'butterfly_bush' : 'bush', p[0], p[1]); });
-  [[33, 13], [19, 37], [45, 37], [3, 11], [38, 4]].forEach(function (p) { put('rock', p[0], p[1]); });
-  // sprinkle flower patches on open grass
-  for (y = 2; y < HT - 2; y++) for (x = 2; x < W - 2; x++) if (g[y][x] === 'g' && hash(x, y, 70) < 0.035) put('flower_patch', x, y);
+  for (var pass = 0; pass < 2; pass++) for (y = 0; y < HT; y++) for (x = 0; x < W; x++) {
+    var e = Math.min(x, y, W - 1 - x, HT - 1 - y);
+    var ch2 = pass === 0 ? (e === 0 ? 1 : e === 1 ? 0.55 : e === 2 ? 0.15 : 0) : (e <= 1 ? 1 : 0);
+    if (hash(x, y, 60 + pass) >= ch2) continue;
+    var c0 = g[y][x]; if (c0 !== 'g' && c0 !== 'f' && c0 !== 't') continue;
+    var k = hash(x, y, 61), t = KINDS[Math.floor(k * KINDS.length)];
+    if (pass === 1) t = 'bush';
+    else if (!free3(x, y)) { if (e > 0) continue; t = 'bush'; }
+    put(t, x, y);
+  }
+  // sprinkle a few flower patches on open grass
+  for (y = 3; y < HT - 3; y++) for (x = 3; x < W - 3; x++) if (g[y][x] === 'g' && hash(x, y, 70) < 0.025) put('flower_patch', x, y);
 
   // ---------- doors ----------
   var doors = [];

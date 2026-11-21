@@ -146,7 +146,7 @@
     '.hb-hp b.low{background:linear-gradient(90deg,#ff7a5a,#ffb08a)}',
     '.hb-card .st{font-size:12px;font-weight:800;margin-top:4px;color:#ffd98a;min-height:15px}',
     '.hb-foe{right:12px;top:calc(env(safe-area-inset-top,0px) + 14px)}',
-    '.hb-me{left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 168px)}',
+    '.hb-me{right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 132px)}',
     '.hb-msg{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);text-align:center;font-weight:900;font-size:clamp(16px,4.6vmin,22px);text-shadow:0 2px 0 rgba(0,0,0,.6);pointer-events:none;min-height:28px}',
     '.hb-spells{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);display:grid;grid-template-columns:repeat(6,1fr);gap:5px}',
     '.hb-sp.lock{opacity:.35}',
