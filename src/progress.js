@@ -3,7 +3,7 @@ window.H = window.H || {};
 // Also wraps H.battle.start so every battle ends with a results card and any evolutions.
 (function () {
   var H = window.H;
-  var STAGE_LV = [1, 8, 16, 26, 38];          // level a hontori may reach each stage at
+  var STAGE_LV = [1, 5, 10, 20, 25];          // level a hontori may reach each stage at
   var TIER = ['', 'Bright', 'Grand', 'Elder', 'Radiant'];
   var MAX_LV = 60, WAND_MAX = 10, PARTY_MAX = 5;
 

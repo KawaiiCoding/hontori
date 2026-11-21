@@ -29,7 +29,7 @@ New rules are added here as they are given. When something in the code disagrees
 
 ## Hontori
 17. Hontori look like fun animals. All designs and names are original: never an existing game creature or name.
-18. Each hontori evolves 4 times (5 forms), from simple to epic.
+18. Each hontori evolves 4 times (5 forms), from simple to epic, at levels 5, 10, 20 and 25.
 19. Hontori have experience and levels. Each has its own attacks, learned as it levels up; the player picks which to bring, to avoid repetition.
 20. Hontori appear where they make sense (water near water, dark at night, and so on), driven by habitat, time and weather.
 21. Wild hontori can be jealous and attack the kid's companions.
