@@ -591,7 +591,7 @@ window.H = window.H || {};
   // ---------- evolution stages ----------
   // Stage 1 is the base body. Stages 2-5 add element structures in four layers around the same body:
   //   'behind' (glow, unoutlined) | 'back' (outlined, behind body) | 'front' (outlined, over body) | 'fx' (glow, over everything).
-  var SS = [1, 1.1, 1.25, 1.4, 1.6], SM = 14; // stage scale, extra logical margin for stages 2-5
+  var SS = [1, 1.1, 1.25, 1.4, 1.6], SM = 26; // stage scale, extra logical margin for stages 2-5
   var STAGES = {
     hontori: [['Hontori', 'A small fire fox kit with a warm ember on its brow.'], ['Cindrel', 'Its tail now burns at the tip and its ruff has grown thick.'],
       ['Brandtail', 'A bold young fox that splits its flame into two tails.'], ['Pyrevane', 'Four blazing tails and gold-marked fur; embers circle where it walks.'],
