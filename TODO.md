@@ -11,6 +11,10 @@ Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CO
 - Story engine and Chapter 1 (src/quests.js, src/chapter1.js): morning scene, pick 5 items, quests.
 - Academy lessons and duels (src/academy.js): switch Aegis Ward and Rally Rune to their real shapes once battle.js has them; duels should use trainer mode.
 
+## First thing next time
+- Battle screen layout: the spell sheet opens over everything (covers the player card, the message line and the hontori); collapse it by default, keep the card and messages visible, keep cooldown text inside the move button. Then a full play-through of a battle on iPhone Safari.
+- Faint dark seam lines remain on the largest evolved forms (stage 4-5); finish the clean-up in src/spirits.js.
+
 ## Left over from the last agents (details)
 - Chapter 1 content was not written (src/chapter1.js): morning scene with mom and dad, pick-5 backpack picker, quests A Steady Hand, Wet Pawprints, The Elder's Second Cup, Beyond the Trees, ending letter from the archmage. The story engine (src/quests.js) is ready for it.
 - Approve the antagonist name in STORY.md: Grand Archmage Orlen Vael (crest: a closed grey eye). Check STORY.md against WORLD_RULES.md.
