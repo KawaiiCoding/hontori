@@ -124,76 +124,22 @@ window.H = window.H || {};
       .then(function () { return a.say('dad', 'Dad', 'The chimney finally stopped grumbling.'); })
       .then(function () { return a.say('dad', 'Dad', 'Wren says the old Academy opened its gate again.'); })
       .then(function () { return a.say('hontori', 'They cannot see, and that is fine. Pack your bag, the sun will shine.'); })
-      .then(function () { return picker(); })
-      .then(function (ids) {
-        ids.forEach(function (id) { var it = H.items.list.filter(function (x) { return x.id === id; })[0]; H.game.addItem(id, it ? it.name : id, id); });
-        a.setFlag('c1:morning'); a.setFlag('c1:packed', ids);
-        setParents();
-        a.toast('Packed 5 things');
-        return a.say('hontori', 'To the Academy, up the hill. Learn the spiral, and learn it well.');
-      })
-      .then(function () { ST.start('academy'); });
+      .then(function () { return a.say('mom', 'Mom', 'Take what you need, five things fit in your bag.'); })
+      .then(function () {
+        // the home items now lie around the house as small glowing pickups (src/items.js)
+        a.setFlag('c1:morning'); setParents();
+        ST.start('academy');
+      });
   } });
-
-  var USE = { backpack: 'Room for one more', lantern: 'Light in dark places', teddy: 'Calm on scary nights', cookbook: 'Cook warm meals anywhere',
-    compass: 'Never lose your way', scarf: 'Warm in cold wind', slingshot: 'Knock down far things', bread: 'Spirits love a crust',
-    map: 'See the whole area', candle: 'A small steady flame', kite: 'Ride the wind higher', mirror: 'See through the veil' };
-  var CSS = [
-    '.c1-pick{position:absolute;inset:0;z-index:47;background:rgba(5,6,14,.7);display:flex;align-items:center;justify-content:center;padding:12px;opacity:0;transition:opacity .25s}',
-    '.c1-pick.on{opacity:1}',
-    '.c1-box{width:100%;max-width:520px;max-height:100%;overflow:auto;border-radius:20px;background:linear-gradient(180deg,#1b1e3a,#101226);border:2px solid #d9a85a;box-shadow:0 10px 40px rgba(0,0,0,.6);padding:16px;color:#f4f1e8;font-family:Nunito,"M PLUS Rounded 1c",system-ui,sans-serif}',
-    '.c1-box h2{margin:0 0 2px;font-size:20px;font-weight:900;text-align:center}',
-    '.c1-box p{margin:0 0 12px;text-align:center;font-weight:700;opacity:.75;font-size:14px}',
-    '.c1-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}',
-    '.c1-it{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:14px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}',
-    '.c1-it canvas{width:40px;height:40px;image-rendering:pixelated}',
-    '.c1-it b{font-size:14px;font-weight:900}',
-    '.c1-it small{font-size:11px;font-weight:700;opacity:.7;line-height:1.2;text-align:center}',
-    '.c1-it.on{border-color:#ffc56b;background:rgba(255,197,107,.16);box-shadow:0 0 12px rgba(255,176,74,.35)}',
-    '.c1-it.off{opacity:.45}',
-    '.c1-go{display:block;width:100%;margin-top:12px;padding:12px;border-radius:14px;border:0;background:#ffc56b;color:#2a1a08;font:900 16px Nunito,system-ui,sans-serif;cursor:pointer}',
-    '.c1-go:disabled{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);cursor:default}'
-  ].join('\n');
-  var styled = false;
-  function style() { if (styled) return; styled = true; var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); }
-  function root() { return document.getElementById('root') || document.body; }
-
-  // grid of the 12 home items; resolves with exactly 5 ids
-  function picker() {
-    style();
-    return new Promise(function (res) {
-      var picked = [], o = document.createElement('div');
-      o.className = 'c1-pick hq-pick';
-      o.innerHTML = '<div class="c1-box"><h2>Pick 5 things for your backpack</h2><p>Chosen: <span>0</span> of 5</p><div class="c1-grid"></div><button class="c1-go" type="button" disabled>Pack the bag</button></div>';
-      var grid = o.querySelector('.c1-grid'), go = o.querySelector('.c1-go'), cnt = o.querySelector('p span');
-      var btns = H.items.list.map(function (it) {
-        var b = document.createElement('button'); b.type = 'button'; b.className = 'c1-it';
-        var cv = document.createElement('canvas'); cv.width = 16; cv.height = 16;
-        try { H.items.draw(cv.getContext('2d'), it.id, 0, 0); } catch (e) {}
-        var nm = document.createElement('b'); nm.textContent = it.name;
-        var us = document.createElement('small'); us.textContent = USE[it.id] || '';
-        b.appendChild(cv); b.appendChild(nm); b.appendChild(us);
-        b.addEventListener('click', function () {
-          var i = picked.indexOf(it.id);
-          if (i >= 0) picked.splice(i, 1); else if (picked.length < 5) picked.push(it.id); else return;
-          try { H.audio && H.audio.sfx('confirm'); } catch (e) {}
-          render();
-        });
-        grid.appendChild(b); return { b: b, id: it.id };
+  // leaving without the map: Mom stops the kid once and hands it over (it does not take a bag slot)
+  ST.defineEvent({ id: 'c1_mapgift', when: 'manual', once: false, run: function (a) {
+    return a.say('mom', 'Mom', 'Wait. You will need this.')
+      .then(function () {
+        a.state.flags['map:gift'] = true;
+        a.give('map', 'Map', 'map');
+        return a.say('hontori', 'A map in hand, we know the land.');
       });
-      function render() {
-        btns.forEach(function (x) { var on = picked.indexOf(x.id) >= 0; x.b.classList.toggle('on', on); x.b.classList.toggle('off', !on && picked.length >= 5); });
-        cnt.textContent = picked.length; go.disabled = picked.length !== 5;
-      }
-      go.addEventListener('click', function () {
-        if (picked.length !== 5) return;
-        o.classList.remove('on'); setTimeout(function () { o.remove(); }, 260); res(picked.slice());
-      });
-      o.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-      root().appendChild(o);
-      requestAnimationFrame(function () { o.classList.add('on'); });
-    });
-  }
+  } });
 
   // ---------------------------------------------------------------- Wet Pawprints
   ST.defineEvent({ id: 'c1_pip', when: 'talk', map: 'house_a2', npc: 'Pip', run: function (a) {
@@ -297,5 +243,5 @@ window.H = window.H || {};
     return a.say('hontori', 'The stars are out, the lanterns low. Sleep in a bed, then on we go.');
   } });
 
-  H.chapter1 = { picker: picker, openWoods: openWoods };
+  H.chapter1 = { openWoods: openWoods };
 })();

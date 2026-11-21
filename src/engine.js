@@ -230,7 +230,7 @@
   function interactAt(x, y) {
     if (!H.interact) return;
     // wall decor hangs one tile above the floor edge, so look one tile further up when facing a wall
-    const hit = objectAt(x, y) || (player.dir === 1 ? objectAt(x, y - 1) : null);
+    const hit = (H.pickups && H.pickups.at(mapName, x, y)) || objectAt(x, y) || (player.dir === 1 ? objectAt(x, y - 1) : null);
     if (!hit) return;
     busy = true; sfx('confirm');
     const c = { say, toast: (t) => H.ui && H.ui.toast(t), emit, sfx, note: (m) => { try { H.audio && H.audio.note(m); } catch (e) {} },
@@ -305,6 +305,9 @@
     player.dir = dir;
     const [ddx, ddy] = DIRS[dir], nx = player.tx + ddx, ny = player.ty + ddy;
     const door = (map.doors || []).find(d => d.x === nx && d.y === ny);
+    // hook: something may stop the kid at a door (returns a promise while it runs)
+    const guard = door && H.doorGuard ? H.doorGuard(door, mapName) : null;
+    if (guard) { busy = true; player.frame = 0; Promise.resolve(guard).catch(e => console.warn(e)).then(() => { busy = false; }); return; }
     if (door && door.to === 'school' && !H.game.state.academy) {
       // the trial happens on the steps, before the door opens
       busy = true; player.frame = 0;
@@ -324,7 +327,7 @@
     if (!st.intro) return;
     const mm = st.maxMana || 3; if (st.mana == null) st.mana = mm;
     // a long jump forward in time means a night in bed: mana is full again
-    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6 && st.mana < mm) st.mana = mm; }
+    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6) { (H.onSleep || []).forEach(fn => { try { fn(env, mapName); } catch (e) { console.warn(e); } }); if (st.mana < (st.maxMana || 3)) st.mana = st.maxMana || 3; } }
     lastTime = env.time;
     if (busy || menuOpen || st.mana >= mm) { if (st.mana >= mm) manaT = 0; return; }
     manaT += dt;
@@ -359,7 +362,7 @@
     }
     if (player.moving) {
       const run = keys.shift || ((H.ui && H.ui.input && (H.ui.input.run || H.ui.input.back)) ? true : false);
-      player.prog += dt / (run ? 0.14 : 0.24);
+      player.prog += dt / ((run ? 0.14 : 0.24) * (H.speedMul ? H.speedMul(env, mapName) : 1));
       if (player.prog >= 1) {
         const left = player.prog - 1; player.moving = false; player.steps++; sfx('step');
         player.x = player.tx * T + 8; player.y = player.ty * T + 15;
@@ -432,11 +435,13 @@
       ents.push({ y: ts.y + 20, d: () => { H.fx.shadow(ctx, ts.x, ts.y + 18, 12, 4, env); H.spirits.draw(ctx, ts.key, Math.round(ts.x), Math.round(ts.y + Math.sin(env.t * 2) * 2), env, { stage: 5, dir: 0, alpha: Math.min(1, ts.t * 1.5) }); } }); }
     (map.lights || []).forEach(l => lights.push(l));
     if (H.encounters) try { H.encounters.collect(ents, lights, ctx, env); } catch (e) { console.warn(e); }
+    (H.worldDraw || []).forEach(fn => { try { fn(ents, lights, ctx, env, mapName, player); } catch (e) { console.warn(e); } });
     ents.sort((a, b) => a.y - b.y).forEach(e => { try { e.d(); } catch (err) { console.warn(err); } });
     if (ambient) try { ambient.draw(ctx, env); } catch (e) { console.warn(e); ambient = null; }
     ctx.restore();
     if (weather && !env.indoor) weather.draw(ctx, camX, camY, env);
     if (lighting) lighting.render(ctx, camX, camY, env, lights);
+    (H.screenDraw || []).forEach(fn => { try { fn(ctx, VW, VH, env, mapName, camX, camY, player); } catch (e) { console.warn(e); } });
     if (particles) particles.draw(ctx, camX, camY);
     if (flash > 0) { ctx.fillStyle = `rgba(255,240,200,${flash * 0.6})`; ctx.fillRect(0, 0, VW, VH); }
   }
@@ -468,7 +473,7 @@
     busy = false;
   }
   H.game.battle = startBattle;
-  H.game.currentMap = () => ({ name: mapName, map, player });
+  H.game.currentMap = () => ({ name: mapName, map, player, env, blocked, tileAt });
 
   let last = performance.now();
   function loop(now) { checkSize(); const dt = Math.min(0.05, (now - last) / 1000); last = now; update(dt); render(); requestAnimationFrame(loop); }

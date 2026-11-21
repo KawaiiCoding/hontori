@@ -82,6 +82,8 @@ window.H = window.H || {};
       s *= sp.wx[wx] || 1;
       res[key] = s * sp.rare;
     }
+    // a lit lantern at night draws dark hontori closer
+    if (night && H.pickups && H.pickups.has('lantern')) { if (res.dark) res.dark *= 2.2; if (res.raven) res.raven *= 1.6; }
     return res;
   }
 
@@ -141,7 +143,7 @@ window.H = window.H || {};
       if (tries < 30 && S.list.filter(function (o) { return o.key === p.key; }).length >= 2) continue;
       var w = { id: S.uid++, key: p.key, level: p.level, hx: c[0], hy: c[1], tx: c[0], ty: c[1],
         x: c[0] * T + 8, y: c[1] * T + 12, dir: Math.floor(Math.random() * 4), moving: false, state: 'idle',
-        timer: 1 + Math.random() * 3, alpha: 0, fade: 1, bang: 0, ph: Math.random() * 6.28 };
+        timer: 1 + Math.random() * 3, alpha: 0, fade: 1, bang: 0, ph: Math.random() * 6.28, hidden: Math.random() < 0.22 };
       S.list.push(w); return w;
     }
     return null;
@@ -198,7 +200,8 @@ window.H = window.H || {};
       if (w.fade < 0) { w.alpha -= dt * 0.8; if (w.alpha <= 0) { S.list.splice(j, 1); continue; } }
       w.bang = Math.max(0, w.bang - dt);
       var pdx = pl.x - w.x, pdy = (pl.y - 4) - w.y, pd = Math.hypot(pdx, pdy);
-      var calm = ctx.busy || S.grace > 0 || w.fade < 0;
+      // hidden ones (a faint shimmer) only notice a kid who can see them in the mirror
+      var calm = ctx.busy || S.grace > 0 || w.fade < 0 || (w.hidden && !seen());
       if (!calm && w.state !== 'chase' && w.state !== 'notice' && pd < 3 * T) {
         w.state = 'notice'; w.timer = 0.7; w.bang = 1.1; w.moving = false;
         w.dir = Math.abs(pdx) > Math.abs(pdy) ? (pdx < 0 ? 2 : 3) : (pdy < 0 ? 1 : 0);
@@ -248,11 +251,14 @@ window.H = window.H || {};
   }
 
   // Push draw entries into the engine's y-sorted list.
+  function seen() { return !!(H.pickups && H.pickups.has('mirror')); }
   function collect(ents, lights, ctx, env) {
     if (!S.map || S.map.tileset !== 'outdoor') return;
-    var night = isNight(env);
+    var night = isNight(env), mir = seen();
     S.list.forEach(function (w) {
       var gy = w.y + 10;
+      if (w.hidden && !mir) { ents.push({ y: gy, d: function () { var a = 0.25 + Math.sin(w.ph * 2.6) * 0.15; ctx.fillStyle = 'rgba(220,235,255,' + a + ')';
+        for (var q = 0; q < 4; q++) { var an = w.ph * 1.3 + q * 1.57; ctx.fillRect(Math.round(w.x + Math.cos(an) * 5), Math.round(w.y - 2 + Math.sin(an * 1.4) * 4), 1, 1); } } }); return; }
       if (night) lights.push({ x: w.x, y: w.y, r: 18, color: '#9ec8ff', flicker: true });
       ents.push({ y: gy, d: function () {
         var bob = Math.sin(w.ph * 2.2) * 1.2, shim = 0.84 + Math.sin(w.ph * 3.1) * 0.08;

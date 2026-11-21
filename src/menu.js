@@ -199,13 +199,15 @@
   function render() {
     var g = game(), st = g.state; els.sheet.innerHTML = '';
     if (open === 'bag') {
-      header('Backpack', 'backpack', st.items.length ? st.items.length + ' things' : null);
+      header('Backpack', 'backpack', (H.pickups && H.game.currentMap && H.game.currentMap().name === 'home' && (st.flags || {})['c1:morning']) ? 'Bag ' + H.pickups.count() + ' / ' + H.pickups.cap() : st.items.length ? st.items.length + ' things' : null);
       if (!st.items.length) mk('div', 'hm-empty', els.sheet, 'Empty for now.');
       st.items.forEach(function (it) {
         var r = mk('div', 'hm-row', els.sheet); r.style.padding = '8px 10px';
         var c = itemCanvas(it); c.className = 'itm'; r.appendChild(c);
         var i = mk('div', 'inf', r); mk('div', 'nm', i, it.name + (it.n > 1 ? '  x' + it.n : '')).style.fontSize = '16px';
-        var d = itemDesc(it); if (d) mk('div', 'sub', i, d).style.margin = '2px 0 0';
+        var d = (H.pickups && H.pickups.uses[it.id]) || itemDesc(it); if (d) mk('div', 'sub', i, d).style.margin = '2px 0 0';
+        var ax = H.pickups ? H.pickups.actions(it) : [];
+        if (ax.length) { var ab = mk('div', 'hm-btns', i); ab.style.cssText = 'flex-direction:row;flex-wrap:wrap;margin-top:6px'; ax.forEach(function (x) { var bt = kb(ab, { label: x.label, desc: x.desc, kind: 'alt', sm: true, onClick: function () { if (x.off) return; if (x.label !== 'Put back') hide(); x.run(); if (open) render(); } }); bt.disabled = !!x.off; }); }
       });
     } else if (open === 'party') {
       header('Your Hontori', 'paw', st.party.length + ' of ' + MAX + ' travel with you');

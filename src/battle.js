@@ -785,7 +785,7 @@
     var el = mk('div', 'hb', root), cv = mk('canvas', '', el), g = cv.getContext('2d');
     var intentEl = mk('div', 'hb-intent', el), foeCard = mk('div', 'hb-card hb-foe', el), meCard = mk('div', 'hb-card hb-me', el);
     var msg = mk('div', 'hb-msg', el), sheet = mk('div', 'hb-sheet', el), bar = mk('div', 'hb-bar', el), movesEl = mk('div', 'hb-moves', el);
-    var manaEl = mk('div', 'hb-mana', bar), sheetBtn = mk('button', 'hb-btn', bar, 'Spells'), herbBtn = mk('button', 'hb-btn', bar, '');
+    var manaEl = mk('div', 'hb-mana', bar), sheetBtn = mk('button', 'hb-btn', bar, 'Spells'), herbBtn = mk('button', 'hb-btn', bar, ''), breadBtn = mk('button', 'hb-btn', bar, ''), breadUsed = false, calm = 0;
     mk('div', '', bar).style.flex = '1';
     var pxIc = function (n, fb) { try { return '<img class="pi" alt="" src="' + H.icons.url(n, 2) + '">'; } catch (e) { return fb; } };
     var swBtn = mk('button', 'hb-btn hb-ic', bar, pxIc('swap', ICON.swap) + '<span class="tl">Switch</span>'), escBtn = mk('button', 'hb-btn hb-ic hb-esc', bar, pxIc('run', ICON.esc) + '<span class="tl">Escape</span><span class="m"><b></b><b></b><b></b></span>');
@@ -857,6 +857,9 @@
       manaEl.innerHTML = 'Mana ' + Array.apply(null, Array(maxMana)).map(function (_, i) { return '<span class="hb-pip' + (i < mana ? ' on' : '') + '"></span>'; }).join('');
       var herb = (GS.items || []).filter(function (i) { return i.id === 'herb'; })[0];
       herbBtn.hidden = !herb || mana >= maxMana; if (herb) herbBtn.textContent = 'Herb x' + (herb.n || 1);
+      var bread = (GS.items || []).filter(function (i) { return i.id === 'bread'; })[0];
+      breadBtn.hidden = !bread || breadUsed || !!TR;
+      if (bread && !breadBtn.firstChild) { try { var bi = document.createElement('img'); bi.alt = ''; bi.src = H.pickups.iconUrl('bread'); bi.style.cssText = 'width:20px;height:20px;image-rendering:pixelated;vertical-align:middle;margin-right:4px'; breadBtn.appendChild(bi); } catch (e) {} breadBtn.appendChild(document.createTextNode('Bread')); }
       var fainted = me.hp <= 0;
       MOV.forEach(function (m, i) {
         var b = mvBtns[i], cd = me.cd[m.id] || 0, mx = matrix(me.el, foe.el), mark = '';
@@ -1225,7 +1228,7 @@
     async function bind(sc, gm) {
       var P = POS.foe, acc = sc ? sc.acc : 0.5;
       var chance = 0.05 + 0.45 * (1 - foe.hp / foe.max) + (foe.asleep ? 0.18 : 0) + (foe.stun ? 0.12 : 0) + 0.15 * acc - 0.07 * (foe.lvl - me.lvl) - (matrix(foe.el, me.el) > 1 ? 0.08 : 0) + (matrix(me.el, foe.el) > 1 ? 0.05 : 0);
-      chance = Math.max(0.05, Math.min(0.85, chance * wandMul * (gm || 1) + (perks.captureBonus || 0)));
+      chance = Math.max(0.05, Math.min(0.85, chance * wandMul * (gm || 1) + (perks.captureBonus || 0) + calm));
       // a spiral of light wraps the foe, then three shakes
       fxs.push({ t: 0, ms: 2000, draw: function (g2, k) { var pts = []; for (var i = 0; i <= 40; i++) { var t = i / 40, a2 = t * 12 + k * 8, r = 22 * (1 - t * 0.8) * (1 - k * 0.3); pts.push([P.x + Math.cos(a2) * r, P.y + Math.sin(a2) * r * 0.8]); } inkStroke(g2, pts, 0.8, '#ffd98a', Math.sin(k * Math.PI)); } });
       for (var s = 0; s < 3; s++) { await wait(420); foe.fx.dx = s % 2 ? 3 : -3; foe.fx.alpha = 0.5; sfx('bump'); await wait(140); foe.fx.dx = 0; foe.fx.alpha = 1; }
@@ -1365,6 +1368,15 @@
       if (busy || done) return; var it = (GS.items || []).filter(function (i) { return i.id === 'herb'; })[0]; if (!it || mana >= maxMana) return;
       it.n = (it.n || 1) - 1; if (it.n <= 0) GS.items.splice(GS.items.indexOf(it), 1);
       mana++; sfx('sparkle'); burst(POS.me.x, POS.me.y, '#9fd0ff', 16, 1); float(POS.me.x, POS.me.y - 18, '+1 mana', '#9fd0ff', true); say('The herb restores a little mana.'); renderUI();
+    });
+
+    // bread: once per battle, calms a wild foe so a binding holds more easily
+    breadBtn.addEventListener('click', function () {
+      if (busy || done || breadUsed || TR) return; var it = (GS.items || []).filter(function (i) { return i.id === 'bread'; })[0]; if (!it) return;
+      it.n = (it.n || 1) - 1; if (it.n <= 0) GS.items.splice(GS.items.indexOf(it), 1);
+      breadUsed = true; calm = 0.15; sfx('sparkle'); burst(POS.foe.x, POS.foe.y, '#ffd890', 14, 1);
+      if (!(GS.flags = GS.flags || {}).tipBread) { GS.flags.tipBread = true; say('It nibbles the bread and calms down. A binding holds more easily now.'); } else say('It nibbles the bread and calms down.');
+      renderUI();
     });
 
     // ---------------- go
