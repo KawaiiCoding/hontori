@@ -404,7 +404,7 @@ window.H = window.H || {};
       { say: [K, KN, 'A... talking fox. Made of FIRE. In my living room.'] },
       { say: [HK, HN, 'The world has magic, truth be told — in brook and breeze, in stone and cold.'] },
       { say: [HK, HN, 'But most folk wear a veil so thick, they never see a single trick.'] },
-      { say: [HK, HN, 'We call them the Dimsighted — kind, but blind to all the glowing things behind.'] },
+      { say: [HK, HN, 'We call them the Veilbound — kind, but blind to all the glowing things behind.'] },
       { say: [K, KN, 'Wait, so... my parents can\'t see you?'] },
       { say: [HK, HN, 'Not unless the veil is torn. They\'d think I\'m just a coal, forlorn.'] },
       { say: [K, KN, 'My parents will FREAK if they find a fire-fox on the rug!'] },

@@ -61,7 +61,7 @@ window.H = window.H || {};
     '"Light, and Where It Hides at Night."',
     '"Eight Elements, One Very Tired Author."',
     '"Chimney Care for Beginners." Huh.',
-    '"Things the Dimsighted Walk Past."',
+    '"Things the Veilbound Walk Past."',
     '"Mom\'s Ramen Notes." Top secret.'
   ];
   var PENTA = [60, 62, 64, 67, 69, 72, 74, 76];
@@ -152,7 +152,7 @@ window.H = window.H || {};
       sfx(c, n % 2 ? 'purr' : 'meow');
       emit(c, 'dust', 2);
       return kid(c, step(n, ['Meow to you too, Biscuit.', 'Purring. The engine is running.', 'She is pretending I am not here.', 'One eye open. She is watching the fox.']))
-        .then(function () { return rhyme(c, 'Cats see me plain as day. Never Dimsighted, anyway.', 0.5); });
+        .then(function () { return rhyme(c, 'Cats see me plain as day. Never Veilbound, anyway.', 0.5); });
     },
     bookshelf: function (c, n) {
       state.books++;
@@ -206,7 +206,7 @@ window.H = window.H || {};
     wall_map: simple(['A map of the valley. Emberbrook is the dot.', 'Someone drew a tiny fox in the corner.', '"Here be spirits," in Grandpa\'s writing.'],
       { fox: 'Maps show roads. Hidden paths are best.' }),
     stairs: simple(['Shh. My parents are asleep upstairs.', 'Third step creaks. I am not risking it.', 'Dad is snoring. The house is safe.'],
-      { fox: 'Tiptoe, not a peep. Let the Dimsighted sleep.', p: 0.5 }),
+      { fox: 'Tiptoe, not a peep. Let the Veilbound sleep.', p: 0.5 }),
     chest: function (c, n) {
       sfx(c, 'creak'); emit(c, n ? 'dust' : 'sparkle', 5, 0, -4);
       return kid(c, step(n, ['Blankets, and one very old cookie.', 'Still blankets. The cookie is gone now.', 'Empty, apart from the cosy smell.']))
@@ -403,7 +403,7 @@ window.H = window.H || {};
           if (!c.hasSpirit) return null;
           return fox(c, step(n, [
             'The School of Magic, hid in plain sight. Tomorrow, all right?',
-            'The Dimsighted see a barn. You see the door.',
+            'The Veilbound see a barn. You see the door.',
             'Patience, pup. The bell rings at sun-up.',
             'Knock all you like. That door holds a grudge.'
           ]));
