@@ -110,7 +110,7 @@ window.H = window.H || {};
     grandma: { name: 'Grandma', skin: '#ecc4a4', hair: '#dcd8e2', style: 'bun', ties: '#8a5aa0', dress: '#7a5a9a', pants: '#4a3a5a', shoes: '#4a2a2a',
       collar: '#f4ecf4', glasses: 1, eye: '#5a5a7a', expr: 'smile', bg: '#d8c8e8' },
     guard: { name: 'Guard', skin: '#b87a52', hair: '#2a2420', style: 'hat', cap: '#8a90a0', shirt: '#3a5a9a', collar: '#d8b850', pants: '#33334a', shoes: '#262626',
-      moustache: 1, eye: '#3a2a1a', expr: 'smile', wide: 1, bg: '#b0c0e0' },
+      moustache: 1, spear: 1, eye: '#3a2a1a', expr: 'smile', wide: 1, bg: '#b0c0e0' },
     kid2: { name: 'Kid', kid: 1, skin: '#8a5a3e', hair: '#241818', style: 'short', shirt: '#f0cc3a', pants: '#3a6aa0', shoes: '#e04a4a',
       eye: '#4a2a1a', expr: 'grin', raised: 1, freckles: 1, bg: '#f8e0a0' },
     traveler: { name: 'Traveler', skin: '#e8b890', hair: '#5a3a6a', style: 'ponytail', ties: '#c04040', robe: '#5e7048', trim: '#c8a050', pants: '#4a3a2a',
@@ -194,14 +194,192 @@ window.H = window.H || {};
     }
   }
 
+  // ---------- idle actions (posed arms + small props) ----------
+  // hand positions (top-left of the 4x3 hand) for named poses; front view uses L/R, side view a single near arm
+  function hp(n, P, w) {
+    var by = P.by, hy = P.hy, ey = P.ey, my = P.my, hx = P.hx;
+    if (P.side) return ({ chest: [10, by + 6], low: [9, by + 9], high: [13, hy - 3], gest: [6, by + 5], salute: [hx + 1, ey - 4], mouth: [hx - 1, my - 2] })[n];
+    var L = w === 'L';
+    return ({ chest: L ? [10, by + 6] : [18, by + 6], low: L ? [10, by + 9] : [18, by + 9], high: L ? [2, hy - 2] : [26, hy - 2],
+      gest: L ? [1, by + 5] : [27, by + 5], salute: L ? [8, ey - 4] : [20, ey - 4], mouth: L ? [13, my - 2] : [15, my - 2] })[n];
+  }
+  function pose(sp, l, r, P) { if (l) { sp.L = typeof l === 'string' ? hp(l, P, 'L') : l; sp.Ln = l; } if (r) { sp.R = typeof r === 'string' ? hp(r, P, 'R') : r; sp.Rn = r; } return sp; }
+  function seg(m, a, b, w) {
+    var n = Math.ceil(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]))) + 1;
+    for (var i = 0; i <= n; i++) { var t = i / n; m.r(a[0] + (b[0] - a[0]) * t - w / 2, a[1] + (b[1] - a[1]) * t - 1.5, w, 3); }
+  }
+  function armPose(g, d, sleeve, w, H, P) {
+    var S = w === 'S' ? [15.5, P.by + 2] : w === 'L' ? [5.5, P.by + 2] : [25.5, P.by + 2], out = w === 'S' ? 0 : w === 'L' ? -1 : 1;
+    var Hc = [H[0] + 2, H[1] + 1.5], E;
+    if (Hc[1] < P.by + 2) E = [(S[0] + Hc[0]) / 2 + out * 2, (S[1] + Hc[1]) / 2];
+    else E = [S[0], Math.min(Hc[1], P.by + 7)];
+    g.part(sleeve, function (m) { seg(m, S, E, 4); seg(m, E, Hc, 3); });
+    g.part(d.skin, function (m) { m.r(H[0], H[1], 4, 3); });
+  }
+  function ln(g, x0, y0, x1, y1, c, L) {
+    var n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) | 0;
+    for (var i = 0; i <= n; i++) { var t = n ? i / n : 0, x = Math.round(x0 + (x1 - x0) * t), y = Math.round(y0 + (y1 - y0) * t); if (L) L.push([x, y, c]); else g.set(x, y, c); }
+  }
+  function loopP(fps) { return function (p, u) { return Math.floor(u * fps) % 4; }; }
+  function seqP(p) { return Math.min(3, Math.floor(p * 4)); }
+  var ACT = {
+    talk: { ph: null, f: function (a, P) { return pose({}, null, a === 1 ? 'gest' : a === 2 ? 'chest' : null, P); } },
+    fish: { ph: function (p, u) { return p < 0.16 ? 0 : p < 0.3 ? 1 : 2 + (Math.floor(u * 3) & 1); }, f: function (a, P) {
+      var sp = pose({}, a >= 2 ? 'low' : null, a === 0 ? (P.side ? [14, P.by - 2] : [24, P.by - 1]) : a === 1 ? 'gest' : 'chest', P), fw = P.fw;
+      var R = sp.R, hc = [R[0] + 2, R[1] + 1];
+      var tip = a === 0 ? [hc[0] - fw * 5, hc[1] - 20] : a === 1 ? [hc[0] + fw * 16, hc[1] - 10] : [hc[0] + fw * 14, hc[1] - 13 + (a === 3 ? 2 : 0)];
+      sp.back = function (g) { ln(g, hc[0], hc[1] + 3, tip[0], tip[1], '#7a5230'); };
+      sp.front = function (g, P2, L) {
+        g.set(hc[0] + fw * 2, hc[1] + 2, '#9aa0aa'); g.set(hc[0] + fw * 3, hc[1] + 2, '#6a7080');
+        var B = a === 1 ? [tip[0] + fw * 3, tip[1] + 5] : [hc[0] + fw * 18, 43 + (a === 3 ? 1 : 0)];
+        if (a >= 1) {
+          ln(g, tip[0], tip[1], B[0], B[1], '#e4eef2', L);
+          L.push([B[0], B[1], '#e03a3a'], [B[0] + 1, B[1], '#e03a3a'], [B[0], B[1] + 1, '#ffffff'], [B[0] + 1, B[1] + 1, '#ffffff']);
+          if (a === 3) L.push([B[0] - 2, B[1] + 2, '#d8f4ff'], [B[0] + 3, B[1] + 2, '#d8f4ff'], [B[0] - 1, B[1] + 2, '#bfe6ff'], [B[0] + 2, B[1] + 2, '#bfe6ff']);
+        }
+      };
+      return sp;
+    } },
+    knead: { ph: loopP(4), f: function (a, P) {
+      var by = P.by, o = a & 1, sp = P.side ? pose({}, null, [9, by + 8 + o], P) : pose({}, [10, by + 8 + o], [18, by + 9 - o], P);
+      var cx = P.side ? 9 : 16;
+      sp.back = function (g) { g.part('#e2b878', function (m) { m.e(cx, by + 11.5, P.side ? 4 : 5.5, 2.5); }); };
+      sp.front = function (g, P2, L) {
+        if (a < 2) return;
+        var dy = (a - 2) * 2;
+        [[-3, 5], [4, 4], [0, 3], [-5, 4], [2, 6]].forEach(function (q, i) { L.push([cx + q[0], by + q[1] - dy - (i & 1), i % 3 ? '#f6f2ea' : '#ffffff']); });
+      };
+      return sp;
+    } },
+    knit: { ph: loopP(6), f: function (a, P) {
+      var by = P.by, o = a & 1, sp = P.side ? pose({}, null, [10, by + 6], P) : pose({}, [11, by + 6], [17, by + 6 + o], P);
+      sp.back = function (g) {
+        if (P.up) return;
+        var x0 = P.side ? 7 : 12;
+        g.part('#e07aa0', function (m) { m.r(x0, by + 9, P.side ? 6 : 9, 3); });
+        for (var i = x0; i < x0 + (P.side ? 6 : 9); i += 2) g.set(i, by + 10, '#f4b0c8');
+        g.part('#b05a8a', function (m) { m.e(P.side ? 4 : 25, 45, 2.5, 2); });
+      };
+      sp.front = function (g, P2, L) {
+        if (P.up) return;
+        if (P.side) { ln(g, 11, by + 7, 7 - o, by + 1, '#c8ccd8'); ln(g, 12, by + 7, 9 + o, by + 2, '#aab0c0'); if (o) L.push([8, by + 1, '#ffffff']); }
+        else { ln(g, 12, by + 7, 18 - o, by + 1, '#c8ccd8'); ln(g, 20, by + 7 + o, 14 + o, by + 1, '#c8ccd8'); if (o) L.push([16, by, '#ffffff'], [15, by - 1, '#fff8d0']); }
+      };
+      return sp;
+    } },
+    hoe: { ph: seqP, f: function (a, P) {
+      var by = P.by, ey = P.ey, hx = P.hx, sp = {};
+      var X = P.side ? 7 : P.up ? 3 : 28;
+      if (P.side) pose(sp, null, a >= 2 ? [hx + 1 + (a === 3 ? 2 : 0), ey - 3] : [X - 2, by + 1], P);
+      else pose(sp, a >= 2 ? [8 + (a === 3 ? 3 : 0), ey - 3] : null, [25, by + 1], P);
+      sp.back = function (g) {
+        g.part('#9a6a3a', function (m) { m.r(X, by - 5, 2, 47 - by + 5); });
+        g.part('#9aa0aa', function (m) { if (P.side) m.r(X - 5, 44, 7, 3); else m.r(X, 44, 6, 3); });
+      };
+      sp.front = function (g, P2, L) { if (a === 3 && !P.up) L.push(P.side ? [hx - 2, ey + 1, '#bfe8ff'] : [7, ey + 2, '#bfe8ff'], P.side ? [hx - 2, ey + 2, '#8ad0ff'] : [7, ey + 3, '#8ad0ff']); };
+      return sp;
+    } },
+    water: { ph: loopP(6), f: function (a, P) {
+      var by = P.by, sp = P.side ? pose({}, null, [9, by + 8], P) : pose({}, null, [21, by + 8], P);
+      sp.front = function (g, P2, L) {
+        if (P.up) return;
+        var s = P.side ? -1 : 1, cx = P.side ? 5 : 22, tx = P.side ? -1 : 33, ty = by + 8 + (a & 1);
+        g.part('#5f9a78', function (m) { m.r(cx, by + 10, 7, 5); });
+        g.part('#4a7a60', function (m) { m.r(cx + 2, by + 8, 3, 2); });
+        ln(g, P.side ? cx - 1 : cx + 7, by + 11, tx, ty, '#5f9a78'); g.set(tx, ty, '#3e6a52'); g.set(tx + s, ty, '#3e6a52');
+        for (var i = 0; i < 4; i++) { var yy = ty + 2 + ((a * 3 + i * 4) % 14); L.push([tx + s * (i & 1) + s, yy, '#9adcff']); if (i === 1) L.push([tx + s, yy + 1, '#d8f4ff']); }
+      };
+      return sp;
+    } },
+    spear: { ph: seqP, still: function (a) { return a >= 2; }, f: function (a, P) {
+      var sp = { spy: a === 0 ? -3 : 0 };
+      if (a === 0) pose(sp, null, P.side ? [7, P.by + 3] : [25, P.by + 3], P);
+      if (a >= 2) pose(sp, P.side ? null : 'salute', P.side ? 'salute' : null, P);
+      if (a === 1) sp.front = function (g, P2, L) { var x = P.side ? 6 : P.up ? 2 : 28; L.push([x - 2, 47, '#d8c8a8'], [x + 3, 47, '#d8c8a8'], [x - 3, 46, '#e8dcc0'], [x + 4, 46, '#e8dcc0']); };
+      return sp;
+    } },
+    hop: { ph: loopP(7), dy: function (a) { return [0, -1.5, -2.5, -1][a]; }, f: function (a, P) { return a === 1 || a === 2 ? pose({}, 'high', 'high', P) : {}; } },
+    swing: { ph: loopP(5), f: function (a, P) { return pose({}, a === 0 ? 'gest' : null, a === 2 ? 'gest' : null, P); } },
+    kick: { ph: seqP, f: function (a, P) {
+      var sp = { kl: a === 0 ? 3 : a === 1 ? 2 : 0 };
+      sp.front = function (g, P2, L) {
+        if (a === 0 || P.up) return;
+        var x = P.side ? [9, 4, -1][a - 1] : [24, 29, 34][a - 1], y = a === 2 ? 45 : 46;
+        L.push([x, y, '#8a8a92'], [x + 1, y, '#6a6a72'], [x, y + 1, '#6a6a72'], [x + 1, y + 1, '#55555e'], [x, y - 1 + (a === 2 ? 0 : 1), '#c0c0c8']);
+      };
+      return sp;
+    } },
+    map: { ph: loopP(1.5), nd: function () { return 1; }, f: function (a, P) {
+      var by = P.by, o = a & 1, sp = P.side ? pose({}, null, [8, by + 6], P) : pose({}, [9, by + 6 + o], [19, by + 6], P);
+      sp.lk = P.side ? 0 : (a < 2 ? -1 : 1);
+      sp.back = function (g) {
+        if (P.up) return;
+        var x0 = P.side ? 3 : 8, w = P.side ? 6 : 16;
+        g.part('#efe0b4', function (m) { m.r(x0, by + 2 + (P.side ? 0 : o), w, 8); });
+        if (!P.side) {
+          for (var i = 0; i < 8; i++) g.set(16, by + 2 + o + i, '#d8c490');
+          [[10, 7], [11, 6], [13, 6], [14, 5], [18, 6], [19, 7]].forEach(function (q) { g.set(q[0], by + q[1] + o, '#a07a4a'); });
+          g.set(20, by + 4 + o, '#d04040'); g.set(21, by + 5 + o, '#d04040'); g.set(21, by + 4 + o, '#d04040'); g.set(20, by + 5 + o, '#d04040');
+        } else { g.set(5, by + 5, '#a07a4a'); g.set(6, by + 6, '#a07a4a'); }
+      };
+      return sp;
+    } },
+    beard: { ph: loopP(2.5), nd: function (a) { return a >= 2 ? 1 : 0; }, f: function (a, P) {
+      return P.side ? pose({}, null, [P.hx + 2, P.ey + 5 + a], P) : pose({}, [11, P.ey + 5 + a], null, P);
+    } },
+    mug: { ph: loopP(5), f: function (a, P) {
+      var by = P.by, sp = P.side ? pose({}, null, [8, by + 7], P) : pose({}, [10, by + 7], [[15, by + 1], [17, by + 3], [15, by + 5], [13, by + 3]][a], P);
+      sp.back = function (g) {
+        if (P.up) return;
+        var x0 = P.side ? 6 : 11;
+        g.part('#6a8ac8', function (m) { m.r(x0, by + 2, 6, 6); m.r(P.side ? x0 + 6 : x0 - 2, by + 3, 2, 3); m.x(P.side ? x0 + 7 : x0 - 2, by + 4); });
+        g.part('#f4f0e0', function (m) { m.r(x0, by + 2, 6, 1); }, 1, true);
+      };
+      sp.front = function (g, P2, L) {
+        if (P.up) return;
+        if (P.side) { var cx = [6, 8, 10, 8][a]; g.part('#f4f4ee', function (m) { m.r(cx, by + 1, 3, 2); }); }
+        else { var R = sp.R; g.part('#f4f4ee', function (m) { m.r(R[0] - 1, R[1] + 2, 5, 2); }); }
+        L.push([P.side ? 7 : 12, by + 3, '#ffffff']);
+      };
+      return sp;
+    } },
+    coins: { ph: loopP(6), f: function (a, P) {
+      var by = P.by, sp = P.side ? pose({}, null, [9, by + 9], P) : pose({}, [10, by + 9], [18, by + 7], P);
+      sp.front = function (g, P2, L) {
+        if (P.up) return;
+        var x0 = P.side ? 9 : 10;
+        g.part('#e8b830', function (m) { m.r(x0, by + 7, 4, 2); m.r(x0 + 1, by + 6, 2, 1); }, 1);
+        var cx = P.side ? 10 : 15, cy = by + 3 - [0, 3, 5, 2][a];
+        if (a & 1) L.push([cx, cy, '#ffd860'], [cx, cy + 1, '#c89020']);
+        else L.push([cx - 1, cy, '#ffd860'], [cx, cy, '#ffe890'], [cx - 1, cy + 1, '#c89020'], [cx, cy + 1, '#e8b830']);
+        if (a === 2) L.push([cx + 2, cy - 1, '#fffbe0'], [cx + 2, cy - 2, '#fffbe0'], [cx + 3, cy - 1, '#fffbe0']);
+      };
+      return sp;
+    } },
+    stretch: { ph: seqP, f: function (a, P) { var sp = a >= 1 ? pose({}, 'high', 'high', P) : pose({}, 'chest', 'chest', P); sp.ec = a === 1 || a === 2; sp.mo = a === 1 || a === 2; return sp; } },
+    yawn: { ph: seqP, f: function (a, P) { var sp = pose({}, a === 0 || a === 3 ? 'chest' : 'mouth', null, P); sp.ec = a >= 1; sp.mo = a === 1; return sp; } },
+    fold: { ph: loopP(1), f: function (a, P) { var sp = P.side ? pose({}, null, [11, P.by + 6], P) : pose({}, [16, P.by + 6], [11, P.by + 7], P); sp.lk = [0, -1, 0, 1][a]; return sp; } }
+  };
+  var IDLE = { fisher: ['fish'], baker: ['knead'], grandma: ['knit'], farmer: ['hoe'], gardener: ['water'], guard: ['spear'],
+    kid: ['hop', 'swing', 'kick'], kid2: ['kick', 'hop', 'swing'], girl: ['hop', 'swing', 'kick'], boy: ['kick', 'swing', 'hop'],
+    traveler: ['map'], elder: ['beard'], innkeeper: ['mug'], shopkeeper: ['coins'], mom: ['stretch', 'yawn', 'fold'], dad: ['fold', 'yawn', 'stretch'] };
+  function hsh(n) { var s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
+
   function sprite(d, dir, f, o) {
     var g = new G(56, 56, 12, 6), A = !d.kid, side = dir >= 2, up = dir === 1;
     var st = f === 1 ? -1 : f === 3 ? 1 : 0, b = st ? 2 : (o.br || 0), lag = st ? -1 : f === 2 ? 1 : 0;
-    var hw = A ? 20 : 24, hh = A ? 20 : 22, hx = 16 - hw / 2, hy = (A ? 1 : 5) + b;
+    var hw = A ? 20 : 24, hh = A ? 20 : 22, hx = 16 - hw / 2, hy = (A ? 1 : 5) + b + (o.nd || 0);
+    if (o.hl != null && !st) lag = o.hl;
     var by = (A ? 20 : 25) + b, ly = A ? 35 : 38, cy = hy + hh / 2, ey = hy + hh - (A ? 10 : 11);
     var body = d.robe || d.dress || d.shirt, sleeve = d.robe || d.shirt || d.dress;
     var tx = side ? (d.wide ? 10 : 11) : (d.wide ? 7 : 8), tw = side ? (d.wide ? 12 : 10) : (d.wide ? 18 : 16), al = A ? 10 : 8, i, j;
     var dim = function (c) { return sh(c, 0.78); };
+    var my0 = hy + hh - (A ? 10 : 11) + (A ? 6 : 7);
+    var P = { side: side, up: up, dir: dir, fw: side ? -1 : 1, by: by, hy: hy, ey: ey, my: my0, hx: hx, A: A, ly: ly, tx: tx, tw: tw };
+    var ACTD = o.ac && ACT[o.ac], spec = ACTD ? ACTD.f(o.ap | 0, P) || {} : {}, LATE = [];
+    var HL = spec.L || null, HR = spec.R || null;
+    if (side) { HR = HR || HL; HL = null; }
+    if (up) { if (HL && spec.Ln !== 'high' && spec.Ln !== 'gest') HL = null; if (HR && spec.Rn !== 'high' && spec.Rn !== 'gest') HR = null; }
     function legF(x, lift, sx) {
       g.part(d.pants, function (m) { m.r(x, ly - 3, 5, 47 - ly - lift); });
       g.part(d.shoes, function (m) { m.r(sx, 44 - lift, 6, 4); m.x(sx === x ? sx + 5 : sx, 44 - lift); });
@@ -219,7 +397,8 @@ window.H = window.H || {};
     // legs / feet
     if (d.robe) {
       g.part(d.shoes, function (m) { if (side) m.r(10 + st * 2, 45, 9, 3); else { m.r(10, 45 - (st < 0 ? 1 : 0), 5, 3); m.r(17, 45 - (st > 0 ? 1 : 0), 5, 3); } });
-    } else if (!side) { legF(10, st < 0 ? 3 : 0, 9); legF(17, st > 0 ? 3 : 0, 17); }
+    } else if (!side) { legF(10, st < 0 ? 3 : 0, 9); legF(17, st > 0 ? 3 : spec.kl || 0, 17); }
+    else if (spec.kl) { legS(0, 0, true); legS(-4, spec.kl > 2 ? 2 : 1, false); }
     else if (st) { legS(st < 0 ? 4 : -4, st < 0 ? 1 : 0, true); legS(st < 0 ? -4 : 4, st < 0 ? 0 : 1, false); }
     else legS(0, 0, false);
     if (side && st) armS(st < 0 ? -5 : 5, true);
@@ -249,17 +428,18 @@ window.H = window.H || {};
       if (d.stubble && dir === 0) { g.set(16, by + 5, F); g.set(16, by + 8, F); }
     }
     if (d.apron && !up) {
-      g.part(d.apron, function (m) { if (side) m.r(tx, by + 4, 4, ly - by - 2); else { m.r(11, by + 4, 10, ly - by - 2); m.r(11, by + 1, 2, 3); m.r(19, by + 1, 2, 3); } });
+      g.part(d.apron, function (m) { if (side) { m.r(tx, by + 4, 4, ly - by - 2); if (o.as) m.r(tx + 4, ly - 4, 1, 3); } else { m.r(11, by + 4, 10, ly - by - 2); m.r(11, by + 1, 2, 3); m.r(19, by + 1, 2, 3); if (o.as) { m.r(21, ly - 4, 1, 3); m.x(11, ly - 1); } } });
       if (!side) for (i = 13; i < 19; i++) g.set(i, by + 10, sh(d.apron, 0.8));
     }
     // arms (swing opposite to the legs)
     if (!side) {
       [[4, st], [24, -st]].forEach(function (a) {
+        if (a[0] === 4 ? HL : HR) return;
         var len = al + a[1] * 2, y0 = by + 1, ox = a[0] === 4 ? 4 : 27;
         g.part(sleeve, function (m) { m.r(a[0], y0, 4, len); m.x(ox, y0); });
         g.part(d.skin, function (m) { m.r(a[0], y0 + len, 4, 3); m.x(ox, y0 + len + 2); });
       });
-    } else armS(st < 0 ? 5 : st > 0 ? -5 : 0, false);
+    } else if (!HR) armS(st < 0 ? 5 : st > 0 ? -5 : 0, false);
     // scarf: wrap + tail trailing in the wind
     if (d.scarf) {
       var wl = o.wl || 0, L = [7, 11, 15][wl], sx = dir === 0 ? 21 : up ? 16 : tx + tw - 2, sy = by + 1, ph = (o.sp || 0) * Math.PI / 2;
@@ -285,13 +465,19 @@ window.H = window.H || {};
       g.part('#6ad0ff', function (m) { m.e(fx + 1, by - 10, 3, 3); });
       g.set(fx, by - 12, '#e8fbff');
     }
+    if (d.spear) {
+      var spx = side ? 6 : up ? 2 : 28, spy = spec.spy || 0;
+      g.part('#8a6a42', function (m) { m.r(spx, by - 13 + spy, 2, 60 - by - spy); });
+      g.part('#c8ccd8', function (m) { m.r(spx, by - 19 + spy, 2, 6); m.r(spx - 1, by - 16 + spy, 4, 2); }, 1);
+      g.part('#c83a3a', function (m) { m.r(spx - 1, by - 13 + spy, 4, 2); }, 1, true);
+    }
     // head
     g.part(d.skin, function (m) {
       m.e(16, cy, hw / 2, hh / 2);
       if (side) m.r(hx - 1, ey + 4, 1, 2); else if (!up) { m.r(hx - 1, ey + 2, 1, 4); m.r(hx + hw, ey + 2, 1, 4); }
     });
     // face
-    var I = d.eye, IL = sh(d.eye, 1.35), closed = d.expr === 'closed', w = A ? 3 : 4, rows = A ? 3 : 4;
+    var I = d.eye, IL = sh(d.eye, 1.35), closed = d.expr === 'closed' || spec.ec, mouthOn = d.expr !== 'closed' || o.mo || spec.mo, w = A ? 3 : 4, rows = A ? 3 : 4, gx = spec.lk != null ? spec.lk : (o.lk || 0);
     function eye(x0, mir) {
       var q, r;
       if (closed) { g.set(x0, ey + 2, E); for (q = 1; q < w - 1; q++) g.set(x0 + q, ey + 1, E); g.set(x0 + w - 1, ey + 2, E); return; }
@@ -306,18 +492,23 @@ window.H = window.H || {};
     }
     var my = ey + (A ? 6 : 7), grin = d.expr === 'grin', BL = A ? sh(d.skin, 0.9) : '#f09a94', mc = grin ? E : MO;
     if (dir === 0) {
-      if (A) { eye(10, false); eye(19, true); g.set(16, ey + 4, sh(d.skin, 0.8)); } else { eye(9, false); eye(19, true); }
-      if (!closed) {
-        g.set(13, my - 1, mc); g.set(18, my - 1, mc); for (i = 14; i <= 17; i++) g.set(i, my, mc);
-        if (grin) { g.set(15, my + 1, '#e0606c'); g.set(16, my + 1, '#e0606c'); }
+      if (A) { eye(10 + gx, false); eye(19 + gx, true); g.set(16 + gx, ey + 4, sh(d.skin, 0.8)); } else { eye(9 + gx, false); eye(19 + gx, true); }
+      if (o.mo || spec.mo) {
+        for (i = 14; i <= 17; i++) g.set(i + gx, my - 1, E);
+        g.set(14 + gx, my, E); g.set(15 + gx, my, '#b8404c'); g.set(16 + gx, my, '#b8404c'); g.set(17 + gx, my, E);
+        g.set(15 + gx, my + 1, E); g.set(16 + gx, my + 1, E);
+      } else if (mouthOn) {
+        g.set(13 + gx, my - 1, mc); g.set(18 + gx, my - 1, mc); for (i = 14; i <= 17; i++) g.set(i + gx, my, mc);
+        if (grin) { g.set(15 + gx, my + 1, '#e0606c'); g.set(16 + gx, my + 1, '#e0606c'); }
       }
       if (A) { g.set(8, ey + 4, BL); g.set(9, ey + 4, BL); g.set(22, ey + 4, BL); g.set(23, ey + 4, BL); }
       else for (i = 0; i < 3; i++) for (j = 0; j < 2; j++) { g.set(6 + i, ey + 5 + j, BL); g.set(23 + i, ey + 5 + j, BL); }
       if (d.freckles) { g.set(7, ey + 4, sh(d.skin, 0.78)); g.set(24, ey + 4, sh(d.skin, 0.78)); }
       if (d.bandaid) for (i = 22; i <= 25; i++) { g.set(i, ey + 5, '#f6e2c0'); g.set(i, ey + 6, i === 23 ? '#d8b080' : '#f6e2c0'); }
     } else if (side) {
-      eye(hx + 3, true);
-      if (!closed) { g.set(hx + 2, my, mc); g.set(hx + 3, my, mc); g.set(hx + 4, my - (grin ? 1 : 0), mc); }
+      eye(hx + 3 + (gx > 0 ? 1 : 0), true);
+      if (o.mo || spec.mo) { g.set(hx + 2, my - 1, E); g.set(hx + 3, my - 1, E); g.set(hx + 2, my, '#b8404c'); g.set(hx + 3, my, E); g.set(hx + 2, my + 1, E); }
+      else if (mouthOn) { g.set(hx + 2, my, mc); g.set(hx + 3, my, mc); g.set(hx + 4, my - (grin ? 1 : 0), mc); }
       if (!A) for (i = 0; i < 3; i++) for (j = 0; j < 2; j++) g.set(hx + 8 + i, ey + 5 + j, BL);
     }
     if (d.stubble && !up) for (j = ey + 4; j <= ey + 9; j++) for (i = hx; i < hx + hw; i++) if (((i + j) & 1) && g.get(i, j) === d.skin && !(Math.abs(i - 15.5) < 3 && j < ey + 8)) g.set(i, j, sh(d.skin, 0.88));
@@ -335,13 +526,27 @@ window.H = window.H || {};
       g.part(d.hair, function (m) { m.e(dir === 0 ? 16 : hx + 5, hy + hh, dir === 0 ? 7 : 5, 6); m.clip(function (x, y) { return y >= ey + 4; }); });
       for (j = -1; j <= 0; j++) for (i = 0; i < 4; i++) { if (dir === 0) { g.set(9 + i, ey + j, d.brow); g.set(19 + i, ey + j, d.brow); } else g.set(hx + 2 + i, ey + j, d.brow); }
     }
-    if (d.moustache && !up) g.part(d.hair, function (m) { if (dir === 0) { m.e(13.5, ey + 6, 2.7, 1.4); m.e(18.5, ey + 6, 2.7, 1.4); } else m.r(hx, ey + 5, 4, 2); }, 1, true);
+    if (d.moustache && !up) g.part(d.hair, function (m) { if (dir === 0) { m.e(13.5 + gx, ey + 6, 2.7, 1.4); m.e(18.5 + gx, ey + 6, 2.7, 1.4); } else m.r(hx, ey + 5, 4, 2); }, 1, true);
     if (d.glasses && !up) {
       var fr = function (x0, x1) { for (i = x0; i <= x1; i++) { g.set(i, ey - 1, GL); g.set(i, ey + 4, GL); } for (j = ey; j < ey + 4; j++) { g.set(x0, j, GL); g.set(x1, j, GL); } };
-      if (dir === 0) { fr(9, 13); fr(18, 22); for (i = 14; i <= 17; i++) g.set(i, ey + 1, GL); }
+      if (dir === 0) { fr(9 + gx, 13 + gx); fr(18 + gx, 22 + gx); for (i = 14; i <= 17; i++) g.set(i + gx, ey + 1, GL); }
       else { fr(hx + 2, hx + 6); for (i = hx + 7; i <= 18; i++) g.set(i, ey + 1, GL); }
     }
+    // idle action: props behind hands, posed arms, props in front
+    if (spec.back) spec.back(g, P, LATE);
+    if (HL) armPose(g, d, sleeve, 'L', HL, P);
+    if (HR) armPose(g, d, sleeve, side ? 'S' : 'R', HR, P);
+    if (spec.front) spec.front(g, P, LATE);
+    // weight shift: upper body leans one pixel over the hips
+    if (o.ws) {
+      var cut = ly - 3 + g.oy, sx2 = o.ws;
+      for (j = 0; j < cut; j++) {
+        var row = g.c.slice(j * g.w, (j + 1) * g.w);
+        for (i = 0; i < g.w; i++) { var si = i - sx2; g.c[j * g.w + i] = si >= 0 && si < g.w ? row[si] : null; }
+      }
+    }
     g.outline();
+    LATE.forEach(function (p) { g.set(p[0], p[1], p[2]); });
     return g.canvas(1, dir === 3);
   }
 
@@ -483,31 +688,60 @@ window.H = window.H || {};
   // ---------- API ----------
   var SPR = {}, POR = {}, SEED = {};
   Object.keys(C).forEach(function (k, i) { var s = Math.sin((i + 1) * 91.7) * 43758.5453; SEED[k] = s - Math.floor(s); });
+  var NSPR = 0;
   function frameCanvas(key, dir, f, o) {
-    var k = key + dir + f + o.br + o.bl + o.sp + o.wl;
-    if (!SPR[k]) SPR[k] = sprite(C[key], dir, f, o);
+    var k = key + dir + f + '|' + [o.br, o.bl, o.sp, o.wl, o.lk, o.ws, o.hl, o.as, o.nd, o.mo, o.ac, o.ap].join(',');
+    if (!SPR[k]) { if (++NSPR > 3000) { SPR = {}; NSPR = 1; } SPR[k] = sprite(C[key], dir, f, o); }
     return SPR[k];
   }
   H.chars = {
     data: C,
     keys: Object.keys(C),
     names: Object.keys(C).reduce(function (o, k) { o[k] = C[k].name; return o; }, {}),
+    idles: Object.keys(ACT).filter(function (k) { return k !== 'talk'; }),
     // (x,y) = feet centre in logical px. Art is 2x: 56x56 real px drawn into a 28x28 logical box.
-    draw: function (ctx, key, x, y, dir, frame, env) {
+    // opts (NPCs): { npc, seed 0..1, idle: action name, talking }
+    draw: function (ctx, key, x, y, dir, frame, env, opts) {
       if (!C[key]) key = 'kid';
-      dir = (dir | 0) & 3; var f = ((Math.floor(frame || 0) % 4) + 4) % 4, d = C[key], sd = SEED[key];
-      var t = (env && env.t) || 0, o = { br: 0, bl: 0, sp: 0, wl: 0 };
-      if (f === 0) { // idle life: breathing + occasional (sometimes double) blink, de-synced per character
-        o.br = Math.sin(t * (1.7 + sd * 0.6) + sd * 6.28) > 0.15 ? 1 : 0;
-        var bt = (t + sd * 7.3) % (3.3 + sd * 2.4);
-        o.bl = (bt < 0.13 || (sd > 0.5 && bt > 0.3 && bt < 0.4)) ? 1 : 0;
+      dir = (dir | 0) & 3; var f = ((Math.floor(frame || 0) % 4) + 4) % 4, d = C[key];
+      var npc = !!(opts && opts.npc), sd = opts && opts.seed != null ? +opts.seed : SEED[key];
+      var t = (env && env.t) || 0, wv = (env && !env.indoor && env.wind) || 0, dy = 0;
+      var o = { br: 0, bl: 0, sp: 0, wl: 0, lk: 0, ws: 0, hl: 0, as: 0, nd: 0, mo: 0, ac: '', ap: 0 };
+      if (f === 0) {
+        // breathing (1 real px), blinking at irregular moments, hair/apron lagging the breath
+        o.br = Math.sin(t * (1.6 + sd * 0.6) + sd * 6.28) > 0.1 ? 1 : 0;
+        var slot = 1.9 + sd * 0.9, bt = t + sd * 13, bi = Math.floor(bt / slot), bh = hsh(bi + sd * 91), bu = bt - bi * slot, bo = bh * (slot - 0.5);
+        o.bl = (bh > 0.2 && bu > bo && bu < bo + 0.13) || (bh > 0.78 && bu > bo + 0.26 && bu < bo + 0.38) ? 1 : 0;
+        o.hl = o.br ? -1 : 0;
+        if (d.apron && wv > 0.35) o.as = o.br;
+        if (npc) {
+          // glance + weight shift together, at random-feeling moments
+          var gp = 2.4 + sd * 1.3, gi = Math.floor((t + sd * 17) / gp), gh = hsh(gi * 3.1 + sd * 33);
+          o.lk = gh < 0.5 ? 0 : gh < 0.75 ? -1 : 1;
+          if (!d.staff && !d.spear) o.ws = hsh(gi * 5.7 + sd * 7) < 0.45 ? o.lk || 1 : 0;
+          if (opts.talking) {
+            o.ac = 'talk'; o.ap = Math.floor(t * 1.3 + sd * 5) % 3; o.ws = 0; o.lk = 0;
+            o.mo = hsh(Math.floor(t * 7) + sd * 50) > 0.38 ? 1 : 0;
+            o.nd = (t * 1.4 + sd * 3) % 2.3 < 0.28 ? 1 : 0;
+          } else {
+            var per = 6 + sd * 6, dur = 1.6 + sd * 1.4, at = t + sd * 37, ci = Math.floor(at / per), u = at - ci * per;
+            var list = opts.idle && ACT[opts.idle] ? [opts.idle] : IDLE[key];
+            if (list && u < dur) {
+              var nm = list[(ci + Math.floor(sd * 10)) % list.length], A = ACT[nm];
+              o.ac = nm; o.ap = A.ph(u / dur, u); o.ws = 0;
+              if (A.nd) o.nd = A.nd(o.ap);
+              if (A.dy) { dy = A.dy(o.ap); o.br = 0; }
+              if (A.still && A.still(o.ap)) o.br = 0;
+              if (o.nd) o.lk = 0;
+            }
+          }
+        }
       }
       if (d.scarf) {
-        var wv = (env && !env.indoor && env.wind) || 0;
         o.wl = wv < 0.35 ? 0 : wv < 0.65 ? 1 : 2;
         o.sp = Math.floor(t * (o.wl ? 9 : 3.5)) & 3;
       }
-      ctx.drawImage(frameCanvas(key, dir, f, o), Math.round(x) - 14, Math.round(y) - 27.5, 28, 28);
+      ctx.drawImage(frameCanvas(key, dir, f, o), Math.round(x) - 14, Math.round(y) - 27.5 + dy, 28, 28);
     },
     portrait: function (key) {
       if (!POR[key]) POR[key] = portraitArt(C[key] || C.kid);
