@@ -105,7 +105,7 @@
     var c = document.createElement('canvas'); c.width = c.height = 32; var g = c.getContext('2d'); g.imageSmoothingEnabled = false;
     try {
       if (H.items && H.items.list.some(function (x) { return x.id === it.id; })) { g.scale(2, 2); H.items.draw(g, it.id, 0, 0); }
-      else { var ic = iconCanvas(it.icon || it.id); if (ic) g.drawImage(ic, 0, 0, 32, 32); }
+      else { var ICO = { ember_dust: 'fire', tide_pearl: 'water', herb: 'grass', spirit_snack: 'energy', wand: 'wand', novice_cert: 'scroll', charm: 'backpack' }; var ic = iconCanvas(ICO[it.id] || it.icon || it.id); if (ic) g.drawImage(ic, 0, 0, 32, 32); }
     } catch (e) {}
     return c;
   }
@@ -193,7 +193,8 @@
   function acts(parent) { return mk('div', 'hk-acts', parent || els.sheet); }
   function note(text, parent) { return mk('div', 'hk-note', parent || els.sheet, text); }
   function itemDesc(it) {
-    var d = it.desc;
+    var USE = { ember_dust: 'Revives a fainted fire hontori', tide_pearl: 'Revives a fainted water hontori', herb: 'Restores a little mana in battle', spirit_snack: 'Revives other hontori, restores mana', wand: 'Draw spells to help your hontori', novice_cert: 'Proof you finished the Academy', charm: 'A lucky charm' };
+    var d = it.desc || USE[it.id];
     if (!d && H.items) { var f = H.items.list.filter(function (x) { return x.id === it.id; })[0]; d = f && f.desc; }
     return d ? String(d).split(/(?<=\.)\s/)[0] : '';
   }
