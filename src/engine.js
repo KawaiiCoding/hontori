@@ -319,7 +319,7 @@
     }
     if (player.moving) {
       const run = keys.shift || ((H.ui && H.ui.input && (H.ui.input.run || H.ui.input.back)) ? true : false);
-      player.prog += dt / (run ? 0.13 : 0.21);
+      player.prog += dt / (run ? 0.15 : 0.28);
       if (player.prog >= 1) {
         const left = player.prog - 1; player.moving = false; player.steps++; sfx('step');
         player.x = player.tx * T + 8; player.y = player.ty * T + 15;
