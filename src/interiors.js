@@ -83,8 +83,9 @@ window.H = window.H || {};
       pr('bookstack', 1, 11), pr('flower_vase', 18, 11), pr('plant', 1, 8), pr('bookstack', 18, 8)
     ],
     npcs: [
-      { key: 'elder', x: 8, y: 3, dir: 0, lines: L('Madam Sorrel', 'Eight elements, eight tempers, and all of them teachable.', 'Read the board, child, and mind the orb.') },
-      { key: 'boy', x: 5, y: 7, dir: 1, lines: L('Ash', 'I made a spark today, a tiny one.', 'Do not tell Kip outside, he would be jealous.') }
+      { key: 'elder', x: 8, y: 3, dir: 0, lines: L('Madam Sorrel', 'Eight elements, eight tempers, and all of them teachable.', 'Read the board, child, and mind the orb.'), svc: 'academy_lessons' },
+      { key: 'boy', x: 5, y: 7, dir: 1, lines: L('Ash', 'I made a spark today, a tiny one.', 'Do not tell Kip outside, he would be jealous.'), svc: 'academy_duel' },
+      { key: 'girl', x: 15, y: 7, dir: 1, lines: L('Mira', 'My otter splashed the whole front row today.', 'Madam Sorrel only smiled and dried us off.'), svc: 'academy_duel' }
     ]
   });
   ['water', 'fire', 'wind', 'grass', 'electric', 'earth', 'dark', 'light'].forEach(function (el, i) {
