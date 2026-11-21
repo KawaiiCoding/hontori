@@ -642,6 +642,9 @@
     '.hb-sp.no{opacity:.55}',
     '.hb-sp.hot{background:rgba(255,217,138,.14);box-shadow:0 0 0 2px rgba(255,217,138,.5)}',
     '.hb-run{position:absolute;left:10px;top:calc(env(safe-area-inset-top,0px) + 12px)}',
+    '.hb-turn{position:absolute;left:50%;top:47%;transform:translateX(-50%);padding:6px 16px;border-radius:999px;font-weight:900;font-size:14px;letter-spacing:.5px;background:rgba(40,20,24,.85);color:#ffb3a8;border:2px solid rgba(255,140,120,.5);opacity:0;transition:opacity .25s;pointer-events:none;z-index:5}',
+    '.hb-turn.on{opacity:1}',
+    '.hb-turn.me{background:rgba(14,30,24,.88);color:#b8f5c8;border-color:#57d07a;box-shadow:0 0 14px rgba(87,208,122,.45)}',
     '.hb-banner{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(.9);min-width:240px;max-width:90%;text-align:center;padding:14px 18px;border-radius:18px;background:rgba(10,10,28,.9);border:2px solid rgba(255,217,138,.4);box-shadow:0 0 30px rgba(0,0,0,.6);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none}',
     '.hb-banner.on{opacity:1;transform:translate(-50%,-50%) scale(1)}',
     '.hb-banner .vs{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:900;font-size:16px}',
@@ -725,9 +728,11 @@
     // spell cheat-sheet
     var chips = {};
     ORDER.forEach(function (k) {
-      var S = SPELLS[k], kn = known.indexOf(k) >= 0, c = mk('div', 'hb-sp' + (kn ? '' : ' lock'), sheet);
+      var S = SPELLS[k], kn = known.indexOf(k) >= 0;
+      if (!kn && k !== 'bind') return; // spells from later schools stay hidden until learned
+      var c = mk('div', 'hb-sp' + (kn ? '' : ' lock'), sheet);
       var SHORT = { mend: 'Heal', shield: 'Block', boost: 'Power up', stun: 'Stun', sleep: 'Sleep', bind: 'Capture', revive: 'Revive', veil: 'Lift veil' };
-      c.innerHTML = sigilSVG(k, S.col, !kn) + (kn ? S.name + '<span class="d">' + (SHORT[k] || '') + '</span><span class="c">' + new Array(S.cost + 1).join('o').replace(/o/g, '&#9679;') + '</span>' : '');
+      c.innerHTML = sigilSVG(k, S.col, !kn) + (kn ? S.name + '<span class="d">' + (SHORT[k] || '') + '</span><span class="c">' + new Array(S.cost + 1).join('o').replace(/o/g, '&#9679;') + '</span>' : S.name + '<span class="d">Learn at the Academy</span>');
       chips[k] = c;
     });
     var sheetNote = mk('div', '', sheet); sheetNote.hidden = true;
@@ -760,6 +765,11 @@
       return '<svg class="hb-edge" width="' + px + '" height="' + px + '" viewBox="0 0 24 24" style="vertical-align:middle;flex:none"><circle cx="12" cy="12" r="11" fill="' + col + '" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/><path d="' + path + '" fill="#fff"/></svg>';
     }
     function tag(p, t, c) { var s = mk('span', 'hb-tag', p, t); s.style.background = rgba(c, 0.25); s.style.color = c; }
+    var turnPill = mk('div', 'hb-turn', el);
+    function updateTurn() {
+      var mine = !busy && !done, txt = done ? '' : mine ? 'Your turn' : 'Enemy turn';
+      if (turnPill._t !== txt) { turnPill._t = txt; turnPill.textContent = txt; turnPill.className = 'hb-turn' + (txt ? ' on' : '') + (mine ? ' me' : ''); }
+    }
     function renderUI() {
       card(foeCard, foe); card(meCard, me);
       manaEl.innerHTML = 'Mana ' + Array.apply(null, Array(maxMana)).map(function (_, i) { return '<span class="hb-pip' + (i < mana ? ' on' : '') + '"></span>'; }).join('');
@@ -866,7 +876,7 @@
       g.globalAlpha = 1;
       ink.draw(g, 1);
       if (flash.a > 0) { g.globalAlpha = flash.a; g.fillStyle = flash.c; g.fillRect(0, 0, W, Hh); g.globalAlpha = 1; flash.a = Math.max(0, flash.a - dt * 2.5); }
-      requestAnimationFrame(frame);
+      updateTurn(); requestAnimationFrame(frame);
     }
     function runFx(dt, back) {
       for (var i = 0; i < fxs.length; i++) {
