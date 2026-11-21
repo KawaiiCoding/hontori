@@ -65,6 +65,8 @@
     if (spirit) { spirit.x = spirit.gx = player.x; spirit.gy = player.y; spirit.y = player.y - 10; trail.length = 0; }
     H.ui && H.ui.hud(env, map.name || name);
     try { H.audio && H.audio.setScene(name, env); } catch (e) {}
+    // story/quest hooks: listeners get (mapName, map) after every map load
+    (H.onMapEnter || []).forEach(fn => { try { fn(name, map); } catch (e) { console.warn(e); } });
   }
 
   const tileAt = (x, y) => (grid[y] && grid[y][x]) || (env.indoor ? 'void' : 'grass');
