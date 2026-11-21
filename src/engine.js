@@ -335,6 +335,10 @@
   // ---------- update
   function update(dt) {
     env.t += dt;
+    // the clock runs on its own: 1 game hour per 2 real minutes, paused in dialogs, menus and battles
+    if (H.game && H.game.state && H.game.state.intro && !busy && !(H.ui && H.ui.isOpen && H.ui.isOpen()) && !(H.menu && H.menu.isOpen && H.menu.isOpen())) {
+      env.time = (env.time + dt / 120) % 24;
+    }
     const targetWind = env.weather === 'wind' ? 0.45 : env.weather === 'rain' ? 0.3 : 0.1;
     env.wind += (targetWind + Math.sin(env.t * 0.4) * 0.1 - env.wind) * dt * 0.8;
     const inp = readInput();

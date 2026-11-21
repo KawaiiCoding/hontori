@@ -56,7 +56,7 @@ New rules are added here as they are given. When something in the code disagrees
 38. Never use emojis anywhere.
 39. Mobile first (portrait phone), also web. Joystick on the left, buttons on the right. No zoom on double tap. Works in Safari.
 40. Fitting music.
-41. Time of day carries over when entering or leaving places. Only sleeping moves time forward (8 hours).
+41. Time flows on its own (one game hour every 2 real minutes, paused in dialogs, menus and battles), carries over when entering or leaving places, and sleeping skips 8 hours.
 42. The kid has a map of the current area (map button next to the backpack).
 43. You cannot capture another person's hontori: the owner pushes the binding away with their hand.
 44. Teaching style: like classic handheld monster RPGs. Each mechanic is shown once, when it first matters, in one short line. Never over-explain, never leave anything unexplained.
