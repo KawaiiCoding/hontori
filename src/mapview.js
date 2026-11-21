@@ -146,7 +146,7 @@
     var m = H.game && H.game.currentMap && H.game.currentMap();
     if (!m || !m.map || document.querySelector('.hmap')) return;
     if (H.pickups && H.game.state.intro && !H.pickups.has('map')) { H.ui && H.ui.blocked('No map yet. There is one somewhere at home.'); return; }
-    H.ui && H.ui.helper && H.ui.helper('map', 'Map', 'Places you have seen. Drag to look around, pinch or use the buttons to zoom.', 'map');
+    H.ui && H.ui.helper && H.ui.helper('map', 'Map', 'Places you have seen. Drag to look, pinch to zoom.', 'map', '.hmap .vp');
     var map = m.map, root = document.getElementById('root');
     if (!document.getElementById('hmap-css')) { var st = document.createElement('style'); st.id = 'hmap-css'; st.textContent = CSS; document.head.appendChild(st); }
     reveal(m.name, map, m.player.tx, m.player.ty);

@@ -256,7 +256,7 @@ window.H = window.H || {};
   // the pill is a small scroll icon; tapping it shows the current step and a way into the full log
   function togglePop(on) {
     if (!pop) return; if (on == null) on = !pop.classList.contains('on');
-    if (on) { var id = current(), st = id && nextStep(id); if (!id) return; pop.querySelector('b').textContent = quests[id].title; pop.querySelector('p').textContent = st ? (typeof st.text === 'function' ? st.text(S()) : st.text) : ''; H.ui && H.ui.helper && H.ui.helper('quest', 'Quests', 'Tap the scroll to see what to do next.', 'scroll'); }
+    if (on) { var id = current(), st = id && nextStep(id); if (!id) return; pop.querySelector('b').textContent = quests[id].title; pop.querySelector('p').textContent = st ? (typeof st.text === 'function' ? st.text(S()) : st.text) : ''; H.ui && H.ui.helper && H.ui.helper('quest', 'Quests', 'Tap the scroll to see what comes next.', 'scroll', '.hq-pill'); }
     pop.classList.toggle('on', on);
   }
   function style() { if (styled) return; var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); styled = true; }

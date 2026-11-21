@@ -493,41 +493,68 @@ window.H = window.H || {};
   H.kit = { css: css, img: img, btn: btn, x: x, header: header };
 })();
 
-// H.ui.helper: rule 48 first-touch card. Shown once per id (state.flags['help:' + id]); tap anywhere on it to close.
+// H.ui.helper: rule 48 first-touch guide. The kid's own hontori floats to the thing being explained and says one short line
+// in a small bubble; that thing gets a soft glowing ring. Shown once per id (state.flags['help:' + id]); tap anywhere to go on.
+// helper(id, title, text, icon, target) - target: an element or a selector (optional).
 // H.ui.blocked(text): the one-line "not yet, learn it at ..." note for things shown but not open yet.
 (function () {
   'use strict';
-  var H = window.H, card = null, queue = [];
-  var CSS = '.hh-card{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translate(-50%,-10px);width:min(340px,calc(100% - 32px));z-index:9000;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}' +
-    '.hh-card.on{opacity:1;transform:translate(-50%,0)}' +
-    '.hh-card img{width:32px;height:32px;image-rendering:pixelated;flex:none;margin-top:2px}' +
-    '.hh-card b{display:block;font-size:16px;font-weight:900;color:#ffe7a8;margin-bottom:2px}' +
-    '.hh-card p{margin:0;font-size:14px;font-weight:700;line-height:1.35;color:#f4f1e8}' +
-    '.hh-card i{display:block;font-style:normal;font-size:11px;font-weight:800;opacity:.55;margin-top:6px;text-align:right}';
-  function css() { if (document.getElementById('hh-style')) return; var s = document.createElement('style'); s.id = 'hh-style'; s.textContent = CSS; document.head.appendChild(s); }
+  var H = window.H, busy = false, queue = [];
+  var CSS = '.hg{position:absolute;inset:0;z-index:9000;background:rgba(6,8,20,.22);opacity:0;transition:opacity .2s;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:Nunito,"M PLUS Rounded 1c",system-ui,-apple-system,sans-serif}' +
+    '.hg.on{opacity:1}' +
+    '.hg-ring{position:absolute;border-radius:14px;box-shadow:0 0 0 3px rgba(255,214,120,.95),0 0 18px 4px rgba(255,190,90,.6);animation:hgP 1.4s ease-in-out infinite;pointer-events:none}' +
+    '@keyframes hgP{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}' +
+    '.hg-g{position:absolute;display:flex;align-items:flex-start;gap:6px;max-width:min(300px,calc(100% - 20px));transition:left .35s ease,top .35s ease}' +
+    '.hg-fox{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden;background:#2a2d52;border:2px solid #ffb04a;box-shadow:0 3px 10px rgba(0,0,0,.45);animation:hgB 1.8s ease-in-out infinite}' +
+    '.hg-fox canvas{width:100%;height:100%;image-rendering:pixelated;display:block}' +
+    '@keyframes hgB{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}' +
+    '.hg-b{position:relative;min-width:0;padding:7px 11px 8px;border-radius:14px;background:#fffaf0;color:#2a1d10;box-shadow:0 4px 14px rgba(0,0,0,.4);font-size:14px;font-weight:800;line-height:1.3}' +
+    '.hg-b:before{content:"";position:absolute;left:-6px;top:14px;border-top:6px solid transparent;border-bottom:6px solid transparent;border-right:7px solid #fffaf0}' +
+    '.hg-b b{display:block;font-size:11px;font-weight:900;color:#c0602a;letter-spacing:.3px;text-transform:uppercase}' +
+    '.hg-b span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}';
+  function css() { if (document.getElementById('hg-style')) return; var s = document.createElement('style'); s.id = 'hg-style'; s.textContent = CSS; document.head.appendChild(s); }
   function flags() { var st = H.game && H.game.state; if (!st) return null; return (st.flags = st.flags || {}); }
   function seen(id) { var f = flags(); return !!(f && f['help:' + id]); }
-  function helper(id, title, text, icon) {
+  function helper(id, title, text, icon, target) {
     var f = flags(); if (!f || f['help:' + id]) return Promise.resolve(false);
     f['help:' + id] = 1;
     try { H.game.save && H.game.save(); } catch (e) {}
-    return new Promise(function (res) { queue.push({ title: title, text: text, icon: icon, res: res }); if (!card) next(); });
+    return new Promise(function (res) { queue.push({ title: title, text: text, target: target, res: res }); if (!busy) setTimeout(next, 60); busy = true; });
+  }
+  function fox() {
+    var st = H.game && H.game.state, m = st && st.party && st.party[0], c = null;
+    try { c = H.spirits.portrait(m ? m.key : 'hontori'); } catch (e) {}
+    if (!c) return null;
+    var cl = document.createElement('canvas'); cl.width = c.width; cl.height = c.height; cl.getContext('2d').drawImage(c, 0, 0); return cl;
   }
   function next() {
-    var o = queue.shift(); if (!o) { card = null; return; }
-    css(); if (H.kit) H.kit.css();
-    var root = document.getElementById('root') || document.body;
-    card = document.createElement('div'); card.className = 'hh-card hk-panel';
-    if (o.icon && /^data:|\//.test(o.icon)) { var im = document.createElement('img'); im.alt = ''; im.src = o.icon; card.appendChild(im); }
-    else if (o.icon && H.kit) card.appendChild(H.kit.img(o.icon));
-    var t = document.createElement('div'), b = document.createElement('b'), p = document.createElement('p'), i = document.createElement('i');
-    b.textContent = o.title; p.textContent = o.text; i.textContent = 'Tap to close';
-    t.appendChild(b); t.appendChild(p); t.appendChild(i); card.appendChild(t); root.appendChild(card);
-    var c = card, gone = false;
-    function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; c.classList.remove('on'); setTimeout(function () { if (c.parentNode) c.parentNode.removeChild(c); o.res(true); next(); }, 200); }
-    c.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-    c.addEventListener('click', close);
-    void c.offsetWidth; c.classList.add('on');
+    var o = queue.shift(); if (!o) { busy = false; return; }
+    css();
+    var root = document.getElementById('root') || document.body, R = root.getBoundingClientRect();
+    var ov = document.createElement('div'); ov.className = 'hg';
+    var t = typeof o.target === 'string' ? document.querySelector(o.target) : o.target, tr = null;
+    if (t && t.getBoundingClientRect && t.offsetParent !== null) { var b = t.getBoundingClientRect(); if (b.width && b.height) tr = { x: b.left - R.left, y: b.top - R.top, w: b.width, h: b.height }; }
+    if (tr) { var ring = document.createElement('div'); ring.className = 'hg-ring'; ring.style.cssText = 'left:' + (tr.x - 4) + 'px;top:' + (tr.y - 4) + 'px;width:' + (tr.w + 8) + 'px;height:' + (tr.h + 8) + 'px'; ov.appendChild(ring); }
+    var g = document.createElement('div'); g.className = 'hg-g';
+    var fx = document.createElement('div'); fx.className = 'hg-fox'; var fc = fox(); if (fc) fx.appendChild(fc); g.appendChild(fx);
+    var bb = document.createElement('div'); bb.className = 'hg-b';
+    var bt = document.createElement('b'), bs = document.createElement('span'); bt.textContent = o.title; bs.textContent = o.text;
+    bb.appendChild(bt); bb.appendChild(bs); g.appendChild(bb); ov.appendChild(g);
+    root.appendChild(ov);
+    // the guide floats next to the thing: below it in the top half of the screen, above it in the bottom half
+    var W = R.width, Hh = R.height, gw = Math.min(300, W - 20), gh = g.offsetHeight || 70, x, y;
+    if (tr) {
+      x = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2));
+      y = tr.y + tr.h / 2 < Hh / 2 ? tr.y + tr.h + 12 : tr.y - gh - 12;
+      y = Math.max(10, Math.min(Hh - gh - 10, y));
+    } else { x = (W - gw) / 2; y = Math.max(10, Hh * 0.16); }
+    g.style.left = x + 'px'; g.style.top = y + 'px'; g.style.width = gw + 'px';
+    var gone = false;
+    function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; ov.classList.remove('on'); setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); o.res(true); next(); }, 200); }
+    ov.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); });
+    ov.addEventListener('pointerup', function (e) { e.stopPropagation(); });
+    ov.addEventListener('click', close);
+    void ov.offsetWidth; ov.classList.add('on');
   }
   function blocked(text) { if (H.ui && H.ui.toast) H.ui.toast(text); }
   // the game layers never scroll: a focused input or scrollIntoView must not shift the screen (Safari)
