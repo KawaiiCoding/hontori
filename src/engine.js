@@ -57,6 +57,7 @@
     (map.props || []).forEach(p => { const i = propInfo(p.type); if (i.solid && !i.decor) for (let y = 0; y < i.fh; y++) for (let x = 0; x < i.fw; x++) block(p.x + x, p.y + y); });
     (map.buildings || []).forEach(b => { const i = H.buildings.info[b.type]; const dx = Math.floor(i.fw / 2), dy = i.fh - 1;
       for (let y = 0; y < i.fh; y++) for (let x = 0; x < i.fw; x++) if (!(x === dx && y === dy)) block(b.x + x, b.y + y); });
+    (map.passable || []).forEach(([x, y]) => { if (solid[y]) solid[y][x] = false; }); // e.g. stepping stones over a stream
     try { ambient = H.ambient && H.ambient.create ? H.ambient.create(map) : null; } catch (e) { console.warn(e); ambient = null; }
     npcs = (map.npcs || []).map((n, i) => ({ ...n, seed: (n.x * 13 + n.y * 7 + i * 31) % 97 / 97, px: n.x * T + 8, py: n.y * T + 15 }));
     const s = map.spawn || { x: 1, y: 1, dir: 0 };
@@ -64,6 +65,8 @@
     player.x = player.tx * T + 8; player.y = player.ty * T + 15; player.moving = false; camSnap = true;
     if (spirit) { spirit.x = spirit.gx = player.x; spirit.gy = player.y; spirit.y = player.y - 10; trail.length = 0; }
     H.ui && H.ui.hud(env, map.name || name);
+    // wild hontori (src/encounters.js)
+    try { H.encounters && H.encounters.enter(name, map, { grid, solid, env, player }); } catch (e) { console.warn(e); }
     try { H.audio && H.audio.setScene(name, env); } catch (e) {}
     // story/quest hooks: listeners get (mapName, map) after every map load
     (H.onMapEnter || []).forEach(fn => { try { fn(name, map); } catch (e) { console.warn(e); } });
@@ -82,7 +85,7 @@
     if (k === 'r') { env.weather = WEATHERS[(WEATHERS.indexOf(env.weather) + 1) % WEATHERS.length]; H.ui && H.ui.toast('Weather: ' + env.weather); }
     if (k === 'h' && !busy && H.spirits) { const have = H.game.state.party.map(p => p.key), nx = H.spirits.list.find(s => !have.includes(s.key)); if (nx && H.game.addHontori(nx.key)) H.ui && H.ui.toast('A ' + nx.element + ' hontori joined'); }
     if (k === 'f' && !busy) startBattle();
-    if (k === '1' && !busy) loadMap('home'); if (k === '2' && !busy) loadMap('village');
+    if (k === '1' && !busy) loadMap('home'); if (k === '2' && !busy) loadMap('village'); if (k === '3' && !busy && H.maps.whisperwood) loadMap('whisperwood');
     if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
   });
   addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
@@ -317,7 +320,7 @@
         player.x = player.tx * T + 8; player.y = player.ty * T + 15;
         const d = (map.doors || []).find(d => d.x === player.tx && d.y === player.ty);
         if (d) { player.frame = 0; goDoor(d); }
-        else if (!env.indoor && tileAt(player.tx, player.ty) === 'tallgrass' && H.game.state.party.length && Math.random() < 0.12) { player.frame = 0; startBattle(); }
+        else if (!H.encounters && !env.indoor && tileAt(player.tx, player.ty) === 'tallgrass' && H.game.state.party.length && Math.random() < 0.12) { player.frame = 0; startBattle(); }
         else if (!busy && !menuOpen && !(H.ui && H.ui.isOpen()) && (inp.dx || inp.dy)) tryMove(inp, left); // chain steps with no hitch
         else player.frame = 0;
       }
@@ -333,6 +336,11 @@
     // villagers glance around now and then
     npcs.forEach(n => { n.look = (n.look ?? Math.random() * 6) - dt; if (n.look <= 0 && !busy) { n.look = 3 + Math.random() * 5; if (Math.random() < 0.6) n.dir = Math.floor(Math.random() * 4); } });
     if (spirit) updateSpirit(dt);
+    // wild hontori: wander, notice, drift closer; a touch starts a battle
+    if (H.encounters && !env.indoor) try {
+      const wild = H.encounters.update(dt, { env, player, blocked, emit, sfx, busy: busy || menuOpen || !!(H.ui && H.ui.isOpen()) || !H.game.state.party.length });
+      if (wild) { player.frame = 0; startBattle(wild.key, wild); }
+    } catch (e) { console.warn(e); }
     H.ambientPlayer = { x: player.x, y: player.y };
     if (ambient) try { ambient.update(dt, env); } catch (e) { console.warn(e); ambient = null; }
     try { H.audio && H.audio.update(env); } catch (e) {}
@@ -374,6 +382,7 @@
         H.fx.shadow(ctx, spirit.x, gy, Math.max(3, 5 - h * 0.25), 2, env);
         H.spirits.draw(ctx, spirit.key, Math.round(spirit.x), Math.round(spirit.y), env, { scale: 0.75, dir: spirit.dir || 0, noShadow: true, moving: !!spirit.moving, sit: !!spirit.sit }); } }); }
     (map.lights || []).forEach(l => lights.push(l));
+    if (H.encounters) try { H.encounters.collect(ents, lights, ctx, env); } catch (e) { console.warn(e); }
     ents.sort((a, b) => a.y - b.y).forEach(e => { try { e.d(); } catch (err) { console.warn(err); } });
     if (ambient) try { ambient.draw(ctx, env); } catch (e) { console.warn(e); ambient = null; }
     ctx.restore();
@@ -397,7 +406,7 @@
   };
 
   // ---------- battles
-  async function startBattle(enemy) {
+  async function startBattle(enemy, wild) {
     if (busy || !H.battle || !H.game.state.party.length) return;
     busy = true; sfx('spell');
     // what kind of place we are in, from the tiles and props around the player
@@ -405,7 +414,8 @@
     for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) { const id = tileAt(player.tx + dx, player.ty + dy); if (id === 'water') water++; if (id === 'tallgrass') tall++; }
     (map.props || []).forEach(p => { if (/tree|pine/.test(p.type) && Math.abs(p.x - player.tx) < 6 && Math.abs(p.y - player.ty) < 6) trees++; });
     const biome = env.indoor ? 'indoor' : water > 6 ? 'river' : trees > 4 ? 'forest' : 'meadow';
-    try { await H.battle.start({ env, enemy, biome }); } catch (e) { console.warn(e); }
+    try { await H.battle.start({ env, enemy, biome, level: wild ? wild.level : undefined }); } catch (e) { console.warn(e); }
+    if (wild && H.encounters) try { H.encounters.defeated(wild); } catch (e) { console.warn(e); }
     busy = false;
   }
   H.game.battle = startBattle;
