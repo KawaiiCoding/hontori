@@ -288,11 +288,11 @@ window.H = window.H || {};
         R(c, bx, by + 1, 10, 10, OUT); R(c, bx + 1, by + 2, 8, 8, '#c87a32'); R(c, bx + 1, by + 2, 8, 3, '#a85e24');
         R(c, bx + 3, by, 4, 2, OUT); R(c, bx + 4, by + 6, 2, 2, '#e8c050'); R(c, bx + 2, by + 3, 1, 1, '#f0a050'); R(c, bx + 1, by + 9, 8, 1, '#7a4218');
       } },
-    school: { fw: 10, fh: 6, ext: 84, wallH: 56, roofTop: 52, roof: 'purple', pl: PLASTER_B, beams: null, win: [[8, 14, 16], [30, 14, 16], [116, 14, 16], [138, 14, 16]], box: false, wide: true,
+    school: { fw: 10, fh: 6, ext: 84, wallH: 56, roofTop: 52, roof: 'purple', pl: PLASTER_B, beams: null, win: [[20, 14, 16], [42, 14, 16], [120, 14, 16], [142, 14, 16]], box: false, wide: true,
       extra: function (c, L, n, H) {
         var wy = H - L.wallH;
         // upper row windows in roof face
-        windowAt(c, 14, 74, 10, 10, n, false); windowAt(c, 136, 74, 10, 10, n, false);
+        windowAt(c, 26, 74, 10, 10, n, false); windowAt(c, 140, 74, 10, 10, n, false);
         // central tower
         var tx = 70, tw = 36, ty = 26, th = H - 4 - ty;
         R(c, tx - 1, ty, tw + 2, th, OUT);
@@ -338,7 +338,7 @@ window.H = window.H || {};
         disc(c, cxs, cy + 7, 3, '#ffd84a'); disc(c, cxs + 1, cy + 6, 2, '#3a5ab0'); R(c, cxs + 1, cy + 6, 2, 3, '#8a2a4a');
         R(c, cxs + 3, cy + 4, 1, 1, '#fff6c0');
         // banners on main wall
-        [[52, wy + 8], [112, wy + 8]].forEach(function (b) {
+        [[60, wy + 8], [108, wy + 8]].forEach(function (b) {
           R(c, b[0] - 1, b[1] - 1, 10, 18, OUT); R(c, b[0], b[1], 8, 15, '#563c8c'); R(c, b[0] + 1, b[1], 2, 15, '#7858b4');
           R(c, b[0], b[1] + 15, 3, 2, '#563c8c'); R(c, b[0] + 5, b[1] + 15, 3, 2, '#563c8c');
           R(c, b[0] + 3, b[1] + 5, 2, 2, '#ffd84a'); R(c, b[0] + 2, b[1] + 6, 4, 1, '#ffd84a'); R(c, b[0] - 1, b[1] - 2, 10, 1, WOOD[2]);
@@ -364,6 +364,18 @@ window.H = window.H || {};
     for (var i = 0; i < Lt.win.length; i++) { var w = Lt.win[i]; windowAt(c, w[0], wy + 12, w[1], w[2], night, Lt.box); }
     door(c, Lt.fw, H, night, P, Lt.wide);
     if (Lt.extra) Lt.extra(c, Lt, night, H);
+    if (type === 'school') {
+      // the tower is drawn over the wall, so give it its own arched stone doorway at the base
+      var sdx = Math.floor(Lt.fw / 2) * T, adw = 18, ax = sdx + ((T - adw) >> 1), adh = 26, ay = H - 3 - adh;
+      R(c, ax - 3, ay - 5, adw + 6, adh + 5, OUT);
+      for (var ar = 0; ar < 5; ar++) R(c, ax - 2 + ar, ay - 4 + ar, adw + 4 - ar * 2, 1, ar % 2 ? '#9a96a8' : '#c8c4d4');
+      R(c, ax - 2, ay, 2, adh, '#b0acbc'); R(c, ax + adw, ay, 2, adh, '#8a8698');
+      door(c, Lt.fw, H, night, P, true);
+      // glowing keystone rune
+      R(c, sdx + 7, ay - 6, 3, 3, night ? '#ffe08a' : '#d0b0ff'); R(c, sdx + 8, ay - 5, 1, 1, '#ffffff');
+      // two stone steps
+      R(c, ax - 4, H - 3, adw + 8, 2, '#a8a4b4'); R(c, ax - 4, H - 3, adw + 8, 0.5, '#d8d4e4'); R(c, ax - 6, H - 1, adw + 12, 1, '#8a8698');
+    }
     NOSIGN = false;
     return cv;
   }
