@@ -55,6 +55,11 @@
     '.hm-sc .lv{position:absolute;left:6px;top:6px;font-size:11px;font-weight:900;background:rgba(0,0,0,.55);border-radius:8px;padding:1px 6px}',
     '.hm-sc .hui-el{transform:scale(.85)}',
     '.hm-det{display:flex;gap:12px;align-items:center}.hm-det canvas{width:96px;height:96px;border-radius:14px;image-rendering:pixelated;background:rgba(0,0,0,.25);flex:none}',
+    '.hm-mana{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:900;margin:-4px 0 12px;opacity:.95}',
+    '.hm-cry{width:10px;height:14px;clip-path:polygon(50% 0,100% 35%,50% 100%,0 35%);background:rgba(255,255,255,.16)}.hm-cry.on{background:linear-gradient(180deg,#d8f0ff,#5aa8ff)}',
+    '.hm-mend{display:flex;flex-direction:column;align-items:center;line-height:1.1;background:rgba(120,200,255,.22)}.hm-mend small{font-size:10px;font-weight:700;opacity:.8}',
+    '.hm-mend .ic{display:inline-block;width:10px;height:10px;border:2px solid #bfe4ff;border-radius:50%;margin-right:5px;vertical-align:-1px}',
+    '.hm-mend[disabled]{opacity:.5;cursor:default}',
     '.hm-pick{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.hm-pick button{display:flex;align-items:center;gap:6px}.hm-pick canvas{width:32px;height:32px;image-rendering:pixelated}'
   ].join('\n');
 
@@ -159,6 +164,22 @@
     if (open) render();
   }
 
+  // out of battle care: draw a circle, spend 1 mana, heal about 40% of health
+  var mending = false;
+  function mend(p) {
+    var g = H.game, st = g.state, mm = st.maxMana || 3, mn = st.mana == null ? mm : st.mana;
+    if (mending || mn < 1 || p.hp >= p.maxHp) return;
+    mending = true; hide();
+    var ask = H.gesture && H.gesture.prompt ? Promise.resolve(H.gesture.prompt('mend', 'Draw a circle to mend')) : Promise.resolve();
+    ask.then(function () {
+      var cur = st.mana == null ? mm : st.mana;
+      if (cur >= 1 && p.hp < p.maxHp) {
+        st.mana = cur - 1; var before = p.hp; p.hp = Math.min(p.maxHp, p.hp + Math.max(1, Math.round(p.maxHp * 0.4)));
+        H.ui && H.ui.toast(displayName(p) + ' feels better  +' + (p.hp - before));
+        g.save && g.save();
+      }
+    }).catch(function (e) { console.warn(e); }).then(function () { mending = false; refresh(); setTimeout(function () { show('party'); }, 200); });
+  }
   function header(title) { var h = mk('div', 'hm-h', els.sheet); mk('h2', '', h, title); var x = mk('button', 'hm-x', h, 'X'); x.addEventListener('click', hide); }
 
   function render() {
@@ -169,6 +190,9 @@
       else { var grid = mk('div', 'hm-grid', els.sheet); st.items.forEach(function (it) { var c = mk('div', 'hm-item', grid); c.appendChild(itemCanvas(it)); c.appendChild(document.createTextNode(it.name + (it.n > 1 ? ' x' + it.n : ''))); }); }
     } else if (open === 'party') {
       header('Your Hontori  ' + st.party.length + ' / ' + MAX);
+      var mm = st.maxMana || 3, mn = st.mana == null ? mm : Math.min(mm, st.mana), mrow = mk('div', 'hm-mana', els.sheet); mk('span', '', mrow, 'Mana');
+      for (var ci = 0; ci < mm; ci++) mk('i', 'hm-cry' + (ci < mn ? ' on' : ''), mrow);
+      mk('span', '', mrow, mn + ' / ' + mm);
       if (!st.party.length) mk('div', 'hm-empty', els.sheet, 'No hontori with you yet.');
       st.party.forEach(function (p, i) {
         var s = spec(p.key), row = mk('div', 'hm-row' + (i === 0 ? ' lead' : ''), els.sheet);
@@ -179,6 +203,10 @@
         mk('div', 'sub', inf, stageName(p) + '   Level ' + p.level + '   Health ' + p.hp + ' / ' + p.maxHp);
         bar(inf, p.hp / p.maxHp); bar(inf, xpFrac(p), 'xp');
         var bs = mk('div', 'hm-btns', row);
+        var md = mk('button', 'hm-mini hm-mend', bs), mt = mk('span', '', md); mk('i', 'ic', mt); mt.appendChild(document.createTextNode('Mend'));
+        var why = p.hp >= p.maxHp ? 'Already well' : mn < 1 ? 'No mana left' : null;
+        mk('small', '', md, why || 'Heal, costs 1 mana'); md.disabled = !!why;
+        md.addEventListener('click', function () { mend(p); });
         if (i > 0) { var b = mk('button', 'hm-mini', bs, 'Lead'); b.addEventListener('click', function () { st.party.splice(i, 1); st.party.unshift(p); g.partyChanged && g.partyChanged(); refresh(); }); }
         if (P()) { var mvb = mk('button', 'hm-mini', bs, 'Moves'); mvb.addEventListener('click', function () { moveFor = p; show('moves'); }); }
         if (st.party.length > 1 && P()) { var sb = mk('button', 'hm-mini', bs, 'To Sanctum'); sb.addEventListener('click', function () { P().toSanctum(i); }); }

@@ -305,6 +305,23 @@
     else { player.frame = 0; if (bumpT <= 0) { sfx('bump'); bumpT = 0.4; } }
   }
 
+  // ---------- exploration and slow mana recovery out of battle
+  let revKey = '', manaT = 0, lastManaToast = -1e9, lastTime = null;
+  function careTick(dt, menuOpen) {
+    const st = H.game.state;
+    const rk = mapName + ':' + player.tx + ',' + player.ty;
+    if (rk !== revKey && H.mapview && H.mapview.reveal) { revKey = rk; try { H.mapview.reveal(mapName, map, player.tx, player.ty); } catch (e) { console.warn(e); } }
+    if (!st.intro) return;
+    const mm = st.maxMana || 3; if (st.mana == null) st.mana = mm;
+    // a long jump forward in time means a night in bed: mana is full again
+    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6 && st.mana < mm) st.mana = mm; }
+    lastTime = env.time;
+    if (busy || menuOpen || st.mana >= mm) { if (st.mana >= mm) manaT = 0; return; }
+    manaT += dt;
+    if (manaT >= 45) { manaT = 0; st.mana = Math.min(mm, st.mana + 1);
+      if (env.t - lastManaToast > 240 || st.mana >= mm) { lastManaToast = env.t; H.ui && H.ui.toast(st.mana >= mm ? 'Mana full' : '+1 mana'); } }
+  }
+
   // ---------- update
   function update(dt) {
     env.t += dt;
@@ -350,6 +367,7 @@
     // villagers glance around now and then
     npcs.forEach(n => { n.look = (n.look ?? Math.random() * 6) - dt; if (n.look <= 0 && !busy) { n.look = 3 + Math.random() * 5; if (Math.random() < 0.6) n.dir = Math.floor(Math.random() * 4); } });
     if (spirit) updateSpirit(dt);
+    careTick(dt, menuOpen);
     // wild hontori: wander, notice, drift closer; a touch starts a battle
     if (H.encounters && !env.indoor) try {
       const wild = H.encounters.update(dt, { env, player, blocked, emit, sfx, busy: busy || menuOpen || !!(H.ui && H.ui.isOpen()) || !H.game.state.party.length });
