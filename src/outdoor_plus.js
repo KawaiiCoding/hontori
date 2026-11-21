@@ -555,7 +555,7 @@ window.H = window.H || {};
         v = (px >> 4) % 2;
         fr = sprite(type + v, function () { return stallFrames(v); });
         return blit(ctx, fr[sway(env, px, py, fr.length, 0.8)], px, py);
-      case 'laundry_line': fr = sprite(type, laundryFrames); return blit(ctx, fr[Math.floor((env.t || 0) * (2 + (env.wind || 0.2) * 5)) % 3], px, py);
+      case 'laundry_line': fr = sprite(type, laundryFrames); return blit(ctx, fr[Math.floor((env.t || 0) * (0.8 + (env.wind || 0.2) * 1.4)) % 3], px, py);
       case 'windchime': fr = sprite(type, chimeFrames); return blit(ctx, fr[sway(env, px, py, fr.length, 1.2)], px, py);
       case 'birdbath': fr = sprite(type, birdbathFrames); return blit(ctx, fr[Math.floor((env.t || 0) * 1.5) & 1], px, py);
       case 'lantern_string':
