@@ -592,32 +592,37 @@
     '.hb-card .st{font-size:11px;font-weight:800;margin-top:4px;display:flex;flex-wrap:wrap;gap:3px;align-items:center;min-height:16px}',
     '.hb-tag{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:900;background:rgba(255,255,255,.12);color:#fff}',
     '.hb-foe{right:10px;top:calc(env(safe-area-inset-top,0px) + 50px)}',
-    '.hb-me{right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 168px)}',
+    '.hb-me{right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 200px)}',
     '.hb-intent{position:absolute;right:10px;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;gap:6px;padding:5px 11px 5px 7px;border-radius:999px;background:rgba(14,16,36,.88);border:2px solid var(--ic,#fff);font-weight:900;font-size:14px;box-shadow:0 0 12px var(--ic,#fff);pointer-events:none;transition:transform .2s}',
     '.hb-intent svg{width:20px;height:20px}',
     '.hb-intent small{font-size:11px;font-weight:800;opacity:.8}',
     '.hb-intent.pulse{animation:hbp 1s ease-in-out infinite}',
     '@keyframes hbp{50%{transform:scale(1.08)}}',
-    '.hb-msg{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 132px);text-align:center;font-weight:900;font-size:clamp(14px,4.2vmin,19px);text-shadow:0 2px 0 rgba(0,0,0,.7),0 0 8px rgba(0,0,0,.6);pointer-events:none;min-height:24px}',
+    '.hb-msg{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 164px);text-align:center;font-weight:900;font-size:clamp(14px,4.2vmin,19px);text-shadow:0 2px 0 rgba(0,0,0,.7),0 0 8px rgba(0,0,0,.6);pointer-events:none;min-height:24px}',
     '.hb-moves{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);display:grid;grid-template-columns:repeat(3,1fr);gap:6px}',
-    '.hb-mv{position:relative;border:0;border-radius:14px;padding:7px 6px 6px;min-height:66px;overflow:hidden;text-align:left;font:inherit;color:#fff;cursor:pointer;background:linear-gradient(180deg,color-mix(in srgb,var(--mc) 55%,#1a1c38),#14162e);box-shadow:inset 0 0 0 2px var(--mc),0 3px 0 rgba(0,0,0,.45);touch-action:manipulation}',
-    '.hb-mv b{display:block;font-size:13px;font-weight:900;line-height:1.1}',
+    '.hb-mv{position:relative;border:0;border-radius:14px;padding:7px 6px 6px;min-height:66px;overflow:hidden;text-align:left;font:inherit;color:#fff;cursor:pointer;background:linear-gradient(180deg,color-mix(in srgb,var(--mc) 55%,#1a1c38),#14162e);box-shadow:inset 0 0 0 2px var(--mc),inset 0 2px 0 rgba(255,255,255,.18),0 4px 0 color-mix(in srgb,var(--mc) 45%,#000),0 6px 12px rgba(0,0,0,.35);transition:transform .08s;touch-action:manipulation}',
+    '.hb-mv b{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:900;line-height:1.1;padding-right:44px}',
+    '.hb-mv .ic{width:20px;height:20px;image-rendering:pixelated;flex:none;filter:drop-shadow(0 1px 0 rgba(0,0,0,.5))}',
+    '.hb-mv .kind{display:inline-block;margin-top:4px;font-size:9px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.35)}',
+    '.hb-mv:after{content:"";position:absolute;right:8px;bottom:8px;width:7px;height:7px;border-right:2px solid rgba(255,255,255,.7);border-bottom:2px solid rgba(255,255,255,.7);transform:rotate(-45deg)}',
+    '.hb-mv:active{transform:translateY(3px);box-shadow:inset 0 0 0 2px var(--mc),0 0 0 rgba(0,0,0,.45)}',
     '.hb-mv i{display:block;font-style:normal;font-size:10px;font-weight:700;opacity:.85;line-height:1.15;margin-top:3px}',
     '.hb-mv em{position:absolute;top:3px;right:4px;font-style:normal;font-size:10px;font-weight:900;padding:1px 6px;border-radius:8px;background:#ffd24a;color:#3a2400}',
     '.hb-mv em.weak{background:#8a90a8;color:#14162e}',
     '.hb-mv.off{filter:grayscale(.85) brightness(.6)}',
     '.hb-mv .cd{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;background:rgba(10,10,24,.55)}',
     '.hb-mv.hot{animation:hbp 1s ease-in-out infinite}',
-    '.hb-bar{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);display:flex;align-items:center;gap:6px;height:40px}',
+    '.hb-bar{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 116px);display:flex;align-items:center;gap:6px;height:40px}',
     '.hb-mana{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:12px;background:rgba(14,16,36,.84);font-weight:900;font-size:12px}',
     '.hb-pip{width:11px;height:11px;border-radius:50%;border:2px solid #9fd0ff;box-sizing:border-box}',
     '.hb-pip.on{background:radial-gradient(circle at 35% 35%,#fff,#7fc8ff 50%,#3a7ad8);box-shadow:0 0 6px #7fc8ff}',
     '.hb-btn{border:0;border-radius:12px;background:rgba(14,16,36,.84);color:#fff;font:inherit;font-weight:900;font-size:12px;padding:9px 11px;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.14)}',
     '.hb-btn.hot{box-shadow:inset 0 0 0 2px #ffd98a,0 0 10px #ffd98a}',
-    '.hb-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 128px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;border-radius:14px;background:rgba(10,10,26,.9);border:2px solid rgba(255,217,138,.25)}',
+    '.hb-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 160px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;border-radius:14px;background:rgba(10,10,26,.9);border:2px solid rgba(255,217,138,.25)}',
     '.hb-sp{text-align:center;font-size:10px;font-weight:800;line-height:1.1;padding:2px 0 3px;border-radius:10px}',
     '.hb-sp svg{display:block;margin:0 auto 2px;width:40px;height:40px}',
-    '.hb-sp .c{display:block;margin-top:2px;letter-spacing:2px;color:#9fd0ff;font-size:9px}',
+    '.hb-sp .c{display:block;margin-top:2px;letter-spacing:1px;color:#9fd0ff;font-size:9px}',
+    '.hb-sp .d{display:block;margin-top:2px;font-size:9.5px;font-weight:700;opacity:.8;line-height:1.15;padding:0 2px}',
     '.hb-sp.lock{opacity:.45}',
     '.hb-sp.no{opacity:.55}',
     '.hb-sp.hot{background:rgba(255,217,138,.14);box-shadow:0 0 0 2px rgba(255,217,138,.5)}',
@@ -706,7 +711,7 @@
     var chips = {};
     ORDER.forEach(function (k) {
       var S = SPELLS[k], kn = known.indexOf(k) >= 0, c = mk('div', 'hb-sp' + (kn ? '' : ' lock'), sheet);
-      c.innerHTML = sigilSVG(k, S.col, !kn) + S.name + '<span class="c">' + (kn ? new Array(S.cost + 1).join('o ').trim().replace(/o/g, '&#9679;') : 'Academy') + '</span>';
+      c.innerHTML = sigilSVG(k, S.col, !kn) + S.name + '<span class="d">' + S.desc + '</span><span class="c">' + (kn ? new Array(S.cost + 1).join('o ').trim().replace(/o/g, '&#9679;') + ' mana' : 'Learn at Academy') + '</span>';
       chips[k] = c;
     });
     var sheetNote = mk('div', 'hb-sp', sheet, '<span style="display:block;padding-top:8px;opacity:.8;font-size:10px">Draw a sigil anywhere. One spell each turn.</span>');
@@ -743,7 +748,8 @@
       MOV.forEach(function (m, i) {
         var b = mvBtns[i], cd = me.cd[m.id] || 0, mx = matrix(me.el, foe.el), mark = '';
         if (m.pow) mark = mx > 1 ? '<em>Strong</em>' : mx < 1 ? '<em class="weak">Weak</em>' : '';
-        b.innerHTML = mark + '<b>' + m.name + '</b><i>' + (m.pow ? 'Power ' + m.pow + '. ' : '') + m.desc.replace(/ Rests 2 turns\./, '') + '</i>' + (cd > 0 ? '<span class="cd">Rest ' + cd + '</span>' : fainted ? '<span class="cd">Fainted</span>' : me.asleep ? '<span class="cd">Asleep</span>' : '');
+        var ico = ''; try { ico = '<img class="ic" alt="" src="' + H.icons.url(m.el || me.el, 2) + '">'; } catch (e) {}
+        b.innerHTML = mark + '<b>' + ico + m.name + '</b><span class="kind">' + (m.pow ? 'Attack' : 'Support') + '</span><i>' + (m.pow ? 'Power ' + m.pow + '. ' : '') + m.desc.replace(/ Rests 2 turns\./, '') + '</i>' + (cd > 0 ? '<span class="cd">Rest ' + cd + '</span>' : fainted ? '<span class="cd">Fainted</span>' : me.asleep ? '<span class="cd">Asleep</span>' : '');
         b.classList.toggle('off', cd > 0 || fainted || busy || done);
       });
       ORDER.forEach(function (k) { var kn = known.indexOf(k) >= 0, ok = kn && mana >= SPELLS[k].cost && !spellUsed && canCast(k) === true; chips[k].classList.toggle('no', kn && !ok); });
