@@ -56,5 +56,5 @@ New rules are added here as they are given. When something in the code disagrees
 38. Never use emojis anywhere.
 39. Mobile first (portrait phone), also web. Joystick on the left, buttons on the right. No zoom on double tap. Works in Safari.
 40. Fitting music.
-42. Time of day carries over when entering or leaving places. Only sleeping moves time forward (8 hours).
-43. The kid has a map of the current area (map button next to the backpack).
+41. Time of day carries over when entering or leaving places. Only sleeping moves time forward (8 hours).
+42. The kid has a map of the current area (map button next to the backpack).
