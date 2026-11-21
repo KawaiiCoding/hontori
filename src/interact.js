@@ -94,7 +94,8 @@ window.H = window.H || {};
         if (c.setTime) c.setTime(((c.env && c.env.time) || 22) + 8 >= 24 ? (((c.env && c.env.time) || 22) + 8) % 24 : ((c.env && c.env.time) || 22) + 8); // sleeping skips 8 hours
         emit(c, 'sparkle', 6, 0, -8);
         toast(c, 'Eight hours later');
-        return c.hasSpirit ? fox(c, pick(['Up with the sun, a new day begun.', 'Rest is done, now out we run.']))
+        var hr = (c.env && c.env.time) || 8, night = hr >= 19 || hr < 5;
+        return c.hasSpirit ? fox(c, pick(night ? ['Stars are high, the moon rides by.', 'Night is deep, but we have slept.'] : ['Up with the sun, a new day begun.', 'Rest is done, now out we run.']))
           : kid(c, 'I feel rested.');
       });
   }

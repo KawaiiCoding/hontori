@@ -184,7 +184,7 @@
   const TRIAL_STRONG = { water: ['fire', 'earth'], fire: ['grass', 'wind'], wind: ['grass', 'electric'], grass: ['water', 'earth'], electric: ['water', 'wind'], earth: ['electric', 'fire'], dark: ['light'], light: ['dark'] };
   const capWord = (w) => w.charAt(0).toUpperCase() + w.slice(1);
   async function academyTrial() {
-    const G = 'elder', N = 'Gatekeeper';
+    const G = 'guard', N = 'Gatekeeper';
     await say(G, N, 'Halt. Only open eyes may enter.');
     // the sight test: an epic hontori appears beside the gate; the Veilbound would see nothing there
     const list = (H.spirits && H.spirits.list) || [], pickS = list[Math.floor(Math.random() * list.length)] || { key: 'hontori' };
