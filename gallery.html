@@ -1,52 +1,123 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Hontori Gallery</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap">
 <style>
-  body{margin:0;background:#101226;color:#f4f1e8;font-family:Nunito,system-ui,sans-serif;padding:16px}
-  h1{font-size:22px;margin:4px 0 16px}h2{font-size:17px;margin:0 0 8px}
-  .sp{background:#1b1e3a;border:2px solid #2c3160;border-radius:16px;padding:10px;margin-bottom:14px}
+  body{margin:0;background:#101226;color:#f4f1e8;font-family:Nunito,system-ui,sans-serif}
+  header{position:sticky;top:0;z-index:2;background:#101226ee;padding:12px 14px 0;border-bottom:1px solid #2c3160}
+  h1{font-size:20px;margin:0 0 10px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px}
+  .tab{flex:none;border:2px solid #2c3160;background:#1b1e3a;color:#f4f1e8;border-radius:999px;padding:7px 14px;font:inherit;font-weight:900;font-size:14px;cursor:pointer}
+  .tab.on{background:#ffc56b;color:#2a1405;border-color:#ffc56b}
+  main{padding:14px}
+  .card{background:#1b1e3a;border:2px solid #2c3160;border-radius:16px;padding:12px;margin-bottom:14px}
+  .card h2{font-size:17px;margin:0 0 2px}.sub{font-size:13px;opacity:.7;margin-bottom:10px}
   .row{display:flex;flex-wrap:wrap;gap:8px}
-  .st{flex:1 1 110px;max-width:160px;text-align:center;cursor:pointer;border:2px solid transparent;border-radius:12px;padding:4px}
-  .st.on{border-color:#ffd070}
-  canvas{width:100%;image-rendering:pixelated;border-radius:10px;background:#141733}
-  .n{font-weight:900;font-size:14px;margin-top:4px}.e{font-size:12px;opacity:.7}
-  .dirs{margin-top:8px}.dirs canvas{flex:1 1 90px;max-width:140px}
+  .cell{flex:1 1 96px;max-width:150px;text-align:center;border:2px solid transparent;border-radius:12px;padding:4px;cursor:pointer}
+  .cell.on{border-color:#ffd070}
+  .cell b{display:block;font-size:13px;margin-top:3px}.cell i{display:block;font-style:normal;font-size:11px;opacity:.65}
+  canvas{width:100%;image-rendering:pixelated;border-radius:10px;background:#141733;display:block}
+  .lbl{font-size:12px;font-weight:900;opacity:.7;margin:10px 0 6px;letter-spacing:.5px}
 </style></head><body>
-<h1>Hontori spirits</h1>
-<div id="g"></div>
+<header><h1>Hontori Gallery</h1><div class="tabs" id="tabs"></div></header>
+<main id="main"></main>
 <script src="src/icons.js"></script>
 <script src="src/spirits.js"></script>
+<script src="src/characters.js"></script>
 <script>
-  const env = { t: 0, time: 12, weather: 'clear', wind: 0.2, indoor: false };
-  const cells = [];
-  H.spirits.list.forEach(s => {
-    const box = document.createElement('div'); box.className = 'sp';
-    box.innerHTML = `<h2>${s.name} line <span class="e">${s.element}</span></h2>`;
-    const row = document.createElement('div'); row.className = 'row'; box.appendChild(row);
-    const dirs = document.createElement('div'); dirs.className = 'row dirs'; box.appendChild(dirs);
-    const info = { s, stage: 1, tiles: [] };
-    (H.spirits.stages[s.key] || []).forEach((d, i) => {
-      const t = document.createElement('div'); t.className = 'st' + (i ? '' : ' on');
-      const cv = document.createElement('canvas'); cv.width = 128; cv.height = 128; t.appendChild(cv);
-      t.insertAdjacentHTML('beforeend', `<div class="n">${d.name}</div><div class="e">${d.desc}</div>`);
-      t.onclick = () => { info.stage = i + 1; info.tiles.forEach((x, j) => x.el.classList.toggle('on', j === i)); };
-      row.appendChild(t); info.tiles.push({ el: t, cv, stage: i + 1 });
-    });
-    info.dirCv = [0, 1, 2, 3].map(() => { const c = document.createElement('canvas'); c.width = 128; c.height = 128; dirs.appendChild(c); return c; });
-    document.getElementById('g').appendChild(box); cells.push(info);
-  });
-  function one(cv, key, opts) {
-    const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 128, 128);
-    g.save(); g.scale(2, 2); H.spirits.draw(g, key, 32, 36, env, opts); g.restore();
+  window.H = window.H || {}; H.renderScale = 2;
+  const env = { t: 0, time: 12, weather: 'clear', wind: 0.3, indoor: false };
+  const DIRS = ['Front', 'Back', 'Left', 'Right'];
+  const POSES = [['Idle', {}], ['Walk', { moving: true }], ['Sit', { sit: true }]];
+  const live = []; // {cv, draw(g)} redrawn every frame
+  const tabs = [{ id: 'all', name: 'All hontori' }]
+    .concat(H.spirits.list.map(s => ({ id: 's:' + s.key, name: s.name })))
+    .concat([{ id: 'people', name: 'People' }]);
+
+  function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+  function spiritDraw(cv, key, opts, sc) {
+    live.push({ cv, draw(g) { g.save(); g.scale(sc || 2, sc || 2); H.spirits.draw(g, key, cv.width / (2 * (sc || 2)), cv.height / (2 * (sc || 2)) + 4, env, opts); g.restore(); } });
   }
+  function charDraw(cv, key, dir, frameFn) {
+    live.push({ cv, draw(g) { g.save(); g.scale(3, 3); H.chars.draw(g, key, cv.width / 6, cv.height / 3 - 4, dir, frameFn(), env, { npc: true, seed: key.length / 9 }); g.restore(); } });
+  }
+  const stagesOf = (key) => (H.spirits.stages && H.spirits.stages[key]) || [{ name: (H.spirits.list.find(s => s.key === key) || {}).name || key, desc: '' }];
+
+  function show(id) {
+    live.length = 0;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.id === id));
+    const main = document.getElementById('main'); main.innerHTML = '';
+    if (id === 'all') {
+      // every species, every evolution, front view
+      H.spirits.list.forEach(s => {
+        const card = document.createElement('div'); card.className = 'card';
+        card.innerHTML = `<h2>${s.name} line</h2><div class="sub">${s.element} hontori</div>`;
+        const row = document.createElement('div'); row.className = 'row'; card.appendChild(row);
+        stagesOf(s.key).forEach((st, i) => {
+          const cell = document.createElement('div'); cell.className = 'cell'; const cv = mkCanvas(128, 128); cell.appendChild(cv);
+          cell.insertAdjacentHTML('beforeend', `<b>${st.name}</b><i>Stage ${i + 1}</i>`);
+          cell.onclick = () => show('s:' + s.key);
+          spiritDraw(cv, s.key, { stage: i + 1 }); row.appendChild(cell);
+        });
+        main.appendChild(card);
+      });
+    } else if (id.startsWith('s:')) {
+      // one species: pick a stage, then see 4 directions x idle / walk / sit
+      const key = id.slice(2), sp = H.spirits.list.find(s => s.key === key), stages = stagesOf(key);
+      let stage = 1;
+      const card = document.createElement('div'); card.className = 'card';
+      card.innerHTML = `<h2>${sp.name} line</h2><div class="sub">${sp.element} hontori. Tap a stage.</div>`;
+      const row = document.createElement('div'); row.className = 'row'; card.appendChild(row);
+      const detail = document.createElement('div'); card.appendChild(detail); main.appendChild(card);
+      const cells = stages.map((st, i) => {
+        const cell = document.createElement('div'); cell.className = 'cell' + (i ? '' : ' on'); const cv = mkCanvas(128, 128); cell.appendChild(cv);
+        cell.insertAdjacentHTML('beforeend', `<b>${st.name}</b><i>${st.desc || 'Stage ' + (i + 1)}</i>`);
+        spiritDraw(cv, key, { stage: i + 1 }); row.appendChild(cell); return cell;
+      });
+      const base = live.length;
+      function details() {
+        live.length = base; detail.innerHTML = '';
+        POSES.forEach(([pname, popts]) => {
+          detail.insertAdjacentHTML('beforeend', `<div class="lbl">${pname.toUpperCase()}</div>`);
+          const r = document.createElement('div'); r.className = 'row'; detail.appendChild(r);
+          DIRS.forEach((dname, d) => {
+            const cell = document.createElement('div'); cell.className = 'cell'; const cv = mkCanvas(128, 128); cell.appendChild(cv);
+            cell.insertAdjacentHTML('beforeend', `<i>${dname}</i>`); r.appendChild(cell);
+            spiritDraw(cv, key, Object.assign({ stage, dir: d }, popts));
+          });
+        });
+      }
+      cells.forEach((c, i) => c.onclick = () => { stage = i + 1; cells.forEach((x, j) => x.classList.toggle('on', j === i)); details(); });
+      details();
+    } else if (id === 'people') {
+      // every character: 4 directions standing (idle life) and walking
+      const keys = Object.keys(H.chars.defs || {}).length ? Object.keys(H.chars.defs)
+        : ['kid', 'mom', 'dad', 'elder', 'innkeeper', 'shopkeeper', 'girl', 'boy', 'farmer', 'fisher', 'baker', 'grandma', 'guard', 'kid2', 'traveler', 'gardener'];
+      keys.forEach(k => {
+        const card = document.createElement('div'); card.className = 'card';
+        card.innerHTML = `<h2>${k.charAt(0).toUpperCase() + k.slice(1)}</h2>`;
+        [['Standing', () => 0], ['Walking', () => [0, 1, 2, 3][Math.floor(env.t * 6) % 4]]].forEach(([lbl, fr]) => {
+          card.insertAdjacentHTML('beforeend', `<div class="lbl">${lbl.toUpperCase()}</div>`);
+          const r = document.createElement('div'); r.className = 'row'; card.appendChild(r);
+          DIRS.forEach((dname, d) => {
+            const cell = document.createElement('div'); cell.className = 'cell'; const cv = mkCanvas(96, 120); cell.appendChild(cv);
+            cell.insertAdjacentHTML('beforeend', `<i>${dname}</i>`); r.appendChild(cell);
+            charDraw(cv, k, d, fr);
+          });
+        });
+        main.appendChild(card);
+      });
+    }
+    window.scrollTo(0, 0);
+  }
+
+  const tabsEl = document.getElementById('tabs');
+  tabs.forEach(t => { const b = document.createElement('button'); b.className = 'tab'; b.textContent = t.name; b.dataset.id = t.id; b.onclick = () => show(t.id); tabsEl.appendChild(b); });
   function frame(ms) {
     env.t = ms / 1000;
-    cells.forEach(c => {
-      c.tiles.forEach(t => one(t.cv, c.s.key, { stage: t.stage }));
-      c.dirCv.forEach((cv, d) => one(cv, c.s.key, { stage: c.stage, dir: d, moving: d >= 2 }));
-    });
+    live.forEach(o => { const g = o.cv.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.clearRect(0, 0, o.cv.width, o.cv.height); try { o.draw(g); } catch (e) {} });
     requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  show('all'); requestAnimationFrame(frame);
 </script>
 </body></html>

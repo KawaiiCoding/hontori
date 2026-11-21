@@ -11,6 +11,14 @@ Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CO
 - Story engine and Chapter 1 (src/quests.js, src/chapter1.js): morning scene, pick 5 items, quests.
 - Academy lessons and duels (src/academy.js): switch Aegis Ward and Rally Rune to their real shapes once battle.js has them; duels should use trainer mode.
 
+## Left over from the last agents (details)
+- Chapter 1 content was not written (src/chapter1.js): morning scene with mom and dad, pick-5 backpack picker, quests A Steady Hand, Wet Pawprints, The Elder's Second Cup, Beyond the Trees, ending letter from the archmage. The story engine (src/quests.js) is ready for it.
+- Approve the antagonist name in STORY.md: Grand Archmage Orlen Vael (crest: a closed grey eye). Check STORY.md against WORLD_RULES.md.
+- CONTENT_GUIDE.md is missing the school and spirit-stage sections; quest log sheet and story events untested.
+- Evolution art: stages 4-5 are a bit noisy (fire stage 5 crowded); grass, electric, earth, dark, light stages 2-5 not reviewed; no sit pose for stages 2-5; stage 2-5 portraits unchecked.
+- Progression: battle must use H.progress.wandPerks(), state.spellLoadout, state.spellMastery, report participants, set H.progress.handled; lessons should call H.progress.lesson(); evolution flash looks grey; Moves screen needs src/moves.js pool/learned and its script tag.
+- Wild hontori: battle ignores the wild level (opts.level); electric ones almost never spawn; species balance; door between village and Whisperwood not play-tested; pale light and wind spirits hard to see by day.
+
 ## Requested but not done yet
 - Rewrite object interaction lines (src/interact.js) in the calm short style with spirit rhyme (some are still jokey).
 - Wand memory of 100 spirits (codex/encyclopedia screen) and more species beyond the 8 starters.
