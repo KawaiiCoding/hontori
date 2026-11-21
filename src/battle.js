@@ -633,9 +633,12 @@
     '.hb-pip.on{background:radial-gradient(circle at 35% 35%,#fff,#7fc8ff 50%,#3a7ad8);box-shadow:0 0 6px #7fc8ff}',
     '.hb-btn{border:0;border-radius:12px;background:rgba(14,16,36,.84);color:#fff;font:inherit;font-weight:900;font-size:12px;padding:9px 11px;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.14)}',
     '.hb-btn.hot{box-shadow:inset 0 0 0 2px #ffd98a,0 0 10px #ffd98a}',
-    '.hb-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 160px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;border-radius:14px;background:#0c0d20;border:2px solid rgba(255,217,138,.25)}',
+    '.hb-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 160px);display:flex;overflow-x:auto;gap:4px;padding:6px;scrollbar-width:none;border-radius:14px;background:#0c0d20;border:2px solid rgba(255,217,138,.25)}',
     '.hb-sp{text-align:center;font-size:10px;font-weight:800;line-height:1.1;padding:2px 0 3px;border-radius:10px}',
-    '.hb-sp svg{display:block;margin:0 auto 2px;width:40px;height:40px}',
+    '.hb-sp svg{display:block;margin:0 auto 2px;width:34px;height:34px}',
+    '.hb-sheet .hb-sp{flex:0 0 74px}',
+    '.hb.sheet-open .hb-me{bottom:calc(env(safe-area-inset-bottom,0px) + 290px)!important}',
+    '.hb.sheet-open .hb-msg{opacity:0}',
     '.hb-sp .c{display:block;margin-top:2px;letter-spacing:1px;color:#9fd0ff;font-size:9px}',
     '.hb-sp .d{display:block;margin-top:2px;font-size:9.5px;font-weight:700;opacity:.8;line-height:1.15;padding:0 2px}',
     '.hb-sp.lock{opacity:.45}',
@@ -672,7 +675,7 @@
     '.hb-pm .hb-hp{height:5px;margin-top:3px}',
     '.hb-grade{position:absolute;transform:translate(-50%,-50%) scale(.6);padding:2px 9px;border-radius:999px;font-weight:900;font-size:12px;background:rgba(10,10,28,.85);border:2px solid var(--gc);color:var(--gc);box-shadow:0 0 10px var(--gc);pointer-events:none;opacity:0;transition:opacity .2s,transform .25s;z-index:6}',
     '.hb-grade.on{opacity:1;transform:translate(-50%,-50%) scale(1)}',
-    '.hb-turn{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 14px);padding:6px 16px;border-radius:999px;font-weight:900;font-size:14px;letter-spacing:.5px;background:rgba(40,20,24,.85);color:#ffb3a8;border:2px solid rgba(255,140,120,.5);opacity:0;transition:opacity .25s;pointer-events:none;z-index:5}',
+    '.hb-turn{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 64px);padding:6px 16px;border-radius:999px;font-weight:900;font-size:14px;letter-spacing:.5px;background:rgba(40,20,24,.85);color:#ffb3a8;border:2px solid rgba(255,140,120,.5);opacity:0;transition:opacity .25s;pointer-events:none;z-index:5}',
     '.hb-turn.on{opacity:1}',
     '.hb-turn.me{background:rgba(14,30,24,.88);color:#b8f5c8;border-color:#57d07a;box-shadow:0 0 14px rgba(87,208,122,.45)}',
     '.hb-banner{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(.9);min-width:240px;max-width:90%;text-align:center;padding:14px 18px;border-radius:18px;background:rgba(10,10,28,.9);border:2px solid rgba(255,217,138,.4);box-shadow:0 0 30px rgba(0,0,0,.6);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none}',
@@ -701,12 +704,12 @@
     stunned: '<path d="M15 4 L18 12 L26 12 L19 17 L22 25 L15 20 L8 25 L11 17 L4 12 L12 12 Z"/>'
   };
   var INTENT = {
-    strike: { w: 'Strike', c: '#ff9a7a', d: 'attacks' },
-    charge: { w: 'Charge', c: '#ffcf5a', d: 'big hit next turn' },
-    unleash: { w: 'Unleash', c: '#ff5a5a', d: 'double power' },
-    guard: { w: 'Guard', c: '#8fd8ff', d: 'takes half damage' },
-    heal: { w: 'Heal', c: '#9cf0a6', d: 'restores itself' },
-    hex: { w: 'Hex', c: '#c49aff', d: 'may put yours to sleep' },
+    strike: { w: 'Attack', c: '#ff9a7a', d: 'will hit yours' },
+    charge: { w: 'Powering up', c: '#ffcf5a', d: 'big hit next turn' },
+    unleash: { w: 'Big hit', c: '#ff5a5a', d: 'double damage now' },
+    guard: { w: 'Guarding', c: '#8fd8ff', d: 'takes half damage' },
+    heal: { w: 'Healing', c: '#9cf0a6', d: 'restores itself' },
+    hex: { w: 'Sleep spell', c: '#c49aff', d: 'yours may fall asleep' },
     asleep: { w: 'Asleep', c: '#b9a8ff', d: 'cannot act' },
     stunned: { w: 'Stunned', c: '#ffe27a', d: 'cannot act' }
   };
@@ -790,7 +793,8 @@
     var endBtn = mk('button', 'hb-end', el, 'Continue'); endBtn.hidden = true;
     requestAnimationFrame(function () { el.classList.add('on'); });
     sheetOpen = false; sheet.hidden = true;
-    sheetBtn.addEventListener('click', function () { sheetOpen = sheet.hidden; sheet.hidden = !sheetOpen; });
+    sheetBtn.addEventListener('click', function () { sheetOpen = sheet.hidden; sheet.hidden = !sheetOpen; el.classList.toggle('sheet-open', sheetOpen); });
+    new MutationObserver(function () { el.classList.toggle('sheet-open', !sheet.hidden); }).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
 
     // spell cheat-sheet
     var chips = {};
