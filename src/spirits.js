@@ -88,8 +88,10 @@ window.H = window.H || {};
     return api;
   }
 
-  function outline(c, col, close) {
+  function outline(c, col, close, under) {
     var g = c.getContext('2d'), w = c.width, h = c.height;
+    // 'under' = the layer drawn behind this one; no outline where it already covers (avoids lines across tails)
+    var ud = under ? under.getContext('2d').getImageData(0, 0, w, h).data : null;
     var id = g.getImageData(0, 0, w, h), d = id.data, a = new Uint8Array(w * h), i, x, y;
     for (i = 0; i < w * h; i++) a[i] = d[i * 4 + 3] > 40 ? 1 : 0;
     if (close) {
@@ -125,6 +127,7 @@ window.H = window.H || {};
     g.fillStyle = col;
     for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
       if (!out[y * w + x]) continue;
+      if (ud && ud[(y * w + x) * 4 + 3] > 40) continue;
       if ((x > 0 && a[y * w + x - 1]) || (x < w - 1 && a[y * w + x + 1]) || (y > 0 && a[(y - 1) * w + x]) || (y < h - 1 && a[(y + 1) * w + x]))
         g.fillRect(x, y, 1, 1);
     }
@@ -639,8 +642,10 @@ window.H = window.H || {};
     taper = taper == null ? 0.72 : taper; bend = bend || 0;
     for (i = 0; i < n; i++) {
       t = i / (n - 1); r = Math.max(0.55, r0 * (1 - taper * t));
+      // drop the darkest tone: on a chain of small circles it forms dark hair-like lines
+      var pl = pals[Math.min(pals.length - 1, Math.floor(t * pals.length))];
       p.ell(x0 + ca * len * t - sa * bend * t * t, y0 + sa * len * t + ca * bend * t * t, r, r * 1.08,
-        pals[Math.min(pals.length - 1, Math.floor(t * pals.length))], r < 1.1);
+        pl.length > 3 ? [pl[0], pl[1], pl[2]] : pl, r < 1.1);
     }
   }
   function sparkle(p, x, y, c0, c1, big) {
@@ -1132,7 +1137,21 @@ window.H = window.H || {};
     if (st > 1) { pc.warp = false; STG[key](pc, f, st, 'behind'); pc.warp = mode !== 'move'; STG[key](pb, f, st, 'back'); }
     DEF[key](pb, f);
     if (st > 1) STG[key](pb, f, st, 'front');
-    outline(body, OUT[key] || '#1a1020', st > 1 ? Math.max(1, Math.round(k)) : 0);
+    outline(body, OUT[key] || '#1a1020', st > 1 ? Math.max(1, Math.round(k)) : 0, st > 1 ? c : null);
+    if (st > 1) { // repaint outline-coloured pixels that sit between body pixels (interior hairlines)
+      var oc = OUT[key] || '#1a1020', orr = parseInt(oc.slice(1, 3), 16), og = parseInt(oc.slice(3, 5), 16), ob = parseInt(oc.slice(5, 7), 16);
+      var bg2 = body.getContext('2d'), bw = body.width, bh = body.height, bid = bg2.getImageData(0, 0, bw, bh), bd = bid.data;
+      var isO = function (j) { return bd[j + 3] > 200 && bd[j] === orr && bd[j + 1] === og && bd[j + 2] === ob; };
+      var solid = function (j) { return bd[j + 3] > 200 && !isO(j); };
+      for (var pass2 = 0; pass2 < 2; pass2++) for (var yy2 = 1; yy2 < bh - 1; yy2++) for (var xx2 = 1; xx2 < bw - 1; xx2++) {
+        var j0 = (yy2 * bw + xx2) * 4; if (!isO(j0)) continue;
+        var L2 = j0 - 4, R2 = j0 + 4, U2 = j0 - bw * 4, D2 = j0 + bw * 4, A2 = -1, B2 = -1;
+        if (solid(L2) && solid(R2)) { A2 = L2; B2 = R2; } else if (solid(U2) && solid(D2)) { A2 = U2; B2 = D2; }
+        if (A2 < 0) continue;
+        for (var ch = 0; ch < 3; ch++) bd[j0 + ch] = (bd[A2 + ch] + bd[B2 + ch]) >> 1;
+      }
+      bg2.putImageData(bid, 0, 0);
+    }
     if (st > 1) { enrich(body, st); c.getContext('2d').drawImage(body, 0, 0); }
     pc.warp = false; aura(pc, key, f);
     if (st > 1) STG[key](pc, f, st, 'fx');
