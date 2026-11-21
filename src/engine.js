@@ -35,7 +35,7 @@
 
   let map, grid, solid, tileset, camX = 0, camY = 0, shake = 0, busy = false, mapName;
   const player = { key: 'kid', tx: 0, ty: 0, x: 0, y: 0, dir: 0, moving: false, fx: 0, fy: 0, prog: 0, frame: 0, steps: 0 };
-  let spirit = null, camFocus = null, ambient = null, fcx = 0, fcy = 0, camSnap = true; // {key,x,y}
+  let spirit = null, trialSpirit = null, camFocus = null, ambient = null, fcx = 0, fcy = 0, camSnap = true; // {key,x,y}
   const trail = [];
   let npcs = [];
 
@@ -166,30 +166,35 @@
   const capWord = (w) => w.charAt(0).toUpperCase() + w.slice(1);
   async function academyTrial() {
     const G = 'elder', N = 'Gatekeeper';
-    await say(G, N, 'Halt. The Academy tests all who enter.');
-    await say(G, N, 'Answer three, then show your wand.');
-    const els = Object.keys(TRIAL_STRONG), shuffle = (a) => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
-    let right = 0;
-    const asked = shuffle(els.filter(e => e !== 'dark' && e !== 'light')).slice(0, 2).concat([Math.random() < 0.5 ? 'dark' : 'light']);
-    for (const target of asked) {
-      // which element beats <target>?
-      const winners = els.filter(e => TRIAL_STRONG[e].includes(target));
-      const answer = winners[Math.floor(Math.random() * winners.length)];
-      const wrong = shuffle(els.filter(e => e !== answer && !winners.includes(e) && e !== target)).slice(0, 2);
-      const opts = shuffle([answer, ...wrong]);
-      await say(G, N, 'Which element is strong against ' + capWord(target) + '?');
-      const pick = H.ui && H.ui.choose ? await H.ui.choose(opts.map(capWord)) : 0;
-      if (opts[pick] === answer) { right++; sfx('confirm'); } else { sfx('bump'); await say(G, N, 'No. ' + capWord(answer) + ' is.'); }
+    await say(G, N, 'Halt. Only open eyes may enter.');
+    // the sight test: an epic hontori appears beside the gate; the Veilbound would see nothing there
+    const list = (H.spirits && H.spirits.list) || [], pickS = list[Math.floor(Math.random() * list.length)] || { key: 'hontori' };
+    const stageInfo = (k) => (H.spirits.stages && H.spirits.stages[k] && H.spirits.stages[k][4]) || { name: k, desc: 'A great spirit wrapped in light.' };
+    trialSpirit = { key: pickS.key, x: player.x + 30, y: player.y - 26, t: 0 };
+    emit('magic', trialSpirit.x, trialSpirit.y, 50); sfx('sparkle'); await wait(900);
+    await say(G, N, 'Look beside me. What do you see?');
+    const others = list.filter(s => s.key !== pickS.key).sort(() => Math.random() - 0.5).slice(0, 1);
+    const right = stageInfo(pickS.key).desc;
+    const opts = [right, stageInfo(others[0] ? others[0].key : 'water').desc, 'Only an empty courtyard.'].sort(() => Math.random() - 0.5);
+    const pick = H.ui && H.ui.choose ? await H.ui.choose(opts) : opts.indexOf(right);
+    if (opts[pick] !== right) {
+      sfx('bump'); trialSpirit = null;
+      await say(G, N, 'Your eyes are not open yet. Come back when they are.');
+      return false;
     }
-    if (right < 2) { await say(G, N, 'Study the elements, then return.'); return false; }
-    await say(G, N, 'Good. Now draw the Mending Sigil.');
-    if (H.gesture && H.gesture.prompt) await H.gesture.prompt('mend', 'Draw a circle');
+    sfx('confirm');
+    await say(G, N, 'Yes. ' + stageInfo(pickS.key).name + ', in full glory.');
+    emit('sparkle', trialSpirit.x, trialSpirit.y, 30); trialSpirit = null;
+    // the wand test: cast the spell the kid already knows
+    await say(G, N, 'Now lift the veil with your wand.');
+    if (H.gesture && H.gesture.prompt) await H.gesture.prompt('veil', 'Draw the V: Velum Aperi');
     sfx('wand'); emit('magic', player.x, player.y - 16, 60);
     await say(G, N, 'Steady hand, open eye. Welcome, the gate stands by.');
     H.game.state.academy = true; H.game.save();
     H.ui && H.ui.toast('Academy trial passed');
     return true;
   }
+
 
   async function goDoor(d) {
     busy = true; sfx('door'); const f = H.ui ? H.ui.fade(600) : Promise.resolve();
@@ -381,6 +386,9 @@
       ents.push({ y: (spirit.gy ?? spirit.y + 10), d: () => { const gy = spirit.gy ?? spirit.y + 10, h = spirit.h || 0;
         H.fx.shadow(ctx, spirit.x, gy, Math.max(3, 5 - h * 0.25), 2, env);
         H.spirits.draw(ctx, spirit.key, Math.round(spirit.x), Math.round(spirit.y), env, { scale: 0.75, dir: spirit.dir || 0, noShadow: true, moving: !!spirit.moving, sit: !!spirit.sit }); } }); }
+    if (trialSpirit) { trialSpirit.t += 0.016; const ts = trialSpirit;
+      lights.push({ x: ts.x, y: ts.y, r: 70, color: '#ffe8b0', flicker: true });
+      ents.push({ y: ts.y + 20, d: () => { H.fx.shadow(ctx, ts.x, ts.y + 18, 12, 4, env); H.spirits.draw(ctx, ts.key, Math.round(ts.x), Math.round(ts.y + Math.sin(env.t * 2) * 2), env, { stage: 5, dir: 0, alpha: Math.min(1, ts.t * 1.5) }); } }); }
     (map.lights || []).forEach(l => lights.push(l));
     if (H.encounters) try { H.encounters.collect(ents, lights, ctx, env); } catch (e) { console.warn(e); }
     ents.sort((a, b) => a.y - b.y).forEach(e => { try { e.d(); } catch (err) { console.warn(err); } });
