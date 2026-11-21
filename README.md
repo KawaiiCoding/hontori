@@ -10,3 +10,5 @@ Play: open `index.html` (works straight from GitHub Pages, no build step).
 - `gallery.html` shows all hontori
 
 All art and music are generated in code (Canvas 2D and Web Audio), no asset files.
+
+:
