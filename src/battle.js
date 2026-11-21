@@ -616,7 +616,6 @@
     '.hb-mv b{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:900;line-height:1.1;padding-right:44px}',
     '.hb-mv .ic{width:20px;height:20px;image-rendering:pixelated;flex:none;filter:drop-shadow(0 1px 0 rgba(0,0,0,.5))}',
     '.hb-mv .kind{display:inline-block;margin-top:4px;font-size:9px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.35)}',
-    '.hb-mv:after{content:"";position:absolute;right:8px;bottom:8px;width:7px;height:7px;border-right:2px solid rgba(255,255,255,.7);border-bottom:2px solid rgba(255,255,255,.7);transform:rotate(-45deg)}',
     '.hb-mv:active{transform:translateY(3px);box-shadow:inset 0 0 0 2px var(--mc),0 0 0 rgba(0,0,0,.45)}',
     '.hb-mv i{display:block;font-style:normal;font-size:10px;font-weight:700;opacity:.85;line-height:1.15;margin-top:3px}',
     '.hb-mv em{position:absolute;top:3px;right:4px;font-style:normal;font-size:10px;font-weight:900;padding:1px 6px;border-radius:8px;background:#ffd24a;color:#3a2400}',
