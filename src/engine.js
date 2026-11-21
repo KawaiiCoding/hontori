@@ -86,15 +86,17 @@
   const DIRS = [[0, 1], [0, -1], [-1, 0], [1, 0]];
 
   // ---------- input
+  // test-only keys (time, weather, add hontori, battle, warps) work only with ?debug=1
+  const DEBUG = /[?&]debug=1/.test(location.search);
   const keys = {}; let actionQueued = false;
   addEventListener('keydown', e => {
     const k = e.key.toLowerCase(); if (!keys[k] && (k === ' ' || k === 'enter' || k === 'z')) actionQueued = true;
     keys[k] = true;
-    if (k === 't') { env.time = (env.time + 3) % 24; H.ui && H.ui.toast('Time ' + Math.floor(env.time) + ':00'); }
-    if (k === 'r') { env.weather = WEATHERS[(WEATHERS.indexOf(env.weather) + 1) % WEATHERS.length]; H.ui && H.ui.toast('Weather: ' + env.weather); }
-    if (k === 'h' && !busy && H.spirits) { const have = H.game.state.party.map(p => p.key), nx = H.spirits.list.find(s => !have.includes(s.key)); if (nx && H.game.addHontori(nx.key)) H.ui && H.ui.toast('A ' + nx.element + ' hontori joined'); }
-    if (k === 'f' && !busy) startBattle();
-    if (k === '1' && !busy) loadMap('home'); if (k === '2' && !busy) loadMap('village'); if (k === '3' && !busy && H.maps.whisperwood) loadMap('whisperwood');
+    if (DEBUG && k === 't') { env.time = (env.time + 3) % 24; H.ui && H.ui.toast('Time ' + Math.floor(env.time) + ':00'); }
+    if (DEBUG && k === 'r') { env.weather = WEATHERS[(WEATHERS.indexOf(env.weather) + 1) % WEATHERS.length]; H.ui && H.ui.toast('Weather: ' + env.weather); }
+    if (DEBUG && k === 'h' && !busy && H.spirits) { const have = H.game.state.party.map(p => p.key), nx = H.spirits.list.find(s => !have.includes(s.key)); if (nx && H.game.addHontori(nx.key)) H.ui && H.ui.toast('A ' + nx.element + ' hontori joined'); }
+    if (DEBUG && k === 'f' && !busy) startBattle();
+    if (DEBUG && k === '1' && !busy) loadMap('home'); if (DEBUG && k === '2' && !busy) loadMap('village'); if (DEBUG && k === '3' && !busy && H.maps.whisperwood) loadMap('whisperwood');
     if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
   });
   addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
