@@ -32,7 +32,7 @@ window.H = window.H || {};
     fills: [[1, 2, 6, 4, 'S'], [8, 6, 15, 9, 'R']],
     props: [
       pr('lantern_hang', 7, 1), pr('notice_board', 9, 1), pr('lantern_hang', 12, 1), pr('window', 14, 1), pr('picture', 16, 1),
-      pr('stove', 1, 2), pr('cupboard', 2, 2), pr('barrel_in', 4, 2),
+      pr('cupboard', 1, 2), pr('stove', 3, 2),
       pr('ramen_pot', 1, 4), pr('tavern_counter', 2, 4),
       pr('tavern_table', 8, 3), pr('stool', 7, 3), pr('stool', 10, 4),
       pr('tavern_table', 12, 3), pr('stool', 14, 4),

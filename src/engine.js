@@ -58,7 +58,7 @@
     (map.buildings || []).forEach(b => { const i = H.buildings.info[b.type]; const dx = Math.floor(i.fw / 2), dy = i.fh - 1;
       for (let y = 0; y < i.fh; y++) for (let x = 0; x < i.fw; x++) if (!(x === dx && y === dy)) block(b.x + x, b.y + y); });
     try { ambient = H.ambient && H.ambient.create ? H.ambient.create(map) : null; } catch (e) { console.warn(e); ambient = null; }
-    npcs = (map.npcs || []).map(n => ({ ...n, px: n.x * T + 8, py: n.y * T + 15 }));
+    npcs = (map.npcs || []).map((n, i) => ({ ...n, seed: (n.x * 13 + n.y * 7 + i * 31) % 97 / 97, px: n.x * T + 8, py: n.y * T + 15 }));
     const s = map.spawn || { x: 1, y: 1, dir: 0 };
     player.tx = tx ?? s.x; player.ty = ty ?? s.y; player.dir = dir ?? s.dir ?? 0;
     player.x = player.tx * T + 8; player.y = player.ty * T + 15; player.moving = false; camSnap = true;
@@ -263,7 +263,7 @@
       if (inp.act) {
         const [ddx, ddy] = DIRS[player.dir]; const n = npcs.find(n => n.x === player.tx + ddx && n.y === player.ty + ddy);
         if (n && n.lines) { busy = true; n.dir = [1, 0, 3, 2][player.dir]; sfx('confirm');
-          (async () => { for (const l of n.lines.slice(0, 2)) await say(n.key, l[0], l[1]); busy = false; })(); }
+          (async () => { n.talking = true; for (const l of n.lines.slice(0, 2)) await say(n.key, l[0], l[1]); n.talking = false; busy = false; })(); }
         else if (!n) interactAt(player.tx + ddx, player.ty + ddy);
       } else if (inp.dx || inp.dy) tryMove(inp, 0);
     }
@@ -325,7 +325,7 @@
     (map.buildings || []).forEach(b => { const i = H.buildings.info[b.type], px = b.x * T, py = b.y * T;
       (i.lights || []).forEach(l => pushLight(l, px, py));
       ents.push({ y: py + i.fh * T, d: () => { H.fx.shadow(ctx, px + i.fw * 8, py + i.fh * T - 1, i.fw * 8 + 4, 6, env); H.buildings.draw(ctx, b.type, px, py, env); } }); });
-    npcs.forEach(n => ents.push({ y: n.py, d: () => { H.fx.shadow(ctx, n.px, n.py, 6, 2, env); H.chars.draw(ctx, n.key, n.px, n.py, n.dir || 0, 0, env); } }));
+    npcs.forEach(n => ents.push({ y: n.py, d: () => { H.fx.shadow(ctx, n.px, n.py, 6, 2, env); H.chars.draw(ctx, n.key, n.px, n.py, n.dir || 0, 0, env, { npc: true, seed: n.seed, idle: n.idle, talking: n.talking }); } }));
     ents.push({ y: player.y, d: () => { H.fx.shadow(ctx, player.x, player.y, 6, 2, env); H.chars.draw(ctx, 'kid', Math.round(player.x), Math.round(player.y), player.dir, player.frame, env); } });
     if (spirit) { lights.push({ x: spirit.x, y: spirit.y, r: 28, color: '#b8642a', flicker: true });
       ents.push({ y: (spirit.gy ?? spirit.y + 10), d: () => { const gy = spirit.gy ?? spirit.y + 10, h = spirit.h || 0;
