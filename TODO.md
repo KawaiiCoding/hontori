@@ -12,7 +12,7 @@ Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CO
 - Academy lessons and duels (src/academy.js): switch Aegis Ward and Rally Rune to their real shapes once battle.js has them; duels should use trainer mode.
 
 ## First thing next time
-- Battle screen layout: the spell sheet opens over everything (covers the player card, the message line and the hontori); collapse it by default, keep the card and messages visible, keep cooldown text inside the move button. Then a full play-through of a battle on iPhone Safari.
+- Battle screen layout fixed (spell sheet starts closed). Run one full battle on a real iPhone to confirm.
 - Faint dark seam lines remain on the largest evolved forms (stage 4-5); finish the clean-up in src/spirits.js.
 
 ## Battle: still missing (src/battle.js, src/moves.js)
