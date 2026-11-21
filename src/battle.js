@@ -236,6 +236,7 @@
     function frame(ms) {
       if (!live) return;
       T = ms / 1000;
+      if (Math.round(el.clientWidth * dpr) !== cv.width || Math.round(el.clientHeight * dpr) !== cv.height) size();
       g.setTransform(dpr * L, 0, 0, dpr * L, 0, 0); g.imageSmoothingEnabled = false;
       var sx = shakeT > 0 ? (Math.random() - 0.5) * 3 * shakeT : 0; shakeT = Math.max(0, shakeT - 0.03);
       g.save(); g.translate(sx, 0);

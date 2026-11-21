@@ -100,7 +100,23 @@ window.H = window.H || {};
     girl: { name: 'Lily', kid: 1, skin: '#f8d0b0', hair: '#f0c050', style: 'twintails', dress: '#e06a8a', pants: '#f4ecec', shoes: '#7a3a4a',
       ties: '#4ab0e0', collar: '#ffffff', eye: '#3a7ad8', expr: 'grin', bg: '#f8c0d8' },
     boy: { name: 'Tomo', kid: 1, skin: '#c88a60', hair: '#1e1e2e', style: 'cap', cap: '#3aa05a', shirt: '#f08a30', pants: '#6a5a4a',
-      shoes: '#f0f0f0', eye: '#6a4a2a', expr: 'grin', bandaid: 1, raised: 1, bg: '#b8e0a0' }
+      shoes: '#f0f0f0', eye: '#6a4a2a', expr: 'grin', bandaid: 1, raised: 1, bg: '#b8e0a0' },
+    farmer: { name: 'Farmer', skin: '#d9a27a', hair: '#6a4a2a', style: 'hat', cap: '#e2c060', shirt: '#c8563a', pants: '#3e5486', shoes: '#4a3020',
+      apron: '#4a64a0', stubble: 1, eye: '#4a3a2a', expr: 'smile', wide: 1, bg: '#e8dc98' },
+    fisher: { name: 'Fisher', skin: '#c98a5e', hair: '#a4a4ac', style: 'bandana', band: '#2a6a9a', shirt: '#e8e0c8', pants: '#3a4a3a', shoes: '#2a2a2a',
+      apron: '#d8a030', beard: 1, brow: '#c8c8d0', eye: '#3a4a6a', expr: 'smile', bg: '#98d0e8' },
+    baker: { name: 'Baker', skin: '#f4cfb0', hair: '#c8783a', style: 'bun', ties: '#ffffff', shirt: '#f2d0c0', pants: '#6a4a3a', shoes: '#5a3a2a',
+      apron: '#fbf4ea', eye: '#6a3a2a', expr: 'grin', wide: 1, bg: '#f4d8a8' },
+    grandma: { name: 'Grandma', skin: '#ecc4a4', hair: '#dcd8e2', style: 'bun', ties: '#8a5aa0', dress: '#7a5a9a', pants: '#4a3a5a', shoes: '#4a2a2a',
+      collar: '#f4ecf4', glasses: 1, eye: '#5a5a7a', expr: 'smile', bg: '#d8c8e8' },
+    guard: { name: 'Guard', skin: '#b87a52', hair: '#2a2420', style: 'hat', cap: '#8a90a0', shirt: '#3a5a9a', collar: '#d8b850', pants: '#33334a', shoes: '#262626',
+      moustache: 1, eye: '#3a2a1a', expr: 'smile', wide: 1, bg: '#b0c0e0' },
+    kid2: { name: 'Kid', kid: 1, skin: '#8a5a3e', hair: '#241818', style: 'short', shirt: '#f0cc3a', pants: '#3a6aa0', shoes: '#e04a4a',
+      eye: '#4a2a1a', expr: 'grin', raised: 1, freckles: 1, bg: '#f8e0a0' },
+    traveler: { name: 'Traveler', skin: '#e8b890', hair: '#5a3a6a', style: 'ponytail', ties: '#c04040', robe: '#5e7048', trim: '#c8a050', pants: '#4a3a2a',
+      shoes: '#5a3a2a', scarf: '#c8a050', eye: '#5a8a4a', expr: 'smile', bg: '#c8d8b0' },
+    gardener: { name: 'Gardener', skin: '#f0c8a0', hair: '#a83a2a', style: 'hat', cap: '#78a048', shirt: '#9ad0e0', pants: '#5a4a3a', shoes: '#4a3a2a',
+      apron: '#7a5a3a', freckles: 1, eye: '#3a7a5a', expr: 'grin', bg: '#c0e8b0' }
   };
   var E = '#2a1c2e', GL = '#3a2e44', WH = '#fbf6f0', MO = '#a8443c';
 
@@ -116,7 +132,7 @@ window.H = window.H || {};
       });
       return;
     }
-    var lng = st === 'bun' || st === 'twintails' || st === 'ponytail', shortS = st === 'short' || st === 'cap' || st === 'bandana';
+    var lng = st === 'bun' || st === 'twintails' || st === 'ponytail', shortS = st === 'short' || st === 'cap' || st === 'hat' || st === 'bandana';
     var longH = lng ? bot : shortS ? fr + 4 : bot - 3, swept = st === 'bun' || st === 'ponytail', tl = shortS ? 2 : 4, per = A ? 6 : 7;
     function bang(x, y) {
       var j = y - fr; if (j < 0 || j >= tl) return false;
@@ -171,6 +187,11 @@ window.H = window.H || {};
       else g.part(sh(d.cap, 0.8), function (m) { m.r(13, fr - 3, 6, 2); }, 1, true);
       if (dir === 0) { g.set(15, hy - 1, '#fff'); g.set(16, hy - 1, '#fff'); }
     }
+    if (st === 'hat') { // wide-brim hat: dome + brim + band
+      g.part(d.cap, function (m) { m.e(16, cy - 3, hw / 2 - 1, hh / 2 - 1); m.clip(function (x, y) { return y < fr - 2; }); });
+      g.part(sh(d.cap, 0.88), function (m) { m.r(hx - 3, fr - 3, hw + 6, 2); m.r(hx - 1, fr - 1, hw + 2, 1); });
+      g.part(sh(d.cap, 0.6), function (m) { m.r(hx + 2, fr - 5, hw - 4, 2); }, 1, true);
+    }
   }
 
   function sprite(d, dir, f, o) {
@@ -179,7 +200,7 @@ window.H = window.H || {};
     var hw = A ? 20 : 24, hh = A ? 20 : 22, hx = 16 - hw / 2, hy = (A ? 1 : 5) + b;
     var by = (A ? 20 : 25) + b, ly = A ? 35 : 38, cy = hy + hh / 2, ey = hy + hh - (A ? 10 : 11);
     var body = d.robe || d.dress || d.shirt, sleeve = d.robe || d.shirt || d.dress;
-    var tx = side ? 11 : 8, tw = side ? 10 : 16, al = A ? 10 : 8, i, j;
+    var tx = side ? (d.wide ? 10 : 11) : (d.wide ? 7 : 8), tw = side ? (d.wide ? 12 : 10) : (d.wide ? 18 : 16), al = A ? 10 : 8, i, j;
     var dim = function (c) { return sh(c, 0.78); };
     function legF(x, lift, sx) {
       g.part(d.pants, function (m) { m.r(x, ly - 3, 5, 47 - ly - lift); });
@@ -336,7 +357,7 @@ window.H = window.H || {};
       else if (t < 0.34 && (u + v < -30 || (dz && u + v < -18))) c = sh(d.bg, 1.14);
       x.fillStyle = c; x.fillRect(i, j, 1, 1);
     }
-    var g = new G(96, 96, 0, 0, 2), s = d.skin, hc = d.hair, st = d.style, ey = 20, hl = st === 'cap' ? 16 : 15;
+    var g = new G(96, 96, 0, 0, 2), s = d.skin, hc = d.hair, st = d.style, ey = 20, hl = (st === 'cap' || st === 'hat') ? 16 : 15;
     // back hair
     if (st === 'twintails') g.part(hc, function (m) { m.e(8, 33, 4.5, 10); m.e(40, 33, 4.5, 10); }, 2);
     if (st === 'ponytail') g.part(hc, function (m) { m.e(39, 31, 4.5, 10); }, 2);
@@ -411,6 +432,12 @@ window.H = window.H || {};
       g.part(d.cap, function (m) { m.e(24, 16, 14.5, 11); m.clip(function (x, y) { return y <= 15; }); }, 2);
       g.part(sh(d.cap, 0.75), function (m) { m.e(24, 16.5, 15.5, 2.4); });
       g.part('#ffffff', function (m) { m.e(24, 10, 2.5, 2.5); }, 1, true); g.set(24, 10, d.cap); g.set(23, 9, d.cap);
+    } else if (st === 'hat') {
+      shine = false;
+      g.part(hc, function (m) { m.e(12, 22, 3, 6); m.e(36, 22, 3, 6); bangs(m, 5, 3, 12, 36); });
+      g.part(d.cap, function (m) { m.e(24, 12, 11, 9); m.clip(function (x, y) { return y <= 14; }); }, 2);
+      g.part(sh(d.cap, 0.6), function (m) { m.r(13, 11, 22, 2); }, 1, true);
+      g.part(sh(d.cap, 0.9), function (m) { m.e(24, 15, 22, 3); }, 2);
     } else {
       g.part(hc, function (m) {
         if (st === 'messy') { base(m, 24); bangs(m, 5, 4); m.e(15, 8, 4, 3); m.e(24, 6, 4.5, 3.5); m.e(33, 8, 4, 3); m.r(25, 2, 2, 3); m.r(27, 1, 2, 2); m.e(10, 24, 2, 4); m.e(38, 24, 2, 4); }

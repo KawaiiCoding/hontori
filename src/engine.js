@@ -15,14 +15,19 @@
   function resize() {
     const root = document.getElementById('root');
     const w = root.clientWidth || window.innerWidth, h = root.clientHeight || window.innerHeight, short = 216;
-    if (h >= w) { VW = short; VH = Math.min(440, Math.round(short * h / w)); }
-    else { VH = short; VW = Math.min(440, Math.round(short * w / h)); }
+    // keep the exact screen aspect (never stretch); limit the long side for speed
+    const lo = Math.min(w, h), hi = Math.max(w, h), longS = Math.min(440, short * hi / lo), shortS = longS * lo / hi;
+    if (h >= w) { VW = Math.round(shortS); VH = Math.round(longS); } else { VW = Math.round(longS); VH = Math.round(shortS); }
     root.classList.toggle('land', w > h);
     canvas.width = VW * RS; canvas.height = VH * RS; ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.imageSmoothingEnabled = false;
     lighting = H.fx && H.fx.createLighting ? H.fx.createLighting(VW, VH) : null;
     weather = H.fx && H.fx.createWeather ? H.fx.createWeather(VW, VH) : null;
   }
   resize(); addEventListener('resize', resize);
+  // Phones report the new size late after rotating, so also check the real size every frame.
+  let lastRW = 0, lastRH = 0;
+  function checkSize() { const r = document.getElementById('root'); if (r.clientWidth !== lastRW || r.clientHeight !== lastRH) { lastRW = r.clientWidth; lastRH = r.clientHeight; resize(); } }
+  addEventListener('orientationchange', () => setTimeout(resize, 250));
   const particles = H.fx && H.fx.createParticles ? H.fx.createParticles() : null;
   const emit = (k, x, y, n) => particles && particles.emit(k, x, y, n);
   const sfx = (n) => { try { H.audio && H.audio.sfx(n); } catch (e) {} };
@@ -359,7 +364,7 @@
   H.game.battle = startBattle;
 
   let last = performance.now();
-  function loop(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; update(dt); render(); requestAnimationFrame(loop); }
+  function loop(now) { checkSize(); const dt = Math.min(0.05, (now - last) / 1000); last = now; update(dt); render(); requestAnimationFrame(loop); }
 
   H.ui && H.ui.init(document.getElementById('root'));
   // debug url params: ?nointro=1&scene=village&time=21&weather=rain&tx=10&ty=12
