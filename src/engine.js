@@ -263,7 +263,11 @@
       if (inp.act) {
         const [ddx, ddy] = DIRS[player.dir]; const n = npcs.find(n => n.x === player.tx + ddx && n.y === player.ty + ddy);
         if (n && n.lines) { busy = true; n.dir = [1, 0, 3, 2][player.dir]; sfx('confirm');
-          (async () => { n.talking = true; for (const l of n.lines.slice(0, 2)) await say(n.key, l[0], l[1]); n.talking = false; busy = false; })(); }
+          (async () => { n.talking = true; for (const l of n.lines.slice(0, 2)) await say(n.key, l[0], l[1]);
+            // shopkeepers offer their service right after talking
+            const svc = { innkeeper: 'tavern_counter', shopkeeper: 'shop_counter' }[n.key];
+            if (svc && H.interact && H.interact.has(svc)) { busy = true; try { await H.interact.run(svc, { say, toast: (t) => H.ui && H.ui.toast(t), emit, sfx, note: () => {}, env, map, mapName, x: n.px, y: n.py, player, hasSpirit: !!spirit, object: n, setTime: (h) => { env.time = h; }, fade: (ms) => (H.ui ? H.ui.fade(ms) : Promise.resolve()) }); } catch (e) { console.warn(e); } }
+            n.talking = false; busy = false; })(); }
         else if (!n) interactAt(player.tx + ddx, player.ty + ddy);
       } else if (inp.dx || inp.dy) tryMove(inp, 0);
     }
