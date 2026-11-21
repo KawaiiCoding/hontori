@@ -385,14 +385,14 @@
 
   // ---------- game state, saving (on this device)
   const SAVE_KEY = 'hontori.save.v1';
-  const mkMember = (key) => ({ key, nick: null, level: 1, hp: 20, maxHp: 20 });
+  const mkMember = (key) => H.progress ? H.progress.newMember(key) : ({ key, nick: null, level: 1, hp: 20, maxHp: 20 });
   H.game = {
     state: { items: [], party: [], intro: false },
     save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ map: mapName, tx: player.tx, ty: player.ty, dir: player.dir, time: env.time, weather: env.weather, state: H.game.state })); return true; } catch (e) { return false; } },
     read() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { return null; } },
     reset() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} location.href = location.pathname; },
     partyChanged() { const lead = H.game.state.party[0]; if (lead) { if (!spirit) spirit = { key: lead.key, x: player.x + 12, y: player.y - 10 }; else if (spirit.key !== lead.key) { spirit.key = lead.key; emit('sparkle', spirit.x, spirit.y, 14); sfx('sparkle'); } } H.game.save(); },
-    addHontori(key) { const p = H.game.state.party; if (p.length >= 5) return false; p.push(mkMember(key)); H.game.partyChanged(); H.menu && H.menu.refresh(); return true; },
+    addHontori(key, level) { if (H.progress) return H.progress.place(H.progress.newMember(key, level)); const p = H.game.state.party; if (p.length >= 5) return false; p.push(mkMember(key)); H.game.partyChanged(); H.menu && H.menu.refresh(); return true; },
     addItem(id, name, icon) { const it = H.game.state.items.find(i => i.id === id); if (it) it.n = (it.n || 1) + 1; else H.game.state.items.push({ id, name, icon, n: 1 }); H.menu && H.menu.refresh(); },
   };
 
@@ -426,6 +426,7 @@
     if (Q.get('nointro')) { H.game.state.party = [mkMember('hontori')]; H.game.state.intro = true; spirit = { key: 'hontori', x: player.x + 14, y: player.y - 10 }; }
     else (H.title ? H.title.ready : Promise.resolve()).then(() => setTimeout(runIntro, 500));
   }
+  H.progress && H.progress.migrate(H.game.state); // fills new save fields, moves old wand keys into the Sanctum
   H.menu && H.menu.init(document.getElementById('root'));
   requestAnimationFrame(loop);
   setInterval(() => { if (H.game.state.intro && !busy) H.game.save(); }, 30000);
