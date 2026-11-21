@@ -61,6 +61,7 @@ window.H = window.H || {};
     '@media (min-width:760px){.hui-dlg{left:50%;right:auto;width:min(92%,980px);transform:translate(-50%,24px);bottom:calc(var(--sa-b) + 18px);gap:16px;border-radius:20px}.hui-dlg.on{transform:translate(-50%,0)}.hui-por{align-self:center}.hui-ch{right:max(4%,calc(50% - 490px))}}'
   ].join('\n');
 
+  (function () { var st = document.createElement('style'); st.textContent = '.hui-ch button.rich{display:flex;align-items:center;gap:10px;text-align:left}.hui-ch button.rich .ci{width:32px;height:32px;image-rendering:pixelated;flex:none}.hui-ch button.rich .ct{display:flex;flex-direction:column}.hui-ch button.rich small{font-size:.72em;font-weight:700;opacity:.75;margin-top:2px}'; document.head.appendChild(st); })();
   function mk(tag, cls, parent) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -266,6 +267,23 @@ window.H = window.H || {};
   }
 
   // ---- choice ----
+  // icons and one-line descriptions for common choices (shop items, food, services)
+  var CHOICE_INFO = [
+    [/herb/i, 'grass', 'Restores a little mana in battle'],
+    [/ember dust/i, 'fire', 'Revives a fainted fire hontori'],
+    [/tide pearl/i, 'water', 'Revives a fainted water hontori'],
+    [/spirit snack/i, 'energy', 'Revives other hontori, restores some mana'],
+    [/charm/i, 'backpack', 'A lucky charm for your backpack'],
+    [/ramen/i, 'energy', 'Heals your party and refills mana'],
+    [/no thanks|leave|maybe later|not now/i, null, null]
+  ];
+  function choiceInfo(label) {
+    for (var i = 0; i < CHOICE_INFO.length; i++) if (CHOICE_INFO[i][0].test(label)) {
+      var ic = null; try { if (CHOICE_INFO[i][1] && H.icons) ic = H.icons.url(CHOICE_INFO[i][1], 2); } catch (e) {}
+      return { icon: ic, desc: CHOICE_INFO[i][2] };
+    }
+    return {};
+  }
   function choose(options) {
     if (!els.root) init(document.body);
     if (choice) closeChoice(-1);
@@ -273,7 +291,16 @@ window.H = window.H || {};
     setTalk(true);
     var btns = (options || []).map(function (opt, i) {
       var b = mk('button', i === 0 ? 'sel' : '', box);
-      b.type = 'button'; b.textContent = String(opt);
+      b.type = 'button';
+      // options may be plain text or {label, icon, desc}; known items get an icon and a short "what it does"
+      var o = (opt && typeof opt === 'object') ? opt : { label: String(opt) }, info = choiceInfo(o.label);
+      var icon = o.icon || info.icon, desc = o.desc || info.desc;
+      if (icon || desc) {
+        b.classList.add('rich');
+        if (icon) { var im = document.createElement('img'); im.className = 'ci'; im.alt = ''; im.src = icon; b.appendChild(im); }
+        var tx = document.createElement('span'); tx.className = 'ct'; tx.textContent = o.label; b.appendChild(tx);
+        if (desc) { var ds = document.createElement('small'); ds.textContent = desc; tx.appendChild(ds); }
+      } else b.textContent = o.label;
       b.addEventListener('pointerenter', function () { setSel(i); });
       b.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); setSel(i); closeChoice(i); });
       return b;
