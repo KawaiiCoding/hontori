@@ -86,7 +86,6 @@ window.H = window.H || {};
       { type: 'coat_rack', x: 1, y: 12 },
       { type: 'clock', x: 6, y: 12 },
       { type: 'potted_tree', x: 9, y: 12 },
-      { type: 'stairs', x: 1, y: 14 },
       { type: 'doormat', x: 4, y: 16 },
       { type: 'potted_tree', x: 9, y: 16 },
       // ---- living room
