@@ -15,6 +15,15 @@ Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CO
 - Battle screen layout: the spell sheet opens over everything (covers the player card, the message line and the hontori); collapse it by default, keep the card and messages visible, keep cooldown text inside the move button. Then a full play-through of a battle on iPhone Safari.
 - Faint dark seam lines remain on the largest evolved forms (stage 4-5); finish the clean-up in src/spirits.js.
 
+## Battle: still missing (src/battle.js, src/moves.js)
+- Drawing quality grades (Flawless / Strong / Rough) changing spell strength.
+- Spell mastery (state.spellMastery) and the 4-spell loadout (state.spellLoadout).
+- Move pools that grow with level (H.moves.pool / learned, member.moves, up to 4 move buttons).
+- Switching hontori mid-battle; result needs a participants list for EXP sharing.
+- Escape as a real action (chance low/fair/good, retry bonus, failure costs the turn, dash-off animation, veilstep sigil).
+- Node test that all drawn shapes are told apart (U vs V most at risk).
+- Check every biome/time/weather background and run a battle in WebKit (iPhone Safari).
+
 ## Left over from the last agents (details)
 - Chapter 1 content was not written (src/chapter1.js): morning scene with mom and dad, pick-5 backpack picker, quests A Steady Hand, Wet Pawprints, The Elder's Second Cup, Beyond the Trees, ending letter from the archmage. The story engine (src/quests.js) is ready for it.
 - Approve the antagonist name in STORY.md: Grand Archmage Orlen Vael (crest: a closed grey eye). Check STORY.md against WORLD_RULES.md.
