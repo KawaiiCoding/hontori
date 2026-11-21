@@ -17,16 +17,16 @@ window.H = window.H || {};
   ];
   var FALLBACK = { shield: 'mend', boost: 'veil' };
   var STUDENTS = {
-    boy: { name: 'Ash', enemy: 'electric', level: 2, lesson: 'stun',
-      hello: 'Want a practice duel? My spark is getting bigger.', win: 'You got me. Good duel.', lose: 'Ha. Try again when you are ready.' },
-    girl: { name: 'Mira', enemy: 'water', level: 3, lesson: 'sleep',
+    boy: { name: 'Ash', enemy: 'electric', level: 1, lesson: 'stun',
+      hello: 'Want a practice duel? My spark is getting bigger.', win: 'You got me. Good duel.', lose: 'Good try. Rest a moment and come back.' },
+    girl: { name: 'Mira', enemy: 'water', level: 2, lesson: 'sleep',
       hello: 'A practice duel? My little otter is quick.', win: 'Well drawn. My otter needs a nap now.', lose: 'The water was kind to me this time.' }
   };
 
   function P(v) { return (v && typeof v.then === 'function') ? v : Promise.resolve(v); }
   function say(c, key, name, text) { return c && c.say ? P(c.say(key, name, text)) : Promise.resolve(); }
   function sorrel(c, text) { return say(c, TEACH[0], TEACH[1], text); }
-  function fox(c, text) { return c && c.hasSpirit ? say(c, 'hontori', 'Hontori', text) : Promise.resolve(); }
+  function fox(c, text) { return c && c.hasSpirit ? say(c, 'hontori', H.spiritName || 'Fire Hontori', text) : Promise.resolve(); }
   function toast(c, t) { if (c && c.toast) c.toast(t); else if (H.ui && H.ui.toast) H.ui.toast(t); }
   function emit(c, kind, n) { if (c && c.emit) c.emit(kind, c.x || 0, (c.y || 0) - 10, n); }
   function sfx(c, n) { if (c && c.sfx) c.sfx(n); }
@@ -69,7 +69,7 @@ window.H = window.H || {};
   }
 
   function teach(c, i) {
-    var s = st(), L = LESSONS[i];
+    var s = st(), L = LESSONS[i], again = lessonDone(s, L);
     return seq(c, sorrel, L.lines)
       .then(function () { return sorrel(c, 'Now you try. Follow the glowing line.'); })
       .then(function () { return practice(L); })
@@ -78,10 +78,10 @@ window.H = window.H || {};
         s.academyLessons[L.kind] = true;
         if (s.spells.indexOf(L.kind) < 0) s.spells.push(L.kind);
         save(); sfx(c, 'sparkle'); emit(c, 'magic', 14);
-        toast(c, (i === 0 ? 'Reviewed: ' : 'Learned: ') + L.name);
-        return sorrel(c, i === 0 ? 'Neat and round. Good.' : 'Well done. It is yours now.');
+        toast(c, (again ? 'Reviewed: ' : 'Learned: ') + L.name);
+        return sorrel(c, again ? 'Neat and steady. Good.' : 'Well done. It is yours now.');
       })
-      .then(function () { return i === LESSONS.length - 1 ? fox(c, 'Round and round, the bond is found.') : fox(c, 'A brand new sign, your wand will shine.'); });
+      .then(function () { return again ? null : fox(c, 'Round and round, the bond is found.'); });
   }
 
   function wheel(c) {

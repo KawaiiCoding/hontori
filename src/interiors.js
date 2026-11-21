@@ -119,7 +119,7 @@ window.H = window.H || {};
     ],
     npcs: [
       { key: 'boy', x: 9, y: 8, dir: 1, lines: L('Pip', 'A glowing puff slept in our woodpile last week.', 'Then it was gone, and it left wet pawprints.') },
-      { key: 'dad', x: 5, y: 3, dir: 0, lines: L('Bram', 'Pip leaves a saucer of milk by the door each night.', 'Something drinks it, so I let him keep hoping.') }
+      { key: 'dad', x: 5, y: 3, dir: 0, lines: L('Corin', 'Pip leaves a saucer of milk by the door each night.', 'Something drinks it, so I let him keep hoping.') }
     ]
   });
   var house3 = mk({ // hints at the elder

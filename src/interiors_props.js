@@ -381,8 +381,8 @@ window.H = window.H || {};
     px = px | 0; py = py | 0;
     if (builders[type]) {
       if (!anim[type]) builders[type]();
-      var A = anim[type];
-      HD.blit(ctx, A.frames[Math.floor(t * A.fps) % A.frames.length], px + A.ox, py + A.oy);
+      var A = anim[type], n = (A && A.frames && A.frames.length) || 0, fi = n ? ((Math.floor((+t || 0) * A.fps) % n) + n) % n : 0;
+      if (n && A.frames[fi]) HD.blit(ctx, A.frames[fi], px + A.ox, py + A.oy);
       return true;
     }
     var a;

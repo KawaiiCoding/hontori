@@ -67,6 +67,9 @@ Expose Orlen Vael and pass a new law, so hontori are known and respected by ever
    - **The Elder's Second Cup** (Fenn or Lark start it): Elder Wisteria tells of the old law, her light hontori sealed in the well, and Grand Archmage Orlen Vael.
    - **Beyond the Trees**: Guard Bram keeps the south road closed until the Academy quest is done; reaching Whisperwood finishes it.
    - When all four are done, a paper bird letter sealed with a closed grey eye arrives. No title card; the scene simply happens.
+   - After the letter the fox says one rhyme about the road ahead, and play simply continues.
+   - The pond needs night. Time only moves by sleeping (8 hours), so from morning the kid sleeps twice; the quest step says so and the map marker points to the kid's bed until dusk.
+   - Every quest step carries a map marker (step.target in src/chapter1.js): the spot on the current map, or the door that leads toward it.
    - One-time tips appear when they first matter: first battle (tap a move), first hurt hontori after a wild battle (Mend in the party panel, costs mana), low mana (herbs, ramen), first weakened wild hontori before the spiral is known (the Academy teaches binding), first night (sleep in a bed).
 2. **Whisperwood** - the forest road and the first ring school.
 3. **Tidewell**
