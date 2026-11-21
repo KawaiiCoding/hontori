@@ -5,7 +5,7 @@ window.H = window.H || {};
   var S = 32, NF = 16, cache = {}, pcache = {}, gcache = {};
   var list = [
     { key: 'hontori', name: 'Hontori', element: 'fire' },
-    { key: 'water', name: 'Plipplop', element: 'water' },
+    { key: 'water', name: 'Brookit', element: 'water' },
     { key: 'wind', name: 'Hooligust', element: 'wind' },
     { key: 'grass', name: 'Bramblebun', element: 'grass' },
     { key: 'electric', name: 'Zappity', element: 'electric' },
@@ -41,7 +41,9 @@ window.H = window.H || {};
           if (!flat) {
             var d = nx * 0.55 + ny * 0.85;
             if (d < -0.62 && r < 0.75) col = pal[0];
-            else if (d > 0.55 || r > 0.86 && d > 0.1) col = pal[3] || pal[2];
+            // darkest tone only on the deep shadow side; the rim of overlapping parts stays mid-tone (no dark 'ropes')
+            else if (d > 0.7) col = pal[3] || pal[2];
+            else if (r > 0.86 && d > 0.1) col = pal[2];
             else if (d > 0.2) col = pal[2];
           }
           g.fillStyle = col; g.fillRect(x, y, 1, 1);
@@ -86,13 +88,43 @@ window.H = window.H || {};
     return api;
   }
 
-  function outline(c, col) {
+  function outline(c, col, close) {
     var g = c.getContext('2d'), w = c.width, h = c.height;
     var id = g.getImageData(0, 0, w, h), d = id.data, a = new Uint8Array(w * h), i, x, y;
     for (i = 0; i < w * h; i++) a[i] = d[i * 4 + 3] > 40 ? 1 : 0;
+    if (close) {
+      // morphological closing (dilate then erode) seals thin seams between overlapping parts that open to the edge
+      var dil = new Uint8Array(w * h), cl = new Uint8Array(w * h), r = close, xx, yy, hit;
+      for (y = 0; y < h; y++) for (x = 0; x < w; x++) { hit = 0;
+        for (yy = Math.max(0, y - r); yy <= Math.min(h - 1, y + r) && !hit; yy++) for (xx = Math.max(0, x - r); xx <= Math.min(w - 1, x + r); xx++) if (a[yy * w + xx]) { hit = 1; break; }
+        dil[y * w + x] = hit; }
+      for (y = 0; y < h; y++) for (x = 0; x < w; x++) { hit = 1;
+        for (yy = y - r; yy <= y + r && hit; yy++) for (xx = x - r; xx <= x + r; xx++) { if (xx < 0 || yy < 0 || xx >= w || yy >= h || !dil[yy * w + xx]) { hit = 0; break; } }
+        cl[y * w + x] = hit; }
+      // seam pixels (in the closed shape, transparent in the drawing): fill with a nearby body colour
+      for (var pass = 0; pass < r + 1; pass++) for (i = 0; i < w * h; i++) {
+        if (a[i] || !cl[i]) continue;
+        var nb = [i - 1, i + 1, i - w, i + w];
+        for (var q2 = 0; q2 < 4; q2++) { var j2 = nb[q2]; if (j2 >= 0 && j2 < w * h && a[j2]) { d[i * 4] = d[j2 * 4]; d[i * 4 + 1] = d[j2 * 4 + 1]; d[i * 4 + 2] = d[j2 * 4 + 2]; d[i * 4 + 3] = 255; a[i] = 1; break; } }
+      }
+    }
+    // Transparent pixels reachable from the canvas border are "outside". Any other transparent pixel is a
+    // hairline gap between overlapping body shapes: heal it with a neighbouring body colour instead of
+    // outlining it (outlining those gaps made thin dark "ropes" across evolved forms).
+    var out = new Uint8Array(w * h), q = [];
+    for (x = 0; x < w; x++) { q.push(x, (h - 1) * w + x); }
+    for (y = 0; y < h; y++) { q.push(y * w, y * w + w - 1); }
+    while (q.length) { i = q.pop(); if (out[i] || a[i]) continue; out[i] = 1; x = i % w; y = (i / w) | 0;
+      if (x > 0) q.push(i - 1); if (x < w - 1) q.push(i + 1); if (y > 0) q.push(i - w); if (y < h - 1) q.push(i + w); }
+    for (i = 0; i < w * h; i++) {
+      if (a[i] || out[i]) continue;
+      var n = [i - 1, i + 1, i - w, i + w];
+      for (var k = 0; k < 4; k++) { var j = n[k]; if (j >= 0 && j < w * h && a[j]) { d[i * 4] = d[j * 4]; d[i * 4 + 1] = d[j * 4 + 1]; d[i * 4 + 2] = d[j * 4 + 2]; d[i * 4 + 3] = 255; break; } }
+    }
+    g.putImageData(id, 0, 0);
     g.fillStyle = col;
     for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
-      if (a[y * w + x]) continue;
+      if (!out[y * w + x]) continue;
       if ((x > 0 && a[y * w + x - 1]) || (x < w - 1 && a[y * w + x + 1]) || (y > 0 && a[(y - 1) * w + x]) || (y < h - 1 && a[(y + 1) * w + x]))
         g.fillRect(x, y, 1, 1);
     }
@@ -270,7 +302,7 @@ window.H = window.H || {};
   var DEF = {
     hontori: function (p, f) { if (p.back) foxBack(p, f); else if (p.side) foxSide(p, f); else foxFront(p, f); },
 
-    water: function (p, f) { // Plipplop the otter
+    water: function (p, f) { // Brookit the otter
       var B = ['#9ad0f0', '#4a90c8', '#2e6aa0', '#1c4878'], C = ['#ffffff', '#e8f4ff', '#c0dcf0', '#9ac0e0'];
       var b = hop(p), sw = Math.sin(p.ph - 1) * 2;
       if (p.side) {
@@ -561,7 +593,7 @@ window.H = window.H || {};
     hontori: [['Hontori', 'A small fire fox kit with a warm ember on its brow.'], ['Cindrel', 'Its tail now burns at the tip and its ruff has grown thick.'],
       ['Brandtail', 'A bold young fox that splits its flame into two tails.'], ['Pyrevane', 'Four blazing tails and gold-marked fur; embers circle where it walks.'],
       ['Solvaryn', 'A legendary fox whose five tails open like a crown of sunfire.']],
-    water: [['Plipplop', 'A round river otter that blows tiny bubbles.'], ['Plashet', 'A head fin and a broad paddle tail make it a quick swimmer.'],
+    water: [['Brookit', 'A round river otter that blows tiny bubbles.'], ['Plashet', 'A head fin and a broad paddle tail make it a quick swimmer.'],
       ['Tidewend', 'Ear fins and arm fins let it ride the strongest currents.'], ['Marivoss', 'Flowing whisker tendrils; rings of water turn around it.'],
       ['Thalavyr', 'A legendary otter crowned with a breaking wave, calm as deep water.']],
     wind: [['Hooligust', 'A fluffy owlet that rides small breezes.'], ['Breezlow', 'Long ear tufts and its first strong flight feathers.'],
@@ -1100,7 +1132,7 @@ window.H = window.H || {};
     if (st > 1) { pc.warp = false; STG[key](pc, f, st, 'behind'); pc.warp = mode !== 'move'; STG[key](pb, f, st, 'back'); }
     DEF[key](pb, f);
     if (st > 1) STG[key](pb, f, st, 'front');
-    outline(body, OUT[key] || '#1a1020');
+    outline(body, OUT[key] || '#1a1020', st > 1 ? Math.max(1, Math.round(k)) : 0);
     if (st > 1) { enrich(body, st); c.getContext('2d').drawImage(body, 0, 0); }
     pc.warp = false; aura(pc, key, f);
     if (st > 1) STG[key](pc, f, st, 'fx');
