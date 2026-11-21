@@ -25,7 +25,7 @@ Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CO
 - Check every biome/time/weather background and run a battle in WebKit (iPhone Safari).
 
 ## Left over from the last agents (details)
-- Done: Chapter 1 (src/chapter1.js) played end to end in Chromium (intro, V, picker, real walk to the Academy, gate trial, a real duel, Binding lesson, Pip, two sleeps, pond, Fenn, Elder, south gate, Whisperwood, letter, closing rhyme, save/reload). Still play it once on iPhone Safari with a real pond capture.
+- Done: Chapter 1 (src/chapter1.js) played end to end in Chromium (intro, V, picker, real walk to the Academy, gate trial, a real duel, Binding lesson, Tobin, two sleeps, pond, Fenn, Elder, south gate, Whisperwood, letter, closing rhyme, save/reload). Still play it once on iPhone Safari with a real pond capture.
 - The gatekeeper and Madam Sorrel both use the 'elder' portrait (engine.js / academy.js): give the gatekeeper a look of its own.
 - Academy lesson "Caring for your hontori" added (src/academy.js); check its lines match the final Mend/mana mechanics.
 - Approve the antagonist name in STORY.md: Grand Archmage Orlen Vael (crest: a closed grey eye). Check STORY.md against WORLD_RULES.md.

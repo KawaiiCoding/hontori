@@ -16,7 +16,7 @@
     '.hn .ok:active,.hn .no:active{transform:translateY(3px);box-shadow:none}'
   ].join('\n');
   // a few gentle suggestions so nobody is stuck on an empty box
-  var IDEAS = ['Ember', 'Kindle', 'Sootling', 'Pip', 'Juniper', 'Wisp', 'Cinder', 'Maple', 'Nova', 'Tansy'];
+  var IDEAS = ['Ember', 'Kindle', 'Sootling', 'Pebble', 'Juniper', 'Wisp', 'Cinder', 'Maple', 'Nova', 'Tansy'];
 
   function ask(current, portrait, title) {
     return new Promise(function (resolve) {

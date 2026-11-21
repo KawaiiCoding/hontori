@@ -16,19 +16,19 @@ window.H = window.H || {};
   function pos() { var c = H.game && H.game.currentMap && H.game.currentMap(); return c && c.player ? { x: c.player.tx, y: c.player.ty, name: c.name } : null; }
 
   // ---------------------------------------------------------------- quests
-  ST.defineQuest({ id: 'academy', icon: 'book', title: 'The Academy', desc: 'Emberbrook Academy teaches one spell: the Binding Spiral.', steps: [
+  ST.defineQuest({ id: 'academy', icon: 'book', title: 'The Academy', desc: 'The old school up the north road has opened its gate again.', steps: [
     { id: 'go', text: 'Go to Emberbrook Academy, up the road north of the square', done: function (s) { return !!s.academy || !!s.flags['visited:school']; } },
     { id: 'trial', text: 'Pass the gate trial', done: function (s) { return !!s.academy; } },
     { id: 'duel', text: 'Win a practice duel with Ash or Mira', done: function () { return duels(); } },
     { id: 'bind', text: 'Learn the Binding Spiral from Madam Sorrel', done: function () { return spells().indexOf('bind') >= 0; } }
   ], reward: function () {
     ST.start('woods'); ST.start('pawprints');
-    var q = S().quests || {}; if (q.pawprints && q.woods && q.pawprints.status === 'active') q.pawprints.t = q.woods.t + 1; // Pip comes first in the pill
+    var q = S().quests || {}; if (q.pawprints && q.woods && q.pawprints.status === 'active') q.pawprints.t = q.woods.t + 1; // Tobin comes first in the pill
     openWoods();
   } });
 
   ST.defineQuest({ id: 'pawprints', icon: 'paw', title: 'Wet Pawprints', desc: 'Something leaves wet pawprints in the village at night.', steps: [
-    { id: 'pip', text: 'Ask Pip about the pawprints, in Pip\'s house on the south row', done: function () { return F('c1:pip'); } },
+    { id: 'pip', text: 'Ask Tobin about the pawprints, in Tobin\'s house on the south row', done: function () { return F('c1:pip'); } },
     { id: 'pond', text: function () { return dusk() ? 'Go to the pond in the northwest of the village' : 'Wait for night: sleep in your bed, then go to the pond'; }, done: function () { return F('c1:pond'); } },
     { id: 'bind', text: 'Weaken the shy water hontori at the pond and bind it', done: function () { return F('c1:brook'); } }
   ], reward: function () { ST.start('elder'); } });
@@ -142,9 +142,9 @@ window.H = window.H || {};
   } });
 
   // ---------------------------------------------------------------- Wet Pawprints
-  ST.defineEvent({ id: 'c1_pip', when: 'talk', map: 'house_a2', npc: 'Pip', run: function (a) {
-    return a.say('boy', 'Pip', 'You believe me, right? It was real.')
-      .then(function () { return a.say('boy', 'Pip', 'The pawprints always lead to the pond.'); })
+  ST.defineEvent({ id: 'c1_pip', when: 'talk', map: 'house_a2', npc: 'Tobin', run: function (a) {
+    return a.say('boy', 'Tobin', 'You believe me, right? It was real.')
+      .then(function () { return a.say('boy', 'Tobin', 'The pawprints always lead to the pond.'); })
       .then(function () { return a.say('hontori', 'Wet little paws, a pond at night. We wait for dusk and the water light.'); })
       .then(function () { ST.start('pawprints'); a.setFlag('c1:pip'); });
   } });

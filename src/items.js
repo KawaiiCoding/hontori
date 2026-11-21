@@ -159,24 +159,28 @@ window.H = window.H || {};
       once('lantern', 'The lantern lights the way. Dark hontori come closer.');
     }
   });
-  var frame = 0, pill = null;
+  var frame = 0, pill = null, compA = 0, compAng = 0, compX = 0, compY = 0;
   H.screenDraw = H.screenDraw || [];
   H.screenDraw.push(function (ctx, VW, VH, env, mapName, camX, camY, player) {
-    // compass: an arrow at the edge points to the next goal
+    // compass: a small, soft arrow at the screen edge, only while the goal is off-screen; it fades in and out
+    var want = 0, ang = compAng, ax = compX, ay = compY;
     if (has('compass') && H.story && H.story.target) {
       var t = H.story.target();
       if (t && t.map === mapName) {
-        var sx = t.x * T + 8 - camX, sy = t.y * T + 8 - camY, m = 14;
+        var sx = t.x * T + 8 - camX, sy = t.y * T + 8 - camY, m = 12;
         if (sx < m || sy < m || sx > VW - m || sy > VH - m) {
-          var cx = player.x - camX, cy = player.y - 8 - camY, ang = Math.atan2(sy - cy, sx - cx);
+          var cx = player.x - camX, cy = player.y - 8 - camY; ang = Math.atan2(sy - cy, sx - cx);
           var k = Math.min(Math.abs((VW / 2 - m) / (Math.cos(ang) || 1e-6)), Math.abs((VH / 2 - m) / (Math.sin(ang) || 1e-6)));
-          var ax = VW / 2 + Math.cos(ang) * k, ay = VH / 2 + Math.sin(ang) * k, pu = 1 + Math.sin(env.t * 4) * 0.12;
-          ctx.save(); ctx.translate(Math.round(ax), Math.round(ay)); ctx.rotate(ang); ctx.scale(pu, pu);
-          ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(-5, -5); ctx.lineTo(-2, 0); ctx.lineTo(-5, 5); ctx.closePath();
-          ctx.fillStyle = '#ffd36b'; ctx.strokeStyle = 'rgba(40,24,6,.85)'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fill(); ctx.restore();
+          ax = VW / 2 + Math.cos(ang) * k; ay = VH / 2 + Math.sin(ang) * k; want = 1;
           once('compass', 'The compass points the way');
         }
       }
+    }
+    compA += (want - compA) * Math.min(1, 0.06); if (want) { compAng = ang; compX = ax; compY = ay; }
+    if (compA > 0.02) {
+      ctx.save(); ctx.globalAlpha = compA * 0.55; ctx.translate(Math.round(compX), Math.round(compY)); ctx.rotate(compAng); ctx.scale(0.7, 0.7);
+      ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(-4, -4); ctx.lineTo(-2, 0); ctx.lineTo(-4, 4); ctx.closePath();
+      ctx.fillStyle = '#ffe2a0'; ctx.strokeStyle = 'rgba(40,24,6,.6)'; ctx.lineWidth = 1; ctx.stroke(); ctx.fill(); ctx.restore();
     }
     if (++frame % 20) return;
     // map button only once the kid has the map

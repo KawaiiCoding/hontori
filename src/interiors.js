@@ -109,7 +109,7 @@ window.H = window.H || {};
     ]
   });
   var house2 = mk({ // hints at a lost hontori
-    name: 'Pip\'s House', w: 14, h: 11, floor: 'H', door: 7,
+    name: 'Tobin\'s House', w: 14, h: 11, floor: 'H', door: 7,
     fills: [[1, 2, 4, 4, 'K'], [7, 4, 11, 7, 'R']],
     props: [
       pr('window', 2, 1), pr('lantern_hang', 6, 1), pr('window', 9, 1), pr('picture', 11, 1),
@@ -118,8 +118,8 @@ window.H = window.H || {};
       pr('bed', 12, 7), pr('chest', 12, 9), pr('barrel_in', 1, 9), pr('plant', 6, 9)
     ],
     npcs: [
-      { key: 'boy', x: 9, y: 8, dir: 1, lines: L('Pip', 'A glowing puff slept in our woodpile last week.', 'Then it was gone, and it left wet pawprints.') },
-      { key: 'dad', x: 5, y: 3, dir: 0, lines: L('Corin', 'Pip leaves a saucer of milk by the door each night.', 'Something drinks it, so I let him keep hoping.') }
+      { key: 'boy', x: 9, y: 8, dir: 1, lines: L('Tobin', 'A glowing puff slept in our woodpile last week.', 'Then it was gone, and it left wet pawprints.') },
+      { key: 'dad', x: 5, y: 3, dir: 0, lines: L('Corin', 'Tobin leaves a saucer of milk by the door each night.', 'Something drinks it, so I let him keep hoping.') }
     ]
   });
   var house3 = mk({ // hints at the elder

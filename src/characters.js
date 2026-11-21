@@ -95,7 +95,7 @@ window.H = window.H || {};
       shoes: '#5a3a2a', staff: 1, beard: 1, eye: '#4a4a6a', expr: 'closed', brow: '#f8f6f0', bg: '#c8b0e8' },
     innkeeper: { name: 'Bruno', skin: '#d89a70', hair: '#2a1a14', style: 'bandana', band: '#d04848', shirt: '#f0e6d0', pants: '#5a3a2a',
       shoes: '#3a2418', apron: '#e8dcc0', moustache: 1, eye: '#5a3a2a', expr: 'smile', my: 33, bg: '#f0b090' },
-    shopkeeper: { name: 'Pip', skin: '#f0c8a8', hair: '#8a3a5a', style: 'ponytail', shirt: '#e8b048', pants: '#4a3a3a', shoes: '#5a3a2a',
+    shopkeeper: { name: 'Nettle', skin: '#f0c8a8', hair: '#8a3a5a', style: 'ponytail', shirt: '#e8b048', pants: '#4a3a3a', shoes: '#5a3a2a',
       apron: '#5e8a4a', ties: '#f0e070', glasses: 1, eye: '#7a4aa0', expr: 'smile', bg: '#a8e0c8' },
     girl: { name: 'Lily', kid: 1, skin: '#f8d0b0', hair: '#f0c050', style: 'twintails', dress: '#e06a8a', pants: '#f4ecec', shoes: '#7a3a4a',
       ties: '#4ab0e0', collar: '#ffffff', eye: '#3a7ad8', expr: 'grin', bg: '#f8c0d8' },

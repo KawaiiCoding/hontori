@@ -212,27 +212,30 @@ window.H = window.H || {};
 
   // ---------- quest pill + Quest Log sheet
   var CSS = [
-    '.hq-pill{position:absolute;z-index:31;left:calc(env(safe-area-inset-left,0px) + 60px);top:calc(env(safe-area-inset-top,0px) + 62px);max-width:min(64%,330px);display:flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:14px;background:rgba(14,16,32,.82);border:2px solid rgba(255,214,120,.35);color:#f4f1e8;font:800 13px/1.2 Nunito,"M PLUS Rounded 1c",system-ui,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.4);cursor:pointer;transition:opacity .2s,transform .2s;-webkit-user-select:none;user-select:none}',
+    '.hq-pill{position:absolute;z-index:31;left:calc(env(safe-area-inset-left,0px) + 60px);top:calc(env(safe-area-inset-top,0px) + 62px);max-width:calc(100% - 60px - 66px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px));height:36px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:4px 12px 4px 6px;border-radius:14px;background:rgba(14,16,32,.82);border:2px solid rgba(255,214,120,.35);color:#f4f1e8;font:800 13px/1.2 Nunito,"M PLUS Rounded 1c",system-ui,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.4);cursor:pointer;transition:opacity .2s,transform .2s;-webkit-user-select:none;user-select:none}',
     '.hq-pill[hidden]{display:none}',
     '.hq-pill:active{transform:translateY(2px)}',
-    '.hq-pill .ic{flex:none;width:24px;height:24px;image-rendering:pixelated;filter:drop-shadow(0 0 4px rgba(255,176,74,.6))}',
+    '.hq-pill .ic{flex:none;width:22px;height:22px;image-rendering:pixelated;filter:drop-shadow(0 0 4px rgba(255,176,74,.6))}',
     '.hq-pill .tx{min-width:0}',
-    '.hq-pill b{display:block;color:#ffe7a8;font-weight:900;font-size:12px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-    '.hq-pill span{display:block;opacity:.85;font-weight:700;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}',
+    '.hq-pill b{display:none}',
+    '.hq-pill span{display:block;font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.hq-pill.flash{animation:hqf 1s ease-out}@keyframes hqf{0%{box-shadow:0 0 0 0 rgba(255,200,100,.8)}100%{box-shadow:0 0 0 14px rgba(255,200,100,0)}}',
     '.hq-shade{position:absolute;inset:0;z-index:46;background:rgba(5,6,14,.6);opacity:0;transition:opacity .2s}',
     '.hq-shade.on{opacity:1}',
-    '.hq-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);max-height:80%;overflow:auto;padding:16px;transform:translateY(30px);transition:transform .22s}',
+    '.hq-sheet{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px);display:flex;flex-direction:column;overflow:hidden;padding:12px 12px 10px;box-sizing:border-box;transform:translateY(30px);transition:transform .22s}',
     '.hq-shade.on .hq-sheet{transform:none}',
     '@media (min-width:640px){.hq-sheet{left:50%;right:auto;width:560px;margin-left:-280px}}',
     '.hq-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}',
     '.hq-h h2{margin:0;font-size:22px;font-weight:900}',
     '.hq-x{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.1);border:0;color:#fff;font:900 18px Nunito,system-ui;cursor:pointer}',
-    '.hq-sec{margin:12px 0 6px;font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase;opacity:.6}',
-    '.hq-q{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);border-radius:16px;padding:10px 12px;margin-bottom:8px}',
+    '.hq-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}',
+    '.hq-sheet .hk-h{flex:none;margin-bottom:6px}',
+    '.hq-q .dn{font-size:12px;font-weight:800;opacity:.55;padding:2px 0}',
+    '.hq-sec{margin:8px 0 4px;font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase;opacity:.6}',
+    '.hq-q{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);border-radius:14px;padding:8px 10px;margin-bottom:6px}',
     '.hq-q.cur{border-color:#ffc56b}',
     '.hq-q.done{opacity:.6}',
-    '.hq-q h3{display:flex;align-items:center;gap:8px;margin:0 0 3px;font-size:17px;font-weight:900}',
+    '.hq-q h3{display:flex;align-items:center;gap:8px;margin:0 0 2px;font-size:16px;font-weight:900}',
     '.hq-q h3 img{width:22px;height:22px;image-rendering:pixelated;flex:none}',
     '.hq-q p{margin:0 0 6px;font-size:13px;opacity:.75;line-height:1.3}',
     '.hq-q ul{list-style:none;margin:0;padding:0}',
@@ -264,7 +267,7 @@ window.H = window.H || {};
     pill.querySelector('b').textContent = q.title;
     var ic = pill.querySelector('.ic'), want = q.icon || 'scroll';
     if (ic.getAttribute('data-k') !== want) { ic.setAttribute('data-k', want); try { ic.src = H.icons.url(want, 2); } catch (e) {} }
-    pill.querySelector('span').textContent = txt;
+    pill.querySelector('span').textContent = txt || q.title; pill.title = q.title; pill.setAttribute('aria-label', q.title + ': ' + (txt || ''));
     if (key !== lastPill && lastPill) { pill.classList.remove('flash'); void pill.offsetWidth; pill.classList.add('flash'); }
     lastPill = key;
   }
@@ -276,16 +279,16 @@ window.H = window.H || {};
     order.forEach(function (id) { var st = s.quests[id]; if (st) (st.status === 'done' ? done : act).push(id); });
     function card(id) {
       var q = quests[id], st = s.quests[id];
-      var li = (q.steps || []).map(function (step) {
-        var ok = !!st.steps[step.id], txt = typeof step.text === 'function' ? step.text(s) : step.text;
-        return '<li class="' + (ok ? 'ok' : '') + '"><i></i>' + esc(txt) + '</li>';
-      }).join('');
+      // no spoilers: finished steps fold into a count, only the current step is shown, later ones stay hidden
+      var steps = q.steps || [], nDone = steps.filter(function (step) { return !!st.steps[step.id]; }).length, nx = st.status === 'done' ? null : nextStep(id), li = '';
+      if (nDone && st.status !== 'done') li += '<li class="dn">' + nDone + (nDone === 1 ? ' step done' : ' steps done') + '</li>';
+      if (nx) li += '<li><i></i>' + esc(typeof nx.text === 'function' ? nx.text(s) : nx.text) + '</li>';
       var icon = ''; try { icon = '<img alt="" src="' + H.icons.url(q.icon || 'scroll', 2) + '">'; } catch (e) {}
-      return '<div class="hq-q' + (id === cur ? ' cur' : '') + (st.status === 'done' ? ' done' : '') + '"><h3>' + icon + esc(q.title) + '</h3>' + (q.desc ? '<p>' + esc(q.desc) + '</p>' : '') + '<ul>' + li + '</ul></div>';
+      return '<div class="hq-q' + (id === cur ? ' cur' : '') + (st.status === 'done' ? ' done' : '') + '"><h3>' + icon + esc(q.title) + '</h3>' + (q.desc && st.status !== 'done' ? '<p>' + esc(q.desc) + '</p>' : '') + '<ul>' + li + '</ul></div>';
     }
     var o = document.createElement('div'); o.className = 'hq-shade';
     o.innerHTML = '<div class="hq-sheet hk-panel"></div>';
-    var sh = o.firstChild, body = document.createElement('div');
+    var sh = o.firstChild, body = document.createElement('div'); body.className = 'hq-body';
     body.innerHTML = (act.length ? '<div class="hq-sec">Active</div>' + act.map(card).join('') : '<div class="hq-empty">No open quests right now.</div>') +
       (done.length ? '<div class="hq-sec">Done</div>' + done.map(card).join('') : '');
     if (H.kit) H.kit.header(sh, 'scroll', 'Quest Log', null, function () { close(); });
