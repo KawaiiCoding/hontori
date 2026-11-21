@@ -118,6 +118,7 @@
       header('Menu');
       var acts = mk('div', 'hm-acts', els.sheet);
       var sv = mk('button', 'hm-act', acts, 'Save game'); sv.addEventListener('click', function () { g.save && g.save(); hide(); H.ui && H.ui.toast('Game saved'); });
+      var bt = mk('button', 'hm-act', acts, 'Spirit battle (demo)'); bt.addEventListener('click', function () { hide(); setTimeout(function () { H.game.battle && H.game.battle(); }, 250); });
       var snd = mk('button', 'hm-act', acts, (H.audio && H.audio.muted) ? 'Sound: off' : 'Sound: on');
       snd.addEventListener('click', function () { if (H.audio) { H.audio.setMuted(!H.audio.muted); render(); } });
       var ng = mk('button', 'hm-act warn', acts, 'New game'); var armed = false;

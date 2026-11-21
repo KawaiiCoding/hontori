@@ -74,6 +74,7 @@
     if (k === 't') { env.time = (env.time + 3) % 24; H.ui && H.ui.toast('Time ' + Math.floor(env.time) + ':00'); }
     if (k === 'r') { env.weather = WEATHERS[(WEATHERS.indexOf(env.weather) + 1) % WEATHERS.length]; H.ui && H.ui.toast('Weather: ' + env.weather); }
     if (k === 'h' && !busy && H.spirits) { const have = H.game.state.party.map(p => p.key), nx = H.spirits.list.find(s => !have.includes(s.key)); if (nx && H.game.addHontori(nx.key)) H.ui && H.ui.toast('A ' + nx.element + ' hontori joined'); }
+    if (k === 'f' && !busy) startBattle();
     if (k === '1' && !busy) loadMap('home'); if (k === '2' && !busy) loadMap('village');
     if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
   });
@@ -269,6 +270,7 @@
         player.x = player.tx * T + 8; player.y = player.ty * T + 15;
         const d = (map.doors || []).find(d => d.x === player.tx && d.y === player.ty);
         if (d) { player.frame = 0; goDoor(d); }
+        else if (!env.indoor && tileAt(player.tx, player.ty) === 'tallgrass' && H.game.state.party.length && Math.random() < 0.12) { player.frame = 0; startBattle(); }
         else if (!busy && !menuOpen && !(H.ui && H.ui.isOpen()) && (inp.dx || inp.dy)) tryMove(inp, left); // chain steps with no hitch
         else player.frame = 0;
       }
@@ -346,6 +348,15 @@
     addHontori(key) { const p = H.game.state.party; if (p.length >= 5) return false; p.push(mkMember(key)); H.game.partyChanged(); H.menu && H.menu.refresh(); return true; },
     addItem(id, name, icon) { const it = H.game.state.items.find(i => i.id === id); if (it) it.n = (it.n || 1) + 1; else H.game.state.items.push({ id, name, icon, n: 1 }); H.menu && H.menu.refresh(); },
   };
+
+  // ---------- battles
+  async function startBattle(enemy) {
+    if (busy || !H.battle || !H.game.state.party.length) return;
+    busy = true; sfx('spell');
+    try { await H.battle.start({ env, enemy }); } catch (e) { console.warn(e); }
+    busy = false;
+  }
+  H.game.battle = startBattle;
 
   let last = performance.now();
   function loop(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; update(dt); render(); requestAnimationFrame(loop); }
