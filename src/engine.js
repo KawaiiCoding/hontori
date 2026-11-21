@@ -358,7 +358,12 @@
   async function startBattle(enemy) {
     if (busy || !H.battle || !H.game.state.party.length) return;
     busy = true; sfx('spell');
-    try { await H.battle.start({ env, enemy }); } catch (e) { console.warn(e); }
+    // what kind of place we are in, from the tiles and props around the player
+    let water = 0, trees = 0, tall = 0;
+    for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) { const id = tileAt(player.tx + dx, player.ty + dy); if (id === 'water') water++; if (id === 'tallgrass') tall++; }
+    (map.props || []).forEach(p => { if (/tree|pine/.test(p.type) && Math.abs(p.x - player.tx) < 6 && Math.abs(p.y - player.ty) < 6) trees++; });
+    const biome = env.indoor ? 'indoor' : water > 6 ? 'river' : trees > 4 ? 'forest' : 'meadow';
+    try { await H.battle.start({ env, enemy, biome }); } catch (e) { console.warn(e); }
     busy = false;
   }
   H.game.battle = startBattle;

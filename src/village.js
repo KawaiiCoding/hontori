@@ -78,10 +78,10 @@ window.H = window.H || {};
   var FP = { house_player: [6, 4], house_a: [5, 4], tavern: [8, 5], shop: [6, 4], school: [10, 6] };
   var buildings = [
     { type: 'school', x: 25, y: 4 },
-    { type: 'house_player', x: 4, y: 29 },
-    { type: 'house_a', x: 13, y: 29 },
-    { type: 'house_a', x: 21, y: 29 },
-    { type: 'house_a', x: 35, y: 29 },
+    { type: 'house_player', x: 4, y: 28 },
+    { type: 'house_a', x: 13, y: 28 },
+    { type: 'house_a', x: 21, y: 28 },
+    { type: 'house_a', x: 35, y: 28 },
     { type: 'tavern', x: 13, y: 16 },
     { type: 'shop', x: 38, y: 17 }
   ];
@@ -94,10 +94,10 @@ window.H = window.H || {};
   rect(29, 12, 30, 15, 'c');                      // steps down to the plaza
   // roads (2 wide) and lanes
   trail([[29, 25], [29, 39]], 2, 'p');            // main road from the south gate
-  trail([[0, 22], [22, 22]], 2, 'p');             // west road past the tavern
-  trail([[37, 22], [59, 22]], 2, 'p');            // east road over the bridge
-  trail([[3, 33], [44, 33]], 2, 'p');             // residential lane
-  trail([[54, 21], [54, 14]], 1, 'p');            // meadow path
+  trail([[2, 22], [22, 22]], 2, 'p');             // west road past the tavern
+  trail([[37, 22], [55, 22]], 2, 'p');            // east road over the bridge
+  trail([[3, 32], [44, 32]], 2, 'p');             // residential lane
+  trail([[54, 21], [54, 14]], 1, 'p'); trail([[54, 24], [54, 26]], 1, 'p');            // meadow path
   trail([[2, 21], [2, 13]], 1, 'p');              // orchard path to the pond
   // ground under buildings, path below every door
   buildings.forEach(function (b) { var f = FP[b.type]; rect(b.x, b.y, b.x + f[0] - 1, b.y + f[1] - 1, 'g'); });
@@ -109,6 +109,7 @@ window.H = window.H || {};
   buildings.forEach(function (b) { var f = FP[b.type]; res(b.x, Math.max(0, b.y - 3), b.x + f[0] - 1, b.y + f[1] - 1); var d = doorOf(b); res(d.x - 1, d.y + 1, d.x + 1, d.y + 2); });
   for (y = 0; y < HT; y++) for (x = 0; x < W; x++) { var ch = g[y][x]; if (ch === 'p' || ch === 'b' || ch === 'c') occ[y][x] = 1; }
 
+  var hard = occ.map(function (r) { return r.slice(); });
   var INFO = (H.propsOutdoor && H.propsOutdoor.info) || {};
   var props = [];
   function size(t) { var i = INFO[t]; return i ? [i.fw, i.fh] : [1, 1]; }
@@ -121,11 +122,12 @@ window.H = window.H || {};
     var s = size(t), decor = INFO[t] && INFO[t].decor;
     for (var yy = y; yy < y + s[1]; yy++) for (var xx = x; xx < x + s[0]; xx++) {
       if (xx < 0 || yy < 0 || xx >= W || yy >= HT) return false;
-      if (occ[yy][xx] && !(decor && any)) return false;
+      if (occ[yy][xx] && !(decor && any) && any !== 'F') return false;
       if (!any && !okGround(t, g[yy][xx])) return false;
     }
     if (!decor || !any) res(x, y, x + s[0] - 1, y + s[1] - 1);
     props.push({ type: t, x: x, y: y });
+    if (t !== 'tree' && t !== 'pine' && t !== 'bush') for (var y2 = y; y2 < y + s[1]; y2++) for (var x2 = x; x2 < x + s[0]; x2++) hard[y2][x2] = 1;
     return true;
   }
 
@@ -148,13 +150,12 @@ window.H = window.H || {};
   npcs.forEach(function (n) { res(n.x - 1, n.y - 1, n.x + 1, n.y + 1); });
 
   // ---- plaza: well centre, stalls, benches, lamps at the corners ----
-  put('well', 29, 19, true);
-  put('market_stall', 24, 17, true); put('market_stall', 33, 17, true);
-  put('bench', 24, 23, true); put('bench', 34, 23, true);
-  put('lamp', 23, 17, true); put('lamp', 36, 17, true); put('lamp', 23, 23, true); put('lamp', 36, 23, true);
-  put('flowerbed', 26, 21, true); put('flowerbed', 32, 21, true);
+  put('well', 29, 19, 'F');
+  put('market_stall', 24, 17, 'F'); put('market_stall', 34, 17, 'F');
+  put('bench', 25, 23, 'F'); put('bench', 33, 23, 'F');
+  put('lamp', 23, 17, 'F'); put('lamp', 36, 18, 'F'); put('lamp', 23, 23, 'F'); put('lamp', 36, 23, 'F');
+  put('flowerbed', 26, 20, 'F'); put('flowerbed', 32, 20, 'F');
   put('lantern_string', 28, 16, true);
-  put('statue', 31, 23, true);
   // ---- school terrace: low wall with a stair gap, framed by trees ----
   for (x = 21; x <= 38; x++) if (x < 29 || x > 30) put('stone_wall_h', x, 12);
   put('flowerbed', 27, 11, true); put('flowerbed', 31, 11, true);
@@ -164,26 +165,26 @@ window.H = window.H || {};
   put('bush', 24, 10); put('bush', 35, 10);
   // ---- tavern: barrels & crates at its sides ----
   put('barrel', 12, 19); put('barrel', 12, 20); put('crate', 21, 20); put('barrel', 21, 21 - 1 + 1);
-  put('bench', 14, 21 + 0); put('lantern_string', 14, 15, true);
+  put('bench', 13, 21); put('lantern_string', 14, 15, true);
   put('lamp', 11, 21); put('sign', 20, 21);
   // ---- shop: crates by the side, sign ----
-  put('crate', 44, 18); put('crate', 44, 19); put('barrel', 37, 19); put('barrel', 37, 20); put('sign', 39, 21); put('cart', 42, 15);
+  put('crate', 44, 18); put('crate', 44, 19); put('barrel', 37, 19); put('barrel', 37, 20); put('sign', 38, 21); put('cart', 42, 15);
   // ---- lamps along roads ----
-  [[28, 27], [31, 30], [28, 35], [31, 38]].forEach(function (p) { put('lamp', p[0], p[1]); });
+  [[28, 27], [31, 30], [28, 36]].forEach(function (p) { put('lamp', p[0], p[1]); });
   [[6, 21], [16, 24], [43, 21], [52, 24], [57, 21]].forEach(function (p) { put('lamp', p[0], p[1]); });
-  [[10, 32], [18, 35], [26, 32], [40, 35], [33, 35]].forEach(function (p) { put('lamp', p[0], p[1]); });
+  [[10, 31], [19, 34], [26, 31], [40, 34]].forEach(function (p) { put('lamp', p[0], p[1]); });
   // ---- house row: mailboxes + small fenced gardens across the lane ----
   buildings.forEach(function (b) {
     if (b.type !== 'house_a' && b.type !== 'house_player') return;
     var d = doorOf(b);
     put('mailbox', d.x + 2, d.y + 1);
-    var gx = b.x, gy = 35;
+    var gx = b.x, gy = 34;
     for (var xx = gx; xx < gx + 5; xx++) put('fence_h', xx, gy + 2);
     put('fence_v', gx, gy); put('fence_v', gx, gy + 1); put('fence_v', gx + 4, gy); put('fence_v', gx + 4, gy + 1);
     put('garden_bed', gx + 1, gy); put('pumpkin', gx + 3, gy); put('flower_patch', gx + 2, gy + 1, true);
   });
-  put('laundry_line', 10, 30, true); put('birdbath', 11, 31); put('log_pile', 19, 31); put('butterfly_bush', 26, 31);
-  put('hay_bale', 41, 31); put('barrel', 34, 31);
+  put('laundry_line', 10, 29, true); put('birdbath', 11, 30); put('log_pile', 19, 30); put('butterfly_bush', 26, 30);
+  put('hay_bale', 41, 30); put('barrel', 34, 30);
   // ---- orchard (west, tidy rows) ----
   for (y = 14; y <= 18; y += 2) for (x = 4; x <= 10; x += 3) if (!(x === 7 && y === 16)) put('fruit_tree', x + (y === 16 ? 1 : 0), y);
   put('crate', 5, 20); put('hay_bale', 9, 20); put('cart', 3, 26 - 1);
@@ -216,6 +217,10 @@ window.H = window.H || {};
 
   // ---- dense forest border (no void at the edges) ----
   var KINDS = ['tree', 'pine', 'tree', 'pine', 'tree', 'bush'];
+  function free3h(x, y) {
+    for (var yy = y - 2; yy <= y; yy++) for (var xx = x - 1; xx <= x + 1; xx++) if (yy >= 0 && xx >= 0 && xx < W && hard[yy] && hard[yy][xx]) return false;
+    return true;
+  }
   function free3(x, y) {
     for (var yy = y - 2; yy <= y; yy++) for (var xx = x - 1; xx <= x + 1; xx++) if (yy >= 0 && xx >= 0 && xx < W && occ[yy] && occ[yy][xx]) return false;
     return true;
@@ -226,8 +231,8 @@ window.H = window.H || {};
     if (hash(x, y, 60 + pass) >= ch2) continue;
     var c0 = g[y][x]; if (c0 !== 'g' && c0 !== 'f' && c0 !== 't') continue;
     var k = hash(x, y, 61), t = KINDS[Math.floor(k * KINDS.length)];
-    if (pass === 1) t = 'bush';
-    else if (!free3(x, y)) { if (e > 0) continue; t = 'bush'; }
+    if (pass === 1 || ((x + y) & 1 && e > 0)) t = 'bush';
+    else if (!free3h(x, y)) t = 'bush';
     put(t, x, y);
   }
   // sprinkle a few flower patches on open grass
