@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Hontori</title>
+<style>
+  html,body{margin:0;height:100%;background:#07080d;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+  /* mobile first: a phone fills the screen; on a wide desktop window the game sits in a centred phone-shaped frame */
+  #root{position:fixed;inset:0;margin:auto;width:100vw;height:100dvh;overflow:hidden}
+  @media (min-aspect-ratio: 3/4) and (pointer:fine){
+    #root{height:min(100dvh,920px);width:calc(min(100dvh,920px)*9/16);border-radius:18px;box-shadow:0 0 0 2px #23263a,0 20px 60px #000}
+  }
+  /* controls are always visible (web and phone); the dialog sits clear of them */
+  #root .hui-touch{display:block!important}
+  #root:not(.land) .hui-dlg{left:8px!important;right:8px!important;width:auto!important;transform:none!important;bottom:calc(env(safe-area-inset-bottom,0px) + 206px)!important}
+  #root.land .hui-dlg{left:210px!important;right:210px!important;width:auto!important;transform:none!important;bottom:10px!important}
+  #game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+  #help{position:fixed;bottom:4px;right:8px;color:#8890a8;font:11px system-ui;pointer-events:none;opacity:.7}
+  @media (pointer:coarse){#help{display:none}}
+</style></head><body>
+<div id="root"><canvas id="game" width="384" height="216"></canvas></div>
+<div id="help">Arrows/WASD move · Space talk/next · T time · R weather · 1 home · 2 village</div>
+<script src="src/icons.js"></script>
+<script src="src/fx.js"></script>
+<script src="src/tiles_outdoor.js"></script>
+<script src="src/tiles_indoor.js"></script>
+<script src="src/props_outdoor.js"></script>
+<script src="src/outdoor_plus.js"></script>
+<script src="src/buildings.js"></script>
+<script src="src/furniture.js"></script>
+<script src="src/characters.js"></script>
+<script src="src/spirits.js"></script>
+<script src="src/interior_plus.js"></script>
+<script src="src/walltops.js"></script>
+<script src="src/maps.js"></script>
+<script src="src/village.js"></script>
+<script src="src/story.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/interact.js"></script>
+<script src="src/menu.js"></script>
+<script src="src/engine.js"></script>
+</body></html>

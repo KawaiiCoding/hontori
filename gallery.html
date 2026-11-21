@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hontori Gallery</title>
+<style>
+  body{margin:0;background:#101226;color:#f4f1e8;font-family:Nunito,system-ui,sans-serif;padding:16px}
+  h1{font-size:22px;margin:4px 0 16px}
+  .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .c{background:#1b1e3a;border:2px solid #2c3160;border-radius:16px;padding:10px;text-align:center}
+  .c canvas{width:100%;image-rendering:pixelated;border-radius:10px;background:#141733}
+  .n{font-weight:900;font-size:16px;margin-top:6px}.e{font-size:13px;opacity:.7}
+</style></head><body>
+<h1>Hontori spirits</h1>
+<div class="g" id="g"></div>
+<script src="src/icons.js"></script>
+<script src="src/spirits.js"></script>
+<script>
+  const env = { t: 0, time: 12, weather: 'clear', wind: 0.2, indoor: false };
+  const cards = H.spirits.list.map(s => {
+    const c = document.createElement('div'); c.className = 'c';
+    const cv = document.createElement('canvas'); cv.width = 192; cv.height = 128; c.appendChild(cv);
+    c.insertAdjacentHTML('beforeend', `<div class="n">${s.name}</div><div class="e">${s.element} hontori</div>`);
+    document.getElementById('g').appendChild(c); return { s, cv };
+  });
+  function frame(ms) {
+    env.t = ms / 1000;
+    cards.forEach(({ s, cv }) => {
+      const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 192, 128);
+      g.drawImage(H.spirits.portrait(s.key), 4, 16, 96, 96);
+      g.save(); g.scale(3, 3); H.spirits.draw(g, s.key, 48, 22, env, {}); g.restore();
+    });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body></html>
