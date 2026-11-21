@@ -61,3 +61,4 @@ New rules are added here as they are given. When something in the code disagrees
 43. You cannot capture another person's hontori: the owner pushes the binding away with their hand.
 44. Teaching style: like classic handheld monster RPGs. Each mechanic is shown once, when it first matters, in one short line. Never over-explain, never leave anything unexplained.
 45. How the game grows: always build toward the end of the story, step by step and world by world (finish and polish one area and its chapter before the next), staying consistent with everything already made.
+46. Every hontori can be given its own name (the fox asks for one at the end of the intro); the name is used everywhere.
