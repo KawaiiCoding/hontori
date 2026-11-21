@@ -12,7 +12,11 @@ New rules are added here as they are given. When something in the code disagrees
 6. The human kid is the hero. Hontori are companions. The kid supports with spells; the hontori fight with their own attacks.
 7. Before the adventure starts, the kid picks exactly 5 items from the house for the backpack.
 8. The world has areas for each element. Each area has towns and a School of Magic.
-9. Every school gives a ring after its trial. The first school (Emberbrook Academy) teaches the basics only and gives no ring.
+9. There are three kinds of schools:
+   - Small local schools: each teaches ONE spell. No ring. (Emberbrook Academy is the first: it teaches the Binding Spiral, the Element Wheel and practice duels.)
+   - The 8 great schools of the mighty elements: their trial (a fight) awards a ring.
+   - The archmage's school (the final boss): the last ring.
+   Spells are never learned all at once; they are collected one school at a time.
 10. Entering a School of Magic requires passing an entrance test.
 11. Towns have a tavern to sleep and eat ramen (restores health and mana), a shop for magical and normal items (like backpacks), houses with people who have their own stories and small quests, and a school. Small quests help the bigger quest.
 12. The big quest: defeat a revered, grandfatherly archmage-headmaster (original name, never an existing character), and make a new law so spirits are known by everyone and not seen as bad spirits.

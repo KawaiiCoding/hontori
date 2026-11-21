@@ -7,23 +7,10 @@ window.H = window.H || {};
   if (!H.interact) return;
 
   var TEACH = ['elder', 'Madam Sorrel'];
+  // Each school teaches ONE spell (World Rules). Emberbrook teaches the Binding Spiral;
+  // the other spells come from other local schools later.
   var LESSONS = [
-    { kind: 'mend', name: 'Mending Sigil', draw: 'Draw a circle to mend', lines: [
-      'You know this one already. A full circle, closed and calm.',
-      'A circle has no corners, so the hurt has nowhere to hide.'] },
-    { kind: 'shield', name: 'Aegis Ward', draw: 'Draw the ward to shield', lines: [
-      'A ward stands between your spirit and the blow.',
-      'Draw it firm and steady, like a door you mean to close.'] },
-    { kind: 'boost', name: 'Rally Rune', draw: 'Draw the rune to rally', lines: [
-      'A rally rune lends your spirit a little of your courage.',
-      'Draw it upward. Courage always rises.'] },
-    { kind: 'stun', name: 'Thunder Seal', draw: 'Draw the zigzag to stun', lines: [
-      'The thunder seal is a zigzag, quick as a flash.',
-      'A stunned spirit loses its turn. Use it kindly.'] },
-    { kind: 'sleep', name: 'Dream Veil', draw: 'Draw the wave to lull', lines: [
-      'The dream veil is a slow wave, like breath at night.',
-      'A sleeping spirit rests until it is struck.'] },
-    { kind: 'absorb', name: 'Binding Spiral', draw: 'Draw the spiral inward to bind', needDuel: true, lines: [
+    { kind: 'bind', name: 'Binding Spiral', draw: 'Draw the spiral inward to bind', needDuel: true, lines: [
       'You have duelled, so you are ready for the binding spiral.',
       'Draw it from the outside in, two full turns.',
       'Only a tired spirit will listen. Never bind in anger.'] }
