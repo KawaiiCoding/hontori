@@ -80,7 +80,7 @@ window.H = window.H || {};
       for (var i = 0; i < n; i++) g.fillRect(X + i, Y - Math.round(Math.sin((i + 0.5) / n * Math.PI) * K - 0.3), 1, th);
     };
     api.blush = function (x, y, col) {
-      col = col || '#ff8a9a'; y += dy(y);
+      if (api.stage >= 3) return; col = col || '#ff8a9a'; y += dy(y);
       if (k < 1.5) rrect(x, y, 2, 1, col); else rell(x + 1, y + 0.5, 1.3, 0.62, [col, col], true);
     };
     return api;
@@ -553,26 +553,562 @@ window.H = window.H || {};
     }
   };
 
+  // ---------- evolution stages ----------
+  // Stage 1 is the base body. Stages 2-5 add element structures in four layers around the same body:
+  //   'behind' (glow, unoutlined) | 'back' (outlined, behind body) | 'front' (outlined, over body) | 'fx' (glow, over everything).
+  var SS = [1, 1.1, 1.25, 1.4, 1.6], SM = 8; // stage scale, extra logical margin for stages 2-5
+  var STAGES = {
+    hontori: [['Hontori', 'A small fire fox kit with a warm ember on its brow.'], ['Cindrel', 'Its tail now burns at the tip and its ruff has grown thick.'],
+      ['Brandtail', 'A bold young fox that splits its flame into two tails.'], ['Pyrevane', 'Four blazing tails and gold-marked fur; embers circle where it walks.'],
+      ['Solvaryn', 'A legendary fox whose five tails open like a crown of sunfire.']],
+    water: [['Plipplop', 'A round river otter that blows tiny bubbles.'], ['Plashet', 'A head fin and a broad paddle tail make it a quick swimmer.'],
+      ['Tidewend', 'Ear fins and arm fins let it ride the strongest currents.'], ['Marivoss', 'Flowing whisker tendrils; rings of water turn around it.'],
+      ['Thalavyr', 'A legendary otter crowned with a breaking wave, calm as deep water.']],
+    wind: [['Hooligust', 'A fluffy owlet that rides small breezes.'], ['Breezlow', 'Long ear tufts and its first strong flight feathers.'],
+      ['Galequill', 'Wide wings and a feathered crest that cut the wind.'], ['Cyclorne', 'Great wings; loose feathers spin around it in a gale.'],
+      ['Aerovaunt', 'A legendary owl of the high sky, haloed by a ring of wind.']],
+    grass: [['Bramblebun', 'A round hedgehog with a flower in its spines.'], ['Thistlet', 'Leaves sprout among its spines and it carries two blooms.'],
+      ['Thornmantle', 'A mantle of leaf blades guards its back.'], ['Brackenward', 'Bark plates and blossoms; petals drift wherever it rests.'],
+      ['Sylvanthos', 'A legendary forest warden with blooming branch antlers.']],
+    electric: [['Zappity', 'A slate-teal storm ferret with a spark-plug tail.'], ['Voltwhisk', 'Static tufts on its ears and a brighter tail coil.'],
+      ['Arcrunner', 'A jagged crest and a conductor collar hum with charge.'], ['Tempestoat', 'A storm-cloud mane; charged rings orbit its body.'],
+      ['Fulgaryn', 'A legendary ferret crowned with lightning prongs and twin coils.']],
+    earth: [['Dugsworth', 'A sleepy mole wearing a pebble with a sprout.'], ['Burrowby', 'A bigger stone cap and heavy digging claws.'],
+      ['Quarrydel', 'Rock plates on its shoulders and an amber gem on its brow.'], ['Stonewarden', 'Amber crystals grow from its back; pebbles float around it.'],
+      ['Orogrand', 'A legendary mountain mole with a crown of crystal spires.']],
+    dark: [['Nyxlet', 'A tiny cat-bat with golden eyes that loves the dusk.'], ['Gloamkit', 'Its wings have grown wide enough to glide.'],
+      ['Vesperclaw', 'Hooked wing claws and a crescent mark on its brow.'], ['Shadewyn', 'Star-flecked wings; shadow wisps trail behind it.'],
+      ['Nocthrone', 'A legendary night spirit with a floating crescent crown.']],
+    light: [['Lumbleen', 'A fleecy moth-lamb that glows like a candle.'], ['Glimmerwool', 'Bigger wings and soft glowing antennae.'],
+      ['Lanternfleece', 'A second pair of wings with bright eye spots.'], ['Halomere', 'Ornate shining wings; motes of light drift around it.'],
+      ['Seraphleen', 'A legendary moth-lamb with four radiant wings and a sun halo.']]
+  };
+  var stages = {};
+  Object.keys(STAGES).forEach(function (k) { stages[k] = STAGES[k].map(function (a) { return { name: a[0], desc: a[1] }; }); });
+
+  var EP = { // element palettes [hi, base, shade, dark]
+    fire: [['#fff6c0', '#ffe08a', '#ffc050', '#f0a030'], ['#ffd070', '#f89a2c', '#e06a20', '#b84a18'], ['#ffc070', '#f07a26', '#c0501a', '#8a3010']],
+    water: [['#f0fdff', '#bff0ff', '#8fdcff', '#5ab8f0'], ['#bff0ff', '#7fd0ff', '#4aa0e0', '#2a70b0'], ['#9ad0f0', '#4a90c8', '#2e6aa0', '#1c4878']],
+    wind: [['#ffffff', '#f4f8ff', '#dce8f8', '#c0d0e8'], ['#e0f0ff', '#a8c4e8', '#7890c0', '#58689a'], ['#c8d8f0', '#8aa0d0', '#6070a8', '#46507e']],
+    grass: [['#e8ffb0', '#bff070', '#8ad050', '#5aa030'], ['#bff070', '#6ab83a', '#3a8a2a', '#24601e'], ['#c8a070', '#9a7048', '#6e4c30', '#4a3020']],
+    electric: [['#e8ffff', '#bff8ff', '#7ff0ff', '#3cc8e0'], ['#8fd4dc', '#4f9aac', '#36707f', '#244c58'], ['#5a7f8a', '#3a5a66', '#28424c', '#1a2e36']],
+    earth: [['#fff4c8', '#ffd878', '#f0a840', '#c07828'], ['#d0d0c8', '#a0a098', '#787870', '#585850'], ['#c09070', '#8a6044', '#664430', '#4a3020']],
+    dark: [['#f4e8ff', '#d0a8ff', '#a070f0', '#7040c0'], ['#7a5aa8', '#4a3478', '#30205a', '#1e143c'], ['#5a3a88', '#30205a', '#1e143c', '#120a24']],
+    light: [['#ffffff', '#fffbe0', '#fff0a8', '#ffd870'], ['#fffbe0', '#ffe8a0', '#f0c870', '#d0a050'], ['#ffffff', '#fff8ec', '#f0e4cc', '#d8c8a8']]
+  };
+  var GC = { // glow colours for unoutlined fx: [core, mid, edge]
+    hontori: ['#fff6c0', '#ffb040', '#e0601a'], water: ['#ffffff', '#9fe8ff', '#4aa8e8'], wind: ['#ffffff', '#dceeff', '#9fc0e8'],
+    grass: ['#fff0f6', '#ff9ac0', '#9be04a'], electric: ['#ffffff', '#9ff6ff', '#3cc8e0'], earth: ['#fff6d0', '#ffd060', '#c08830'],
+    dark: ['#f6eaff', '#c090ff', '#7040c0'], light: ['#ffffff', '#fff3b0', '#ffd060']
+  };
+  // tapered chain of shaded blobs: a tail, flame, fin, feather or crystal
+  function plume(p, x0, y0, ang, len, r0, pals, bend, taper) {
+    var n = Math.max(3, Math.round(len / 1.3)), ca = Math.cos(ang), sa = Math.sin(ang), i, t, r;
+    taper = taper == null ? 0.72 : taper; bend = bend || 0;
+    for (i = 0; i < n; i++) {
+      t = i / (n - 1); r = Math.max(0.55, r0 * (1 - taper * t));
+      p.ell(x0 + ca * len * t - sa * bend * t * t, y0 + sa * len * t + ca * bend * t * t, r, r * 1.08,
+        pals[Math.min(pals.length - 1, Math.floor(t * pals.length))], r < 1.1);
+    }
+  }
+  function sparkle(p, x, y, c0, c1, big) {
+    p.px(x, y, c0);
+    if (big) { p.px(x - 1, y, c1); p.px(x + 1, y, c1); p.px(x, y - 1, c1); p.px(x, y + 1, c1); }
+  }
+  // dotted ellipse ring; part: 0 all, 1 back half only, 2 front half only
+  function ring(p, cx, cy, rx, ry, col, n, ph, part, gap) {
+    for (var i = 0; i < n; i++) {
+      var a = ph + i / n * 6.2832, s = Math.sin(a);
+      if (part === 1 && s > 0 || part === 2 && s <= 0) continue;
+      if (gap && (i % gap) === 0) continue;
+      p.rect(cx + Math.cos(a) * rx - 0.5, cy + s * ry - 0.5, 1, 1, col);
+    }
+  }
+  var RUNES = [[0, 1, 0, 1, 1, 1, 0, 1, 0], [1, 0, 1, 0, 1, 0, 1, 0, 1], [1, 1, 0, 0, 1, 0, 0, 1, 1], [0, 1, 1, 1, 0, 0, 0, 1, 1], [1, 1, 1, 0, 1, 0, 1, 0, 1], [0, 1, 0, 1, 0, 1, 1, 1, 1]];
+  function rune(p, x, y, i, col) {
+    var r = RUNES[i % RUNES.length], u = Math.max(0.5, Math.round(0.5 * p.k) / p.k);
+    for (var j = 0; j < 9; j++) if (r[j]) p.rect(x + (j % 3) * u, y + Math.floor(j / 3) * u, u, u, col);
+  }
+  // orbiting items around (cx,cy); split into behind (back half) and fx (front half) layers
+  function orbit(p, f, layer, n, cx, cy, rx, ry, fn, spd) {
+    for (var i = 0; i < n; i++) {
+      var a = (f / NF) * 6.2832 * (spd || 1) + i / n * 6.2832, s = Math.sin(a);
+      if (layer === 'behind' && s <= 0 || layer === 'fx' && s > 0) fn(cx + Math.cos(a) * rx, cy + s * ry, i, s);
+    }
+  }
+  // stage-5 runic circle on the ground and a soft sparkle shower
+  function crownFx(p, f, key, layer, cy) {
+    var G = GC[key], ph = f / NF * 6.2832;
+    if (layer === 'behind') {
+      ring(p, 16, 27.5, 15, 3.6, G[2], 40, ph * 0.25, 1, 5);
+      for (var i = 0; i < 6; i++) { var a = ph * 0.25 + i / 6 * 6.2832; if (Math.sin(a) <= 0) rune(p, 15.3 + Math.cos(a) * 15, 26.8 + Math.sin(a) * 3.6, i, G[1]); }
+    }
+    if (layer === 'fx') {
+      ring(p, 16, 27.5, 15, 3.6, G[2], 40, ph * 0.25, 2, 5);
+      for (var j = 0; j < 6; j++) { var b = ph * 0.25 + j / 6 * 6.2832; if (Math.sin(b) > 0) rune(p, 15.3 + Math.cos(b) * 15, 26.8 + Math.sin(b) * 3.6, j, G[0]); }
+      for (var q = 0; q < 4; q++) {
+        var t = ((f / NF) + q / 4) % 1, x = 2 + hash(q * 5.3 + key.length) * 28;
+        if (t < 0.85) sparkle(p, x, cy - 4 + 30 * (1 - t) - 10, t < 0.3 ? G[0] : G[1], G[2], t > 0.35 && t < 0.55);
+      }
+    }
+  }
+
+  var STG = {
+    hontori: function (p, f, s, L) {
+      var d = p.side ? 2 : p.back ? 1 : 0, b = hop(p), sit = p.mode === 'sit', hb = sit ? 0 : b, F = EP.fire, G = GC.hontori;
+      var tp = [FOX.O, FOX.T1, FOX.T2, FOX.T3], sw = Math.sin(p.ph) * 1.2, i;
+      var hx = d === 2 ? (sit ? 10 : 9.5) : d === 1 ? 16 : 14, hy = d === 2 ? (sit ? 12 : 14 + b) : 13 + hb;
+      if (L === 'behind') {
+        if (s >= 4) { var ga = 'rgba(255,170,60,'; } // glow handled by draw
+        if (s === 5) { // sun disc behind the tail fan
+          ring(p, d === 2 ? 25 : 16, d === 2 ? 9 : 9, 9.5, 9.5, G[1], 44, f / NF * 1.57, 0, 4);
+          ring(p, d === 2 ? 25 : 16, d === 2 ? 9 : 9, 7.5, 7.5, G[2], 30, -f / NF * 1.57, 0, 3);
+        }
+        crownFx(p, f, 'hontori', L, hy); if (s < 5) {}
+        if (s >= 4) orbit(p, f, L, 4, 16, 18, 14, 5, function (x, y) { sparkle(p, x, y, G[2], G[2]); });
+        return;
+      }
+      if (L === 'back') {
+        // extra tails fan out behind; count and length grow with the stage
+        var len = 9 + s * 2.4, r0 = 3.4 + s * 0.35;
+        var fan = s === 2 ? [] : s === 3 ? [-2.0] : s === 4 ? [-2.05, -2.6, -0.65] : [-1.57, -2.05, -2.6, -0.95, -0.4];
+        var bx = d === 2 ? 24 : d === 1 ? 16 : 16, by = d === 2 ? 20 + b : 23 + b;
+        if (d === 2) fan = fan.map(function (a, j) { return -0.3 - j * 0.32; });
+        fan.forEach(function (a, j) { plume(p, bx + Math.cos(a) * 3, by, a, len * (j === 0 && s === 5 ? 1.15 : 1), r0, tp, Math.sin(p.ph - j) * 1.4); });
+        // main tail gets a bigger flame plume underneath
+        if (d === 0) plume(p, 23.5, 21 + b, -1.25, len + 2, r0 + 0.4, tp, sw);
+        else if (d === 1) plume(p, 20, 24 + b, -1.05, len + 1, r0 + 0.3, tp, sw);
+        else plume(p, 24, 19.5 + b, -1.35, len + 2, r0 + 0.3, tp, sw);
+        return;
+      }
+      if (L === 'front') {
+        // chest ruff
+        if (d === 0 && !sit) { p.ell(14, 18.6 + hb, 4 + s * 0.4, 2.2, FOX.C); for (i = 0; i < 3; i++) p.tri(11 + i * 2.5, 13 + i * 2.5, 19 + hb, 12 + i * 2.5, 21.5 + hb, FOX.C[1]); }
+        if (d === 2 && !sit) p.ell(12, 19 + b, 3.2, 3.4, FOX.C);
+        // brow flame
+        var bx2 = d === 2 ? hx - 1 : hx, by2 = d === 2 ? hy - 5.5 : 7.5 + hb;
+        plume(p, bx2, by2, -1.57, 1.5 + s * 1.1, 1.1 + s * 0.3, [F[1], F[0], F[0]], Math.sin(p.ph * 2) * 0.6);
+        if (s >= 3) { // flame-tipped ears
+          var ears = d === 0 ? [[6.5, 3.5 + hb], [21.5, 3.5 + hb]] : d === 1 ? [[7.5, 3.5 + hb], [25.5, 3.5 + hb]] : [[hx + 1.5, hy - 10.5]];
+          ears.forEach(function (e, j) { plume(p, e[0], e[1], -1.57 + (j ? 0.3 : -0.3), 2 + s * 0.6, 1.2, [F[1], F[0]], Math.sin(p.ph * 2 + j) * 0.5); });
+        }
+        if (s >= 4 && d !== 1) { // gold markings
+          var gm = '#ffe070';
+          if (d === 0) { p.px(8, 13 + hb, gm); p.px(7, 14 + hb, gm); p.px(20, 13 + hb, gm); p.px(21, 14 + hb, gm); p.rect(10, 25 + b, 3, 1, gm); p.rect(17, 25 + b, 3, 1, gm); }
+          else { p.px(hx + 2, hy - 1, gm); p.px(hx + 3, hy, gm); p.rect(18, 19 + b, 3, 1, gm); p.rect(21, 20 + b, 2, 1, gm); }
+        }
+        if (s === 5) { // flame crown
+          var cx = d === 2 ? hx - 0.5 : hx, cy = d === 2 ? hy - 6.5 : 6.5 + hb;
+          [-0.7, 0, 0.7].forEach(function (o, j) { plume(p, cx + o * 4, cy + Math.abs(o) * 2, -1.57 + o * 0.5, 4 + (j === 1 ? 3 : 0), 1.3, [F[0], F[0], ['#ffffff', '#ffffff']], Math.sin(p.ph * 2 + j) * 0.5); });
+        }
+        return;
+      }
+      if (L === 'fx') {
+        if (s >= 3) for (i = 0; i < s - 1; i++) { var t = ((f / NF) * 1.5 + i / (s - 1)) % 1; sparkle(p, 6 + hash(i * 9.1) * 22, 22 - t * 22, t < 0.4 ? G[0] : G[1], G[2], s >= 4 && t < 0.25); }
+        if (s >= 4) orbit(p, f, L, 4, 16, 18, 14, 5, function (x, y) { sparkle(p, x, y, G[0], G[1], true); });
+        crownFx(p, f, 'hontori', L, hy);
+      }
+    },
+
+    water: function (p, f, s, L) {
+      var d = p.side ? 2 : p.back ? 1 : 0, b = hop(p), W = EP.water, G = GC.water, i, sw = Math.sin(p.ph) * 1;
+      var fin = [W[0], W[1], W[1], W[0]];
+      var hx = d === 2 ? 11 : 15, hy = 12 + b;
+      if (L === 'behind') {
+        if (s >= 4) orbit(p, f, L, s === 5 ? 6 : 4, 15.5, 21, 13, 5, function (x, y) { p.rect(x - 1, y - 0.5, 2, 1, G[2]); });
+        if (s >= 4) ring(p, 15.5, 21, 13, 5, G[2], 36, f / NF * 6.28, 1, 3);
+        if (s === 5) ring(p, d === 2 ? 11 : 15, 2.5 + b, 8, 2.2, G[1], 30, f / NF * 3.14, 1);
+        crownFx(p, f, 'water', L, hy);
+        return;
+      }
+      if (L === 'back') {
+        // paddle tail grows
+        var tl = 3 + s * 1.6;
+        if (d === 0) plume(p, 22, 25.5 + b, -0.1 + sw * 0.05, tl + 2, 2.4 + s * 0.3, [W[2], W[2], W[1]], -1.5 - sw, 0.2);
+        else if (d === 2) plume(p, 23, 25 + b, 0.05, tl + 3, 2.3 + s * 0.3, [W[2], W[2], W[1]], -1.5 - sw, 0.2);
+        else plume(p, 15, 26 + b, 1.57, 2 + s, 2.6 + s * 0.4, [W[2], W[1]], sw, 0.1);
+        if (s >= 4 && d === 0) { plume(p, 27 + s, 24 + b, -0.9, 3 + s, 1.8, fin, sw); plume(p, 27 + s, 26 + b, 0.5, 2 + s, 1.6, fin, -sw); }
+        if (s >= 3) { // arm fins and ear fins
+          if (d === 2) { plume(p, 17, 19 + b, -0.25, 4 + s * 1.2, 2, fin, -1); plume(p, 14, 9 + b, -0.6, 2 + s, 1.6, fin, 0); }
+          else { [-1, 1].forEach(function (k) {
+            plume(p, 15 + k * 6, 20 + b, k > 0 ? 0.3 : 2.84, 3 + s * 1.2, 1.9, fin, k * 1.2);
+            plume(p, 15 + k * 7, 8 + b, k > 0 ? -0.55 : -2.6, 2 + s * 0.9, 1.6, fin, -k * 0.6);
+          }); }
+        }
+        if (s >= 4) { // long mantle fins from the shoulders
+          var ml = s === 5 ? 15 : 10;
+          if (d === 2) plume(p, 18, 17 + b, 0.2, ml, 2.2, [W[1], W[0], W[0]], 3 + sw);
+          else [-1, 1].forEach(function (k) { plume(p, 15 + k * 5, 17 + b, k > 0 ? 0.45 : 2.69, ml, 2.2, [W[1], W[0], W[0]], k * (3 + sw)); });
+        }
+        return;
+      }
+      if (L === 'front') {
+        // head fin crest
+        var n = s >= 4 ? 3 : 1, cx = d === 2 ? hx + 1 : hx;
+        for (i = 0; i < n; i++) { var o = n === 1 ? 0 : (i - 1); plume(p, cx + o * 2.5, 7.5 + b + Math.abs(o), -1.57 + o * 0.45 + (d === 2 ? 0.5 : 0), 2 + s * 0.9 - Math.abs(o), 1.5 + s * 0.15, fin, sw * 0.5); }
+        if (s >= 4 && d === 0) { // whisker tendrils
+          plume(p, 9.5, 15 + b, 2.6, 5 + s, 0.9, [W[0], W[0]], -2 - sw, 0.2); plume(p, 20.5, 15 + b, 0.54, 5 + s, 0.9, [W[0], W[0]], 2 + sw, 0.2);
+        }
+        if (s >= 4 && d === 2) plume(p, 5, 16 + b, 2.2, 5 + s, 0.9, [W[0], W[0]], -2 - sw, 0.2);
+        if (s >= 3 && d !== 2) { p.px(12, 19 + b, W[0][1]); p.px(13, 18 + b, W[0][1]); p.px(18, 18 + b, W[0][1]); p.px(19, 19 + b, W[0][1]); }
+        if (s === 5) { // wave crown
+          var wx = d === 2 ? hx + 0.5 : hx;
+          for (i = -2; i <= 2; i++) plume(p, wx + i * 2.6, 5 + b + Math.abs(i) * 0.9, -1.57 + i * 0.22, 4 - Math.abs(i) * 0.6, 1.2, [W[1], W[0], [ '#ffffff', '#ffffff']], i * 0.6 + Math.sin(p.ph + i) * 0.4);
+        }
+        return;
+      }
+      if (L === 'fx') {
+        if (s >= 3) for (i = 0; i < s - 2; i++) { var t = ((f / NF) + i / (s - 2)) % 1, x = 5 + hash(i * 4.1 + 2) * 22; if (t < 0.7) { p.rect(x, 24 - t * 18, 1, 1, G[0]); if (t > 0.3) p.rect(x + 1, 24 - t * 18 - 1, 1, 1, G[1]); } }
+        if (s >= 4) { ring(p, 15.5, 21, 13, 5, G[1], 36, f / NF * 6.28, 2, 3); orbit(p, f, L, s === 5 ? 6 : 4, 15.5, 21, 13, 5, function (x, y) { p.rect(x - 1, y - 0.5, 2, 1, G[0]); p.px(x - 1, y - 1.5, G[1]); }); }
+        if (s === 5) ring(p, d === 2 ? 11 : 15, 2.5 + b, 8, 2.2, G[0], 30, f / NF * 3.14, 2);
+        crownFx(p, f, 'water', L, hy);
+      }
+    },
+
+    wind: function (p, f, s, L) {
+      var d = p.side ? 2 : p.back ? 1 : 0, Wd = EP.wind, G = GC.wind, i, fl = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)) * 1.6 - 0.5;
+      var feather = [Wd[1], Wd[1], Wd[0]], tipf = [Wd[2], Wd[1], Wd[0]];
+      if (L === 'behind') {
+        if (s >= 4) orbit(p, f, L, 4, 16, 15, 15, 7, function (x, y) { p.rect(x - 1, y, 2, 1, G[2]); p.px(x + 1, y - 1, G[2]); }, 1);
+        if (s === 5) { ring(p, 16, 16, 17, 15, G[2], 56, f / NF * 6.28, 0, 7); }
+        crownFx(p, f, 'wind', L, 8);
+        return;
+      }
+      if (L === 'back') {
+        if (s >= 3) { // spread wings: feathers fanning out from the shoulders
+          var nf = s === 3 ? 3 : s === 4 ? 4 : 5, wl = 6 + s * 1.6;
+          if (d === 2) for (i = 0; i < nf; i++) plume(p, 20, 15 + fl * 0.5, -0.9 + i * 0.32, wl - i * 0.6, 2.4, tipf, -1 + fl * 0.3, 0.55);
+          else [-1, 1].forEach(function (k) {
+            for (i = 0; i < nf; i++) { var a = -0.55 + i * 0.36 + fl * 0.06; plume(p, 16 + k * 7, 15 + fl * 0.5, k > 0 ? a : Math.PI - a, wl - i * 0.5, 2.4, tipf, k * (0.8 + i * 0.2), 0.55); }
+          });
+        }
+        // tail feathers
+        if (d !== 2) for (i = -1; i <= 1; i++) plume(p, 16 + i * 1.6, 24, 1.57 + i * 0.35, 2 + s, 1.6, feather, 0);
+        else plume(p, 22, 23, 0.9, 2 + s, 1.6, feather, 0);
+        return;
+      }
+      if (L === 'front') {
+        // ear tufts lengthen into plumes
+        var tl = 2 + s * 1.2;
+        if (d === 2) { plume(p, 10, 8, -1.85, tl, 1.4, [Wd[1], Wd[0]], -0.5); plume(p, 18, 7, -1.3, tl, 1.4, [Wd[2], Wd[1]], 0.5); }
+        else { plume(p, 7.5, 8, -2.0, tl, 1.5, [Wd[1], Wd[0]], -0.6); plume(p, 24.5, 8, -1.14, tl, 1.5, [Wd[1], Wd[0]], 0.6); }
+        if (s >= 3) { var cx = d === 2 ? 13 : 16; for (i = -1; i <= 1; i++) plume(p, cx + i * 1.6, 8.5, -1.57 + i * 0.4, 3 + s * 0.8 - Math.abs(i), 1.2, [Wd[0], Wd[0], ['#ffffff', '#ffffff']], i * 0.5); }
+        if (s >= 4 && d === 0) for (i = 0; i < 3; i++) { p.px(13 + i * 3, 23, Wd[2][1]); p.px(14 + i * 3, 24, Wd[2][1]); p.px(12 + i * 3, 24, Wd[2][1]); }
+        if (s >= 4 && d === 1) for (i = 0; i < 3; i++) { p.px(12 + i * 4, 12, Wd[0][2]); p.px(13 + i * 4, 11, Wd[0][2]); p.px(14 + i * 4, 12, Wd[0][2]); }
+        if (s === 5) { // sky crest
+          var c2 = d === 2 ? 13 : 16;
+          for (i = -2; i <= 2; i++) plume(p, c2 + i * 1.8, 7.5 + Math.abs(i) * 0.6, -1.57 + i * 0.3, 7 - Math.abs(i) * 1.5, 1.3, [Wd[1], Wd[0], ['#ffffff', '#ffffff']], i * 0.8 + Math.sin(p.ph + i) * 0.4);
+        }
+        return;
+      }
+      if (L === 'fx') {
+        if (s >= 2) for (i = 0; i < s; i++) { var k2 = (f / NF) * 6.28 * 1.3 + i * 1.7; p.rect(16 + Math.cos(k2) * (12 + s), 17 + Math.sin(k2) * 6, 1, 1, i % 2 ? G[0] : G[1]); }
+        if (s >= 4) orbit(p, f, L, 4, 16, 15, 15, 7, function (x, y) { p.rect(x - 1, y, 2, 1, G[0]); p.px(x + 1, y - 1, G[1]); p.px(x - 2, y + 1, G[2]); }, 1);
+        if (s === 5) ring(p, 16, 16, 17, 15, G[1], 56, f / NF * 6.28, 2, 7);
+        crownFx(p, f, 'wind', L, 8);
+      }
+    },
+
+    grass: function (p, f, s, L) {
+      var d = p.side ? 2 : p.back ? 1 : 0, b = hop(p), Gr = EP.grass, G = GC.grass, i, sw = Math.sin(p.ph) * 0.8;
+      var leaf = [Gr[1], Gr[0]], bark = [Gr[2], Gr[2]], cx = d === 2 ? 18 : 16;
+      function flower(fx, fy, big) {
+        var pc = big ? '#ffb8d4' : '#ff9ac0';
+        p.ell(fx, fy - 1.2, 1.1, 1.1, [pc, pc], true); p.ell(fx - 1.2, fy, 1.1, 1.1, [pc, pc], true); p.ell(fx + 1.2, fy, 1.1, 1.1, [pc, pc], true); p.ell(fx, fy + 1.2, 1.1, 1.1, [pc, pc], true);
+        p.ell(fx, fy, 0.8, 0.8, ['#ffe04a', '#ffe04a'], true);
+      }
+      if (L === 'behind') {
+        if (s >= 4) orbit(p, f, L, 5, 16, 18, 14, 6, function (x, y) { p.rect(x, y, 1, 1, G[1]); }, 0.8);
+        crownFx(p, f, 'grass', L, 10);
+        return;
+      }
+      if (L === 'back') {
+        if (s >= 3) { // leaf-blade mantle
+          var nb = s === 3 ? 5 : 7, bl = 4 + s * 1.3;
+          for (i = 0; i < nb; i++) { var a = -2.7 + i * (2.2 / (nb - 1)) + (d === 2 ? 0.25 : 0); plume(p, cx + Math.cos(a) * 7, 19 + b + Math.sin(a) * 6, a, bl, 2, [Gr[1], Gr[1], Gr[0]], Math.sin(p.ph + i) * 0.6); }
+        }
+        if (s === 5) { // branch antlers
+          var ax = d === 2 ? [[16, 1]] : [[11, -1], [21, 1]];
+          ax.forEach(function (A) {
+            var k = A[1], x0 = A[0], y0 = 11 + b;
+            plume(p, x0, y0, k > 0 ? -1.15 : -1.99, 10, 1.4, [bark, bark], k * -1, 0.3);
+            plume(p, x0 + k * 3, y0 - 5, k > 0 ? -0.5 : -2.64, 4, 1, [bark], 0, 0.3);
+          });
+        }
+        return;
+      }
+      if (L === 'front') {
+        // leaf sprigs among the spines
+        var nl = s === 2 ? 3 : 4;
+        for (i = 0; i < nl; i++) { var a2 = -2.5 + i * (1.8 / (nl - 1)); plume(p, cx + Math.cos(a2) * 8.5, 19 + b + Math.sin(a2) * 8, a2, 2 + s * 0.4, 1.1, leaf, 0.4); }
+        if (s >= 4) { // bark plates
+          if (d === 0) { p.ell(7.5, 18 + b, 2.6, 2.2, Gr[2]); p.ell(24.5, 18 + b, 2.6, 2.2, Gr[2]); p.px(7, 17 + b, Gr[2][0]); p.px(24, 17 + b, Gr[2][0]); }
+          else if (d === 1) for (i = 0; i < 3; i++) { p.ell(11 + i * 5, 17 + b + (i % 2), 2.4, 2, Gr[2]); p.px(10.5 + i * 5, 16 + b + (i % 2), Gr[2][0]); }
+          else { p.ell(19, 16 + b, 2.6, 2.2, Gr[2]); p.ell(24, 19 + b, 2.4, 2, Gr[2]); }
+        }
+        if (s >= 4 && d === 0) { p.px(9, 21 + b, Gr[1][1]); p.px(8, 22 + b, Gr[1][1]); p.px(23, 21 + b, Gr[1][1]); p.px(24, 22 + b, Gr[1][1]); }
+        // flowers: one more per stage
+        var fp = d === 2 ? [[19, 9], [23, 11], [14, 10], [26, 15]] : [[17, 9], [12, 10.5], [22, 11], [8, 14], [25, 15]];
+        for (i = 0; i < Math.min(fp.length, s - (s === 5 ? 1 : 0)); i++) flower(fp[i][0], fp[i][1] + b, i === 0 && s >= 3);
+        if (s === 5) { // blossoms on the antler tips
+          (d === 2 ? [[13, 1 + b], [20, -3 + b]] : [[7, 1 + b], [25, 1 + b], [9, -4 + b], [23, -4 + b]]).forEach(function (q) { flower(q[0], q[1], true); });
+        }
+        return;
+      }
+      if (L === 'fx') {
+        if (s >= 3) for (i = 0; i < s - 1; i++) { var t = ((f / NF) * 0.8 + i / (s - 1)) % 1, x = 4 + hash(i * 6.7 + 1) * 24 + Math.sin(t * 9 + i) * 2; if (t < 0.9) { p.px(x, 2 + t * 26, G[1]); if (i % 2) p.px(x + 1, 2 + t * 26, G[0]); } }
+        if (s >= 4) orbit(p, f, L, 5, 16, 18, 14, 6, function (x, y, j) { p.rect(x, y, 1, 1, j % 2 ? G[1] : G[2]); p.px(x + 1, y - 1, G[0]); }, 0.8);
+        crownFx(p, f, 'grass', L, 10);
+      }
+    },
+
+    electric: function (p, f, s, L) {
+      var d = p.side ? 2 : p.back ? 1 : 0, b = hop(p), E = EP.electric, G = GC.electric, i, sw = Math.sin(p.ph) * 0.8, Q = E[0];
+      var hx = d === 2 ? 8 : 16, hy = d === 2 ? 15.5 + b : 12.5 + b;
+      function bolt(x, y, h, dx, col, col2) { // stepped zigzag prong pointing up
+        for (var j = 0; j < h; j++) { var o = ((j >> 1) & 1) ? dx : 0; p.rect(x + o, y - j, 1.6, 1, j < 2 && col2 ? col2 : col); }
+      }
+      if (L === 'behind') {
+        if (s >= 4) { ring(p, 16, 20, 14, 4.5, G[2], 40, f / NF * 6.28, 1, 6); orbit(p, f, L, 3, 16, 20, 14, 4.5, function (x, y) { p.rect(x - 0.5, y - 0.5, 1.5, 1.5, G[2]); }, 1.5); }
+        if (s === 5) { ring(p, hx, hy - 9, 7, 2, G[2], 26, -f / NF * 6.28, 1); }
+        crownFx(p, f, 'electric', L, hy);
+        return;
+      }
+      if (L === 'back') {
+        // second (and third) tail coil
+        if (s >= 2) {
+          var tl = 4 + s * 1.5;
+          if (d === 0) { plume(p, 22, 19 + b, -1.1, tl, 2.6, [E[1], E[1], E[0]], 1 + sw, 0.2); p.ell(22 + Math.cos(-1.1) * tl + 1, 19 + b + Math.sin(-1.1) * tl, 2 + s * 0.3, 2 + s * 0.3, Q); }
+          else if (d === 1) { plume(p, 21, 18 + b, -1.0, tl, 2.6, [E[1], E[1]], 1 + sw, 0.2); p.ell(21 + Math.cos(-1) * tl + 1, 18 + b + Math.sin(-1) * tl, 2 + s * 0.3, 2 + s * 0.3, Q); }
+          else { plume(p, 27, 15 + b, -1.3, tl, 2.4, [E[1], E[1]], 1 + sw, 0.2); p.ell(27.5 + Math.cos(-1.3) * tl + 1, 15 + b + Math.sin(-1.3) * tl, 2 + s * 0.3, 2 + s * 0.3, Q); }
+        }
+        if (s === 5) { // twin coil on the other side
+          if (d === 0) { plume(p, 10, 22 + b, -2.0, 9, 2.4, [E[1], E[1]], -1 - sw, 0.2); p.ell(5.5, 13 + b, 2.6, 2.6, Q); }
+          else if (d === 1) { plume(p, 12, 22 + b, -2.1, 9, 2.4, [E[1], E[1]], -1 - sw, 0.2); p.ell(7.5, 13.5 + b, 2.6, 2.6, Q); }
+        }
+        if (s >= 4) { // storm-cloud mane
+          var mc = [E[2][0], E[2][1], E[2][2], E[2][3]];
+          if (d === 2) { p.ell(13, 17 + b, 3.4, 3, mc); p.ell(15.5, 15 + b, 2.8, 2.6, mc); p.ell(12, 13 + b, 2.6, 2.4, mc); }
+          else [-1, 1].forEach(function (k) { p.ell(16 + k * 6.5, 15.5 + b, 3, 2.8, mc); p.ell(16 + k * 8, 12 + b, 2.4, 2.2, mc); p.ell(16 + k * 4, 18 + b, 3, 2.4, mc); });
+        }
+        return;
+      }
+      if (L === 'front') {
+        // static ear tufts
+        var ears = d === 2 ? [[9.5, 10 + b]] : [[10.5, 6 + b], [21.5, 6 + b]];
+        ears.forEach(function (e, j) { bolt(e[0] - 0.8, e[1], 1 + s, j ? 1 : -1, E[1][1], Q[1]); });
+        if (s >= 3) { // jagged crest
+          var cx = d === 2 ? hx + 1 : hx, ch = 2 + s;
+          bolt(cx - 0.8, hy - 4.5, ch + 1, 1, E[1][2], Q[1]);
+          if (s >= 4) { bolt(cx - 3.2, hy - 4, ch - 1, -1, E[1][2], Q[1]); bolt(cx + 1.6, hy - 4, ch - 1, 1, E[1][2], Q[1]); }
+        }
+        if (s >= 3 && d !== 2) { p.rect(11.5, 17 + b, 9, 1.4, '#1d3640'); for (i = 0; i < 3; i++) p.rect(13 + i * 2.5, 17.2 + b, 1, 1, Q[2]); }
+        if (s >= 3 && d === 2) { p.rect(9, 18.5 + b, 1.4, 4, '#1d3640'); p.rect(9.2, 19.5 + b, 1, 1, Q[2]); }
+        if (s >= 4 && d !== 2) { p.px(14, 21 + b, Q[2]); p.px(15, 22 + b, Q[2]); p.px(14, 23 + b, Q[2]); p.px(18, 21 + b, Q[2]); p.px(17, 22 + b, Q[2]); p.px(18, 23 + b, Q[2]); }
+        if (s >= 4 && d === 2) { p.px(16, 21 + b, Q[2]); p.px(17, 22 + b, Q[2]); p.px(18, 21 + b, Q[2]); p.px(21, 21 + b, Q[2]); p.px(22, 22 + b, Q[2]); }
+        if (s === 5) { // lightning prong crown
+          var c5 = d === 2 ? hx + 1 : hx;
+          [-4.5, 0, 4.5].forEach(function (o, j) { bolt(c5 + o - 0.8, hy - 7 - (j === 1 ? 3 : 0), j === 1 ? 7 : 5, j === 0 ? -1 : 1, E[0][2], '#ffffff'); });
+        }
+        return;
+      }
+      if (L === 'fx') {
+        var tk = f % 4 < 2;
+        if (s >= 2 && tk) for (i = 0; i < s - 1; i++) { var x = 3 + hash(i * 3.3 + f) * 26, y = 6 + hash(i * 7.7 + f) * 20; p.px(x, y, G[0]); p.px(x + 1, y + 1, G[1]); p.px(x, y + 2, G[1]); }
+        if (s >= 4) { ring(p, 16, 20, 14, 4.5, G[1], 40, f / NF * 6.28, 2, 6); orbit(p, f, L, 3, 16, 20, 14, 4.5, function (x, y) { p.rect(x - 0.5, y - 0.5, 1.5, 1.5, G[0]); }, 1.5); }
+        if (s === 5) ring(p, hx, hy - 9, 7, 2, G[1], 26, -f / NF * 6.28, 2);
+        crownFx(p, f, 'electric', L, hy);
+      }
+    },
+
+    earth: function (p, f, s, L) {
+      var d = p.side ? 2 : p.back ? 1 : 0, b = hop(p), Ea = EP.earth, G = GC.earth, i, Am = Ea[0], R = Ea[1];
+      var cx = d === 2 ? 16 : 16, ry = d === 2 ? 9.5 : 9;
+      function crystal(x, y, ang, len, w) { plume(p, x, y, ang, len, w, [Am, Am, [Am[0], Am[0]]], 0, 0.75); }
+      if (L === 'behind') {
+        if (s >= 4) orbit(p, f, L, s === 5 ? 5 : 4, 16, 18, 15, 5, function (x, y, j) { p.rect(x - 0.5, y - 0.5, 1.5, 1.5, j % 2 ? '#8a6a40' : G[2]); }, 0.6);
+        crownFx(p, f, 'earth', L, 6);
+        return;
+      }
+      if (L === 'back') {
+        if (s >= 4) { // amber crystals rising from the back
+          var cs = s === 4 ? [[-0.6, 6], [0.6, 6]] : [[-1, 7], [-0.45, 9], [0.45, 9], [1, 7]];
+          if (d === 2) cs.forEach(function (c, j) { crystal(19 + j * 2.4, 15 + b + Math.abs(c[0]) * 2, -1.57 + 0.3 + c[0] * 0.3, c[1], 1.8); });
+          else cs.forEach(function (c) { crystal(16 + c[0] * 8, 15 + b + Math.abs(c[0]) * 2, -1.57 + c[0] * 0.55, c[1], 1.9); });
+        }
+        return;
+      }
+      if (L === 'front') {
+        // stone cap grows
+        p.ell(cx, ry + b, 4 + s * 0.6, 2.2 + s * 0.25, R);
+        p.px(cx - 1, ry - 1 + b, R[0]);
+        if (s >= 2) { p.px(cx - 0.5, ry - 3 - s * 0.25 + b, '#6ab83a'); p.px(cx + 0.5, ry - 4 - s * 0.25 + b, '#9be04a'); p.px(cx - 1.5, ry - 4 - s * 0.25 + b, '#9be04a'); }
+        // heavy claws
+        if (d !== 2) { [[4, 23], [27, 23]].forEach(function (c, j) { for (i = 0; i < 3; i++) p.rect(c[0] + (j ? i * 0.4 : -i * 0.4) - 0.5, c[1] + b + i * 1 - 1, 1.5 + s * 0.2, 0.9, R[0]); }); }
+        else for (i = 0; i < 3; i++) p.rect(6 - s * 0.2, 23 + b + i, 1.5 + s * 0.2, 0.9, R[0]);
+        if (s >= 3) { // shoulder plates and amber gem
+          if (d === 2) { p.ell(20, 15 + b, 3.6, 2.6, R); p.ell(23.5, 18 + b, 3, 2.2, R); }
+          else { p.ell(7.5, 15.5 + b, 3.2, 2.6, R); p.ell(24.5, 15.5 + b, 3.2, 2.6, R); if (d === 1) { p.ell(16, 15 + b, 3.4, 2.4, R); p.ell(12, 18.5 + b, 2.6, 2, R); p.ell(20, 18.5 + b, 2.6, 2, R); } }
+          if (d !== 1) p.ell(d === 2 ? cx - 3 : cx, ry + 0.5 + b, 1.3, 1.3, Am);
+        }
+        if (s >= 4 && d !== 1) { var gc = Am[1]; p.px(10, 21 + b, gc); p.px(11, 22 + b, gc); p.px(10, 23 + b, gc); p.px(22, 21 + b, gc); p.px(21, 22 + b, gc); p.px(22, 23 + b, gc); }
+        if (s >= 4 && d === 1) { p.px(13, 21 + b, Am[1]); p.px(14, 22 + b, Am[1]); p.px(19, 21 + b, Am[1]); p.px(18, 22 + b, Am[1]); }
+        if (s >= 4 && d !== 2) { crystal(6.5, 14 + b, -2.2, 3 + s * 0.5, 1.3); crystal(25.5, 14 + b, -0.94, 3 + s * 0.5, 1.3); }
+        if (s === 5) { // crystal crown spires
+          var cc = d === 2 ? cx - 1 : cx;
+          [[-4, 4, -0.35], [-2, 6, -0.15], [0, 8, 0], [2, 6, 0.15], [4, 4, 0.35]].forEach(function (c) { crystal(cc + c[0], ry - 1.5 + b + Math.abs(c[0]) * 0.2, -1.57 + c[2], c[1], 1.4); });
+        }
+        return;
+      }
+      if (L === 'fx') {
+        if (s >= 3) for (i = 0; i < s - 2; i++) { var t = ((f / NF) + i / (s - 2)) % 1; if (t < 0.6) p.px(6 + hash(i * 2.9) * 20, 28 - Math.sin(t / 0.6 * 3.14) * 4, '#b08a5a'); }
+        if (s >= 4) orbit(p, f, L, s === 5 ? 5 : 4, 16, 18, 15, 5, function (x, y, j) { p.rect(x - 0.5, y - 0.5, 1.5, 1.5, j % 2 ? '#b08a5a' : G[1]); p.px(x - 0.5, y - 0.5, G[0]); }, 0.6);
+        if (s >= 4 && f % 8 < 3) sparkle(p, 16 + (s === 5 ? 0 : 0), ry - 7 - (s === 5 ? 4 : 0) + b, '#ffffff', G[0], true);
+        crownFx(p, f, 'earth', L, 6);
+      }
+    },
+
+    dark: function (p, f, s, L) {
+      var d = p.side ? 2 : p.back ? 1 : 0, D = EP.dark, G = GC.dark, i, fl = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)) * 1.2, B = D[1];
+      if (L === 'behind') {
+        if (s >= 4) orbit(p, f, L, 4, 16, 18, 15, 6, function (x, y) { p.rect(x - 0.5, y - 0.5, 1.5, 1.5, G[2]); }, 0.7);
+        if (s === 5) ring(p, 16, 0.5, 6, 6, G[2], 30, f / NF * 3.14, 0, 5);
+        crownFx(p, f, 'dark', L, 6);
+        return;
+      }
+      if (L === 'back') {
+        // wings grow: layered membranes with scalloped edges
+        var ext = (s - 1) * 2.2, up = (s - 1) * 1.6;
+        function wing(k, ox, extra) {
+          var x0 = 16 + k * 8, tip = 16 + k * (14 + ext + extra), ty = 9 - up + fl - extra * 0.5;
+          var lo = Math.min(x0, tip), hi = Math.max(x0, tip);
+          p.tri(lo, hi, 20 + fl, tip, ty, B[2], B[1]);
+          p.tri(Math.min(x0, x0 + k * (ext * 0.6 + 6)), Math.max(x0, x0 + k * (ext * 0.6 + 6)), 23 + fl, x0 + k * (ext * 0.5 + 5), 15 + fl - up * 0.5, B[2], B[1]);
+          if (s >= 3) { p.rect(tip - 0.5, ty - 1, 1, 1.5, '#e0d0ff'); p.px(tip - k, ty - 1.5, '#e0d0ff'); }
+          if (s >= 4) for (var j = 0; j < 3; j++) p.px(x0 + k * (3 + j * 2.5), 16 - j * 1.5 + fl - up * 0.4, '#d0b0ff');
+        }
+        if (d === 2) { var tip2 = 25 + ext * 0.8; p.tri(18, tip2 + 3, 20 + fl, tip2 + 2, 6 - up + fl, B[2], B[1]); if (s >= 3) p.rect(tip2 + 1.5, 5 - up + fl, 1, 1.5, '#e0d0ff'); }
+        else { wing(-1, 0, 0); wing(1, 0, 0); if (s === 5) { wing(-1, 0, 4); wing(1, 0, 4); } }
+        // tail grows longer with a pointed tuft
+        if (d !== 2 && s >= 2) { plume(p, 22, 25, -0.7, 3 + s * 1.2, 1, [D[1], D[1]], -1, 0.2); var tx = 22 + Math.cos(-0.7) * (3 + s * 1.2), ty2 = 25 + Math.sin(-0.7) * (3 + s * 1.2) + 0.6; p.tri(tx - 1.5, tx + 1.5, ty2, tx + 0.5, ty2 - 3, B[1], D[0][2]); }
+        return;
+      }
+      if (L === 'front') {
+        if (d === 2) { // near wing over the body grows too
+          if (s >= 2) p.tri(13, 24 + s, 22 + fl, 22 + s * 0.6, 10 - (s - 1) * 1.6 + fl, B[2], B[1]);
+        }
+        if (s >= 3) { // ear tufts
+          var ears = d === 2 ? [[10, 2], [18, 2]] : [[9, 3], [23, 3]];
+          ears.forEach(function (e, j) { plume(p, e[0], e[1] + 0.5, -1.57 + (j ? 0.5 : -0.5), 1.5 + s * 0.5, 0.9, [B, B], 0, 0.3); });
+        }
+        if (s >= 3 && d !== 1) { var mx = d === 2 ? 9 : 16; p.rect(mx - 1, 8, 1, 1, '#ffe060'); p.rect(mx, 7, 2, 1, '#ffe060'); p.rect(mx + 2, 8, 1, 1, '#ffe060'); }
+        if (s >= 4 && d !== 2) { p.px(13, 22, '#d0b0ff'); p.px(19, 21, '#d0b0ff'); p.px(16, 24, '#e0d0ff'); }
+        if (s >= 4 && d === 1) { p.px(14, 18, '#d0b0ff'); p.px(18, 20, '#d0b0ff'); }
+        return;
+      }
+      if (L === 'fx') {
+        if (s >= 3) for (i = 0; i < s - 1; i++) { var t = ((f / NF) * 0.7 + i / (s - 1)) % 1; if (t < 0.8) { var x = 4 + hash(i * 8.3) * 24; p.px(x, 26 - t * 22, G[1]); if (t < 0.3) p.px(x, 27 - t * 22, G[2]); } }
+        if (s >= 4) orbit(p, f, L, 4, 16, 18, 15, 6, function (x, y) { sparkle(p, x, y, G[0], G[1], true); }, 0.7);
+        if (s === 5) { // floating crescent crown
+          var cy = -1 + Math.sin(p.ph) * 0.7, cx = d === 2 ? 12 : 16;
+          for (var a = -2.4; a <= 2.4; a += 0.18) { var px = cx + Math.sin(a) * 5, py = cy - Math.cos(a) * 4.2; p.rect(px - 0.5, py, 1.2, 1.2, Math.abs(a) < 1 ? '#fff4c0' : '#ffe060'); }
+          p.rect(cx - 0.5, cy - 7, 1, 1, '#ffffff'); sparkle(p, cx, cy - 7, '#ffffff', '#ffe060', f % 6 < 3);
+          ring(p, 16, 0.5, 6, 6, G[1], 30, f / NF * 3.14, 2, 5);
+        }
+        crownFx(p, f, 'dark', L, 6);
+      }
+    },
+
+    light: function (p, f, s, L) {
+      var d = p.side ? 2 : p.back ? 1 : 0, Lt = EP.light, G = GC.light, i, fl = (Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)) + 1) / 2;
+      var M = Lt[1], Eye = ['#ffffff', '#c0e0ff', '#80a8e0'];
+      if (L === 'behind') {
+        if (s >= 4) orbit(p, f, L, 5, 16, 16, 15, 7, function (x, y) { p.px(x, y, G[2]); }, 0.6);
+        if (s === 5) { ring(p, 16, 1.5, 7, 2.2, G[1], 34, f / NF * 3.14, 1); for (i = 0; i < 12; i++) { var a = i / 12 * 6.28 + f / NF * 0.8; p.rect(16 + Math.cos(a) * 12, 13 + Math.sin(a) * 12, 1, 1, G[2]); } }
+        crownFx(p, f, 'light', L, 6);
+        return;
+      }
+      if (L === 'back') {
+        var wx = 4 + s * 1.1, wy = 7 + s * 0.9;
+        if (d === 2) {
+          p.ell(22, 11 - fl - s * 0.5, wx * 0.8, wy * 0.85 + fl, M); p.ell(22, 11 - fl - s * 0.5, 1.8, 1.8, Eye, true);
+          if (s >= 3) { p.ell(22, 20 + fl * 0.5, wx * 0.6, wy * 0.5, M); }
+        } else [-1, 1].forEach(function (k) {
+          var x = 16 + k * (9 + s * 1.2), y = 12 - fl - s * 0.6;
+          p.ell(x, y, wx, wy + fl, M);
+          p.ell(x, y, 1.8 + s * 0.2, 1.8 + s * 0.2, Eye, true);
+          if (s >= 4) ring(p, x, y, wx - 1.6, wy - 2, '#fff8d8', 22, 0, 0, 0);
+          if (s >= 3) { var x2 = 16 + k * (8 + s), y2 = 21 + fl * 0.5; p.ell(x2, y2, wx * 0.7, wy * 0.5, M); p.ell(x2, y2 + 0.5, 1.2, 1.2, Eye, true); }
+          if (s === 5) { p.ell(16 + k * 7, 4 - fl, 3.4, 5, [Lt[0][0], Lt[0][1], Lt[0][2], Lt[0][3]]); }
+        });
+        return;
+      }
+      if (L === 'front') {
+        // fluffy antenna tips
+        var at = d === 2 ? [[11, 4]] : [[12, 4], [20, 4]];
+        at.forEach(function (q) { p.ell(q[0], q[1] - s * 0.4, 0.8 + s * 0.3, 0.8 + s * 0.3, s >= 4 ? Lt[0] : Lt[2]); });
+        if (s >= 3) { // fleece collar
+          if (d === 2) p.ell(14, 18, 3.5, 2.5, Lt[2]);
+          else { for (i = 0; i < 5; i++) p.ell(10.5 + i * 2.75, 18 + (i % 2) * 0.6, 1.8, 1.6, Lt[2]); }
+        }
+        if (s >= 4 && d === 0) { p.px(16, 9, '#ffd060'); p.px(15, 10, '#ffe890'); p.px(17, 10, '#ffe890'); }
+        if (s === 5) { // sun crown rays
+          var cx = d === 2 ? 13 : 16;
+          for (i = -2; i <= 2; i++) plume(p, cx + i * 2.2, 6.5 + Math.abs(i) * 0.6, -1.57 + i * 0.32, 4 - Math.abs(i) * 0.5, 1, [Lt[0], ['#ffffff', '#ffffff']], 0, 0.5);
+        }
+        return;
+      }
+      if (L === 'fx') {
+        if (s >= 2) for (i = 0; i < s; i++) { var tw = (f + i * 3) % NF; if (tw < 4) sparkle(p, 3 + hash(i * 5.9 + 3) * 26, 2 + hash(i * 2.3) * 24, '#ffffff', G[1], tw === 1); }
+        if (s >= 4) orbit(p, f, L, 5, 16, 16, 15, 7, function (x, y) { sparkle(p, x, y, '#ffffff', G[1], true); }, 0.6);
+        if (s === 5) ring(p, 16, 1.5, 7, 2.2, '#ffffff', 34, f / NF * 3.14, 2);
+        crownFx(p, f, 'light', L, 6);
+      }
+    }
+  };
+  // richer colours as the line matures (applied to the outlined body only)
+  function enrich(c, s) {
+    if (s < 3) return;
+    var g = c.getContext('2d'), id = g.getImageData(0, 0, c.width, c.height), dd = id.data, a = (s - 2) * 0.09, i, m;
+    for (i = 0; i < dd.length; i += 4) {
+      if (!dd[i + 3]) continue;
+      m = (dd[i] + dd[i + 1] + dd[i + 2]) / 3;
+      dd[i] = Math.max(0, Math.min(255, m + (dd[i] - m) * (1 + a)));
+      dd[i + 1] = Math.max(0, Math.min(255, m + (dd[i + 1] - m) * (1 + a)));
+      dd[i + 2] = Math.max(0, Math.min(255, m + (dd[i + 2] - m) * (1 + a)));
+    }
+    g.putImageData(id, 0, 0);
+  }
+
   // pose: dir 0 front | 1 back | 2 side (drawn facing left), mode 'idle' | 'move' | 'sit'
-  function frame(key, k, blink, f, dir, mode) {
-    dir = dir || 0; mode = mode || 'idle';
-    var id = key + '|' + k + '|' + (blink ? 1 : 0) + '|' + dir + mode, arr = cache[id] || (cache[id] = []);
+  function frame(key, k, blink, f, dir, mode, st) {
+    dir = dir || 0; mode = mode || 'idle'; st = st > 1 && STG[key] ? Math.min(5, st | 0) : 1;
+    var id = key + '|' + k + '|' + (blink ? 1 : 0) + '|' + dir + mode + '|' + st, arr = cache[id] || (cache[id] = []);
     if (arr[f]) return arr[f];
-    var n = Math.ceil(S * k), c = mk(n, n), p = P(c, k), ph = f / NF * 6.2832, fly = !!FLY[key];
+    var M = st > 1 ? SM : 0, n = Math.ceil((S + 2 * M) * k), c = mk(n, n), fly = !!FLY[key], ph = f / NF * 6.2832;
     var sn = function (v) { return Math.round(v * k) / k; };
-    p.ph = ph; p.gp = ph * 2; p.blink = !!blink; p.fly = fly; p.dir = dir; p.mode = mode;
-    p.back = dir === 1; p.side = dir === 2;
-    p.warp = mode !== 'move';
-    p.u = fly ? 0 : sn(Math.sin(ph) * (mode === 'sit' ? 0.5 : 0.8));
-    p.uh = fly ? sn(Math.sin(ph - 0.9) * 0.5) : sn(Math.sin(ph) * 0.8 + Math.sin(ph - 0.9) * 0.6);
-    DEF[key](p, f);
-    outline(c, OUT[key] || '#1a1020');
-    p.warp = false; aura(p, key, f);
+    var body = st > 1 ? mk(n, n) : c, T = Math.round(M * k);
+    function setup(cv) {
+      var p = P(cv, k); if (T) p.g.translate(T, T);
+      p.ph = ph; p.gp = ph * 2; p.blink = !!blink; p.fly = fly; p.dir = dir; p.mode = mode; p.stage = st;
+      p.back = dir === 1; p.side = dir === 2; p.warp = mode !== 'move';
+      p.u = fly ? 0 : sn(Math.sin(ph) * (mode === 'sit' ? 0.5 : 0.8));
+      p.uh = fly ? sn(Math.sin(ph - 0.9) * 0.5) : sn(Math.sin(ph) * 0.8 + Math.sin(ph - 0.9) * 0.6);
+      return p;
+    }
+    var pb = setup(body), pc = st > 1 ? setup(c) : pb;
+    if (st > 1) { pc.warp = false; STG[key](pc, f, st, 'behind'); pc.warp = mode !== 'move'; STG[key](pb, f, st, 'back'); }
+    DEF[key](pb, f);
+    if (st > 1) STG[key](pb, f, st, 'front');
+    outline(body, OUT[key] || '#1a1020');
+    if (st > 1) { enrich(body, st); c.getContext('2d').drawImage(body, 0, 0); }
+    pc.warp = false; aura(pc, key, f);
+    if (st > 1) STG[key](pc, f, st, 'fx');
     return (arr[f] = c);
   }
-  function frames(key, dir, mode) {
+  function frames(key, dir, mode, stage) {
     if (!DEF[key]) key = 'hontori';
-    var a = [], k = H.renderScale || 1; for (var f = 0; f < NF; f++) a.push(frame(key, k, false, f, dir === 3 ? 2 : dir, mode)); return a;
+    var a = [], k = H.renderScale || 1; for (var f = 0; f < NF; f++) a.push(frame(key, k, false, f, dir === 3 ? 2 : dir, mode, stage)); return a;
   }
 
   var AURA = { hontori: '255,150,60', water: '90,180,255', wind: '200,230,255', grass: '140,220,90', electric: '110,230,250', earth: '190,150,100', dark: '150,90,230', light: '255,245,190' };
@@ -593,7 +1129,8 @@ window.H = window.H || {};
   function draw(ctx, key, x, y, env, opts) {
     opts = opts || {}; if (!DEF[key]) key = 'hontori';
     var t = (env && env.t) || 0, RS = H.renderScale || 1, sd = SEED[key];
-    var sc = opts.scale || 1, a = opts.alpha == null ? 1 : opts.alpha;
+    var sc0 = opts.scale || 1, a = opts.alpha == null ? 1 : opts.alpha;
+    var st = Math.max(1, Math.min(5, opts.stage | 0 || 1)), sc = sc0 * SS[st - 1], B = st > 1 ? S + 2 * SM : S, yo = 12 * sc0 - 12 * sc;
     var k = Math.max(0.5, Math.round(RS * sc * 4) / 4);
     var dir = (opts.dir | 0) & 3, mode = opts.moving ? 'move' : opts.sit ? 'sit' : 'idle';
     var f = Math.floor((t + sd * 3) * (mode === 'move' ? 16 : 12)) % NF;
@@ -608,20 +1145,21 @@ window.H = window.H || {};
     if (!opts.noShadow) { // ground shadow (shrinks while hovering)
       ctx.fillStyle = 'rgba(0,0,0,0.25)';
       var sw = Math.round((10 + hov) * sc);
-      ctx.fillRect(Math.round(x - sw / 2), Math.round(y + 10 * sc), sw, Math.max(1, Math.round(2 * sc)));
-      ctx.fillRect(Math.round(x - sw / 2 + 2), Math.round(y + 10 * sc - 1), sw - 4, Math.max(1, Math.round(4 * sc)));
+      ctx.fillRect(Math.round(x - sw / 2), Math.round(y + 10 * sc0), sw, Math.max(1, Math.round(2 * sc0)));
+      ctx.fillRect(Math.round(x - sw / 2 + 2), Math.round(y + 10 * sc0 - 1), sw - 4, Math.max(1, Math.round(4 * sc0)));
     }
     ctx.globalAlpha = a * (GLOW[key] || 0.3) * (0.85 + 0.15 * Math.sin(t * 2.4 + sd * 9));
-    ctx.drawImage(glow(key), x - 16 * sc, y + hov - 16 * sc, 32 * sc, 32 * sc);
+    ctx.drawImage(glow(key), x - 16 * sc, y + hov + yo - 16 * sc, 32 * sc, 32 * sc);
     ctx.globalAlpha = a;
-    ctx.translate(x, y + hov);
+    ctx.translate(x, Math.round(y + hov + yo));
     if (flip) ctx.scale(-1, 1);
-    ctx.drawImage(frame(key, k, blink, f, dir === 3 ? 2 : dir, mode), -S / 2 * sc, -S / 2 * sc, S * sc, S * sc);
+    ctx.drawImage(frame(key, k, blink, f, dir === 3 ? 2 : dir, mode, st), -B / 2 * sc, -B / 2 * sc, B * sc, B * sc);
     ctx.restore();
   }
 
-  function portrait(key) {
-    if (pcache[key]) return pcache[key];
+  function portrait(key, stage) {
+    var st = Math.max(1, Math.min(5, stage | 0 || 1)), pk = key + '|' + st;
+    if (pcache[pk]) return pcache[pk];
     if (!DEF[key]) key = 'hontori';
     var c = mk(96, 96), g = c.getContext('2d');
     var col = AURA[key];
@@ -633,9 +1171,9 @@ window.H = window.H || {};
       g.fillStyle = 'rgba(' + col + ',' + a.toFixed(3) + ')';
       g.fillRect(x, y, 2, 2);
     }
-    g.drawImage(frame(key, 3, false, 0, 0, 'idle'), 0, 4);
-    return (pcache[key] = c);
+    if (st > 1) g.drawImage(frame(key, 2, false, 0, 0, 'idle', st), 0, 0); else g.drawImage(frame(key, 3, false, 0, 0, 'idle'), 0, 4);
+    return (pcache[pk] = c);
   }
 
-  H.spirits = { list: list, draw: draw, portrait: portrait, frames: frames };
+  H.spirits = { list: list, draw: draw, portrait: portrait, frames: frames, stages: stages };
 })();

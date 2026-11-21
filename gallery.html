@@ -3,30 +3,47 @@
 <title>Hontori Gallery</title>
 <style>
   body{margin:0;background:#101226;color:#f4f1e8;font-family:Nunito,system-ui,sans-serif;padding:16px}
-  h1{font-size:22px;margin:4px 0 16px}
-  .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-  .c{background:#1b1e3a;border:2px solid #2c3160;border-radius:16px;padding:10px;text-align:center}
-  .c canvas{width:100%;image-rendering:pixelated;border-radius:10px;background:#141733}
-  .n{font-weight:900;font-size:16px;margin-top:6px}.e{font-size:13px;opacity:.7}
+  h1{font-size:22px;margin:4px 0 16px}h2{font-size:17px;margin:0 0 8px}
+  .sp{background:#1b1e3a;border:2px solid #2c3160;border-radius:16px;padding:10px;margin-bottom:14px}
+  .row{display:flex;flex-wrap:wrap;gap:8px}
+  .st{flex:1 1 110px;max-width:160px;text-align:center;cursor:pointer;border:2px solid transparent;border-radius:12px;padding:4px}
+  .st.on{border-color:#ffd070}
+  canvas{width:100%;image-rendering:pixelated;border-radius:10px;background:#141733}
+  .n{font-weight:900;font-size:14px;margin-top:4px}.e{font-size:12px;opacity:.7}
+  .dirs{margin-top:8px}.dirs canvas{flex:1 1 90px;max-width:140px}
 </style></head><body>
 <h1>Hontori spirits</h1>
-<div class="g" id="g"></div>
+<div id="g"></div>
 <script src="src/icons.js"></script>
 <script src="src/spirits.js"></script>
 <script>
   const env = { t: 0, time: 12, weather: 'clear', wind: 0.2, indoor: false };
-  const cards = H.spirits.list.map(s => {
-    const c = document.createElement('div'); c.className = 'c';
-    const cv = document.createElement('canvas'); cv.width = 192; cv.height = 128; c.appendChild(cv);
-    c.insertAdjacentHTML('beforeend', `<div class="n">${s.name}</div><div class="e">${s.element} hontori</div>`);
-    document.getElementById('g').appendChild(c); return { s, cv };
+  const cells = [];
+  H.spirits.list.forEach(s => {
+    const box = document.createElement('div'); box.className = 'sp';
+    box.innerHTML = `<h2>${s.name} line <span class="e">${s.element}</span></h2>`;
+    const row = document.createElement('div'); row.className = 'row'; box.appendChild(row);
+    const dirs = document.createElement('div'); dirs.className = 'row dirs'; box.appendChild(dirs);
+    const info = { s, stage: 1, tiles: [] };
+    (H.spirits.stages[s.key] || []).forEach((d, i) => {
+      const t = document.createElement('div'); t.className = 'st' + (i ? '' : ' on');
+      const cv = document.createElement('canvas'); cv.width = 128; cv.height = 128; t.appendChild(cv);
+      t.insertAdjacentHTML('beforeend', `<div class="n">${d.name}</div><div class="e">${d.desc}</div>`);
+      t.onclick = () => { info.stage = i + 1; info.tiles.forEach((x, j) => x.el.classList.toggle('on', j === i)); };
+      row.appendChild(t); info.tiles.push({ el: t, cv, stage: i + 1 });
+    });
+    info.dirCv = [0, 1, 2, 3].map(() => { const c = document.createElement('canvas'); c.width = 128; c.height = 128; dirs.appendChild(c); return c; });
+    document.getElementById('g').appendChild(box); cells.push(info);
   });
+  function one(cv, key, opts) {
+    const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 128, 128);
+    g.save(); g.scale(2, 2); H.spirits.draw(g, key, 32, 36, env, opts); g.restore();
+  }
   function frame(ms) {
     env.t = ms / 1000;
-    cards.forEach(({ s, cv }) => {
-      const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 192, 128);
-      g.drawImage(H.spirits.portrait(s.key), 4, 16, 96, 96);
-      g.save(); g.scale(3, 3); H.spirits.draw(g, s.key, 48, 22, env, {}); g.restore();
+    cells.forEach(c => {
+      c.tiles.forEach(t => one(t.cv, c.s.key, { stage: t.stage }));
+      c.dirCv.forEach((cv, d) => one(cv, c.s.key, { stage: c.stage, dir: d, moving: d >= 2 }));
     });
     requestAnimationFrame(frame);
   }
