@@ -19,9 +19,9 @@
     '.hz-bb .slate{position:relative;border-radius:4px;background:radial-gradient(ellipse at 40% 35%,#2f4a3c,#1d3028);aspect-ratio:1/1;overflow:hidden}',
     '.hz-bb .slate:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(25deg,rgba(255,255,255,.018) 0 3px,transparent 3px 9px);pointer-events:none}',
     '.hz-bb h3{position:absolute;left:0;right:0;top:3%;margin:0;text-align:center;color:#f4f1e8;font:900 clamp(16px,4.5vmin,24px) "Nunito",system-ui;letter-spacing:1px;opacity:.9}',
-    '.hz-bb .foot{position:absolute;left:0;right:0;bottom:3%;text-align:center;color:#e8f0e0;font:800 clamp(12px,3.4vmin,16px) Nunito,system-ui;opacity:.85;padding:0 8%}',
+    '.hz-bb .foot{min-height:44px;margin-top:10px;text-align:center;color:#e8f0e0;font:800 clamp(13px,3.6vmin,16px)/1.35 Nunito,system-ui;padding:0 4%}',
     '.hz-bb .ledge{height:10px;margin:8px -6px -6px;border-radius:3px;background:#6e4a2c;box-shadow:inset 0 2px 0 #8a6040}',
-    '.hz-el{position:absolute;width:15%;aspect-ratio:1/1;transform:translate(-50%,-50%);border-radius:50%;border:2px dashed rgba(244,241,232,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s,border-color .2s}',
+    '.hz-el{position:absolute;width:13%;aspect-ratio:1/1;transform:translate(-50%,-50%);border-radius:50%;border:2px dashed rgba(244,241,232,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s,border-color .2s}',
     '.hz-el img{width:62%;image-rendering:pixelated;filter:drop-shadow(0 0 4px rgba(255,255,255,.25))}',
     '.hz-el span{position:absolute;top:100%;margin-top:2px;color:#f4f1e8;font:800 clamp(10px,2.8vmin,13px) Nunito,system-ui;white-space:nowrap}',
     '.hz-el.sel{transform:translate(-50%,-50%) scale(1.15);border-color:#fff;border-style:solid}',
@@ -62,7 +62,7 @@
     return open(function (wrap) {
       var bb = mk('div', 'hz-bb', wrap), slate = mk('div', 'slate', bb);
       mk('h3', '', slate, 'The Element Wheel');
-      var foot = mk('div', 'foot', slate, '');
+      var foot = mk('div', 'foot', bb, '');
       var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
       svg.setAttribute('viewBox', '0 0 100 100'); svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
       var defs = document.createElementNS(NS, 'defs');
@@ -71,13 +71,13 @@
         '<marker id="ahr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ff9a8a"/></marker>';
       svg.appendChild(defs); slate.appendChild(svg);
       // chalk circle guide
-      var ring = document.createElementNS(NS, 'circle'); ring.setAttribute('cx', 50); ring.setAttribute('cy', 53); ring.setAttribute('r', 31);
+      var ring = document.createElementNS(NS, 'circle'); ring.setAttribute('cx', 50); ring.setAttribute('cy', 55); ring.setAttribute('r', 29);
       ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', 'rgba(244,241,232,.22)'); ring.setAttribute('stroke-width', '0.6'); ring.setAttribute('stroke-dasharray', '1.5 2'); ring.setAttribute('filter', 'url(#chalk)');
       svg.appendChild(ring);
       var arrows = document.createElementNS(NS, 'g'); svg.appendChild(arrows);
       var pos = {};
       ELS.forEach(function (el, i) {
-        var a = -Math.PI / 2 + i / ELS.length * Math.PI * 2, x = 50 + Math.cos(a) * 31, y = 53 + Math.sin(a) * 31;
+        var a = -Math.PI / 2 + i / ELS.length * Math.PI * 2, x = 50 + Math.cos(a) * 29, y = 55 + Math.sin(a) * 29;
         pos[el] = [x, y];
         var b = mk('div', 'hz-el', slate, '<img alt="" src="' + icon(el) + '"><span>' + NAMES[el] + '</span>');
         b.style.left = x + '%'; b.style.top = y + '%';
