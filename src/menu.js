@@ -11,7 +11,7 @@
     '.hm-top{position:absolute;right:calc(env(safe-area-inset-right,0px) + 10px);top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;gap:8px;pointer-events:auto}',
     '.hm-btn{width:44px;height:44px;border-radius:14px;background:rgba(18,20,40,.82);border:2px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.35)}',
     '.hm-btn:active{transform:translateY(2px)}',
-    '.hm-btn svg{transition:transform .5s cubic-bezier(.3,1.5,.5,1)}.hm-btn:hover svg,.hm-btn:active svg{transform:rotate(60deg)}',
+    '.hm-btn canvas.cog{transition:transform .5s cubic-bezier(.3,1.5,.5,1)}.hm-btn:hover canvas.cog,.hm-btn:active canvas.cog{transform:rotate(45deg)}',
     '.hm-btn img,.hm-btn canvas{width:28px;height:28px;image-rendering:pixelated}',
     '.hm-party{position:absolute;left:calc(env(safe-area-inset-left,0px) + 10px);top:calc(env(safe-area-inset-top,0px) + 62px);display:flex;flex-direction:column;gap:6px;pointer-events:auto;cursor:pointer}',
     '.hm-slot{position:relative;width:40px;height:40px;border-radius:50%;background:rgba(18,20,40,.72);border:2px solid rgba(255,255,255,.18);overflow:hidden}',
@@ -65,6 +65,36 @@
   function displayName(p) { var s = spec(p.key); return p.nick || (cap(s.element) + ' Hontori'); }
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
+  // Settings cog drawn as 16x16 pixel art, in the same style as the backpack icon:
+  // dark outline, 3-tone metal shading lit from the top-left, a warm gem in the hub.
+  function pixelCog() {
+    var N = 16, c = document.createElement('canvas'); c.width = c.height = N; c.className = 'cog';
+    var g = c.getContext('2d'), cx = 7.5, cy = 7.5;
+    function inside(x, y) {
+      var dx = x - cx, dy = y - cy, r = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
+      var tooth = Math.cos(a * 8) > 0.0; // 8 chunky teeth
+      var outer = tooth ? 6.7 : 4.9;
+      return r <= outer;
+    }
+    var OUTL = '#3a220e', HI = '#fff2c8', MID = '#e8b868', LO = '#b07a38', HUB = '#5a3a1c', GEM = '#ff8a3c', GEMH = '#ffe6a8';
+    for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
+      if (inside(x, y)) {
+        var light = (x - cx) * -0.6 + (y - cy) * -0.8; // top-left light
+        g.fillStyle = light > 2 ? HI : light < -1.8 ? LO : MID;
+        g.fillRect(x, y, 1, 1);
+      } else if (inside(x - 1, y) || inside(x + 1, y) || inside(x, y - 1) || inside(x, y + 1)) {
+        g.fillStyle = OUTL; g.fillRect(x, y, 1, 1); // outline sits outside the shape so the teeth stay readable
+      }
+    }
+    // hub with a small gem
+    g.fillStyle = OUTL; g.fillRect(6, 5, 4, 6); g.fillRect(5, 6, 6, 4);
+    g.fillStyle = GEM; g.fillRect(6, 6, 4, 4); g.fillStyle = '#c85a20'; g.fillRect(8, 8, 2, 2); g.fillStyle = GEMH; g.fillRect(6, 6, 2, 1); g.fillRect(6, 7, 1, 1);
+    // little sparkle, like the backpack icon
+    g.fillStyle = '#ffffff'; g.fillRect(14, 0, 1, 3); g.fillRect(13, 1, 3, 1);
+    c.style.cssText = 'width:30px;height:30px;image-rendering:pixelated';
+    return c;
+  }
+
   function init(rootEl) {
     root = rootEl;
     var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
@@ -73,7 +103,7 @@
     var top = mk('div', 'hm-top', o);
     var bp = mk('div', 'hm-btn', top); bp.title = 'Backpack'; var b1 = iconCanvas('backpack'); if (b1) bp.appendChild(copyCanvas(b1, 32)); else bp.textContent = 'Bag';
     bp.addEventListener('click', function () { show('bag'); });
-    var mn = mk('div', 'hm-btn', top); mn.title = 'Settings'; mn.innerHTML = '<svg width="30" height="30" viewBox="0 0 28 28"><defs><linearGradient id="hmcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4d6"/><stop offset="1" stop-color="#e0b46a"/></linearGradient><radialGradient id="hmgem" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffe9b0"/><stop offset="0.5" stop-color="#ff9a3c"/><stop offset="1" stop-color="#c4521c"/></radialGradient></defs><g fill="#5a3c1c" transform="translate(0 1)"><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(0 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(45 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(90 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(135 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(180 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(225 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(270 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(315 14 14)"/><circle cx="14" cy="14" r="9.2"/></g><g fill="url(#hmcg)"><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(0 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(45 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(90 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(135 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(180 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(225 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(270 14 14)"/><rect x="10.4" y="1.6" width="7.2" height="6" rx="1.8" transform="rotate(315 14 14)"/><circle cx="14" cy="14" r="9.2"/></g><circle cx="14" cy="14" r="5.4" fill="#2a2348"/><circle cx="14" cy="14" r="3.9" fill="url(#hmgem)"/><circle cx="12.8" cy="12.7" r="1.1" fill="#fff" opacity=".85"/></svg>';
+    var mn = mk('div', 'hm-btn', top); mn.title = 'Settings'; mn.appendChild(pixelCog());
     mn.addEventListener('click', function () { show('menu'); });
     els.shade = mk('div', 'hm-shade', o); els.shade.addEventListener('click', hide);
     els.sheet = mk('div', 'hm-sheet', o);
