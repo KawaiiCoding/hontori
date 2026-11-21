@@ -156,6 +156,36 @@
   const wait = ms => new Promise(r => setTimeout(r, ms));
   let flash = 0, bumpT = 0;
 
+  // Entrance trial for the school of magic: three element questions, then draw a sigil.
+  const TRIAL_STRONG = { water: ['fire', 'earth'], fire: ['grass', 'wind'], wind: ['grass', 'electric'], grass: ['water', 'earth'], electric: ['water', 'wind'], earth: ['electric', 'fire'], dark: ['light'], light: ['dark'] };
+  const capWord = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+  async function academyTrial() {
+    const G = 'elder', N = 'Gatekeeper';
+    await say(G, N, 'Halt. The Academy tests all who enter.');
+    await say(G, N, 'Answer three, then show your wand.');
+    const els = Object.keys(TRIAL_STRONG), shuffle = (a) => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+    let right = 0;
+    const asked = shuffle(els.filter(e => e !== 'dark' && e !== 'light')).slice(0, 2).concat([Math.random() < 0.5 ? 'dark' : 'light']);
+    for (const target of asked) {
+      // which element beats <target>?
+      const winners = els.filter(e => TRIAL_STRONG[e].includes(target));
+      const answer = winners[Math.floor(Math.random() * winners.length)];
+      const wrong = shuffle(els.filter(e => e !== answer && !winners.includes(e) && e !== target)).slice(0, 2);
+      const opts = shuffle([answer, ...wrong]);
+      await say(G, N, 'Which element is strong against ' + capWord(target) + '?');
+      const pick = H.ui && H.ui.choose ? await H.ui.choose(opts.map(capWord)) : 0;
+      if (opts[pick] === answer) { right++; sfx('confirm'); } else { sfx('bump'); await say(G, N, 'No. ' + capWord(answer) + ' is.'); }
+    }
+    if (right < 2) { await say(G, N, 'Study the elements, then return.'); return false; }
+    await say(G, N, 'Good. Now draw the Mending Sigil.');
+    if (H.gesture && H.gesture.prompt) await H.gesture.prompt('mend', 'Draw a circle');
+    sfx('wand'); emit('magic', player.x, player.y - 16, 60);
+    await say(G, N, 'Steady hand, open eye. Welcome, the gate stands by.');
+    H.game.state.academy = true; H.game.save();
+    H.ui && H.ui.toast('Academy trial passed');
+    return true;
+  }
+
   async function goDoor(d) {
     busy = true; sfx('door'); const f = H.ui ? H.ui.fade(600) : Promise.resolve();
     await wait(300); loadMap(d.to, d.tx, d.ty, d.dir); H.game.save(); await f; busy = false;
@@ -246,6 +276,12 @@
     player.dir = dir;
     const [ddx, ddy] = DIRS[dir], nx = player.tx + ddx, ny = player.ty + ddy;
     const door = (map.doors || []).find(d => d.x === nx && d.y === ny);
+    if (door && door.to === 'school' && !H.game.state.academy) {
+      // the trial happens on the steps, before the door opens
+      busy = true; player.frame = 0;
+      academyTrial().catch(e => { console.warn(e); return false; }).then(ok => { busy = false; if (ok) { player.moving = true; player.fx = player.tx; player.fy = player.ty; player.tx = nx; player.ty = ny; player.prog = 0; } });
+      return;
+    }
     if (!blocked(nx, ny) || door) { player.moving = true; player.fx = player.tx; player.fy = player.ty; player.tx = nx; player.ty = ny; player.prog = carry || 0; }
     else { player.frame = 0; if (bumpT <= 0) { sfx('bump'); bumpT = 0.4; } }
   }
