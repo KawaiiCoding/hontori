@@ -25,7 +25,8 @@ Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CO
 - Check every biome/time/weather background and run a battle in WebKit (iPhone Safari).
 
 ## Left over from the last agents (details)
-- Chapter 1 content was not written (src/chapter1.js): morning scene with mom and dad, pick-5 backpack picker, quests A Steady Hand, Wet Pawprints, The Elder's Second Cup, Beyond the Trees, ending letter from the archmage. The story engine (src/quests.js) is ready for it.
+- Done: Chapter 1 content (src/chapter1.js): morning scene, pick-5 backpack picker, quests The Academy, Wet Pawprints, The Elder's Second Cup, Beyond the Trees, grey-eye letter, one-time tips. Tested up to the picker; the pond, Elder, gate and letter still need one full play-through.
+- Academy lesson "Caring for your hontori" added (src/academy.js); check its lines match the final Mend/mana mechanics.
 - Approve the antagonist name in STORY.md: Grand Archmage Orlen Vael (crest: a closed grey eye). Check STORY.md against WORLD_RULES.md.
 - CONTENT_GUIDE.md is missing the school and spirit-stage sections; quest log sheet and story events untested.
 - Evolution art: stages 4-5 are a bit noisy (fire stage 5 crowded); grass, electric, earth, dark, light stages 2-5 not reviewed; no sit pose for stages 2-5; stage 2-5 portraits unchecked.

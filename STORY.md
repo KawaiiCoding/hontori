@@ -60,6 +60,14 @@ Expose Orlen Vael and pass a new law, so hontori are known and respected by ever
 
 ## Chapters
 1. **Emberbrook** - the night visit, the morning after, the Academy basics, the lost water hontori, the Elder's story. Ends with a letter sealed with a closed grey eye.
+   Built in src/chapter1.js, in this order:
+   - Morning at home (8:00). Mom and Dad (Veilbound) talk; Dad mentions the Academy. The kid packs exactly 5 of the 12 home items.
+   - **The Academy**: reach Emberbrook Academy, pass the gate trial, win a practice duel, learn the Binding Spiral. Madam Sorrel also teaches "Caring for your hontori" from day one.
+   - **Wet Pawprints** (starts after the Academy, or by talking to Pip): Pip's story, then the pond after dusk, where a shy water hontori (Brookit) appears. Weaken it and bind it. Without the Binding Spiral the fox says the Academy comes first.
+   - **The Elder's Second Cup** (Fenn or Lark start it): Elder Wisteria tells of the old law, her light hontori sealed in the well, and Grand Archmage Orlen Vael.
+   - **Beyond the Trees**: Guard Bram keeps the south road closed until the Academy quest is done; reaching Whisperwood finishes it.
+   - When all four are done, a paper bird letter sealed with a closed grey eye arrives. No title card; the scene simply happens.
+   - One-time tips appear when they first matter: first battle (tap a move), first hurt hontori after a wild battle (Mend in the party panel, costs mana), low mana (herbs, ramen), first weakened wild hontori before the spiral is known (the Academy teaches binding), first night (sleep in a bed).
 2. **Whisperwood** - the forest road and the first ring school.
 3. **Tidewell**
 4. **Whistling Pass**

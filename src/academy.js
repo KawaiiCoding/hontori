@@ -93,6 +93,19 @@ window.H = window.H || {};
       .then(function () { var s = st(); if (!s.academyLessons.wheel) { s.academyLessons.wheel = true; save(); toast(c, 'Studied: Element Wheel'); } });
   }
 
+  // open to everyone from the first day
+  function care(c) {
+    return seq(c, sorrel, [
+      'A tired spirit needs care, not more battles.',
+      'Out of battle, open the party panel and use Mend to heal.',
+      'Mend costs mana, so use it with thought.',
+      'Mana comes back slowly while you walk, and fully when you sleep.',
+      'Ramen at the tavern heals everyone and refills your mana.',
+      'Herbs restore a little mana when you are far from town.'])
+      .then(function () { return fox(c, 'Rest and ramen, herbs and care, a mended friend is always there.'); })
+      .then(function () { var s = st(); if (!s.academyLessons.care) { s.academyLessons.care = true; save(); toast(c, 'Studied: Caring for your hontori'); } });
+  }
+
   function graduate(c) {
     var s = st();
     s.academyGraduated = true;
@@ -122,10 +135,12 @@ window.H = window.H || {};
       return (i + 1) + '. ' + L.name + tag;
     });
     opts.push('Element Wheel' + (s.academyLessons.wheel ? ' (done)' : ''));
+    opts.push('Caring for your hontori' + (s.academyLessons.care ? ' (done)' : ''));
     opts.push('Leave');
     return choose(opts, nx < 0 ? -1 : nx).then(function (i) {
       if (i < 0 || i === opts.length - 1) return sorrel(c, 'Off you go. Practise between lessons.');
       if (i === LESSONS.length) return wheel(c).then(after);
+      if (i === LESSONS.length + 1) return care(c).then(after);
       var L = LESSONS[i];
       if (lessonDone(s, L)) return teach(c, i).then(after);
       if (i !== nx) return sorrel(c, 'One step at a time. Finish ' + LESSONS[nx].name + ' first.');
