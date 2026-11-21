@@ -301,7 +301,7 @@
         if (n && n.lines) { busy = true; n.dir = [1, 0, 3, 2][player.dir]; sfx('confirm');
           (async () => { n.talking = true; for (const l of n.lines.slice(0, 2)) await say(n.key, l[0], l[1]);
             // shopkeepers offer their service right after talking
-            const svc = { innkeeper: 'tavern_counter', shopkeeper: 'shop_counter' }[n.key];
+            const svc = n.svc || { innkeeper: 'tavern_counter', shopkeeper: 'shop_counter' }[n.key]; // an npc may name its own service via npc.svc
             if (svc && H.interact && H.interact.has(svc)) { busy = true; try { await H.interact.run(svc, { say, toast: (t) => H.ui && H.ui.toast(t), emit, sfx, note: () => {}, env, map, mapName, x: n.px, y: n.py, player, hasSpirit: !!spirit, object: n, setTime: (h) => { env.time = h; }, fade: (ms) => (H.ui ? H.ui.fade(ms) : Promise.resolve()) }); } catch (e) { console.warn(e); } }
             n.talking = false; busy = false; })(); }
         else if (!n) interactAt(player.tx + ddx, player.ty + ddy);
