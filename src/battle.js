@@ -110,8 +110,20 @@
   function score(raw, allowed) {
     if (!raw || raw.length < 6 || pathLen(raw) < 30) return null;
     var g = normalize(raw), gr = g.slice().reverse(), best = null, bestD = 1e9;
+    // count sharp corners: smooth sigils (circle, wave, spiral) must not accept a cornered stroke
+    // such as a triangle, and the star needs real points
+    var corners = 0, lastC = -9;
+    for (var ci0 = 3; ci0 < g.length - 3; ci0++) {
+      var ax = g[ci0][0] - g[ci0 - 3][0], ay = g[ci0][1] - g[ci0 - 3][1], bx = g[ci0 + 3][0] - g[ci0][0], by = g[ci0 + 3][1] - g[ci0][1];
+      var la = Math.hypot(ax, ay), lb = Math.hypot(bx, by); if (!la || !lb) continue;
+      var cosT = (ax * bx + ay * by) / (la * lb);
+      if (cosT < 0.35 && ci0 - lastC > 4) { corners++; lastC = ci0; }
+    }
+    var SMOOTH = { mend: 1, sleep: 1, bind: 1, absorb: 1 };
     (allowed || ORDER.concat(['veil'])).forEach(function (k) {
       var T = TEMPLATES[k]; if (!T) return;
+      if (SMOOTH[k] && corners >= 2) return;
+      if (k === 'revive' && corners < 3) return;
       var shifts = T.closed ? 12 : 1, cands = [g, gr];
       if (T.rot) { cands = []; for (var r = 0; r < 16; r++) { var a = r / 16 * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
         [1, -1].forEach(function (m) { cands.push(g.map(function (q) { return [(q[0] * c - q[1] * sn) * m, q[0] * sn + q[1] * c]; })); }); } }
