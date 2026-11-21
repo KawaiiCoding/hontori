@@ -18,9 +18,7 @@
     '@keyframes htb{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
     '.ht-bar{position:relative;width:min(60%,260px);height:10px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden;border:2px solid rgba(255,255,255,.18)}',
     '.ht-bar b{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff8a3c,#ffc56b);transition:width .25s}',
-    '.ht-btn{position:relative;border:0;border-radius:999px;padding:14px 34px;font:inherit;font-size:20px;font-weight:900;color:#2a1405;',
-    'background:linear-gradient(180deg,#ffd98a,#ff9a3c);box-shadow:0 5px 0 #a8501c,0 10px 24px rgba(0,0,0,.4);cursor:pointer;animation:htp 1.6s ease-in-out infinite}',
-    '.ht-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #a8501c}',
+    '.ht-btn{position:relative;min-width:200px;justify-content:center;font-size:20px;animation:htp 1.6s ease-in-out infinite}',
     '@keyframes htp{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}',
     '.ht-btn[hidden]{display:none}',
     '.ht-hint{position:relative;font-size:13px;opacity:.55}'
@@ -47,7 +45,8 @@
     mk('div', 'ht-logo', overlay, 'Hontori');
     mk('div', 'ht-sub', overlay, 'The veil is thin tonight');
     var bar = mk('div', 'ht-bar', overlay), fill = mk('b', '', bar);
-    var btn = mk('button', 'ht-btn', overlay); btn.hidden = true;
+    var btn = H.kit ? H.kit.btn(overlay, { icon: 'wand', label: ' ', kind: 'gold' }) : mk('button', '', overlay); btn.classList.add('ht-btn'); btn.hidden = true;
+    var btnLabel = btn.querySelector('.t span') || btn;
     var hint = mk('div', 'ht-hint', overlay, 'Preparing the world...');
 
     // animate the fox on the title
@@ -77,7 +76,7 @@
       if (jobs.length || p < 1) return requestAnimationFrame(step);
       var hasSave = false; try { var sv = JSON.parse(localStorage.getItem('hontori.save.v1') || 'null'); hasSave = !!(sv && sv.state && sv.state.intro); } catch (e) {}
       bar.style.display = 'none';
-      btn.textContent = hasSave ? 'Continue' : 'Tap to start';
+      btnLabel.textContent = hasSave ? 'Continue' : 'Start';
       btn.hidden = false;
       hint.textContent = hasSave ? 'Your journey is saved on this device' : 'Sound on for the full magic';
     }

@@ -13,7 +13,7 @@
     '.hz.on{opacity:1}',
     '.hz-wrap{position:relative;width:min(94%,560px);transform:scale(.6);transition:transform .35s cubic-bezier(.2,1.3,.4,1)}',
     '.hz.on .hz-wrap{transform:scale(1)}',
-    '.hz-x{position:absolute;right:-6px;top:-14px;width:40px;height:40px;border-radius:12px;border:0;background:#1b1e3a;color:#fff;font:900 18px Nunito,system-ui,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;z-index:2}',
+    '.hz-x{position:absolute;right:4px;top:-12px;z-index:2}',
     /* blackboard */
     '.hz-bb{border-radius:10px;padding:14px;background:#5a3a22;box-shadow:inset 0 0 0 3px #3a2414,0 14px 40px rgba(0,0,0,.6)}',
     '.hz-bb .slate{position:relative;border-radius:4px;background:radial-gradient(ellipse at 40% 35%,#2f4a3c,#1d3028);aspect-ratio:1/1;overflow:hidden}',
@@ -45,7 +45,7 @@
     return new Promise(function (resolve) {
       var root = document.getElementById('root'), o = mk('div', 'hz', root), wrap = mk('div', 'hz-wrap', o);
       build(wrap);
-      var x = mk('button', 'hz-x', wrap, 'X');
+      var x = H.kit ? H.kit.x(wrap) : mk('button', 'hz-x', wrap, 'X'); x.classList.add('hz-x');
       function close() { o.classList.remove('on'); setTimeout(function () { o.remove(); resolve(); }, 260); window.removeEventListener('keydown', key, true); }
       function key(e) { if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); close(); } }
       x.addEventListener('click', close);

@@ -14,12 +14,12 @@
     '.hmap{position:absolute;inset:0;z-index:47;background:rgba(6,6,16,.78);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;touch-action:none;font-family:Nunito,system-ui,sans-serif}',
     '.hmap.on{opacity:1}',
     '.hmap .box{position:relative;width:min(94%,560px);padding:10px;border-radius:16px;background:#e8d8b0;box-shadow:inset 0 0 0 3px #8a6a40,0 12px 40px rgba(0,0,0,.6)}',
-    '.hmap h3{margin:2px 0 8px;text-align:center;color:#4a3420;font-size:18px;font-weight:900}',
+    '.hmap h3{display:flex;align-items:center;justify-content:center;gap:8px;min-height:40px;margin:0 46px 8px;text-align:center;color:#4a3420;font-size:18px;font-weight:900;line-height:1.1}.hmap h3 img{width:24px;height:24px;image-rendering:pixelated;flex:none}',
     '.hmap .vp{position:relative;border-radius:8px;overflow:hidden;background:#141020;touch-action:none}',
     '.hmap canvas{width:100%;height:100%;display:block}',
-    '.hmap .x{position:absolute;right:-8px;top:-12px;width:38px;height:38px;border-radius:12px;border:0;background:#1b1e3a;color:#fff;font:900 17px Nunito,system-ui;cursor:pointer}',
-    '.hmap .zm{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}',
-    '.hmap .zm button{width:40px;height:40px;border-radius:12px;border:0;background:rgba(27,30,58,.88);color:#fff;font:900 22px Nunito,system-ui;cursor:pointer}',
+    '.hmap .hk-x{position:absolute;right:8px;top:6px}',
+    '.hmap .zm{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:8px}',
+    '.hmap .zm .hk-x{position:static}',
     '.hmap .lg{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;margin-top:8px;color:#4a3420;font-size:12px;font-weight:800}',
     '.hmap .lg span{display:flex;align-items:center;gap:4px}.hmap .lg i{width:12px;height:12px;border-radius:3px;display:inline-block}'
   ].join('\n');
@@ -117,12 +117,12 @@
     reveal(m.name, map, m.player.tx, m.player.ty);
     var o = document.createElement('div'); o.className = 'hmap';
     var box = document.createElement('div'); box.className = 'box'; o.appendChild(box);
-    var h = document.createElement('h3'); h.textContent = map.name || m.name; box.appendChild(h);
+    var h = document.createElement('h3'); h.appendChild(H.kit.img('map')); h.appendChild(document.createTextNode(map.name || m.name)); box.appendChild(h);
     var vp = document.createElement('div'); vp.className = 'vp'; box.appendChild(vp);
     var cv = document.createElement('canvas'); vp.appendChild(cv);
     var zm = document.createElement('div'); zm.className = 'zm'; vp.appendChild(zm);
-    var zin = document.createElement('button'); zin.textContent = '+'; zm.appendChild(zin);
-    var zout = document.createElement('button'); zout.textContent = '-'; zm.appendChild(zout);
+    function zb(icon, tip) { var b = H.kit.x(zm); b.title = tip; b.setAttribute('aria-label', tip); b.firstChild.src = H.icons.url(icon, 2); return b; }
+    var zin = zb('plus', 'Closer'), zout = zb('minus', 'Whole area');
     var lg = document.createElement('div'); lg.className = 'lg'; box.appendChild(lg);
     [['#efc77e', 'Road'], ['#3f86c8', 'Water'], ['#c0503a', 'Building'], ['#ffd98a', 'Door'], ['#ffffff', 'Person'], ['#ff3c28', 'You']]
       .concat(questTarget(m.name, map) ? [['#ffcf3a', 'Quest']] : []).forEach(function (l) {
@@ -178,7 +178,7 @@
     });
     function up(e) { delete pts[e.pointerId]; pinch = null; }
     vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
-    var x = document.createElement('button'); x.className = 'x'; x.textContent = 'X'; box.appendChild(x);
+    var x = H.kit.x(box);
     function close() { live = false; o.classList.remove('on'); setTimeout(function () { o.remove(); }, 220); }
     x.addEventListener('click', close); o.addEventListener('click', function (e) { if (e.target === o) close(); });
     root.appendChild(o); size(); z = fit; clamp(); requestAnimationFrame(function () { o.classList.add('on'); });
@@ -191,12 +191,7 @@
     if (!top) return setTimeout(addButton, 300);
     if (top.querySelector('.hm-map')) return;
     var b = document.createElement('div'); b.className = 'hm-btn hm-map'; b.title = 'Map';
-    var c = document.createElement('canvas'); c.width = c.height = 16; c.style.cssText = 'width:30px;height:30px;image-rendering:pixelated';
-    var g = c.getContext('2d');
-    var R = function (col, x, y, w, h) { g.fillStyle = col; g.fillRect(x, y, w, h); };
-    R('#3a220e', 1, 2, 14, 12); R('#f0dcae', 2, 3, 4, 10); R('#e2c890', 6, 3, 4, 10); R('#f0dcae', 10, 3, 4, 10);
-    R('#5aa04a', 3, 5, 2, 2); R('#3f86c8', 7, 8, 2, 3); R('#c9a46c', 11, 6, 2, 1); R('#c9a46c', 4, 9, 6, 1);
-    R('#ff3c28', 11, 9, 2, 2); R('#ffffff', 14, 0, 1, 3); R('#ffffff', 13, 1, 3, 1);
+    var c = document.createElement('img'); c.alt = ''; c.src = H.icons.url('map', 2); c.style.cssText = 'width:28px;height:28px;image-rendering:pixelated';
     b.appendChild(c); b.addEventListener('click', show);
     top.appendChild(b); top.style.flexDirection = 'column'; // stack buttons so the clock stays visible
   }

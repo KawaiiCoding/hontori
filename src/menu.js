@@ -36,7 +36,7 @@
     '.hm-row canvas.por{width:64px;height:64px;border-radius:12px;image-rendering:pixelated;background:rgba(0,0,0,.25);flex:none}',
     '.hm-row .inf{flex:1;min-width:0}',
     '.hm-row .nm{font-size:18px;font-weight:900;display:flex;gap:8px;align-items:center;flex-wrap:wrap}',
-    '.hm-row .sub{font-size:13px;opacity:.75;margin:2px 0 6px}',
+    '.hm-row .sub{font-size:13px;opacity:.75;margin:2px 0 6px;white-space:pre-wrap}',
     '.hm-bar{height:8px;border-radius:4px;background:rgba(0,0,0,.5);overflow:hidden}',
     '.hm-bar b{display:block;height:100%;background:linear-gradient(90deg,#57d07a,#9cf0a6)}',
     '.hm-tag{font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;background:#ffc56b;color:#2a1c05}',
@@ -60,7 +60,12 @@
     '.hm-mend{display:flex;flex-direction:column;align-items:center;line-height:1.1;background:rgba(120,200,255,.22)}.hm-mend small{font-size:10px;font-weight:700;opacity:.8}',
     '.hm-mend .ic{display:inline-block;width:10px;height:10px;border:2px solid #bfe4ff;border-radius:50%;margin-right:5px;vertical-align:-1px}',
     '.hm-mend[disabled]{opacity:.5;cursor:default}',
-    '.hm-pick{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.hm-pick button{display:flex;align-items:center;gap:6px}.hm-pick canvas{width:32px;height:32px;image-rendering:pixelated}'
+    '.hm-pick{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.hm-pick canvas.pp{width:32px;height:32px;image-rendering:pixelated;flex:none}',
+    '.hm-row.col{flex-direction:column;align-items:stretch;gap:10px}.hm-row .top{display:flex;gap:12px;align-items:center}',
+    '.hm-row.col .hm-btns{flex-direction:row;flex-wrap:wrap;gap:8px}.hm-row.col .hm-btns .hk-btn{flex:1 1 calc(50% - 4px);min-width:0}',
+    '.hm-row canvas.itm{width:40px;height:40px;image-rendering:pixelated;flex:none}',
+    '.hm-sec h3{display:flex;align-items:center;gap:8px}.hm-sec h3 img{width:24px;height:24px;image-rendering:pixelated}',
+    '.hm-sheet{-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}'
   ].join('\n');
 
   function mk(tag, cls, parent, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; }
@@ -145,7 +150,7 @@
     var top = mk('div', 'hm-top', o);
     var bp = mk('div', 'hm-btn', top); bp.title = 'Backpack'; var b1 = iconCanvas('backpack'); if (b1) bp.appendChild(copyCanvas(b1, 32)); else bp.textContent = 'Bag';
     bp.addEventListener('click', function () { show('bag'); });
-    var mn = mk('div', 'hm-btn', top); mn.title = 'Settings'; mn.appendChild(pixelCog());
+    var mn = mk('div', 'hm-btn', top); mn.title = 'Menu'; var cg = iconCanvas('cog'); if (cg) { cg = copyCanvas(cg, 32); cg.className = 'cog'; mn.appendChild(cg); } else mn.appendChild(pixelCog());
     mn.addEventListener('click', function () { show('menu'); });
     els.shade = mk('div', 'hm-shade', o); els.shade.addEventListener('click', hide);
     els.sheet = mk('div', 'hm-sheet', o);
@@ -180,60 +185,70 @@
       }
     }).catch(function (e) { console.warn(e); }).then(function () { mending = false; refresh(); setTimeout(function () { show('party'); }, 200); });
   }
-  function header(title) { var h = mk('div', 'hm-h', els.sheet); mk('h2', '', h, title); var x = mk('button', 'hm-x', h, 'X'); x.addEventListener('click', hide); }
+  function K() { return H.kit; }
+  function header(title, icon, sub) { K().header(els.sheet, icon, title, sub, hide); }
+  function kb(parent, o) { return K().btn(parent, o); }
+  function acts(parent) { return mk('div', 'hk-acts', parent || els.sheet); }
+  function note(text, parent) { return mk('div', 'hk-note', parent || els.sheet, text); }
+  function itemDesc(it) {
+    var d = it.desc;
+    if (!d && H.items) { var f = H.items.list.filter(function (x) { return x.id === it.id; })[0]; d = f && f.desc; }
+    return d ? String(d).split(/(?<=\.)\s/)[0] : '';
+  }
 
   function render() {
     var g = game(), st = g.state; els.sheet.innerHTML = '';
     if (open === 'bag') {
-      header('Backpack');
-      if (!st.items.length) mk('div', 'hm-empty', els.sheet, 'Empty for now. You will pick 5 things from home before leaving.');
-      else { var grid = mk('div', 'hm-grid', els.sheet); st.items.forEach(function (it) { var c = mk('div', 'hm-item', grid); c.appendChild(itemCanvas(it)); c.appendChild(document.createTextNode(it.name + (it.n > 1 ? ' x' + it.n : ''))); }); }
+      header('Backpack', 'backpack', st.items.length ? st.items.length + ' things' : null);
+      if (!st.items.length) mk('div', 'hm-empty', els.sheet, 'Empty for now.');
+      st.items.forEach(function (it) {
+        var r = mk('div', 'hm-row', els.sheet); r.style.padding = '8px 10px';
+        var c = itemCanvas(it); c.className = 'itm'; r.appendChild(c);
+        var i = mk('div', 'inf', r); mk('div', 'nm', i, it.name + (it.n > 1 ? '  x' + it.n : '')).style.fontSize = '16px';
+        var d = itemDesc(it); if (d) mk('div', 'sub', i, d).style.margin = '2px 0 0';
+      });
     } else if (open === 'party') {
-      header('Your Hontori  ' + st.party.length + ' / ' + MAX);
+      header('Your Hontori', 'paw', st.party.length + ' of ' + MAX + ' travel with you');
       var mm = st.maxMana || 3, mn = st.mana == null ? mm : Math.min(mm, st.mana), mrow = mk('div', 'hm-mana', els.sheet); mk('span', '', mrow, 'Mana');
       for (var ci = 0; ci < mm; ci++) mk('i', 'hm-cry' + (ci < mn ? ' on' : ''), mrow);
       mk('span', '', mrow, mn + ' / ' + mm);
       if (!st.party.length) mk('div', 'hm-empty', els.sheet, 'No hontori with you yet.');
       st.party.forEach(function (p, i) {
-        var s = spec(p.key), row = mk('div', 'hm-row' + (i === 0 ? ' lead' : ''), els.sheet);
+        var s = spec(p.key), card = mk('div', 'hm-row col' + (i === 0 ? ' lead' : ''), els.sheet), row = mk('div', 'top', card);
         var pc = copyCanvas(portrait(p.key, p.stage), 96); pc.className = 'por'; row.appendChild(pc);
         var inf = mk('div', 'inf', row), nm = mk('div', 'nm', inf); nm.appendChild(document.createTextNode(displayName(p)));
         try { if (H.ui && H.ui.elementBadge) nm.appendChild(H.ui.elementBadge(s.element)); } catch (e) {}
-        if (i === 0) mk('span', 'hm-tag', nm, 'WALKING WITH YOU');
-        mk('div', 'sub', inf, stageName(p) + '   Level ' + p.level + '   Health ' + p.hp + ' / ' + p.maxHp);
+        if (i === 0) mk('span', 'hm-tag', nm, 'LEAD');
+        mk('div', 'sub', inf, stageName(p) + '   Lv ' + p.level + '   Health ' + p.hp + ' / ' + p.maxHp);
         bar(inf, p.hp / p.maxHp); bar(inf, xpFrac(p), 'xp');
-        var bs = mk('div', 'hm-btns', row);
-        var md = mk('button', 'hm-mini hm-mend', bs), mt = mk('span', '', md); mk('i', 'ic', mt); mt.appendChild(document.createTextNode('Mend'));
+        var bs = mk('div', 'hm-btns', card);
         var why = p.hp >= p.maxHp ? 'Already well' : mn < 1 ? 'No mana left' : null;
-        mk('small', '', md, why || 'Heal, costs 1 mana'); md.disabled = !!why;
-        md.addEventListener('click', function () { mend(p); });
-        if (i > 0) { var b = mk('button', 'hm-mini', bs, 'Lead'); b.addEventListener('click', function () { st.party.splice(i, 1); st.party.unshift(p); g.partyChanged && g.partyChanged(); refresh(); }); }
-        if (P()) { var mvb = mk('button', 'hm-mini', bs, 'Moves'); mvb.addEventListener('click', function () { moveFor = p; show('moves'); }); }
-        if (st.party.length > 1 && P()) { var sb = mk('button', 'hm-mini', bs, 'To Sanctum'); sb.addEventListener('click', function () { P().toSanctum(i); }); }
+        var md = kb(bs, { icon: 'mend', label: 'Mend', desc: why || 'Heal, 1 mana', kind: 'alt', sm: true, onClick: function () { mend(p); } }); md.disabled = !!why;
+        if (i > 0) kb(bs, { icon: 'star', label: 'Lead', desc: 'Walks with you', kind: 'alt', sm: true, onClick: function () { st.party.splice(i, 1); st.party.unshift(p); g.partyChanged && g.partyChanged(); refresh(); } });
+        if (P()) kb(bs, { icon: 'claw', label: 'Moves', desc: 'Pick 4 for battle', kind: 'alt', sm: true, onClick: function () { moveFor = p; show('moves'); } });
+        if (st.party.length > 1 && P()) kb(bs, { icon: 'crystal', label: 'Rest', desc: 'Into the Sanctum', kind: 'alt', sm: true, onClick: function () { P().toSanctum(i); } });
       });
-      if (P()) { var oa = mk('div', 'hm-acts', els.sheet), ob = mk('button', 'hm-act', oa, 'Wand Sanctum  ' + (st.sanctum || []).length + ' / ' + P().capacity()); ob.addEventListener('click', function () { sel = null; show('sanctum'); }); }
-      mk('div', 'hm-note', els.sheet, 'Up to 5 hontori travel with you. The first one walks beside you. Others rest in the Wand Sanctum.');
+      if (P()) kb(acts(), { icon: 'crystal', label: 'Wand Sanctum', desc: (st.sanctum || []).length + ' / ' + P().capacity() + ' resting in your wand', onClick: function () { sel = null; show('sanctum'); } });
     } else if (open === 'sanctum') {
       renderSanctum(g, st);
     } else if (open === 'spells') {
-      header('Spell Loadout  ' + (st.spellLoadout || []).length + ' / 4');
+      header('Spell Loadout', 'book', (st.spellLoadout || []).length + ' of 4 ready for battle');
       P() && P().fixSpells(st);
-      if (!(st.spells || []).length) mk('div', 'hm-empty', els.sheet, 'No spells learned yet. The Academy teaches them.');
+      if (!(st.spells || []).length) mk('div', 'hm-empty', els.sheet, 'No spells learned yet.');
       (st.spells || []).forEach(function (id) {
         var inf = P().spellInfo(id), on = st.spellLoadout.indexOf(id) >= 0;
-        pickRow(els.sheet, on, glyphEl(id), inf.name, 'Mana ' + inf.cost + '   Mastery ' + inf.mastery + ' / 5  ' + pips(inf.mastery), function () {
+        pickRow(els.sheet, on, glyphEl(id), inf.name, 'Mana ' + inf.cost + '   Mastery ' + pips(inf.mastery), function () {
           var L = st.spellLoadout, k = L.indexOf(id);
           if (k >= 0) L.splice(k, 1); else if (L.length < 4) L.push(id); else { H.ui && H.ui.toast('Four spells at most'); return; }
           g.save && g.save(); render();
         });
       });
-      mk('div', 'hm-note', els.sheet, 'Up to four spells are ready in battle. Casting a spell often raises its mastery.');
-      var ba = mk('div', 'hm-acts', els.sheet), bk = mk('button', 'hm-act warn', ba, 'Back'); bk.style.color = '#fff'; bk.addEventListener('click', function () { show('menu'); });
+      kb(acts(), { icon: 'back', label: 'Back', kind: 'alt', onClick: function () { show('menu'); } });
     } else if (open === 'moves') {
       var m = moveFor && (st.party.indexOf(moveFor) >= 0 || (st.sanctum || []).indexOf(moveFor) >= 0) ? moveFor : st.party[0];
       if (!m) { hide(); return; }
       P().fixMoves(m);
-      header('Moves  ' + displayName(m));
+      header('Moves', 'claw', displayName(m) + '   ' + m.moves.length + ' of 4 for battle');
       var pool = P().movePool(m);
       if (!pool.length) mk('div', 'hm-empty', els.sheet, 'No moves to choose yet.');
       pool.forEach(function (mv) {
@@ -250,26 +265,25 @@
           g.save && g.save(); render();
         });
       });
-      mk('div', 'hm-note', els.sheet, 'Up to four moves are used in battle. New moves come with levels.');
-      var bb = mk('div', 'hm-acts', els.sheet), bkk = mk('button', 'hm-act warn', bb, 'Back'); bkk.style.color = '#fff'; bkk.addEventListener('click', function () { show('party'); });
+      kb(acts(), { icon: 'back', label: 'Back', kind: 'alt', onClick: function () { show('party'); } });
     } else if (open === 'menu') {
-      header('Menu');
+      header('Menu', 'cog');
       if (P()) {
-        var wl = st.wandLevel || 1, sec = mk('div', 'hm-sec', els.sheet); mk('h3', '', sec, 'Wand   Level ' + wl);
+        var wl = st.wandLevel || 1, sec = mk('div', 'hm-sec', els.sheet), wh = mk('h3', '', sec);
+        wh.appendChild(K().img('wand')); wh.appendChild(document.createTextNode('Wand   Lv ' + wl));
         bar(sec, wl >= 10 ? 1 : (st.wandExp || 0) / P().wandNeed(wl), 'xp wd');
         var pk = P().wandPerks();
-        mk('div', 'hm-note', sec, 'Mana ' + (st.mana == null ? (st.maxMana || 3) : st.mana) + ' / ' + (st.maxMana || 3) + '   Sanctum ' + (st.sanctum || []).length + ' / ' + P().capacity());
-        mk('div', 'hm-note', sec, 'Spell power +' + Math.round((pk.power - 1) * 100) + '%   Capture +' + Math.round(pk.captureBonus * 100) + '%   Spell cost -' + pk.costCut + '   Sigils ' + (pk.tolerance > 0 ? Math.round(pk.tolerance * 100) + '% easier to draw' : 'read as drawn')).style.marginTop = '4px';
-        var wa = mk('div', 'hm-acts', sec), wb = mk('button', 'hm-act', wa, 'Wand Sanctum'); wb.addEventListener('click', function () { sel = null; show('sanctum'); });
-        var wsp = mk('button', 'hm-act', wa, 'Spell Loadout'); wsp.addEventListener('click', function () { show('spells'); });
+        note('Mana ' + (st.mana == null ? (st.maxMana || 3) : st.mana) + ' / ' + (st.maxMana || 3) + '   Spell power +' + Math.round((pk.power - 1) * 100) + '%   Capture +' + Math.round(pk.captureBonus * 100) + '%', sec).style.marginTop = '6px';
+        var wa = acts(sec);
+        kb(wa, { icon: 'crystal', label: 'Wand Sanctum', desc: 'Resting hontori', onClick: function () { sel = null; show('sanctum'); } });
+        kb(wa, { icon: 'book', label: 'Spell Loadout', desc: 'Pick 4 for battle', onClick: function () { show('spells'); } });
       }
-      var acts = mk('div', 'hm-acts', els.sheet);
-      var sv = mk('button', 'hm-act', acts, 'Save game'); sv.addEventListener('click', function () { g.save && g.save(); hide(); H.ui && H.ui.toast('Game saved'); });
-      var snd = mk('button', 'hm-act', acts, (H.audio && H.audio.muted) ? 'Sound: off' : 'Sound: on');
-      snd.addEventListener('click', function () { if (H.audio) { H.audio.setMuted(!H.audio.muted); render(); } });
-      var ng = mk('button', 'hm-act warn', acts, 'New game'); var armed = false;
-      ng.addEventListener('click', function () { if (!armed) { armed = true; ng.textContent = 'Tap again to erase'; } else g.reset && g.reset(); });
-      mk('div', 'hm-note', els.sheet, 'The game also saves by itself on this device when you change area, and every 30 seconds.');
+      var a = acts();
+      kb(a, { icon: 'scroll', label: 'Save', desc: 'Also saves by itself', kind: 'alt', onClick: function () { g.save && g.save(); hide(); H.ui && H.ui.toast('Game saved'); } });
+      var muted = H.audio && H.audio.muted;
+      kb(a, { icon: muted ? 'bell_off' : 'bell', label: muted ? 'Sound off' : 'Sound on', desc: 'Tap to switch', kind: 'alt', onClick: function () { if (H.audio) { H.audio.setMuted(!H.audio.muted); render(); } } });
+      var armed = false, ng = kb(a, { icon: 'sprout', label: 'New game', desc: 'Erases this save', kind: 'warn' });
+      ng.addEventListener('click', function () { if (!armed) { armed = true; ng.querySelector('.t span').textContent = 'Tap again'; ng.querySelector('small').textContent = 'This erases your save'; } else g.reset && g.reset(); });
     }
   }
 
@@ -277,8 +291,8 @@
     var sn = st.sanctum || [], cap = P() ? P().capacity() : 12;
     var m = sel != null ? sn[sel] : null;
     if (!m) {
-      sel = null; header('Wand Sanctum  ' + sn.length + ' / ' + cap);
-      if (!sn.length) mk('div', 'hm-empty', els.sheet, 'The Sanctum is quiet. Hontori you gather beyond five rest here.');
+      sel = null; header('Wand Sanctum', 'crystal', sn.length + ' of ' + cap + ' \u00b7 tap one to open');
+      if (!sn.length) mk('div', 'hm-empty', els.sheet, 'Quiet for now. A sixth hontori rests here.');
       var grid = mk('div', 'hm-sg', els.sheet);
       sn.forEach(function (p, j) {
         var c = mk('div', 'hm-sc', grid); c.appendChild(copyCanvas(portrait(p.key, p.stage), 96)); mk('span', 'lv', c, 'Lv ' + p.level);
@@ -286,40 +300,37 @@
         mk('div', '', c, stageName(p));
         c.addEventListener('click', function () { sel = j; confirmRel = false; swapPick = false; render(); });
       });
-      var ba = mk('div', 'hm-acts', els.sheet), bk = mk('button', 'hm-act warn', ba, 'Back to party'); bk.style.color = '#fff'; bk.addEventListener('click', function () { show('party'); });
+      kb(acts(), { icon: 'back', label: 'Back', desc: 'To your party', kind: 'alt', onClick: function () { show('party'); } });
       return;
     }
-    header(displayName(m));
+    header(displayName(m), 'crystal', 'Resting in the Sanctum');
     var d = mk('div', 'hm-det', els.sheet), pc = copyCanvas(portrait(m.key, m.stage), 96); d.appendChild(pc);
     var inf = mk('div', 'inf', d); inf.style.flex = '1';
     var nm = mk('div', '', inf); nm.style.cssText = 'font-size:17px;font-weight:900;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
     nm.appendChild(document.createTextNode(stageName(m)));
     try { if (H.ui && H.ui.elementBadge) nm.appendChild(H.ui.elementBadge(spec(m.key).element)); } catch (e) {}
-    mk('div', 'hm-note', inf, 'Level ' + m.level + '   Stage ' + (m.stage || 1) + ' of 5   Health ' + m.hp + ' / ' + m.maxHp);
+    note('Lv ' + m.level + '   Stage ' + (m.stage || 1) + ' of 5   Health ' + m.hp + ' / ' + m.maxHp, inf);
     bar(inf, m.hp / m.maxHp); bar(inf, xpFrac(m), 'xp');
-    var acts = mk('div', 'hm-acts', els.sheet);
     if (confirmRel) {
-      mk('div', 'hm-note', els.sheet, 'Release ' + displayName(m) + '? It returns to the wild and cannot be called back.').style.opacity = '1';
-      var a2 = mk('div', 'hm-acts', els.sheet);
-      var yes = mk('button', 'hm-act warn', a2, 'Release'); yes.addEventListener('click', function () { var n = displayName(m); P().release(sel); sel = null; confirmRel = false; H.ui && H.ui.toast(n + ' went home'); render(); });
-      var no = mk('button', 'hm-act', a2, 'Keep'); no.addEventListener('click', function () { confirmRel = false; render(); });
-      acts.remove(); return;
+      note('Release ' + displayName(m) + '? It goes back to the wild for good.').style.opacity = '1';
+      var a2 = acts();
+      kb(a2, { icon: 'feather', label: 'Release', desc: 'Cannot be undone', kind: 'warn', onClick: function () { var n = displayName(m); P().release(sel); sel = null; confirmRel = false; H.ui && H.ui.toast(n + ' went home'); render(); } });
+      kb(a2, { icon: 'star', label: 'Keep', onClick: function () { confirmRel = false; render(); } });
+      return;
     }
-    var full = st.party.length >= MAX;
-    var sw = mk('button', 'hm-act', acts, full ? 'Swap into party' : 'Move to party');
-    sw.addEventListener('click', function () { if (!full) { P().fromSanctum(sel); sel = null; render(); } else { swapPick = !swapPick; render(); } });
-    var rl = mk('button', 'hm-act warn', acts, 'Release'); rl.addEventListener('click', function () { confirmRel = true; render(); });
+    var full = st.party.length >= MAX, a1 = acts();
+    kb(a1, { icon: 'swap', label: full ? 'Swap in' : 'Join party', desc: full ? 'Trade with one in your party' : 'Travel with you', onClick: function () { if (!full) { P().fromSanctum(sel); sel = null; render(); } else { swapPick = !swapPick; render(); } } });
+    kb(a1, { icon: 'feather', label: 'Release', desc: 'Back to the wild', kind: 'warn', onClick: function () { confirmRel = true; render(); } });
     if (swapPick) {
-      mk('div', 'hm-note', els.sheet, 'Choose who rests in the Sanctum instead.').style.opacity = '1';
+      note('Who rests instead?').style.opacity = '1';
       var pk = mk('div', 'hm-pick', els.sheet);
       st.party.forEach(function (p, i) {
-        var b = mk('button', 'hm-mini', pk); b.appendChild(copyCanvas(portrait(p.key, p.stage), 48)); b.appendChild(document.createTextNode(displayName(p) + '  Lv ' + p.level));
-        b.addEventListener('click', function () { P().fromSanctum(sel, i); sel = null; swapPick = false; H.ui && H.ui.toast(displayName(m) + ' joined your party'); render(); });
+        var b = kb(pk, { label: displayName(p), desc: 'Lv ' + p.level, kind: 'alt', sm: true, onClick: function () { P().fromSanctum(sel, i); sel = null; swapPick = false; H.ui && H.ui.toast(displayName(m) + ' joined your party'); render(); } });
+        var pcv = copyCanvas(portrait(p.key, p.stage), 48); pcv.className = 'pp'; b.insertBefore(pcv, b.firstChild);
       });
     }
-    var ba = mk('div', 'hm-acts', els.sheet), bk = mk('button', 'hm-act warn', ba, 'Back'); bk.style.color = '#fff'; bk.addEventListener('click', function () { sel = null; swapPick = false; render(); });
+    kb(acts(), { icon: 'back', label: 'Back', kind: 'alt', onClick: function () { sel = null; swapPick = false; render(); } });
   }
-
   function show(what) { open = what; render(); els.shade.classList.add('on'); els.sheet.classList.add('on'); }
   function hide() { open = null; els.shade.classList.remove('on'); els.sheet.classList.remove('on'); }
 

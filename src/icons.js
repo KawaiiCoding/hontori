@@ -360,6 +360,115 @@ window.H = window.H || {};
     }
   };
 
+  // ---------- UI icons (menus, buttons, map controls). Same rules: material ramps, auto shade, outline, sparkle.
+  var U = {
+    paper: ['#4a3418', '#c9a46c', '#e8d0a0', '#f6e6c4', '#fffaf0'],
+    red:   ['#4a0a0a', '#b02a1c', '#e0482c', '#ff7a5a', '#ffd0c0'],
+    blue:  ['#0e2250', '#2a5ab0', '#4a8ae4', '#8ac0ff', '#e0f2ff'],
+    green: ['#103a14', '#2a7a2a', '#4aaa3a', '#8ad65a', '#e0ffc0'],
+    metal: ['#3a220e', '#b07a38', '#e8b868', '#fff2c8', '#ffffff'],
+    purp:  ['#1e0e3a', '#4a2a8a', '#7a4ad0', '#b08aff', '#ece0ff'],
+    white: ['#2a2e48', '#a8b0cc', '#dfe4f2', '#f6f8ff', '#ffffff'],
+    cream: ['#3a2a10', '#c8a868', '#f0dcae', '#fff4d8', '#ffffff']
+  };
+  function B(g, rows, map, ox, oy) { g.bmp(rows, ox || 0, oy || 0, map); }
+  var UI = {
+    map: function (g) {
+      g.rect(2, 4, 4, 9, U.paper); g.rect(6, 3, 5, 9, U.cream); g.rect(11, 4, 4, 9, U.paper);
+      g.px(3, 6, U.green, 3); g.px(4, 6, U.green, 2); g.px(3, 7, U.green, 2);
+      g.px(7, 8, U.blue, 3); g.px(8, 8, U.blue, 2); g.px(8, 9, U.blue, 2);
+      g.rect(4, 10, 6, 1, U.paper); for (var x = 4; x < 10; x++) g.tone(x, 10, 1);
+      g.px(12, 7, U.red, 3); g.px(13, 7, U.red, 2); g.px(12, 8, U.red, 2); g.px(13, 8, U.red, 1);
+      g.sparkle(14, 1, false);
+    },
+    cog: function (g) {
+      for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
+        var dx = x + 0.5 - 8, dy = y + 0.5 - 8, r = Math.sqrt(dx * dx + dy * dy), a = Math.atan2(dy, dx);
+        if (r <= (Math.cos(a * 8) > 0 ? 6.4 : 4.8) && r > 1.6) g.px(x, y, U.metal);
+      }
+      g.sphere(U.metal, 8, 8, 6.4);
+      g.disc(8, 8, 2.2, R.bowl); g.tone(7, 7, 4);
+      g.sparkle(14, 1, false);
+    },
+    paw: function (g) {
+      g.disc(8, 11, 3.3, U.cream); g.sphere(U.cream, 8, 11, 3.3);
+      g.disc(3, 7, 1.5, U.cream); g.disc(6, 3.6, 1.5, U.cream); g.disc(10, 3.6, 1.5, U.cream); g.disc(13, 7, 1.5, U.cream);
+      g.dot(7, 9, '#ffffff'); g.sparkle(14, 1, false, '#ffd6dc');
+    },
+    crystal: function (g) {
+      var C = U.purp;
+      B(g, ['...#..', '..###.', '.#####', '.#####', '.#####', '.#####', '.#####', '..###.', '...#..'], { '#': [C] }, 5, 2);
+      B(g, ['.#.', '###', '###', '###', '.#.'], { '#': [U.blue] }, 2, 7);
+      B(g, ['.#.', '###', '###', '###', '.#.'], { '#': [U.blue] }, 11, 7);
+      g.rect(2, 13, 12, 1, U.metal);
+      for (var y = 3; y < 10; y++) g.tone(7, y, 4);
+      g.sparkle(13, 2, false, '#ece0ff');
+    },
+    book: function (g) {
+      g.rect(2, 3, 12, 10, U.purp); g.rect(3, 12, 11, 1, U.cream);
+      g.rect(7, 3, 1, 10, U.purp); for (var y = 3; y < 13; y++) g.tone(7, y, 1);
+      B(g, ['.#.', '###', '.#.'], { '#': [R.star, 3] }, 9, 6);
+      g.px(4, 5, U.purp, 3); g.px(4, 6, U.purp, 3);
+      g.sparkle(14, 1, false, '#fff27a');
+    },
+    claw: function (g) {
+      for (var k = 0; k < 3; k++) { var x0 = 3 + k * 4; g.line(x0, 12, x0 + 3, 3, U.white); g.line(x0 + 1, 12, x0 + 4, 3, U.white); }
+      g.sparkle(14, 12, false);
+    },
+    scroll: function (g) {
+      g.rect(3, 4, 10, 8, U.paper);
+      g.rect(2, 2, 12, 2, U.metal); g.rect(2, 12, 12, 2, U.metal);
+      for (var y = 6; y < 11; y += 2) for (var x = 5; x < 11; x++) g.tone(x, y, 1);
+      g.sparkle(14, 1, false);
+    },
+    bell: function (g) {
+      B(g, ['....##....', '...####...', '..######..', '..######..', '..######..', '.########.', '##########'], { '#': [R.gold] }, 3, 3);
+      g.sphere(R.gold, 7, 6, 6); g.px(7, 11, U.metal, 2); g.px(8, 11, U.metal, 2); g.px(7, 12, U.metal, 1); g.px(8, 12, U.metal, 1);
+      g.sparkle(14, 2, false);
+    },
+    bell_off: function (g) {
+      B(g, ['....##....', '...####...', '..######..', '..######..', '..######..', '.########.', '##########'], { '#': [U.white] }, 3, 3);
+      g.line(2, 13, 13, 2, U.red); g.line(3, 13, 14, 2, U.red);
+    },
+    sprout: function (g) {
+      g.rect(7, 7, 2, 7, U.green);
+      B(g, ['.###...', '#####..', '######.', '.######', '...####'], { '#': [U.green] }, 1, 2);
+      B(g, ['...###.', '..#####', '.######', '######.'], { '#': [R.leaf] }, 8, 3);
+      g.rect(4, 13, 8, 2, R.wood);
+      g.sparkle(14, 1, false, '#e0ffc0');
+    },
+    back: function (g) {
+      B(g, ['....##......', '...###......', '..##########', '.###########', '.###########', '..##########', '...###......', '....##......'], { '#': [U.blue] }, 2, 4);
+      g.sparkle(14, 2, false);
+    },
+    close: function (g) {
+      for (var i = 0; i < 9; i++) { g.rect(3 + i, 3 + i, 2, 2, U.red); g.rect(11 - i, 3 + i, 2, 2, U.red); }
+    },
+    star: function (g) {
+      B(g, ['.......##.......', '......####......', '......####......', '.##############.', '..############..', '...##########...', '....########....', '...####..####...', '..###......###..', '..##........##..'], { '#': [R.star] }, 0, 3);
+      g.sphere(R.star, 7, 7, 7); g.sparkle(14, 1, false);
+    },
+    swap: function (g) {
+      B(g, ['.........#..', '.........##.', '###########.', '###########', '.........##', '.........#.'], { '#': [U.blue] }, 2, 1);
+      B(g, ['..#.........', '.##.........', '############', '############', '.##.........', '..#.........'], { '#': [U.green] }, 1, 9);
+    },
+    feather: function (g) {
+      for (var i = 0; i < 9; i++) { var x = 4 + i, y = 12 - i; g.rect(x - 1, y - 2, 3, 3, U.white); }
+      g.line(2, 14, 12, 4, U.metal);
+      g.sparkle(13, 12, false);
+    },
+    plus: function (g) { g.rect(3, 7, 10, 3, U.white); g.rect(7, 3, 3, 10, U.white); },
+    minus: function (g) { g.rect(3, 7, 10, 3, U.white); },
+    locate: function (g) { g.disc(8, 8, 5.5, U.red); g.erase(8, 8, 3); g.disc(8, 8, 1.6, U.red); g.sparkle(14, 1, false); },
+    mend: function (g) {
+      g.disc(8, 8, 6.4, U.blue); g.erase(8, 8, 4.4);
+      B(g, ['.#.', '###', '.#.'], { '#': [R.heart, 3] }, 7, 7);
+      g.sparkle(14, 1, false, '#e0f2ff');
+    },
+    info: function (g) { g.disc(8, 8, 6.4, U.blue); g.sphere(U.blue, 8, 8, 6.4); g.rect(7, 7, 2, 5, U.white); g.rect(7, 4, 2, 2, U.white); }
+  };
+  Object.keys(UI).forEach(function (k) { draw[k] = UI[k]; });
+
   // elemental gem badges
   Object.keys(EL).forEach(function (k) {
     draw[k] = function (g) {

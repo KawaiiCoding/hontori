@@ -275,7 +275,9 @@ window.H = window.H || {};
     [/spirit snack/i, 'energy', 'Revives other hontori, restores some mana'],
     [/charm/i, 'backpack', 'A lucky charm for your backpack'],
     [/ramen/i, 'energy', 'Heals your party and refills mana'],
-    [/no thanks|leave|maybe later|not now/i, null, null]
+    [/sleep|rest/i, 'night', 'Rest for 8 hours'],
+    [/^(yes|okay|ok|sure|let)/i, 'star', null],
+    [/no thanks|leave|maybe later|not now|^no\b|^back/i, 'back', null]
   ];
   function choiceInfo(label) {
     for (var i = 0; i < CHOICE_INFO.length; i++) if (CHOICE_INFO[i][0].test(label)) {
@@ -418,4 +420,74 @@ window.H = window.H || {};
     init: init, say: say, choose: choose, advance: advance, isOpen: isOpen,
     hud: hud, toast: toast, fade: fade, input: input, elementBadge: elementBadge
   };
+})();
+
+// H.kit: one visual language for every panel, button, header and close button (menu, results, map, boards, title).
+(function () {
+  'use strict';
+  var H = window.H;
+  var CSS = [
+    '.hk-panel{border-radius:20px;background:linear-gradient(180deg,#1b1e3a,#101226);border:2px solid #6f7fd8;box-shadow:0 10px 40px rgba(0,0,0,.6);color:#f4f1e8;font-family:Nunito,"M PLUS Rounded 1c",system-ui,-apple-system,sans-serif}',
+    '.hk-h{display:flex;align-items:center;gap:10px;margin:0 0 12px;min-height:40px}',
+    '.hk-h img{width:28px;height:28px;image-rendering:pixelated;flex:none}',
+    '.hk-h h2{flex:1;min-width:0;margin:0;font-size:20px;font-weight:900;letter-spacing:.2px;line-height:1.15;color:#f4f1e8}',
+    '.hk-h h2 small{display:block;font-size:12px;font-weight:700;opacity:.7;letter-spacing:0}',
+    '.hk-btn{display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 14px;border:2px solid rgba(0,0,0,.35);border-radius:14px;font:inherit;font-family:Nunito,"M PLUS Rounded 1c",system-ui,-apple-system,sans-serif;font-weight:900;font-size:16px;line-height:1.15;text-align:left;cursor:pointer;color:#14162a;background:linear-gradient(180deg,#a8dcff,#7cc4fa);box-shadow:0 4px 0 #2e5a8a,0 6px 14px rgba(0,0,0,.3);-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none}',
+    '.hk-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #2e5a8a,0 2px 6px rgba(0,0,0,.3)}',
+    '.hk-btn.alt,.hk-btn.warn{color:#f4f1e8;background:linear-gradient(180deg,#2e335e,#23274a);border-color:rgba(255,255,255,.16);box-shadow:0 4px 0 #0a0c1c,0 6px 14px rgba(0,0,0,.3)}',
+    '.hk-btn.alt:active,.hk-btn.warn:active{box-shadow:0 1px 0 #0a0c1c}',
+    '.hk-btn.warn{color:#ffb3a8}',
+    '.hk-btn.gold{color:#2a1405;background:linear-gradient(180deg,#ffd98a,#ff9a3c);box-shadow:0 4px 0 #a8501c,0 6px 14px rgba(0,0,0,.3)}',
+    '.hk-btn.gold:active{box-shadow:0 1px 0 #a8501c}',
+    '.hk-btn.sm{min-height:40px;padding:5px 10px;gap:6px;font-size:14px;border-radius:12px}',
+    '.hk-btn img{width:28px;height:28px;image-rendering:pixelated;flex:none}',
+    '.hk-btn.sm img{width:22px;height:22px}',
+    '.hk-btn .t{display:flex;flex-direction:column;min-width:0}',
+    '.hk-btn small{font-size:12px;font-weight:700;opacity:.75;margin-top:1px}',
+    '.hk-btn[hidden],.hk-x[hidden]{display:none}',
+    '.hk-btn[disabled]{opacity:.5;cursor:default;transform:none}',
+    '.hk-btn.wide{width:100%;justify-content:center}',
+    '.hk-btn.wide .t{align-items:center;text-align:center}',
+    '.hk-x{flex:none;width:40px;height:40px;padding:0;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:linear-gradient(180deg,#2e335e,#23274a);border:2px solid rgba(255,255,255,.16);box-shadow:0 3px 0 #0a0c1c;-webkit-tap-highlight-color:transparent;touch-action:manipulation}',
+    '.hk-x:active{transform:translateY(2px);box-shadow:0 1px 0 #0a0c1c}',
+    '.hk-x img{width:22px;height:22px;image-rendering:pixelated}',
+    '.hk-acts{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}',
+    '.hk-acts .hk-btn{flex:1 1 140px}',
+    '.hk-note{font-size:13px;font-weight:700;opacity:.7;margin-top:10px;line-height:1.35;white-space:pre-wrap}'
+  ].join('\n');
+  function css() { if (document.getElementById('hk-style')) return; var s = document.createElement('style'); s.id = 'hk-style'; s.textContent = CSS; (document.head || document.documentElement).appendChild(s); }
+  css();
+  function img(name, scale) { var im = document.createElement('img'); im.alt = ''; im.draggable = false; try { im.src = H.icons.url(name, scale || 2); } catch (e) {} return im; }
+  // btn(parent, {icon, label, desc, kind:'alt'|'warn'|'gold', sm, wide, onClick})
+  function btn(parent, o) {
+    o = o || {}; css();
+    var b = document.createElement('button'); b.type = 'button';
+    b.className = 'hk-btn' + (o.kind ? ' ' + o.kind : '') + (o.sm ? ' sm' : '') + (o.wide ? ' wide' : '');
+    if (o.icon) b.appendChild(img(o.icon));
+    var t = document.createElement('span'); t.className = 't'; b.appendChild(t);
+    var l = document.createElement('span'); l.textContent = o.label || ''; t.appendChild(l);
+    if (o.desc) { var d = document.createElement('small'); d.textContent = o.desc; t.appendChild(d); }
+    if (o.onClick) b.addEventListener('click', o.onClick);
+    if (parent) parent.appendChild(b);
+    return b;
+  }
+  function x(parent, onClick) {
+    css();
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'hk-x'; b.title = 'Close'; b.setAttribute('aria-label', 'Close');
+    b.appendChild(img('close'));
+    if (onClick) b.addEventListener('click', onClick);
+    if (parent) parent.appendChild(b);
+    return b;
+  }
+  function header(parent, icon, title, sub, onClose) {
+    css();
+    var h = document.createElement('div'); h.className = 'hk-h';
+    if (icon) h.appendChild(img(icon));
+    var t = document.createElement('h2'); t.textContent = title; h.appendChild(t);
+    if (sub) { var s = document.createElement('small'); s.textContent = sub; t.appendChild(s); }
+    if (onClose) x(h, onClose);
+    if (parent) parent.appendChild(h);
+    return h;
+  }
+  H.kit = { css: css, img: img, btn: btn, x: x, header: header };
 })();

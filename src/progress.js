@@ -242,7 +242,7 @@ window.H = window.H || {};
   var CSS = [
     '.hp-o{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(5,6,14,.6);font-family:Nunito,"M PLUS Rounded 1c",system-ui,sans-serif;color:#f4f1e8;opacity:0;transition:opacity .25s}',
     '.hp-o.on{opacity:1}',
-    '.hp-card{width:min(92%,460px);max-height:86%;overflow:auto;border-radius:20px;background:linear-gradient(180deg,#1b1e3a,#101226);border:2px solid #6f7fd8;box-shadow:0 10px 40px rgba(0,0,0,.6);padding:14px}',
+    '.hp-card{width:min(92%,460px);max-height:86%;overflow:auto;border-radius:20px;background:linear-gradient(180deg,#1b1e3a,#101226);border:2px solid #6f7fd8;box-shadow:0 10px 40px rgba(0,0,0,.6);padding:16px}',
     '.hp-card h3{margin:0 0 10px;font-size:20px;font-weight:900}',
     '.hp-r{display:flex;gap:10px;align-items:center;margin-bottom:8px;background:rgba(255,255,255,.05);border-radius:14px;padding:6px 8px}',
     '.hp-r canvas{width:44px;height:44px;border-radius:10px;image-rendering:pixelated;flex:none;background:rgba(0,0,0,.25)}',
@@ -252,7 +252,8 @@ window.H = window.H || {};
     '.hp-bar b{display:block;height:100%;width:0;background:linear-gradient(90deg,#6fb8ff,#bfe4ff)}',
     '.hp-bar.w b{background:linear-gradient(90deg,#ffb54a,#ffe6a0)}',
     '.hp-up{color:#ffe27a;font-size:12px;font-weight:900;height:15px;opacity:0;transition:opacity .3s}.hp-up.on{opacity:1}',
-    '.hp-go{width:100%;margin-top:6px;border:0;border-radius:14px;padding:13px;font:inherit;font-weight:900;font-size:16px;color:#14162a;background:#8fd0ff;cursor:pointer}'
+    '.hp-go{width:100%;margin-top:10px}',
+    '.hp-card .hk-h{margin-bottom:10px}'
   ].join('\n');
   var styled = false;
   function style() { if (styled) return; styled = true; var e = document.createElement('style'); e.textContent = CSS; document.head.appendChild(e); }
@@ -290,7 +291,7 @@ window.H = window.H || {};
     style();
     return new Promise(function (resolve) {
       var o = el('div', 'hp-o', rootEl()), c = el('div', 'hp-card', o);
-      el('h3', '', c, 'After the battle');
+      H.kit.header(c, 'star', 'After the battle');
       var anims = [];
       rows.forEach(function (r) {
         var row = el('div', 'hp-r', c); row.appendChild(portraitOf(r.m));
@@ -306,7 +307,7 @@ window.H = window.H || {};
       var wi = el('div', 'i', wr), wn = el('div', 'n', wi); el('b', '', wn, 'Spirit Wand'); var wl = el('span', '', wn, 'Lv ' + wand.w0.lv);
       var wb = el('div', 'hp-bar w', wi), wf = el('b', '', wb); var wu = el('div', 'hp-up on', wi, '+' + wand.gain + ' EXP'); wu.style.opacity = '.7';
       anims.push(function () { return fillBar(wf, wu, wand.w0.lv, wand.w0.f, wand.w1.lv, wand.w1.f, 'Your wand grew stronger', wl); });
-      var go = el('button', 'hp-go', c, 'Continue');
+      var go = H.kit.btn(c, { icon: 'back', label: 'Continue', wide: true }); go.classList.add('hp-go'); go.firstChild.style.transform = 'scaleX(-1)';
       void o.offsetWidth; o.classList.add('on');
       setTimeout(function () { Promise.all(anims.map(function (a) { return a(); })); }, 250);
       function close() { go.removeEventListener('click', close); o.classList.remove('on'); setTimeout(function () { o.remove(); resolve(); }, 260); }
@@ -319,15 +320,13 @@ window.H = window.H || {};
     style();
     return new Promise(function (resolve) {
       var o = el('div', 'hp-o', rootEl()), c = el('div', 'hp-card', o);
-      el('h3', '', c, displayName(m) + ' learned ' + mv.name);
-      var n = el('div', '', c, 'All four move slots are full. Forget one to make room?'); n.style.cssText = 'font-size:14px;opacity:.8;margin-bottom:10px';
+      H.kit.header(c, 'claw', displayName(m) + ' can learn ' + mv.name, 'Four moves at most. Forget one?');
       function done() { o.classList.remove('on'); setTimeout(function () { o.remove(); resolve(); }, 260); H.game && H.game.save && H.game.save(); }
       m.moves.forEach(function (id, i) {
-        var old = moveById(m, id), b = el('button', 'hp-go', c, 'Forget ' + (old ? old.name : id));
-        b.style.background = 'rgba(255,255,255,.12)'; b.style.color = '#fff';
+        var old = moveById(m, id), b = H.kit.btn(c, { icon: 'feather', label: 'Forget ' + (old ? old.name : id), desc: 'Learn ' + mv.name + ' instead', kind: 'alt', wide: true }); b.classList.add('hp-go');
         b.addEventListener('click', function () { m.moves[i] = mv.id; toast(displayName(m) + ' now knows ' + mv.name); done(); });
       });
-      var k = el('button', 'hp-go', c, 'Keep current moves'); k.addEventListener('click', done);
+      var k = H.kit.btn(c, { icon: 'star', label: 'Keep my moves', desc: 'Skip ' + mv.name, wide: true }); k.classList.add('hp-go'); k.addEventListener('click', done);
       void o.offsetWidth; o.classList.add('on');
     });
   }
@@ -361,7 +360,7 @@ window.H = window.H || {};
       var cv = el('canvas', '', o); cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
       var msg = el('div', '', o); msg.style.cssText = 'position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);text-align:center;font-size:clamp(17px,4.6vw,24px);font-weight:900;line-height:1.3;text-shadow:0 2px 8px #000;padding:12px;border-radius:16px;background:rgba(16,18,38,.8);border:2px solid rgba(255,255,255,.18)';
       msg.textContent = 'Something is changing in ' + name + '.';
-      var hold = el('button', '', o, 'Wait'); hold.style.cssText = 'position:absolute;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 14px);border:0;border-radius:12px;padding:10px 16px;font:inherit;font-weight:900;font-size:15px;background:rgba(255,255,255,.14);color:#fff;cursor:pointer';
+      var hold = H.kit.btn(o, { icon: 'close', label: 'Wait', desc: 'Stay as it is', kind: 'alt', sm: true }); hold.style.cssText = 'position:absolute;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 14px)';
       var g = cv.getContext('2d'), W = 0, Hh = 0, dpr = 1;
       function size() { dpr = Math.min(2, window.devicePixelRatio || 1); W = o.clientWidth; Hh = o.clientHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); }
       size(); window.addEventListener('resize', size);
@@ -384,7 +383,7 @@ window.H = window.H || {};
       window.addEventListener('keydown', onKey);
       var canClose = false;
       function finishSoon() { setTimeout(function () { canClose = true; phase = phase === 'held' ? 'held' : 'done'; msg.textContent += '  Tap to continue.'; }, 1400); }
-      o.addEventListener('click', function (e) { if (e.target !== hold && canClose) close(); });
+      o.addEventListener('click', function (e) { if (!hold.contains(e.target) && canClose) close(); });
       function close() {
         if (!live) return; live = false; window.removeEventListener('resize', size); window.removeEventListener('keydown', onKey);
         o.classList.remove('on'); setTimeout(function () { o.remove(); resolve(!stopped); }, 260);
