@@ -58,3 +58,4 @@ New rules are added here as they are given. When something in the code disagrees
 40. Fitting music.
 41. Time of day carries over when entering or leaving places. Only sleeping moves time forward (8 hours).
 42. The kid has a map of the current area (map button next to the backpack).
+43. You cannot capture another person's hontori: the owner pushes the binding away with their hand.
