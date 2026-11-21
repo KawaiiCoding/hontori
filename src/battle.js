@@ -908,6 +908,19 @@
       var tot = 0, k; for (k in w) tot += w[k]; var r = Math.random() * tot;
       for (k in w) { r -= w[k]; if (r <= 0) return k; } return 'strike';
     }
+    // The owner sweeps the binding away with an open hand.
+    function repelHand() {
+      var hd = mk('div', '', el);
+      hd.style.cssText = 'position:absolute;right:-40%;top:30%;width:42%;pointer-events:none;transition:transform .45s cubic-bezier(.2,.9,.3,1),opacity .3s;z-index:6';
+      hd.innerHTML = '<svg viewBox="0 0 100 110" style="width:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))"><g fill="#f2c9a0" stroke="#5a3a24" stroke-width="3" stroke-linejoin="round">' +
+        '<rect x="18" y="22" width="13" height="44" rx="6.5"/><rect x="33" y="10" width="13" height="56" rx="6.5"/><rect x="48" y="8" width="13" height="58" rx="6.5"/><rect x="63" y="16" width="13" height="50" rx="6.5"/>' +
+        '<path d="M14 58 Q14 100 50 104 Q86 100 84 58 Z"/><rect x="78" y="48" width="12" height="34" rx="6" transform="rotate(-35 84 64)"/></g></svg>';
+      requestAnimationFrame(function () { hd.style.transform = 'translateX(-150%) rotate(-12deg)'; });
+      sfx('bump'); shakeT = Math.max(shakeT, 0.4);
+      for (var i = 0; i < 18; i++) parts.push({ x: POS.foe.x - 10 + Math.random() * 20, y: POS.foe.y - 10 + Math.random() * 20, vx: -1.5 - Math.random() * 2, vy: (Math.random() - .5) * 1.5, l: 1, d: 0.03, c: '#ffd98a', s: 1.5 });
+      say((TR && TR.name ? TR.name : 'Owner') + ': Hands off. This one is mine.');
+      setTimeout(function () { hd.style.opacity = '0'; }, 700); setTimeout(function () { hd.remove(); }, 1100);
+    }
     function canCast(k) {
       var S = SPELLS[k];
       if (k === 'revive') return me.hp <= 0 ? (matFor() ? true : 'You need ' + matName(matKey()) + ' for the Phoenix Star.') : 'Your hontori does not need it.';
@@ -1162,6 +1175,7 @@
       tr.forEach(function (q) { minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); });
       cx = (minx + maxx) / 2; cy = (miny + maxy) / 2;
       var why = !kind ? 'The ink crumbles. Try again.' : spellUsed ? 'One spell each turn.' : mana < SPELLS[kind].cost ? 'Not enough mana for the ' + SPELLS[kind].name + '.' : canCast(kind);
+      if (kind === 'bind' && (TR || opts.noCapture)) { repelHand(); ink.ash(); return; } // another person's hontori: they push the spell away
       if (why !== true) { say(why); ink.ash(); sfx('bump'); return; }
       ink.trail = [];
       castSpell(kind, sc, cx, cy, Math.max(maxx - minx, maxy - miny));
