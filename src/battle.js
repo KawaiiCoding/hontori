@@ -660,6 +660,8 @@
     '.hb-moves.four .hb-edge{width:14px;height:14px}',
     '.hb-ic{display:flex;align-items:center;gap:4px;padding:7px 9px;min-height:36px}',
     '.hb-ic svg{width:20px;height:20px}',
+    '.hb-ic .pi{width:26px;height:26px;image-rendering:pixelated;filter:drop-shadow(0 1px 0 rgba(0,0,0,.5))}',
+    '.hb-ic .tl{font-size:12px;font-weight:900}',
     '.hb-ic.off{opacity:.45}',
     '.hb-esc .m{display:flex;align-items:flex-end;gap:2px;height:14px}',
     '.hb-esc .m b{width:4px;border-radius:2px;background:rgba(255,255,255,.2)}',
@@ -785,7 +787,8 @@
     var msg = mk('div', 'hb-msg', el), sheet = mk('div', 'hb-sheet', el), bar = mk('div', 'hb-bar', el), movesEl = mk('div', 'hb-moves', el);
     var manaEl = mk('div', 'hb-mana', bar), sheetBtn = mk('button', 'hb-btn', bar, 'Spells'), herbBtn = mk('button', 'hb-btn', bar, '');
     mk('div', '', bar).style.flex = '1';
-    var swBtn = mk('button', 'hb-btn hb-ic', bar, ICON.swap), escBtn = mk('button', 'hb-btn hb-ic hb-esc', bar, ICON.esc + '<span class="m"><b></b><b></b><b></b></span>');
+    var pxIc = function (n, fb) { try { return '<img class="pi" alt="" src="' + H.icons.url(n, 2) + '">'; } catch (e) { return fb; } };
+    var swBtn = mk('button', 'hb-btn hb-ic', bar, pxIc('swap', ICON.swap) + '<span class="tl">Switch</span>'), escBtn = mk('button', 'hb-btn hb-ic hb-esc', bar, pxIc('run', ICON.esc) + '<span class="tl">Escape</span><span class="m"><b></b><b></b><b></b></span>');
     swBtn.setAttribute('aria-label', 'Switch'); escBtn.setAttribute('aria-label', 'Escape');
     var strip = mk('div', 'hb-strip', el); strip.hidden = true;
     if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Trainer') + ' - practice duel'); }
