@@ -40,6 +40,8 @@
     '.hm-row .sub{font-size:13px;opacity:.75;margin:2px 0 6px;white-space:pre-wrap}',
     '.hm-bar{height:8px;border-radius:4px;background:rgba(0,0,0,.5);overflow:hidden}',
     '.hm-bar b{display:block;height:100%;background:linear-gradient(90deg,#57d07a,#9cf0a6)}',
+    '.hm-purse{display:flex;align-items:center;gap:10px;margin:2px 0 10px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.06)}.hm-purse .pl{font-weight:900;font-size:14px;margin-right:auto}',
+    '.hm-purse .pc{display:flex;align-items:center;gap:5px}.hm-purse i{width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.35)}.hm-purse b{font-size:17px;font-weight:900;min-width:12px}.hm-purse small{font-size:11px;font-weight:800;opacity:.7}',
     '.hm-tag{font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;background:#ffc56b;color:#2a1c05}',
     '.hm-mini{border:0;border-radius:10px;padding:8px 10px;font:inherit;font-weight:800;font-size:13px;background:rgba(255,255,255,.14);color:#fff;cursor:pointer}',
     '.hm-acts{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}',
@@ -259,7 +261,14 @@
       try { if (PK && PK.tidy && PK.tidy()) g.save && g.save(); } catch (e) {}
       var on = !!(PK && (st.flags || {})['c1:morning']);
       header('Backpack', 'backpack', on ? PK.label() : null);
-      if (MON) { var pr = mk('div', 'hm-mana', els.sheet); pr.appendChild(K().img('coin')); mk('span', '', pr, 'Purse: ' + MON.fmt(MON.get())); }
+      if (MON) {
+        // purse: always all three coins, gold, silver and copper, with their counts
+        var cv = MON.get(), pr = mk('div', 'hm-purse', els.sheet); mk('span', 'pl', pr, 'Purse');
+        [['Gold', Math.floor(cv / 100), '#ffe07a', '#c8901a'], ['Silver', Math.floor((cv % 100) / 10), '#f2f4f8', '#8a92a6'], ['Copper', cv % 10, '#f0a070', '#9a4a22']].forEach(function (c) {
+          var w = mk('span', 'pc', pr); var d = mk('i', '', w); d.style.background = 'radial-gradient(circle at 35% 30%,#fff 0,' + c[2] + ' 35%,' + c[3] + ' 100%)';
+          mk('b', '', w, String(c[1])); mk('small', '', w, c[0]);
+        });
+      }
       var kindOf = function (it) { return TR[it.id] ? 'trade' : PK && PK.kind ? PK.kind(it.id) : 'supply'; };
       var by = { pocket: [], supply: [], key: [], trade: [] };
       st.items.forEach(function (it) { by[kindOf(it)].push(it); });
