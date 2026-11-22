@@ -309,7 +309,7 @@
         if (P()) kb(bs, { icon: 'claw', label: 'Moves', desc: 'Pick 4 for battle', kind: 'alt', sm: true, onClick: function () { moveFor = p; show('moves'); } });
         if (st.party.length > 1 && P()) kb(bs, { icon: 'crystal', label: 'Rest', desc: 'Into the Sanctum', kind: 'alt', sm: true, onClick: function () { P().toSanctum(i); } });
       });
-      if (P()) kb(acts(), { icon: 'crystal', label: 'Wand Sanctum', desc: (st.sanctum || []).length + ' / ' + P().capacity() + ' resting in your wand', onClick: function () { sel = null; show('sanctum'); } });
+      if (P()) kb(acts(), { icon: 'crystal', label: 'Wand Sanctum', desc: (st.sanctum || []).length + ' / ' + P().capacity() + ' resting in your wand', onClick: function () { sel = null; sanctFrom = 'party'; show('sanctum'); } });
     } else if (open === 'memory') {
       renderMemory(st);
     } else if (open === 'sanctum') {
@@ -360,7 +360,7 @@
         var pk = P().wandPerks();
         note('Mana ' + (st.mana == null ? (st.maxMana || 3) : st.mana) + ' / ' + (st.maxMana || 3) + '   Spell power +' + Math.round((pk.power - 1) * 100) + '%   Capture +' + Math.round(pk.captureBonus * 100) + '%', sec).style.marginTop = '6px';
         var wa = acts(sec);
-        kb(wa, { icon: 'crystal', label: 'Wand Sanctum', desc: 'Resting hontori', onClick: function () { sel = null; show('sanctum'); } });
+        kb(wa, { icon: 'crystal', label: 'Wand Sanctum', desc: 'Resting hontori', onClick: function () { sel = null; sanctFrom = 'menu'; show('sanctum'); } });
         kb(wa, { icon: 'book', label: 'Spell Loadout', desc: 'Pick 4 for battle', onClick: function () { show('spells'); } });
         kb(wa, { icon: 'paw', label: 'Wand Memory', desc: 'Hontori you met and bound', onClick: function () { memSel = null; show('memory'); } });
       }
@@ -419,6 +419,7 @@
     if (!grid.children.length) mk('div', 'hm-empty', els.sheet, memFilter === 'bound' ? 'None bound yet.' : 'None here yet.');
     kb(acts(), { icon: 'back', label: 'Back', kind: 'alt', onClick: function () { show('menu'); } });
   }
+  var sanctFrom = 'party';
   function renderSanctum(g, st) {
     var sn = st.sanctum || [], cap = P() ? P().capacity() : 12;
     var m = sel != null ? sn[sel] : null;
@@ -432,7 +433,8 @@
         mk('div', '', c, stageName(p));
         c.addEventListener('click', function () { sel = j; confirmRel = false; swapPick = false; render(); });
       });
-      kb(acts(), { icon: 'back', label: 'Back', desc: 'To your party', kind: 'alt', onClick: function () { show('party'); } });
+      // Back returns to where the Sanctum was opened from (the menu or the party)
+      kb(acts(), { icon: 'back', label: 'Back', desc: sanctFrom === 'menu' ? 'To the menu' : 'To your party', kind: 'alt', onClick: function () { show(sanctFrom === 'menu' ? 'menu' : 'party'); } });
       return;
     }
     header(displayName(m), 'crystal', 'Resting in the Sanctum');
