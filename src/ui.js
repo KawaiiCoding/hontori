@@ -500,11 +500,11 @@ window.H = window.H || {};
 (function () {
   'use strict';
   var H = window.H, busy = false, queue = [];
-  var CSS = '.hg{position:absolute;inset:0;z-index:9000;background:rgba(6,8,20,.22);opacity:0;transition:opacity .2s;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:Nunito,"M PLUS Rounded 1c",system-ui,-apple-system,sans-serif}' +
+  var CSS = '.hg{position:absolute;inset:0;z-index:9000;background:transparent;opacity:0;transition:opacity .2s;pointer-events:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:Nunito,"M PLUS Rounded 1c",system-ui,-apple-system,sans-serif}' +
     '.hg.on{opacity:1}' +
     '.hg-ring{position:absolute;border-radius:14px;box-shadow:0 0 0 3px rgba(255,214,120,.95),0 0 18px 4px rgba(255,190,90,.6);animation:hgP 1.4s ease-in-out infinite;pointer-events:none}' +
     '@keyframes hgP{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}' +
-    '.hg-g{position:absolute;display:flex;align-items:flex-start;gap:6px;max-width:min(300px,calc(100% - 20px));transition:left .35s ease,top .35s ease}' +
+    '.hg-g{position:absolute;pointer-events:auto;display:flex;align-items:flex-start;gap:6px;max-width:min(300px,calc(100% - 20px));transition:left .35s ease,top .35s ease}' +
     '.hg-fox{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden;background:#2a2d52;border:2px solid #ffb04a;box-shadow:0 3px 10px rgba(0,0,0,.45);animation:hgB 1.8s ease-in-out infinite}' +
     '.hg-fox canvas{width:100%;height:100%;image-rendering:pixelated;display:block}' +
     '@keyframes hgB{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}' +
@@ -543,7 +543,8 @@ window.H = window.H || {};
     root.appendChild(ov);
     // the guide floats next to the thing: below it in the top half of the screen, above it in the bottom half
     var W = R.width, Hh = R.height, gw = Math.min(300, W - 20), gh = g.offsetHeight || 70, x, y;
-    if (tr) {
+    if (tr && tr.h > Hh * 0.35) { x = (W - gw) / 2; y = Hh - gh - 14 - 70; }
+    else if (tr) {
       x = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2));
       y = tr.y + tr.h / 2 < Hh / 2 ? tr.y + tr.h + 12 : tr.y - gh - 12;
       y = Math.max(10, Math.min(Hh - gh - 10, y));
@@ -551,9 +552,11 @@ window.H = window.H || {};
     g.style.left = x + 'px'; g.style.top = y + 'px'; g.style.width = gw + 'px';
     var gone = false;
     function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; ov.classList.remove('on'); setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); o.res(true); next(); }, 200); }
-    ov.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); });
-    ov.addEventListener('pointerup', function (e) { e.stopPropagation(); });
-    ov.addEventListener('click', close);
+    // it never blocks: a tap on the bubble closes it, any other tap closes it and still goes through
+    g.addEventListener('click', close);
+    var anyTap = function () { document.removeEventListener('pointerdown', anyTap, true); setTimeout(function () { close(); }, 0); };
+    setTimeout(function () { document.addEventListener('pointerdown', anyTap, true); }, 350);
+    setTimeout(function () { document.removeEventListener('pointerdown', anyTap, true); close(); }, 7000);
     void ov.offsetWidth; ov.classList.add('on');
   }
   function blocked(text) { if (H.ui && H.ui.toast) H.ui.toast(text); }
