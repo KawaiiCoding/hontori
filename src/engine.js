@@ -600,6 +600,8 @@
     }
     else (H.title ? H.title.ready : Promise.resolve()).then(() => setTimeout(runIntro, 500));
   }
+  // test jump: ?debug=1&battle=frog starts a wild battle right away (to try weather and time in combat)
+  if (DEBUG && Q.get('battle')) setTimeout(() => { started = true; startBattle(Q.get('battle'), { level: +(Q.get('lv') || 4) }); }, 1800);
   H.progress && H.progress.migrate(H.game.state); // fills new save fields, moves old wand keys into the Sanctum
   H.menu && H.menu.init(document.getElementById('root'));
   requestAnimationFrame(loop);

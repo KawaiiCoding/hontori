@@ -34,7 +34,7 @@ window.H = window.H || {};
   aim('leafring', 'fern', function () { return spot('rootwood_hall', 13, 12); });
   aim('leafring', 'sprouts', function () { return spot('rootwood_hall', 13, 12); });
   aim('leafring', 'duel', function () { return spot('rootwood_hall', 13, 12); });
-  aim('tidewell', 'wait', function () { return spot('mossgrove', 24, 25); });
+  aim('tidewell', 'wait', function () { return spot('mossgrove', 32, 17); });
 
   // the quest starts once Chapter 1 is complete (the letter has arrived)
   ST.defineEvent({ id: 'c2_start', when: 'auto', cond: function (s) { return !!s.flags['c1:complete']; }, run: function (a) {

@@ -21,6 +21,8 @@ window.H = window.H || {};
     heart_tree: { fw: 6, fh: 3, solid: true, light: { dx: 48, dy: 4, r: 110, color: '#c8ff90', flicker: true } },
     hall_wall: { fw: 1, fh: 1, solid: false, decor: true },
     root_wall: { fw: 1, fh: 1, solid: true },
+    rockslide: { fw: 2, fh: 3, solid: true },
+    slide_sign: { fw: 1, fh: 1, solid: true },
     stone_pillar: { fw: 1, fh: 1, solid: true },
     leaf_window: { fw: 2, fh: 1, solid: false, decor: true, light: { dx: 16, dy: 30, r: 46, color: '#d8ffb0', flicker: false } },
     hall_banner: { fw: 1, fh: 1, solid: false, decor: true },
@@ -84,6 +86,28 @@ window.H = window.H || {};
     for (i = 0; i < 8; i++) P(g, 2 + hash(i, 6) * 12, 3 + hash(i, 7) * 4, LEAF[4], 1, 1);
     P(g, 1, 3, LEAF[3], 14, 1);
     return { c: s.c, ox: 0, oy: -12 };
+  };
+  art.rockslide = function () {
+    // a heap of fallen boulders and gravel, clearly blocking the way (2 tiles wide, 3 deep)
+    var s = mk(40, 60), g = s.g;
+    P(g, 2, 50, 'rgba(20,10,5,0.35)', 36, 8);
+    var R = ['#5a5650', '#7a756c', '#9a948a', '#c0b8aa'];
+    [[10, 44, 9, 7], [28, 46, 10, 8], [20, 36, 11, 9], [8, 28, 7, 6], [31, 30, 8, 7], [19, 20, 8, 7], [26, 52, 6, 4], [6, 52, 5, 4]].forEach(function (b, i) {
+      ell(g, b[0], b[1] + 1, b[2] + 1, b[3] + 1, OL); ell(g, b[0], b[1], b[2], b[3], R[1]);
+      ell(g, b[0] - 2, b[1] - 2, b[2] - 3, b[3] - 3, R[2]); ell(g, b[0] - 3, b[1] - 3, Math.max(1, b[2] - 6), Math.max(1, b[3] - 5), R[3]);
+      for (var k = 0; k < 4; k++) P(g, b[0] - b[2] / 2 + hash(i, k) * b[2], b[1] + hash(k, i) * b[3] * 0.6, R[0], 2, 1);
+    });
+    for (var i = 0; i < 40; i++) P(g, 2 + hash(i, 31) * 36, 48 + hash(i, 33) * 9, R[(hash(i, 35) * 4) | 0], 1, 1);
+    for (i = 0; i < 6; i++) P(g, 4 + hash(i, 41) * 30, 18 + hash(i, 43) * 30, MOSS[1], 2, 1);
+    return { c: s.c, ox: -4, oy: -12 };
+  };
+  art.slide_sign = function () {
+    var s = mk(16, 26), g = s.g;
+    P(g, 7, 12, OL, 3, 14); P(g, 8, 12, '#8a5a30', 1, 13);
+    P(g, 1, 2, OL, 14, 11); P(g, 2, 3, '#f0c040', 12, 9);
+    for (var i = 0; i < 12; i += 4) { P(g, 2 + i, 3, '#2a2010', 2, 9); }
+    P(g, 6, 5, '#2a2010', 4, 1); P(g, 7, 6, '#c03020', 2, 4); P(g, 7, 10, '#c03020', 2, 1);
+    return { c: s.c, ox: 0, oy: -10 };
   };
   art.stone_pillar = function () {
     var s = mk(16, 60), g = s.g;
@@ -183,6 +207,8 @@ window.H = window.H || {};
     glowcaps: [['Tiny mushrooms that glow on their own.', 'Small and bright in the forest night.']],
     sprout_pot: [['A sprout in a clay pot.', null]],
     stone_dais: [['A stone dais in front of the Heart Tree.', null]],
+    rockslide: [['Boulders from the cliff cover the whole road to Whistling Pass.', 'Rocks that fell, rocks that stay. Someone will clear the way.'], ['Too big to move. The workers in Mossgrove are on it.', null]],
+    slide_sign: [['A warning sign: Road closed. Rockslide ahead.', null]],
     root_wall: [['A hedge grown on old roots, thick as a wall.', 'Roots that twist and roots that turn. Push the leaves, and they will learn.'], ['The roots do not move. The leaves might.', null]],
     moss_runner: [['Soft moss, like a carpet.', null]]
   };
