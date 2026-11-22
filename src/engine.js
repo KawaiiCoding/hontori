@@ -578,6 +578,23 @@
   }
 
   H.ui && H.ui.init(document.getElementById('root'));
+  // rule: nothing solid stands on a road. Any lamp, rock or sign that landed on a path tile moves to the nearest free spot beside it.
+  (function keepRoadsClear() {
+    const ALLOW = { rockslide: 1, stepping_stone: 1, bridge: 1 };
+    Object.keys(H.maps || {}).forEach(mn => {
+      const m = H.maps[mn]; if (!m || m.tileset !== 'outdoor' || !m.props) return;
+      const tile = (x, y) => m.legend[(m.ground[y] || '')[x]], used = new Set(m.props.map(p => p.x + ',' + p.y));
+      (m.npcs || []).forEach(n => used.add(n.x + ',' + n.y));
+      m.props.forEach(p => {
+        const i = propInfo(p.type); if (!i.solid || i.decor || ALLOW[p.type] || tile(p.x, p.y) !== 'path') return;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1], [2, 0], [-2, 0]]) {
+          const nx = p.x + dx, ny = p.y + dy, t = tile(nx, ny);
+          if (!t || t === 'path' || t === 'water' || t === 'cobble' || used.has(nx + ',' + ny)) continue;
+          used.delete(p.x + ',' + p.y); p.x = nx; p.y = ny; used.add(nx + ',' + ny); break;
+        }
+      });
+    });
+  })();
   // debug url params: ?nointro=1&scene=village&time=21&weather=rain&tx=10&ty=12
   const Q = new URLSearchParams(location.search);
   const sv = (!Q.get('scene') && !Q.get('nointro')) ? H.game.read() : null;

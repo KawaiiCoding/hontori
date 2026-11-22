@@ -48,7 +48,7 @@ window.H = window.H || {};
 
   // square: a well, benches, lamps; the pond has reeds and lilies
   put('well', 19, 15, true); put('bench', 15, 13, true); put('bench', 24, 17, true);
-  put('lamp', 13, 12, true); put('lamp', 26, 12, true); put('lamp', 13, 18, true); put('lamp', 26, 18, true);
+  put('lamp', 13, 12, true); put('lamp', 24, 12, true); put('lamp', 13, 18, true); put('lamp', 26, 18, true);
   put('flowerbed', 16, 15, true); put('flowerbed', 23, 15, true);
   [[30, 4], [37, 5], [29, 8], [36, 9], [33, 10]].forEach(function (p) { put('reeds', p[0], p[1]); });
   [[32, 5], [35, 7]].forEach(function (p) { put('lilypad', p[0], p[1], true); });
