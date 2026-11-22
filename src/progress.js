@@ -349,112 +349,112 @@ window.H = window.H || {};
     try { H.spirits.draw(g, key, size / 2, size / 2, { t: t || 0 }, { scale: size / 40, noShadow: true, stage: stage }); } catch (e) {}
     return c;
   }
-  function silhouette(src, color) {
-    var c = document.createElement('canvas'); c.width = src.width; c.height = src.height; var g = c.getContext('2d');
-    g.drawImage(src, 0, 0);
-    try { var d = g.getImageData(0, 0, c.width, c.height), a = d.data; for (var i = 0; i < a.length; i += 4) { if (a[i + 3] < 200) a[i + 3] = 0; else { a[i] = a[i + 1] = a[i + 2] = 255; a[i + 3] = 255; } } g.putImageData(d, 0, 0); }
-    catch (e) { g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, c.width, c.height); }
-    return c;
-  }
 
+
+  // Element Bloom (original): the hontori curls into a shell of its own element; the kid opens it with the V.
+  // Before it starts the kid chooses: let it bloom now, or later (it asks again at the next level).
+  var SHELL = {
+    fire: { a: '#ffb050', b: '#c2401a', line: '#ffe08a', name: 'an ember shell' },
+    water: { a: '#9fd8ff', b: '#2a6ac0', line: '#e8f8ff', name: 'a bubble of water' },
+    wind: { a: '#d8fff4', b: '#5ab8a0', line: '#ffffff', name: 'a cocoon of wind' },
+    grass: { a: '#b8f090', b: '#3a8a3a', line: '#f0ffd0', name: 'a leaf bud' },
+    electric: { a: '#fff4a0', b: '#c0a020', line: '#ffffff', name: 'a crackling orb' },
+    earth: { a: '#e0c090', b: '#7a5530', line: '#fff0d0', name: 'a shell of stone' },
+    dark: { a: '#b8a0ff', b: '#3a2a70', line: '#e8dcff', name: 'a shadow seed' },
+    light: { a: '#fffbe0', b: '#d8c070', line: '#ffffff', name: 'a pearl of light' }
+  };
   function evolveSeq(m) {
     style();
     var to = stageFor(m.level), from = m.stage || 1, name = displayName(m), el0 = spec(m.key).element;
-    var newName = stageName(m.key, to);
+    var newName = stageName(m.key, to), SH = SHELL[el0] || SHELL.fire;
     return new Promise(function (resolve) {
-      var o = el('div', 'hp-o', rootEl()); o.style.background = '#05060e'; o.style.flexDirection = 'column';
+      var o = el('div', 'hp-o', rootEl()); o.style.background = '#07081a'; o.style.flexDirection = 'column';
       var cv = el('canvas', '', o); cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
-      var msg = el('div', '', o); msg.style.cssText = 'position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);text-align:center;font-size:clamp(17px,4.6vw,24px);font-weight:900;line-height:1.3;text-shadow:0 2px 8px #000;padding:12px;border-radius:16px;background:rgba(16,18,38,.8);border:2px solid rgba(255,255,255,.18)';
-      msg.textContent = 'Something is changing in ' + name + '.';
-      var hold = H.kit.btn(o, { icon: 'close', label: 'Wait', desc: 'Stay as it is', kind: 'alt', sm: true }); hold.style.cssText = 'position:absolute;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 14px)';
+      var msg = el('div', '', o); msg.style.cssText = 'position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);text-align:center;font-size:clamp(16px,4.4vw,22px);font-weight:900;line-height:1.3;padding:12px;border-radius:16px;background:rgba(16,18,38,.86);border:2px solid ' + SH.a;
+      var row = el('div', '', o); row.style.cssText = 'position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 118px);display:flex;gap:10px;justify-content:center';
+      msg.textContent = name + ' is full of ' + el0 + ' light. It wants to bloom.';
       var g = cv.getContext('2d'), W = 0, Hh = 0, dpr = 1;
       function size() { dpr = Math.min(2, window.devicePixelRatio || 1); W = o.clientWidth; Hh = o.clientHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); }
       size(); window.addEventListener('resize', size);
-      var SZ = 160;
-      var oldC = spriteCanvas(m.key, from, SZ, 0), newC = spriteCanvas(m.key, to, SZ, 0);
-      var oldS = silhouette(oldC, '#ffffff'), newS = silhouette(newC, '#ffffff');
-      var COL = { fire: '255,150,80', water: '110,180,255', wind: '120,230,200', grass: '140,230,120', electric: '255,230,110', earth: '230,180,120', dark: '190,150,255', light: '255,240,180' };
-      var col = COL[el0] || '255,230,170';
-      var parts = [], t0 = performance.now(), phase = 'intro', swapAt = 0, live = true, stopped = false;
-      var PULSE = 3.6, INTRO = 0.9;
-      sfx('spell');
-      void o.offsetWidth; o.classList.add('on');
-      function stop() {
-        if (phase !== 'intro' && phase !== 'pulse') return;
-        stopped = true; phase = 'held'; m.hold = true; hold.hidden = true; sfx('bump');
-        msg.textContent = name + ' stayed as it is.'; finishSoon();
+      var SZ = 160, oldC = spriteCanvas(m.key, from, SZ, 0), newC = spriteCanvas(m.key, to, SZ, 0);
+      var t0 = performance.now(), phase = 'ask', pt = 0, live = true, shards = [], motes = [], cracks = [], canClose = false;
+      function setPhase(p) { phase = p; pt = (performance.now() - t0) / 1000; }
+      function btn(label, kind, fn) { var b = H.kit.btn(row, { label: label, kind: kind, sm: true }); b.addEventListener('click', function (e) { e.stopPropagation(); fn(); }); return b; }
+      btn('Not yet', 'alt', function () { row.remove(); m.hold = true; msg.textContent = name + ' will wait. It can bloom at the next level.'; sfx('bump'); finish(false); });
+      btn('Let it bloom', '', function () { row.remove(); sfx('spell'); msg.textContent = name + ' curls up inside ' + SH.name + '.'; setPhase('curl'); setTimeout(askV, 1900); });
+      function askV() {
+        if (!live) return;
+        msg.textContent = 'Open the bloom with your wand.';
+        var root = rootEl(), pr = H.gesture && H.gesture.prompt ? H.gesture.prompt('veil', 'Draw the V to open the bloom') : Promise.resolve();
+        try { var last = root.lastElementChild; if (last && last !== o) last.style.zIndex = '70'; } catch (e) {}
+        Promise.resolve(pr).then(function () {
+          setPhase('open'); sfx('wand'); applyEvolve(m, to); H.game && H.game.save && H.game.save();
+          for (var i = 0; i < 26; i++) { var a = Math.random() * 6.283, v = 60 + Math.random() * 160; shards.push({ x: 0, y: 0, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, r: Math.random() * 6.283, vr: (Math.random() - .5) * 8, s: 6 + Math.random() * 8, l: 1.4 }); }
+          setTimeout(function () { msg.textContent = name + ' bloomed into ' + newName + '.'; finish(true); }, 900);
+        });
       }
-      hold.addEventListener('click', stop);
-      function onKey(e) { if (e.key === 'b' || e.key === 'B' || e.key === 'Escape') stop(); else if ((e.key === 'Enter' || e.key === ' ' || e.key === 'a') && phase === 'done') close(); }
+      function finish(ok) { setTimeout(function () { canClose = true; msg.textContent += '  Tap to continue.'; }, 1200); o._ok = ok; }
+      o.addEventListener('click', function () { if (canClose) close(); });
+      function onKey(e) { if ((e.key === 'Enter' || e.key === ' ') && canClose) close(); }
       window.addEventListener('keydown', onKey);
-      var canClose = false;
-      function finishSoon() { setTimeout(function () { canClose = true; phase = phase === 'held' ? 'held' : 'done'; msg.textContent += '  Tap to continue.'; }, 1400); }
-      o.addEventListener('click', function (e) { if (!hold.contains(e.target) && canClose) close(); });
       function close() {
         if (!live) return; live = false; window.removeEventListener('resize', size); window.removeEventListener('keydown', onKey);
-        o.classList.remove('on'); setTimeout(function () { o.remove(); resolve(!stopped); }, 260);
+        o.classList.remove('on'); setTimeout(function () { o.remove(); resolve(!!o._ok); }, 260);
       }
+      function shell(cx, cy, r, k, crack) {
+        // an egg-like shell in the element's colours, with soft bands and the element's line pattern
+        g.save(); g.translate(cx, cy);
+        var gr = g.createRadialGradient(-r * 0.3, -r * 0.4, r * 0.1, 0, 0, r * 1.1);
+        gr.addColorStop(0, SH.a); gr.addColorStop(1, SH.b);
+        g.fillStyle = gr; g.globalAlpha = k;
+        g.beginPath(); g.ellipse(0, 0, r * 0.82, r, 0, 0, 6.283); g.fill();
+        g.strokeStyle = SH.line; g.lineWidth = Math.max(1.5, r * 0.035); g.globalAlpha = k * 0.55;
+        for (var i = -2; i <= 2; i++) { g.beginPath(); g.ellipse(0, i * r * 0.28, r * 0.78 * Math.cos(i * 0.5), r * 0.1, 0, 0, 3.1416); g.stroke(); }
+        if (crack > 0) {
+          g.globalAlpha = 1; g.strokeStyle = SH.line; g.lineWidth = Math.max(2, r * 0.05); g.shadowColor = SH.a; g.shadowBlur = 12;
+          cracks.forEach(function (c) { g.beginPath(); g.moveTo(0, 0); var n = Math.ceil(c.length * crack); for (var j = 0; j < n; j++) g.lineTo(c[j][0] * r, c[j][1] * r); g.stroke(); });
+        }
+        g.restore();
+      }
+      for (var c = 0; c < 5; c++) { var a0 = c / 5 * 6.283 + Math.random() * 0.5, pts = []; for (var j = 1; j <= 5; j++) pts.push([Math.cos(a0 + (Math.random() - .5) * 0.6) * j * 0.17, Math.sin(a0 + (Math.random() - .5) * 0.6) * j * 0.2]); cracks.push(pts); }
+      sfx('sparkle'); void o.offsetWidth; o.classList.add('on');
       function frame(now) {
         if (!live) return;
-        var t = (now - t0) / 1000, cx = W / 2, cy = Hh * 0.42, k = Math.min(W, Hh) / 260, sz = SZ * k * 1.3;
+        var t = (now - t0) / 1000, lt = t - pt, cx = W / 2, cy = Hh * 0.4, k = Math.min(W, Hh) / 260, sz = SZ * k * 1.3, r = sz * 0.42;
         g.setTransform(dpr, 0, 0, dpr, 0, 0); g.imageSmoothingEnabled = false;
-        g.fillStyle = '#05060e'; g.fillRect(0, 0, W, Hh);
-        if (phase === 'intro' && t > INTRO) phase = 'pulse';
-        var p = phase === 'pulse' ? Math.min(1, (t - INTRO) / PULSE) : phase === 'reveal' || phase === 'done' ? 1 : 0;
-        if (phase === 'pulse' && p >= 1) {
-          phase = 'reveal'; swapAt = t; hold.hidden = true; applyEvolve(m, to); sfx('wand');
-          for (var i = 0; i < 90; i++) { var a = Math.random() * 6.283, v = 40 + Math.random() * 220; parts.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, l: 1 + Math.random() * 1.2, s: 2 + Math.random() * 3 }); }
-          msg.textContent = 'Your ' + el0 + ' hontori became ' + newName + '!';
-          H.game && H.game.save && H.game.save(); finishSoon();
-        }
-        var bright = phase === 'pulse' ? p : phase === 'reveal' || phase === 'done' ? Math.max(0, 1 - (t - swapAt) * 0.8) * 0.6 : 0.1;
-        // soft backdrop glow
-        var rg = g.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, Hh) * 0.6);
-        rg.addColorStop(0, 'rgba(' + col + ',' + (0.12 + bright * 0.45) + ')'); rg.addColorStop(1, 'rgba(5,6,14,0)');
-        g.fillStyle = rg; g.fillRect(0, 0, W, Hh);
-        // light rays
-        if (phase !== 'held') {
-          var nr = 14, ra = t * 0.35, len = Math.max(W, Hh);
-          g.save(); g.translate(cx, cy); g.globalCompositeOperation = 'lighter';
-          for (var r = 0; r < nr; r++) {
-            var a0 = ra + r * 6.283 / nr, wdt = 0.07 + 0.05 * Math.sin(t * 2 + r);
-            g.fillStyle = 'rgba(' + col + ',' + (0.05 + bright * 0.22) + ')';
-            g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a0 - wdt) * len, Math.sin(a0 - wdt) * len); g.lineTo(Math.cos(a0 + wdt) * len, Math.sin(a0 + wdt) * len); g.closePath(); g.fill();
+        g.fillStyle = '#07081a'; g.fillRect(0, 0, W, Hh);
+        // a slow garden of element motes drifting up
+        if (Math.random() < 0.5) motes.push({ x: Math.random() * W, y: Hh + 5, v: 12 + Math.random() * 24, l: 1, s: 1 + Math.random() * 2.5, w: Math.random() * 6 });
+        g.fillStyle = SH.a;
+        for (var i = motes.length - 1; i >= 0; i--) { var q = motes[i]; q.y -= q.v / 60; q.x += Math.sin(t + q.w) * 0.3; if (q.y < -5) { motes.splice(i, 1); continue; } g.globalAlpha = 0.35; g.fillRect(q.x, q.y, q.s * k, q.s * k); }
+        g.globalAlpha = 1;
+        // ground ring of the element
+        g.strokeStyle = SH.a; g.globalAlpha = 0.35; g.lineWidth = 2; g.beginPath(); g.ellipse(cx, cy + sz * 0.46, sz * 0.5, sz * 0.12, 0, 0, 6.283); g.stroke(); g.globalAlpha = 1;
+        var bob = Math.sin(t * 2) * 3 * k;
+        if (phase === 'ask') g.drawImage(oldC, cx - sz / 2, cy - sz / 2 + bob, sz, sz);
+        else if (phase === 'curl') {
+          // the hontori shrinks and fades while the shell grows around it
+          var p = Math.min(1, lt / 1.6), s1 = sz * (1 - p * 0.55);
+          g.globalAlpha = 1 - p; g.drawImage(oldC, cx - s1 / 2, cy - s1 / 2 + bob, s1, s1); g.globalAlpha = 1;
+          shell(cx, cy + bob, r * (0.4 + p * 0.6), p, 0);
+        } else if (phase === 'open') {
+          var p2 = Math.min(1, lt / 0.5);
+          if (lt < 0.5) shell(cx, cy + bob, r * (1 + 0.04 * Math.sin(lt * 60)), 1, p2);
+          // new form rises from the light
+          var p3 = Math.max(0, Math.min(1, (lt - 0.45) / 0.8));
+          if (p3 > 0) {
+            var gl = g.createRadialGradient(cx, cy, 0, cx, cy, sz * 0.8); gl.addColorStop(0, 'rgba(255,255,255,' + 0.25 * (1 - p3 * 0.6) + ')'); gl.addColorStop(1, 'rgba(255,255,255,0)');
+            g.fillStyle = gl; g.fillRect(cx - sz, cy - sz, sz * 2, sz * 2);
+            var s2 = sz * (0.7 + 0.3 * p3); g.globalAlpha = p3; g.drawImage(newC, cx - s2 / 2, cy - s2 / 2 + bob - (1 - p3) * 10, s2, s2); g.globalAlpha = 1;
           }
-          g.restore();
+          if (lt >= 0.5) for (var j2 = shards.length - 1; j2 >= 0; j2--) {
+            var sh = shards[j2]; sh.l -= 1 / 60; if (sh.l <= 0) { shards.splice(j2, 1); continue; }
+            sh.x += sh.vx / 60; sh.y += sh.vy / 60; sh.vy += 3; sh.r += sh.vr / 60;
+            g.save(); g.translate(cx + sh.x, cy + sh.y); g.rotate(sh.r); g.globalAlpha = Math.min(1, sh.l);
+            g.fillStyle = SH.b; g.beginPath(); g.moveTo(0, -sh.s * k); g.lineTo(sh.s * 0.7 * k, sh.s * 0.5 * k); g.lineTo(-sh.s * 0.6 * k, sh.s * 0.4 * k); g.closePath(); g.fill();
+            g.strokeStyle = SH.line; g.lineWidth = 1; g.stroke(); g.restore();
+          }
         }
-        // the hontori
-        var bob = Math.sin(t * 2.2) * 4 * k;
-        if (phase === 'intro' || phase === 'held') g.drawImage(oldC, cx - sz / 2, cy - sz / 2 + bob, sz, sz);
-        else if (phase === 'pulse') {
-          // pulses between the old and the new outline, faster and brighter as it goes
-          var freq = 1.2 + p * p * 9, wave = Math.sin((t - INTRO) * freq * 3.1416 * 2 * (0.5 + p * 0.5));
-          var useNew = p > 0.25 && wave > 0.2, sc = 1 + 0.06 * Math.max(0, wave) * p;
-          g.globalAlpha = 1; g.drawImage(oldC, cx - sz / 2, cy - sz / 2 + bob, sz, sz);
-          g.globalAlpha = Math.min(1, 0.25 + p * 0.9);
-          var S2 = sz * sc; g.drawImage(useNew ? newS : oldS, cx - S2 / 2, cy - S2 / 2 + bob, S2, S2);
-          g.globalAlpha = 1;
-          if (Math.random() < 0.3 + p) parts.push({ x: cx + (Math.random() - .5) * sz, y: cy + sz * 0.4, vx: (Math.random() - .5) * 20, vy: -40 - Math.random() * 60, l: 1.2, s: 2 + Math.random() * 2 });
-        } else {
-          g.drawImage(newC, cx - sz / 2, cy - sz / 2 + bob, sz, sz);
-          var fl = Math.max(0, 1 - (t - swapAt) * 2.2);
-          if (fl > 0) { g.globalAlpha = fl; g.drawImage(newS, cx - sz / 2, cy - sz / 2 + bob, sz, sz); g.globalAlpha = 1; }
-          if (Math.random() < 0.25) { var aa = Math.random() * 6.283, d = sz * (0.3 + Math.random() * 0.4); parts.push({ x: cx + Math.cos(aa) * d, y: cy + Math.sin(aa) * d, vx: 0, vy: -10, l: 0.9, s: 3, star: 1 }); }
-        }
-        // particles and sparkles
-        g.globalCompositeOperation = 'lighter';
-        for (var j = parts.length - 1; j >= 0; j--) {
-          var q = parts[j]; q.l -= 1 / 60; if (q.l <= 0) { parts.splice(j, 1); continue; }
-          q.x += q.vx / 60; q.y += q.vy / 60; q.vx *= 0.97; q.vy *= 0.97;
-          g.fillStyle = 'rgba(255,248,220,' + Math.min(1, q.l) + ')';
-          var s2 = Math.round(q.s * k);
-          if (q.star) { g.fillRect(Math.round(q.x - s2 * 1.5), Math.round(q.y), s2 * 3, Math.max(1, s2 >> 1) + 1); g.fillRect(Math.round(q.x), Math.round(q.y - s2 * 1.5), Math.max(1, s2 >> 1) + 1, s2 * 3); }
-          else g.fillRect(Math.round(q.x), Math.round(q.y), s2, s2);
-        }
-        g.globalCompositeOperation = 'source-over';
-        // white flash at the swap
-        if (phase === 'reveal' || phase === 'done') { var fw = Math.max(0, 1 - (t - swapAt) * 1.6); if (fw > 0) { g.fillStyle = 'rgba(255,255,255,' + fw + ')'; g.fillRect(0, 0, W, Hh); } }
-        else if (phase === 'pulse' && p > 0.85) { g.fillStyle = 'rgba(255,255,255,' + ((p - 0.85) / 0.15 * 0.7) + ')'; g.fillRect(0, 0, W, Hh); }
         requestAnimationFrame(frame);
       }
       requestAnimationFrame(frame);
