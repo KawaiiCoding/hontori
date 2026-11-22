@@ -697,7 +697,16 @@
     '.hb-banner .vs span.x{opacity:.6;font-size:13px}',
     '.hb-banner .ed{margin-top:8px;font-weight:900;font-size:17px}',
     '.hb-banner .wx{margin-top:4px;font-size:12px;font-weight:800;opacity:.8}',
-    '.hb-end{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:0;border-radius:999px;padding:14px 30px;font:inherit;font-size:18px;font-weight:900;color:#2a1405;background:linear-gradient(180deg,#ffd98a,#ff9a3c);box-shadow:0 5px 0 #a8501c;cursor:pointer}',
+    '.hb-end{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);transform:translateX(-50%);display:flex;align-items:center;gap:12px;min-width:220px;border:2px solid var(--ec,#ffd98a);border-radius:20px;padding:10px 14px 10px 10px;font:inherit;color:#fff;cursor:pointer;background:linear-gradient(180deg,rgba(30,32,64,.96),rgba(12,13,30,.96));box-shadow:0 0 0 4px rgba(0,0,0,.25),0 0 26px color-mix(in srgb,var(--ec,#ffd98a) 55%,transparent),0 10px 24px rgba(0,0,0,.5);animation:hbEnd .45s ease-out both}',
+    '.hb-end .ei{flex:none;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 30%,#fff3c0,var(--ec,#ffd98a) 55%,#8a5a18);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}',
+    '.hb-end .ei img{width:26px;height:26px;image-rendering:pixelated;transform:scaleX(-1)}',
+    '.hb-end .et{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;text-align:left}',
+    '.hb-end .et small{font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--ec,#ffd98a)}',
+    '.hb-end .et b{font-size:19px;font-weight:900}',
+    '.hb-end .ar{margin-left:auto;font-size:20px;font-weight:900;color:var(--ec,#ffd98a);animation:hbNud 1.2s ease-in-out infinite}',
+    '.hb-end:active{transform:translateX(-50%) translateY(3px)}',
+    '@keyframes hbEnd{from{opacity:0;transform:translate(-50%,16px) scale(.92)}to{opacity:1;transform:translateX(-50%)}}',
+    '@keyframes hbNud{50%{transform:translateX(4px)}}',
     '.hb-tr{position:absolute;left:10px;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:999px;background:rgba(14,16,36,.84);font-weight:900;font-size:12px;pointer-events:none}',
     '.hb-tr canvas{position:static;width:30px;height:30px;border-radius:50%;background:#2a2c48}',
     '.hb-school{box-shadow:inset 0 0 0 3px var(--sc),inset 0 0 60px color-mix(in srgb,var(--sc) 35%,transparent)}',
@@ -1437,8 +1446,14 @@
       saveHp();
       GS.mana = mana; if (!TR) GS.battles = (GS.battles || 0) + 1;
       if (H.game && H.game.save) H.game.save(); H.menu && H.menu.refresh && H.menu.refresh();
+      // the end card: what happened, in the school colour for ring duels, with a clear way on
+      var head = result.captured ? 'Bound' : result.won ? (TR && TR.school ? 'Ring earned' : TR ? 'Duel won' : 'Victory') : result.fled ? 'Escaped' : TR ? 'Duel lost' : 'Time to rest';
+      var col = result.captured ? '#ffd98a' : result.won ? ((TR && TR.school && TR.school.col) || '#9cf0a6') : result.fled ? '#bfe4ff' : '#ffb08a';
+      var ico = ''; try { ico = '<img alt="" src="' + H.icons.url('back', 2) + '">'; } catch (e) {}
+      endBtn.style.setProperty('--ec', col);
+      endBtn.innerHTML = '<span class="ei">' + ico + '</span><span class="et"><small>' + head + '</small><b>Continue</b></span><span class="ar">&rsaquo;</span>';
       setTimeout(function () { endBtn.hidden = false; }, 600);
-      movesEl.style.opacity = '0.4'; bar.style.opacity = '0.4'; sheet.hidden = true;
+      movesEl.style.visibility = 'hidden'; bar.style.opacity = '0.4'; sheet.hidden = true; // the end card takes the place of the moves
     }
 
     // ---------------- input: draw spells
