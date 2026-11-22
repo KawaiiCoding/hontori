@@ -38,7 +38,7 @@ window.H = window.H || {};
   ];
   buildings.forEach(function (b) { var f = { school: [10, 6], house_a: [5, 4] }[b.type]; res(b.x - 1, b.y - 1, b.x + f[0], b.y + f[1]); });
   var npcs = [
-    { key: 'gardener', x: 22, y: 13, dir: 0, lines: [['Warden Fern', 'Rootwood Hall teaches the patience of roots.'], ['Warden Fern', 'Come inside when you are ready.']] },
+    { key: 'warden', x: 22, y: 13, dir: 0, lines: [['Warden Fern', 'Rootwood Hall teaches the patience of roots.'], ['Warden Fern', 'Come inside when you are ready.']] },
     { key: 'shopkeeper', x: 14, y: 17, dir: 3, lines: [['Pell', 'Seeds, herbs and fair trades.'], ['Pell', 'I buy what the forest gives you.']] },
     { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wonders used to come every spring.']] },
     { key: 'kid2', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'I am not a Wonder. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
@@ -75,30 +75,42 @@ window.H = window.H || {};
     zones: [{ x: 33, y: 6, r: 5, key: 'water', w: 3 }, { x: 6, y: 22, r: 4, key: 'grass', w: 4 }, { x: 31, y: 21, r: 4, key: 'grass', w: 3 }]
   };
 
-  // ---------- Rootwood Hall (inside): a long green room with a guest bed at the back
-  var HW = 20, HH = 13, hg = [];
-  for (y = 0; y < HH; y++) { var rr = []; for (x = 0; x < HW; x++) rr.push(x === 0 || x === HW - 1 || y === HH - 1 ? 'V' : y < 2 ? 'W' : 'F'); hg.push(rr); }
-  hg[HH - 1][10] = 'F'; for (y = 3; y < 9; y++) for (x = 7; x < 13; x++) hg[y][x] = 'R';
+  // ---------- Rootwood Hall (inside): a great stone hall with a living Heart Tree, mossy pillars, leaf windows,
+  // a sprout garden for the wand trial, and a quiet guest nook with a bed.
+  var HW = 26, HH = 22, DOOR = 13, TOP = 6, SH = 4, hg = [];  // TOP wall rows: a tall stone wall so the Heart Tree has room to rise
+  for (y = 0; y < HH; y++) { var rr = []; for (x = 0; x < HW; x++) rr.push(x === 0 || x === HW - 1 || y === HH - 1 ? 'V' : y < TOP ? 'W' : 'S'); hg.push(rr); }
+  hg[HH - 1][DOOR] = 'S'; hg[HH - 1][DOOR - 1] = 'S';
+  for (y = 13 + SH; y < 17 + SH; y++) for (x = 20; x < 25; x++) hg[y][x] = 'H';           // guest nook: warm wood
   function pr(t, x, y) { return { type: t, x: x, y: y }; }
+  var hp = [];
+  for (x = 1; x < HW - 1; x++) [0, 2, 4].forEach(function (wy) { hp.push(pr('hall_wall', x, wy)); });
+  hp = hp.concat([
+    pr('stone_dais', 10, 6), pr('heart_tree', 10, 4),
+    pr('leaf_window', 2, 0), pr('leaf_window', 6, 0), pr('leaf_window', 18, 0), pr('leaf_window', 22, 0),
+    pr('hall_banner', 9, 0), pr('hall_banner', 16, 0),
+    pr('stone_pillar', 7, 4), pr('stone_pillar', 18, 4), pr('stone_pillar', 8, 9), pr('stone_pillar', 17, 9), pr('stone_pillar', 8, 13), pr('stone_pillar', 17, 13),
+    pr('sprout_pot', 3, 7), pr('sprout_pot', 5, 9), pr('sprout_pot', 3, 11),
+    pr('glowcaps', 1, 6), pr('glowcaps', 6, 12), pr('glowcaps', 24, 3), pr('glowcaps', 1, 15), pr('glowcaps', 19, 7),
+    pr('bookshelf', 1, 2), pr('bookshelf', 3, 2), pr('potted_tree', 5, 2), pr('potted_tree', 20, 2), pr('bookshelf', 22, 2), pr('crystal_orb', 24, 6),
+    pr('bed', 23, 13), pr('chest', 21, 13), pr('candles', 24, 16), pr('bookstack', 20, 16)
+  ]);
+  // everything was laid out for a 2-row wall: move the floor pieces down; windows and banners hang mid-wall
+  hp.forEach(function (q) { if (q.type === 'hall_wall') return; if (q.type === 'leaf_window' || q.type === 'hall_banner') q.y = 3; else q.y += SH; });
+  for (y = 8 + SH; y < HH - 1; y++) { hp.push(pr('moss_runner', 12, y)); hp.push(pr('moss_runner', 13, y)); }
   H.maps.rootwood_hall = {
     name: 'Rootwood Hall', w: HW, h: HH, tileset: 'indoor', noRest: true,
     ground: hg.map(function (r) { return r.join(''); }),
     legend: { F: 'floor_wood', R: 'rug', W: 'wall', V: 'void', H: 'floor_herring', S: 'floor_stone', K: 'floor_tile', B: 'carpet_blue' },
-    props: [
-      pr('window', 3, 1), pr('picture', 6, 1), pr('window', 9, 1), pr('window', 13, 1), pr('picture', 16, 1),
-      pr('bookshelf', 1, 2), pr('bookshelf', 3, 2), pr('potted_tree', 6, 2), pr('potted_tree', 13, 2), pr('desk', 15, 2), pr('chair', 15, 3),
-      pr('plant', 1, 6), pr('plant', 1, 8), pr('plant', 18, 6), pr('plant', 18, 8),
-      pr('bed', 17, 9), pr('chest', 15, 10), pr('candles', 2, 10), pr('potted_tree', 5, 10)
-    ],
+    props: hp,
     npcs: [
-      { key: 'gardener', x: 10, y: 4, dir: 0, lines: [['Warden Fern', 'Roots first, then leaves.'], ['Warden Fern', 'Rest in the guest bed if you need it.']] },
-      { key: 'girl', x: 4, y: 6, dir: 2, lines: [['Wren', 'You came too! I knew you would.'], ['Wren', 'Fern is strict, but kind.']] }
+      { key: 'warden', x: 13, y: 8 + SH, dir: 0, lines: [['Warden Fern', 'Roots first, then leaves.'], ['Warden Fern', 'Rest in the guest bed if you need it.']] },
+      { key: 'girl', x: 5, y: 14 + SH, dir: 3, lines: [['Wren', 'You came too! I knew you would.'], ['Wren', 'Fern is strict, but kind.']] }
     ],
-    doors: [{ x: 10, y: HH - 1, to: 'mossgrove', tx: 20, ty: 9, dir: 0 }],
-    spawn: { x: 10, y: HH - 2, dir: 1 }, door: 10
+    doors: [{ x: DOOR, y: HH - 1, to: 'mossgrove', tx: 20, ty: 9, dir: 0 }, { x: DOOR - 1, y: HH - 1, to: 'mossgrove', tx: 19, ty: 9, dir: 0 }],
+    spawn: { x: DOOR, y: HH - 2, dir: 1 }, door: DOOR
   };
   // hall door: the middle of the school front
-  H.maps.mossgrove.doors.push({ x: 20, y: 8, to: 'rootwood_hall', tx: 10, ty: HH - 2, dir: 1 });
+  H.maps.mossgrove.doors.push({ x: 20, y: 8, to: 'rootwood_hall', tx: DOOR, ty: HH - 2, dir: 1 });
   // houses: closed doors are just walls for now (no interiors yet)
 
   // ---------- open a path through the south edge of Whisperwood

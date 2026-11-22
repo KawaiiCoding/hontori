@@ -25,13 +25,13 @@ window.H = window.H || {};
 
   // map markers
   function spot(map, x, y) { var cur = here(); if (!cur) return null; if (cur === map) return { map: map, x: x, y: y };
-    var route = { village: { whisperwood: [29, 39], mossgrove: [29, 39], rootwood_hall: [29, 39] }, whisperwood: { mossgrove: [24, 39], rootwood_hall: [24, 39], village: [24, 0] }, mossgrove: { rootwood_hall: [20, 8], whisperwood: [19, 0] }, rootwood_hall: { mossgrove: [10, 12] } };
+    var route = { village: { whisperwood: [29, 39], mossgrove: [29, 39], rootwood_hall: [29, 39] }, whisperwood: { mossgrove: [24, 39], rootwood_hall: [24, 39], village: [24, 0] }, mossgrove: { rootwood_hall: [20, 8], whisperwood: [19, 0] }, rootwood_hall: { mossgrove: [13, 21] } };
     var r = route[cur] && route[cur][map]; return r ? { map: cur, x: r[0], y: r[1] } : null; }
   function aim(qid, sid, fn) { var q = ST.quests[qid], st = q && q.steps.filter(function (s) { return s.id === sid; })[0]; if (st) Object.defineProperty(st, 'target', { configurable: true, get: fn }); }
   aim('leafring', 'road', function () { return spot('mossgrove', 19, 2); });
-  aim('leafring', 'fern', function () { return spot('rootwood_hall', 10, 4); });
-  aim('leafring', 'sprouts', function () { return spot('rootwood_hall', 10, 4); });
-  aim('leafring', 'duel', function () { return spot('rootwood_hall', 10, 4); });
+  aim('leafring', 'fern', function () { return spot('rootwood_hall', 13, 12); });
+  aim('leafring', 'sprouts', function () { return spot('rootwood_hall', 13, 12); });
+  aim('leafring', 'duel', function () { return spot('rootwood_hall', 13, 12); });
   aim('tidewell', 'wait', function () { return spot('mossgrove', 24, 25); });
 
   // the quest starts once Chapter 1 is complete (the letter has arrived)
@@ -67,9 +67,9 @@ window.H = window.H || {};
   // Warden Fern: the trial, step by step; each talk starts the next part
   ST.defineEvent({ id: 'c2_fern', when: 'talk', npc: 'Warden Fern', map: 'rootwood_hall', once: false, cond: function (s) { return !!s.flags['c1:complete'] && !s.flags['c2:ring']; }, run: function (a) {
     if (!F('c2:fern')) {
-      return a.say('gardener', 'Warden Fern', 'A Wonder from Emberbrook. Sorrel wrote that you might come.')
-        .then(function () { return a.say('gardener', 'Warden Fern', 'The Leaf Ring is earned in two parts: care, then courage.'); })
-        .then(function () { return a.say('gardener', 'Warden Fern', 'First, three sprouts here have wilted. Wake them with your wand.'); })
+      return a.say('warden', 'Warden Fern', 'A Wonder from Emberbrook. Sorrel wrote that you might come.')
+        .then(function () { return a.say('warden', 'Warden Fern', 'The Leaf Ring is earned in two parts: care, then courage.'); })
+        .then(function () { return a.say('warden', 'Warden Fern', 'First, three sprouts here have wilted. Wake them with your wand.'); })
         .then(function () { a.setFlag('c2:fern'); return sprouts(a); });
     }
     if (!F('c2:sprouts')) return sprouts(a);
@@ -79,31 +79,31 @@ window.H = window.H || {};
     var n = 0;
     function one() {
       n++;
-      return a.say('gardener', 'Warden Fern', n === 1 ? 'The first one. Gently.' : n === 2 ? 'Good. The next is thirstier.' : 'The last is almost asleep.')
+      return a.say('warden', 'Warden Fern', n === 1 ? 'The first one. Gently.' : n === 2 ? 'Good. The next is thirstier.' : 'The last is almost asleep.')
         .then(function () { return a.draw('mend', 'Draw the Mending Sigil for sprout ' + n + ' of 3'); })
         .then(function () { a.sfx('sparkle'); a.emit('sparkle', 14, 0, -10); a.toast('Sprout ' + n + ' of 3 is awake'); return a.wait(500); })
         .then(function () { return n < 3 ? one() : null; });
     }
     return one().then(function () {
       a.setFlag('c2:sprouts'); save();
-      return a.say('gardener', 'Warden Fern', 'Care, shown. Now courage. We duel, and in this hall no one switches.')
+      return a.say('warden', 'Warden Fern', 'Care, shown. Now courage. We duel, and in this hall no one switches.')
         .then(function () { return a.say('hontori', 'No switching here, so choose with care. Rest up first, the bed is there.'); });
     });
   }
   function duel(a) {
-    return a.say('gardener', 'Warden Fern', 'Ready? One hontori, start to end.')
+    return a.say('warden', 'Warden Fern', 'Ready? One hontori, start to end.')
       .then(function () { return a.choose(['Begin the ring duel', 'Not yet']); })
       .then(function (i) {
-        if (i !== 0) return a.say('gardener', 'Warden Fern', 'Roots do not hurry. Neither do I.');
-        return a.battle('grass', { trainer: { name: 'Warden Fern', key: 'gardener', spirit: 'grass', level: 6, stage: 2, noCapture: true, noSwitch: true }, noCapture: true })
+        if (i !== 0) return a.say('warden', 'Warden Fern', 'Roots do not hurry. Neither do I.');
+        return a.battle('grass', { trainer: { name: 'Warden Fern', key: 'warden', spirit: 'grass', level: 6, stage: 2, noCapture: true, noSwitch: true }, noCapture: true })
           .then(function (r) {
             var party = S().party || []; party.forEach(function (p) { if (p && p.hp <= 0) p.hp = 1; });
-            if (!r || !r.won) return a.say('gardener', 'Warden Fern', 'Not this time. Rest, think, and come back.');
+            if (!r || !r.won) return a.say('warden', 'Warden Fern', 'Not this time. Rest, think, and come back.');
             a.setFlag('c2:ring');
             var s = S(); s.rings = s.rings || []; if (s.rings.indexOf('grass') < 0) s.rings.push('grass');
             a.give('ring_leaf', 'Leaf Ring', 'grass');
-            return a.say('gardener', 'Warden Fern', 'Well grown. The Leaf Ring is yours.')
-              .then(function () { return a.say('gardener', 'Warden Fern', 'Seven more schools. Each tests you in its own way.'); })
+            return a.say('warden', 'Warden Fern', 'Well grown. The Leaf Ring is yours.')
+              .then(function () { return a.say('warden', 'Warden Fern', 'Seven more schools. Each tests you in its own way.'); })
               .then(function () { return a.say('hontori', 'One ring of eight, a leaf of green. The bravest roots are seldom seen.'); });
           });
       });

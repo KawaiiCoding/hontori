@@ -88,12 +88,14 @@
   };
   function glyphEl(id) {
     var w = document.createElement('span'); w.style.cssText = 'width:34px;height:34px;flex:none;display:inline-block';
-    var html = null; try { if (H.battle && H.battle.glyph) html = H.battle.glyph(id, '#ffd98a'); } catch (e) {}
+    var html = null; try { if (H.gesture && H.gesture.sigilSVG) html = H.gesture.sigilSVG(id === 'absorb' ? 'bind' : id, '#ffd98a', false); else if (H.battle && H.battle.glyph) html = H.battle.glyph(id, '#ffd98a'); } catch (e) {}
     w.innerHTML = html || ('<svg viewBox="0 0 30 30" width="34" height="34"><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' + (GLYPH[id] || '<circle cx="15" cy="15" r="4" />') + '</g></svg>');
     var sv = w.querySelector('svg'); if (sv) { sv.setAttribute('width', '34'); sv.setAttribute('height', '34'); }
     return w;
   }
-  function pips(n) { var t = ''; for (var i = 1; i <= 5; i++) t += i <= n ? '*' : '.'; return t; }
+  var RANK = ['', 'Novice', 'Apprentice', 'Adept', 'Expert', 'Master'];
+  function pips(n) { var t = ''; for (var i = 1; i <= 5; i++) t += '<i style="display:inline-block;width:8px;height:8px;margin-right:3px;transform:rotate(45deg);border-radius:2px;vertical-align:1px;' + (i <= n ? 'background:#ffd98a;box-shadow:0 0 4px #ffb84a' : 'background:rgba(255,255,255,.16)') + '"></i>'; return t; }
+  function masteryHtml(n) { return '<span style="margin-left:2px">' + pips(n) + '</span><b style="color:#ffd98a;font-weight:900;margin-left:4px">' + RANK[Math.max(1, Math.min(5, n))] + '</b>'; }
   function pickRow(parent, on, left, title, sub, onTap) {
     var r = mk('div', 'hm-row' + (on ? ' lead' : ''), parent); r.style.cursor = 'pointer'; r.style.padding = '8px 10px';
     if (left) r.appendChild(left);
@@ -202,7 +204,7 @@
   }
 
   // passive things work by themselves: they show a small tag instead of a button
-  var PASSIVE = { lantern: 'In use at night', compass: 'In use', mirror: 'In use', map: 'Map button', wand: 'Always with you', herb: 'Used in battle', bread: 'Used in battle', ember_dust: 'Used in battle', tide_pearl: 'Used in battle', spirit_snack: 'Used in battle', backpack: 'In use', cookbook: 'Use at a stove', slingshot: 'Use at fruit trees' };
+  var PASSIVE = { lantern: 'In use at night', compass: 'In use', mirror: 'In use', map: 'Map button', wand: 'Always with you', herb: 'Used in battle', bread: 'Used in battle', ember_dust: 'Used in battle', tide_pearl: 'Used in battle', spirit_snack: 'Used in battle', backpack: 'In use', cookbook: 'Use at a stove', slingshot: 'Use at fruit trees', ring_leaf: 'Earned at Rootwood Hall', grey_letter: 'Keep it safe', novice_cert: 'Proof of the Academy' };
   function dropItem(it) {
     var st = game().state, i = st.items.indexOf(it); if (i < 0) return;
     if (it.id === 'backpack' && H.pickups && H.pickups.count() > 5) { H.ui && H.ui.toast('Take one thing out first'); return; }
@@ -229,8 +231,8 @@
         var i = mk('div', 'inf', r); mk('div', 'nm', i, it.name + (it.n > 1 ? '  x' + it.n : '')).style.fontSize = '16px';
         var d = (H.pickups && H.pickups.uses[it.id]) || itemDesc(it); if (d) mk('div', 'sub', i, d).style.margin = '2px 0 0';
         var ax = H.pickups ? H.pickups.actions(it) : [];
-        var KEY = { wand: 1, map: 1, novice_cert: 1 };
-        if (!KEY[it.id]) ax = ax.concat([{ label: 'Drop', desc: (H.pickups && H.pickups.spots[it.id]) ? 'It goes back home' : 'Leave one here', drop: true, run: function () { dropItem(it); } }]);
+        var KEY = { wand: 1, map: 1, novice_cert: 1, grey_letter: 1 };
+        if (!KEY[it.id] && !/^ring_/.test(it.id)) ax = ax.concat([{ label: 'Drop', desc: (H.pickups && H.pickups.spots[it.id]) ? 'It goes back home' : 'Leave one here', drop: true, run: function () { dropItem(it); } }]);
         if (!(H.pickups ? H.pickups.actions(it) : []).length) mk('span', 'hm-tag', i.firstChild, PASSIVE[it.id] || 'In use');
         if (ax.length) { var ab = mk('div', 'hm-btns', i); ab.style.cssText = 'flex-direction:row;flex-wrap:wrap;margin-top:6px'; ax.forEach(function (x) { var bt = kb(ab, { label: x.label, desc: x.desc, kind: 'alt', sm: true, onClick: function () { if (x.off) return; if (x.drop && !bt._sure) { bt._sure = 1; bt.querySelector('span span').textContent = 'Drop it?'; return; } if (x.label !== 'Put back' && !x.drop) hide(); x.run(); if (open) render(); } }); bt.disabled = !!x.off; }); }
       });
@@ -270,12 +272,14 @@
       if (!(st.spells || []).length) mk('div', 'hm-empty', els.sheet, 'No spells learned yet.');
       (st.spells || []).forEach(function (id) {
         var inf = P().spellInfo(id), on = st.spellLoadout.indexOf(id) >= 0;
-        pickRow(els.sheet, on, glyphEl(id), inf.name, 'Mana ' + inf.cost + '   Mastery ' + pips(inf.mastery), function () {
+        var row = pickRow(els.sheet, on, glyphEl(id), inf.name, '', function () {
           var L = st.spellLoadout, k = L.indexOf(id);
           if (k >= 0) L.splice(k, 1); else if (L.length < 4) L.push(id); else { H.ui && H.ui.toast('Four spells at most'); return; }
           g.save && g.save(); render();
         });
+        var sb = row.querySelector('.sub'); if (sb) sb.innerHTML = '<span style="color:#9fd0ff">Mana ' + inf.cost + '</span><span style="margin-left:10px">' + masteryHtml(inf.mastery) + '</span>';
       });
+      note('Mastery grows each time you cast a spell. Neat drawings grow it faster. Higher mastery makes a spell cheaper and easier to draw.');
       kb(acts(), { icon: 'back', label: 'Back', kind: 'alt', onClick: function () { show('menu'); } });
     } else if (open === 'moves') {
       var m = moveFor && (st.party.indexOf(moveFor) >= 0 || (st.sanctum || []).indexOf(moveFor) >= 0) ? moveFor : st.party[0];

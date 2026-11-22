@@ -115,6 +115,8 @@ window.H = window.H || {};
       eye: '#4a2a1a', expr: 'grin', raised: 1, freckles: 1, bg: '#f8e0a0' },
     traveler: { name: 'Traveler', skin: '#e8b890', hair: '#5a3a6a', style: 'ponytail', ties: '#c04040', robe: '#5e7048', trim: '#c8a050', pants: '#4a3a2a',
       shoes: '#5a3a2a', scarf: '#c8a050', eye: '#5a8a4a', expr: 'smile', bg: '#c8d8b0' },
+    warden: { name: 'Warden Fern', skin: '#e8b890', hair: '#3a5a2a', style: 'ponytail', ties: '#e0c060', robe: '#2f6a3a', trim: '#e0c060', pants: '#2a3a22',
+      shoes: '#3a2a1a', staff: 1, eye: '#3a7a4a', expr: 'smile', bg: '#b8e0a0' },
     gardener: { name: 'Gardener', skin: '#f0c8a0', hair: '#a83a2a', style: 'hat', cap: '#78a048', shirt: '#9ad0e0', pants: '#5a4a3a', shoes: '#4a3a2a',
       apron: '#7a5a3a', freckles: 1, eye: '#3a7a5a', expr: 'grin', bg: '#c0e8b0' }
   };
