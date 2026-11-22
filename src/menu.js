@@ -40,6 +40,8 @@
     '.hm-row .sub{font-size:13px;opacity:.75;margin:2px 0 6px;white-space:pre-wrap}',
     '.hm-bar{height:8px;border-radius:4px;background:rgba(0,0,0,.5);overflow:hidden}',
     '.hm-bar b{display:block;height:100%;background:linear-gradient(90deg,#57d07a,#9cf0a6)}',
+    '.hm-tabs{display:flex;gap:6px;margin:0 0 10px}.hm-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:12px;border:2px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;font:inherit;cursor:pointer}',
+    '.hm-tab b{font-size:14px;font-weight:900}.hm-tab small{font-size:11px;font-weight:800;opacity:.65}.hm-tab.on{border-color:#ffc56b;background:rgba(255,197,107,.16)}',
     '.hm-purse{display:flex;align-items:center;gap:10px;margin:2px 0 10px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.06)}.hm-purse .pl{font-weight:900;font-size:14px;margin-right:auto}',
     '.hm-purse .pc{display:flex;align-items:center;gap:5px}.hm-purse i{width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.35)}.hm-purse b{font-size:17px;font-weight:900;min-width:12px}.hm-purse small{font-size:11px;font-weight:800;opacity:.7}',
     '.hm-tag{font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;background:#ffc56b;color:#2a1c05}',
@@ -226,7 +228,7 @@
     if (sub) note(sub, s).style.margin = '0 0 6px';
     return s;
   }
-  var bagWait = 0;
+  var bagWait = 0, bagTab = null;
   function bagRow(it, parent, PK) {
     var r = mk('div', 'hm-row', parent); r.style.padding = '8px 10px';
     var c = itemCanvas(it); c.className = 'itm'; r.appendChild(c);
@@ -238,7 +240,7 @@
       var stuck = PK && PK.held ? PK.held(it.id) : null, atHome = ax.some(function (x) { return x.label === 'Put back'; });
       if (stuck) ax.forEach(function (x) { if (x.label === 'Put back') { x.off = true; x.desc = 'Take one other thing out first'; } });
       // at home "Put back" already does it; elsewhere Drop sends a home thing back to its spot
-      if (!atHome) ax = ax.concat([{ label: 'Drop', desc: stuck ? 'Take one other thing out first' : home ? 'Goes back to its spot at home' : it.n > 1 ? 'Leave one here' : 'Leave it here', off: !!stuck, drop: true, run: function () { dropItem(it); } }]);
+      if (!atHome) ax = ax.concat([{ label: 'Drop', desc: stuck ? 'Take one out first' : '', off: !!stuck, drop: true, run: function () { dropItem(it); } }]);
     }
     if (!ax.length) return;
     var ab = mk('div', 'hm-btns', i); ab.style.cssText = 'flex-direction:row;flex-wrap:wrap;margin-top:6px';
@@ -274,14 +276,22 @@
       var by = { pocket: [], supply: [], key: [], trade: [] };
       st.items.forEach(function (it) { by[kindOf(it)].push(it); });
       if (!st.items.length && !on) mk('div', 'hm-empty', els.sheet, 'Empty for now.');
+      // three tabs: Backpack (things from home), Supplies (battle items and the trade pouch), Key things
+      var tabs = [['pocket', 'Backpack', on ? PK.count() + ' / ' + PK.cap() : String(by.pocket.length)], ['supply', 'Supplies', String(by.supply.length + by.trade.reduce(function (t, it) { return t + (it.n || 1); }, 0))], ['key', 'Key things', String(by.key.length)]];
+      if (!bagTab) bagTab = 'pocket';
+      var tb = mk('div', 'hm-tabs', els.sheet);
+      tabs.forEach(function (t) { var b = mk('button', 'hm-tab' + (bagTab === t[0] ? ' on' : ''), tb); mk('b', '', b, t[1]); mk('small', '', b, t[2]); b.addEventListener('click', function () { bagTab = t[0]; render(); }); });
+      if (bagTab === 'pocket') {
       if (on) {
         var s1 = bagSec(PK.label(), 'backpack', 'Only things from home use a pocket.');
         if (!by.pocket.length) mk('div', 'hm-empty', s1, 'Nothing from home yet.').style.padding = '8px 4px';
         by.pocket.forEach(function (it) { bagRow(it, s1, PK); });
       } else by.pocket.forEach(function (it) { bagRow(it, els.sheet, PK); });
-      if (by.supply.length) { var s2 = bagSec('Supplies', 'heart', 'Used up in battle. No pocket needed.'); by.supply.forEach(function (it) { bagRow(it, s2, PK); }); }
-      if (by.key.length) { var s3 = bagSec('Key things', 'star', 'Always with you. They cannot be dropped.'); by.key.forEach(function (it) { bagRow(it, s3, PK); }); }
-      if (by.trade.length) {
+      }
+      if (bagTab === 'supply' && !by.supply.length && !by.trade.length) mk('div', 'hm-empty', els.sheet, 'No supplies yet. Herbs and dust come from the shop and the wild.');
+      if (bagTab === 'supply' && by.supply.length) { var s2 = bagSec('Supplies', 'heart', 'Used up in battle. No pocket needed.'); by.supply.forEach(function (it) { bagRow(it, s2, PK); }); }
+      if (bagTab === 'key' && by.key.length) { var s3 = bagSec('Key things', 'star', 'Always with you. They cannot be dropped.'); by.key.forEach(function (it) { bagRow(it, s3, PK); }); }
+      if (bagTab === 'supply' && by.trade.length) {
         var ps = bagSec('Trade pouch   worth ' + MON.fmt(MON.pouchValue()), 'coin', 'Sell these at Nettle\'s shop. No pocket needed.');
         by.trade.forEach(function (it) { var r = mk('div', 'hm-row', ps); r.style.padding = '6px 10px'; var cc = itemCanvas(it); cc.className = 'itm'; r.appendChild(cc); var inf = mk('div', 'inf', r); mk('div', 'nm', inf, TR[it.id][0] + (it.n > 1 ? '  x' + it.n : '')); mk('div', 'sub', inf, TR[it.id][3] + '  ' + MON.fmt(MON.value(it.id)) + ' each'); });
       }
