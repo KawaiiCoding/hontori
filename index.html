@@ -11,6 +11,9 @@
   }
   /* controls are always visible (web and phone); the dialog sits clear of them */
   #root .hui-touch{display:block!important}
+  /* tap-to-move mode hides the joystick and the A and B buttons */
+  #root .hui.tapmode .hui-touch{display:none!important}
+  #root:not(.land) .hui.tapmode .hui-dlg{bottom:calc(env(safe-area-inset-bottom,0px) + 24px)!important}
   #root:not(.land) .hui-dlg{left:8px!important;right:8px!important;width:auto!important;transform:none!important;bottom:calc(env(safe-area-inset-bottom,0px) + 206px)!important}
   #root.land .hui-dlg{left:210px!important;right:210px!important;width:auto!important;transform:none!important;bottom:10px!important}
   *{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
@@ -65,6 +68,7 @@
 <script src="src/progress.js"></script>
 <script src="src/naming.js"></script>
 <script src="src/menu.js"></script>
+<script src="src/spellbook.js"></script>
 <script src="src/mapview.js"></script>
 <script src="src/moves.js"></script>
 <script src="src/battle.js"></script>

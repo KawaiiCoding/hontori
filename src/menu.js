@@ -357,6 +357,8 @@
       }
       var a = acts();
       kb(a, { icon: 'scroll', label: 'Save', desc: 'Also saves by itself', kind: 'alt', onClick: function () { g.save && g.save(); hide(); H.ui && H.ui.toast('Game saved'); } });
+      var tapm = H.ui && H.ui.controls && H.ui.controls() === 'tap';
+      kb(a, { icon: 'locate', label: tapm ? 'Controls: Tap' : 'Controls: Joystick', desc: tapm ? 'Tap to move, double tap to run' : 'Stick to move, A to use, B to run', kind: 'alt', onClick: function () { H.ui.setControls(tapm ? 'stick' : 'tap'); render(); } });
       var muted = H.audio && H.audio.muted;
       kb(a, { icon: muted ? 'bell_off' : 'bell', label: muted ? 'Sound off' : 'Sound on', desc: 'Tap to switch', kind: 'alt', onClick: function () { if (H.audio) { H.audio.setMuted(!H.audio.muted); render(); } } });
       var armed = false, ng = kb(a, { icon: 'sprout', label: 'New game', desc: 'Erases this save', kind: 'warn' });

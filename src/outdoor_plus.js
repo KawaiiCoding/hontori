@@ -63,7 +63,7 @@ window.H = window.H || {};
   function mk(g, ox, oy, oc) { if (oc !== false) outline(g, oc); return { c: toCanvas(g), ox: ox, oy: oy }; }
   var cache = {};
   function sprite(key, fn) { return cache[key] || (cache[key] = fn()); }
-  function blit(ctx, s, px, py) { ctx.drawImage(s.c, Math.round(px + s.ox), Math.round(py + s.oy)); }
+  function blit(ctx, s, px, py) { if (!s || !s.c) return; ctx.drawImage(s.c, Math.round(px + s.ox), Math.round(py + s.oy)); }
   function isNight(env) { var h = env && env.time != null ? env.time : 12; return h >= 19 || h < 6; }
   function sway(env, px, py, n, amp) {
     var t = env && env.t || 0, w = env && env.wind != null ? env.wind : 0.2;
@@ -555,7 +555,7 @@ window.H = window.H || {};
         v = (px >> 4) % 2;
         fr = sprite(type + v, function () { return stallFrames(v); });
         return blit(ctx, fr[sway(env, px, py, fr.length, 0.8)], px, py);
-      case 'laundry_line': fr = sprite(type, laundryFrames); return blit(ctx, fr[Math.floor((env.t || 0) * (0.8 + (env.wind || 0.2) * 1.4)) % 3], px, py);
+      case 'laundry_line': fr = sprite(type, laundryFrames); return blit(ctx, fr[Math.abs(Math.floor((env.t || 0) * (0.8 + (env.wind || 0.2) * 1.4))) % 3], px, py);
       case 'windchime': fr = sprite(type, chimeFrames); return blit(ctx, fr[sway(env, px, py, fr.length, 1.2)], px, py);
       case 'birdbath': fr = sprite(type, birdbathFrames); return blit(ctx, fr[Math.floor((env.t || 0) * 1.5) & 1], px, py);
       case 'lantern_string':

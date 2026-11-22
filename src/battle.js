@@ -705,15 +705,15 @@
     '.hb-rule{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 106px);padding:4px 10px;border-radius:10px;font-size:11px;font-weight:900;letter-spacing:.3px;background:color-mix(in srgb,var(--sc) 30%,#0e1024);border:2px solid var(--sc);pointer-events:none}',
     '.hb-title{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--sc) 45%,#0b0c1c),#06070f 70%);animation:hbtIn .6s ease-out both;cursor:pointer}',
     '.hb-title.out{animation:hbtOut .5s ease-in both}',
-    '.hb-title .crest{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,color-mix(in srgb,var(--sc) 60%,#fff) 0,var(--sc) 45%,#14162e 72%);box-shadow:0 0 0 4px #ffd98a,0 0 40px var(--sc);animation:hbtSpin 2.6s ease-in-out both}',
-    '.hb-title .crest img{width:64px;height:64px;image-rendering:pixelated}',
+    '.hb-title .crest{display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 22px var(--sc)) drop-shadow(0 6px 0 rgba(0,0,0,.5));animation:hbtSpin 2.6s ease-in-out both}',
+    '.hb-title .skip{margin-top:18px;font-style:normal;font-size:12px;font-weight:800;opacity:.6;animation:hbp 1.6s ease-in-out infinite}',
     '.hb-title small{margin-top:14px;font-size:13px;font-weight:900;letter-spacing:6px;text-transform:uppercase;color:#ffd98a}',
     '.hb-title b{font-size:clamp(26px,8vw,40px);font-weight:900;text-shadow:0 0 18px var(--sc),0 3px 0 #000}',
     '.hb-title span{font-size:16px;font-weight:800;opacity:.9}',
     '.hb-title em{margin-top:8px;font-style:normal;font-size:13px;font-weight:900;padding:5px 14px;border-radius:12px;border:2px solid var(--sc);background:rgba(0,0,0,.35)}',
     '@keyframes hbtIn{from{opacity:0;transform:scale(1.15)}to{opacity:1;transform:none}}',
     '@keyframes hbtOut{to{opacity:0;transform:scale(.92)}}',
-    '@keyframes hbtSpin{from{transform:rotate(-200deg) scale(.2)}55%{transform:rotate(10deg) scale(1.08)}to{transform:none}}'
+    '@keyframes hbtSpin{from{transform:rotateY(540deg) scale(.2);opacity:0}60%{transform:rotateY(-20deg) scale(1.08);opacity:1}to{transform:none}}'
   ].join('\n');
   var ICON = {
     swap: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 H18 M14 4 L18 8 L14 12 M20 16 H6 M10 12 L6 16 L10 20"/></svg>',
@@ -829,10 +829,19 @@
     if (SCH) {
       el.classList.add('hb-school'); el.style.setProperty('--sc', SCH.col || '#ffd98a');
       if (SCH.rule) mk('div', 'hb-rule', el, 'Rule: ' + SCH.rule);
-      var card0 = mk('div', 'hb-title', el), ic0 = ''; try { ic0 = '<img alt="" src="' + H.icons.url(SCH.el, 4) + '">'; } catch (e) {}
-      card0.innerHTML = '<div class="crest">' + ic0 + '</div><small>Ring Duel</small><b>' + SCH.name + '</b><span>' + (TR.name || '') + '</span>' + (SCH.rule ? '<em>' + SCH.rule + '</em>' : '');
-      var hideCard = function () { card0.classList.add('out'); setTimeout(function () { card0.remove(); }, 500); };
-      card0.addEventListener('click', hideCard); setTimeout(hideCard, 2600); sfx('spell');
+      // the ring itself: a gold band seen at an angle, with a gem in the school's colour
+      var gc = SCH.col || '#7ed957', ring = '<svg viewBox="0 0 160 140" width="170" height="150"><defs>' +
+        '<linearGradient id="rgB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b8"/><stop offset=".45" stop-color="#e8b84a"/><stop offset="1" stop-color="#8a5a18"/></linearGradient>' +
+        '<radialGradient id="rgG" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="' + gc + '"/><stop offset="1" stop-color="#0a1a0a"/></radialGradient></defs>' +
+        '<ellipse cx="80" cy="86" rx="52" ry="34" fill="none" stroke="#3a2408" stroke-width="20"/>' +
+        '<ellipse cx="80" cy="86" rx="52" ry="34" fill="none" stroke="url(#rgB)" stroke-width="15"/>' +
+        '<ellipse cx="80" cy="82" rx="50" ry="31" fill="none" stroke="#fff6c8" stroke-width="2" opacity=".6"/>' +
+        '<path d="M58 54 L80 30 L102 54 L80 66 Z" fill="#5a3a10"/><path d="M62 52 L80 22 L98 52 L80 64 Z" fill="url(#rgG)" stroke="#2a1a06" stroke-width="2"/>' +
+        '<path d="M70 44 L80 28 L84 40 Z" fill="#fff" opacity=".7"/><circle cx="118" cy="70" r="3" fill="#fff" opacity=".9"/></svg>';
+      var card0 = mk('div', 'hb-title', el);
+      card0.innerHTML = '<div class="crest">' + ring + '</div><small>Ring Duel</small><b>' + SCH.name + '</b><span>' + (TR.name || '') + '</span>' + (SCH.rule ? '<em>' + SCH.rule + '</em>' : '') + '<i class="skip">Tap to begin</i>';
+      var hideCard = function () { if (card0._gone) return; card0._gone = 1; card0.classList.add('out'); setTimeout(function () { card0.remove(); }, 500); };
+      card0.addEventListener('click', hideCard); setTimeout(hideCard, 5200); sfx('spell');
     }
     var banner = mk('div', 'hb-banner', el);
     var endBtn = mk('button', 'hb-end', el, 'Continue'); endBtn.hidden = true;
@@ -844,7 +853,7 @@
       HL('intent', 'Foe', 'Up here you see what the foe plans next.', 'info', intentEl);
       HL('turn', 'Turns', 'This shows whose turn it is.', 'star', '.hb-turn.on');
       HL('mana', 'Mana', 'Blue orbs are mana. Spells use them up.', 'crystal', manaEl);
-    }, 1200);
+    }, TR && TR.school ? 5800 : 1200); // after the Ring Duel card
     sheetBtn.addEventListener('click', function () { HL('bspells', 'Spells', 'Draw a sigil on the field to cast. One spell each turn.', 'wand', sheet); if (known.length > 4) HL('loadout4', 'Four spells', 'You know ' + known.length + ' spells, but only 4 come into battle. Choose them in Menu, Spells.', 'book', sheet); sheetOpen = sheet.hidden; sheet.hidden = !sheetOpen; el.classList.toggle('sheet-open', sheetOpen); });
     new MutationObserver(function () { el.classList.toggle('sheet-open', !sheet.hidden); }).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
 

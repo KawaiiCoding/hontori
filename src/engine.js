@@ -114,8 +114,58 @@
   addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
   let touchActionPrev = false;
   let started = !H.title; if (H.title) H.title.ready.then(() => { started = true; actionQueued = false; });
+  // tap to move: a path of tiles to follow, then maybe use (or push) the tapped thing
+  let tapPath = null, tapAct = null, tapRun = false;
+  function tapNext() {
+    if (!tapPath && !tapAct) return null;
+    if (busy || (H.ui && H.ui.isOpen && H.ui.isOpen())) { tapPath = null; tapAct = null; return null; }
+    if (tapPath) while (tapPath.length && tapPath[0][0] === player.tx && tapPath[0][1] === player.ty) tapPath.shift();
+    if (tapPath && tapPath.length) { const n = tapPath[0], dx = n[0] - player.tx, dy = n[1] - player.ty;
+      if (Math.abs(dx) + Math.abs(dy) !== 1) { tapPath = null; tapAct = null; return null; }
+      if (tapPath.length === 1 && tapAct === 'push') { tapPath = null; tapAct = null; }
+      return { dx, dy }; }
+    tapPath = null;
+    if (tapAct && player.moving) return null;   // use the thing only after the last step
+    if (tapAct) { const t = tapAct; tapAct = null; const dx = t[0] - player.tx, dy = t[1] - player.ty;
+      player.dir = dy > 0 ? 0 : dy < 0 ? 1 : dx < 0 ? 2 : 3; return { act: true }; }
+    return null;
+  }
+  function tapAt(cx, cy, run) {
+    if (!started || !map) return;
+    const r = canvas.getBoundingClientRect(), x = Math.floor(((cx - r.left) / r.width * VW + camX) / T), y = Math.floor(((cy - r.top) / r.height * VH + camY) / T);
+    if (x < 0 || y < 0 || x >= map.w || y >= map.h) return;
+    tapRun = !!run;
+    const door = (map.doors || []).find(d => d.x === x && d.y === y);
+    const npc = npcs.find(n => !n.away && n.x === x && n.y === y);
+    const box = !!(H.dynBlocked && H.dynBlocked(mapName, x, y)) && !!H.pushAt;
+    const thing = npc || (H.pickups && H.pickups.at(mapName, x, y)) || objectAt(x, y) || (y + 1 < map.h && objectAt(x, y) ) || null;
+    const free = (a, b) => !blocked(a, b) || (map.doors || []).some(d => d.x === a && d.y === b);
+    // BFS from the kid to the goal tiles
+    const goals = [];
+    if (door || (!blocked(x, y))) goals.push([x, y]);
+    else [[0, 1], [0, -1], [-1, 0], [1, 0]].forEach(([ax, ay]) => { const gx = x + ax, gy = y + ay; if (gx >= 0 && gy >= 0 && gx < map.w && gy < map.h && (!blocked(gx, gy) || (gx === player.tx && gy === player.ty))) goals.push([gx, gy]); });
+    if (!goals.length) return;
+    const key = (a, b) => a + ',' + b, prev = {}, Q = [[player.tx, player.ty]]; prev[key(player.tx, player.ty)] = null; let hit = null;
+    while (Q.length) { const q = Q.shift(); if (goals.some(g => g[0] === q[0] && g[1] === q[1])) { hit = q; break; }
+      for (const [ax, ay] of [[0, 1], [0, -1], [-1, 0], [1, 0]]) { const nx = q[0] + ax, ny = q[1] + ay, k = key(nx, ny);
+        if (k in prev || nx < 0 || ny < 0 || nx >= map.w || ny >= map.h || !free(nx, ny)) continue; prev[k] = q; Q.push([nx, ny]); } }
+    if (!hit) { sfx('bump'); return; }
+    const path = []; for (let c = hit; c; c = prev[key(c[0], c[1])]) path.unshift(c);
+    tapPath = path.slice(1); tapAct = null;
+    if (!(door || !blocked(x, y))) {
+      if (box) { tapPath.push([x, y]); tapAct = 'push'; }          // walk into the pile to push it
+      else if (thing) tapAct = [x, y];                             // face it and use it
+    }
+    tapMark = { x, y, t: 0.5 };
+  }
+  let tapMark = null;
+  H.tapAt = tapAt; H.tapCancel = () => { tapPath = null; tapAct = null; };
+  if (DEBUG) H._tap = { get path() { return tapPath; }, get act() { return tapAct; }, get started() { return started; }, get cam() { return [camX, camY, VW, VH]; } };
   function readInput() {
     if (!started) { actionQueued = false; return { dx: 0, dy: 0, act: false }; }
+    { const ti0 = (H.ui && H.ui.input) || {}; const manual = keys.arrowright || keys.arrowleft || keys.arrowup || keys.arrowdown || keys.w || keys.a || keys.s || keys.d || ti0.dx || ti0.dy;
+      if (manual) { tapPath = null; tapAct = null; }
+      else if (tapPath || tapAct) { const t = tapNext(); if (t) return { dx: t.dx || 0, dy: t.dy || 0, act: !!t.act }; } }
     const ti = (H.ui && H.ui.input) || { dx: 0, dy: 0, action: false };
     let dx = (keys.arrowright || keys.d ? 1 : 0) - (keys.arrowleft || keys.a ? 1 : 0) + (ti.dx || 0);
     let dy = (keys.arrowdown || keys.s ? 1 : 0) - (keys.arrowup || keys.w ? 1 : 0) + (ti.dy || 0);
@@ -167,8 +217,17 @@
     const out = []; let c = end; while (c) { out.unshift(c); c = prev.get(key(c[0], c[1])); } return out;
   }
 
+  // first launch: the player picks how to move (can be changed later in the menu)
+  async function askControls() {
+    if (!H.ui || !H.ui.choose || (H.ui.controls && H.ui.controls())) return;
+    const i = await H.ui.choose([{ label: 'Joystick with A and B', desc: 'Move with the stick, A to use, B to run' }, { label: 'Tap to move', desc: 'Tap where to go, tap a thing to use it, double tap to run' }]);
+    H.ui.setControls(i === 1 ? 'tap' : 'stick');
+    H.ui.toast && H.ui.toast(i === 1 ? 'Tap to move. Change it any time in the menu.' : 'Joystick and buttons. Change it any time in the menu.');
+  }
+  H.askControls = askControls;
   async function runIntro() {
     busy = true;
+    await askControls();
     const fp = (map.props || []).find(p => p.type === 'fireplace');
     const fx = fp ? fp.x * T + 16 : player.x, fy = fp ? fp.y * T + 4 : player.y - 30;
     for (const st of H.script.intro || []) {
@@ -377,7 +436,7 @@
       } else if (inp.dx || inp.dy) tryMove(inp, 0);
     }
     if (player.moving) {
-      const run = keys.shift || ((H.ui && H.ui.input && (H.ui.input.run || H.ui.input.back)) ? true : false);
+      const run = keys.shift || (tapPath && tapRun) || ((H.ui && H.ui.input && (H.ui.input.run || H.ui.input.back)) ? true : false);
       player.prog += dt / ((run ? 0.14 : 0.24) * (H.speedMul ? H.speedMul(env, mapName) : 1));
       if (player.prog >= 1) {
         const left = player.prog - 1; player.moving = false; player.steps++; sfx('step');
@@ -457,6 +516,7 @@
     ctx.restore();
     if (weather && !env.indoor) weather.draw(ctx, camX, camY, env);
     if (lighting) lighting.render(ctx, camX, camY, env, lights);
+    if (tapMark && tapMark.t > 0) { tapMark.t -= 1 / 60; ctx.save(); ctx.translate(-camX, -camY); ctx.globalAlpha = Math.min(1, tapMark.t * 2); ctx.strokeStyle = '#ffe6a0'; ctx.lineWidth = 1; ctx.strokeRect(tapMark.x * T + 2 + (0.5 - tapMark.t) * 4, tapMark.y * T + 2 + (0.5 - tapMark.t) * 4, 12 - (0.5 - tapMark.t) * 8, 12 - (0.5 - tapMark.t) * 8); ctx.restore(); }
     (H.screenDraw || []).forEach(fn => { try { fn(ctx, VW, VH, env, mapName, camX, camY, player); } catch (e) { console.warn(e); } });
     if (particles) particles.draw(ctx, camX, camY);
     if (flash > 0) { ctx.fillStyle = `rgba(255,240,200,${flash * 0.6})`; ctx.fillRect(0, 0, VW, VH); }
@@ -498,7 +558,13 @@
   H.game.npcs = () => npcs; H.game.applySched = applySched;
 
   let last = performance.now();
-  function loop(now) { checkSize(); const dt = Math.min(0.05, (now - last) / 1000); last = now; update(dt); render(); requestAnimationFrame(loop); }
+  // one bad frame must never freeze the game: always schedule the next one
+  let loopErr = 0;
+  function loop(now) {
+    requestAnimationFrame(loop);
+    try { checkSize(); const dt = Math.min(0.05, (now - last) / 1000); last = now; if (!(env.wind >= 0)) env.wind = 0.1; update(dt); render(); }
+    catch (e) { if (loopErr++ < 5) console.warn('frame error', e); }
+  }
 
   H.ui && H.ui.init(document.getElementById('root'));
   // debug url params: ?nointro=1&scene=village&time=21&weather=rain&tx=10&ty=12
@@ -506,6 +572,7 @@
   const sv = (!Q.get('scene') && !Q.get('nointro')) ? H.game.read() : null;
   if (sv && sv.state && sv.state.intro && H.maps[sv.map]) {
     H.game.state = sv.state; loadMap(sv.map, sv.tx, sv.ty, sv.dir); env.time = sv.time; env.weather = sv.weather || 'clear';
+    (H.title ? H.title.ready : Promise.resolve()).then(() => setTimeout(() => { if (!busy) askControls(); }, 1200));
     if (sv.state.party[0]) spirit = { key: sv.state.party[0].key, x: player.x + 12, y: player.y - 10 };
   } else {
     loadMap(Q.get('scene') || 'home', Q.get('tx') ? +Q.get('tx') : undefined, Q.get('ty') ? +Q.get('ty') : undefined);

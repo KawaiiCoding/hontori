@@ -47,6 +47,9 @@ window.H = window.H || {};
     '@media (pointer:coarse){.hui-touch{display:block}}',
     '.hui.touch .hui-touch{display:block}',
     '.hui.fine .hui-touch{display:none}',
+    '.hui-tapl{position:absolute;inset:0;display:none;pointer-events:auto;touch-action:none}',
+    '.hui.tapmode .hui-tapl{display:block}',
+    '.hui.tapmode .hui-touch{display:none!important}',
     '.hui.talk .hui-touch{display:none}',
     '.hui-zone{position:absolute;left:0;bottom:0;width:50%;top:22%;pointer-events:auto;touch-action:none}',
     '.hui-joy{position:absolute;left:0;top:0;width:var(--js);height:var(--js);margin:calc(var(--js) / -2) 0 0 calc(var(--js) / -2);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.04) 30%,rgba(255,255,255,.12) 70%);border:2px solid rgba(255,255,255,.26);box-shadow:0 0 0 1px rgba(0,0,0,.25),inset 0 0 18px rgba(0,0,0,.25);opacity:.45;transition:opacity .15s;pointer-events:none}',
@@ -118,6 +121,17 @@ window.H = window.H || {};
     els.toast = mk('div', 'hui-toast', o);
     els.fade = mk('div', 'hui-fade', o);
 
+    // tap to move: a layer under everything else; a tap walks or uses, a quick second tap runs (B)
+    var tapL = mk('div', 'hui-tapl', o); o.insertBefore(tapL, o.firstChild);
+    var lastTap = 0, lastX = 0, lastY = 0, downX = 0, downY = 0;
+    tapL.addEventListener('pointerdown', function (e) { downX = e.clientX; downY = e.clientY; });
+    tapL.addEventListener('pointerup', function (e) {
+      if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 24) return;
+      if (dlg || choice) { advance(); return; }
+      var now = performance.now(), dbl = now - lastTap < 320 && Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY) < 60;
+      lastTap = dbl ? 0 : now; lastX = e.clientX; lastY = e.clientY;
+      if (H.tapAt) H.tapAt(e.clientX, e.clientY, dbl);
+    });
     // touch controls
     var tc = mk('div', 'hui-touch', o);
     // analog joystick: floating base appears where the left thumb lands
@@ -192,6 +206,8 @@ window.H = window.H || {};
 
     var coarse = window.matchMedia && matchMedia('(pointer:coarse)').matches;
     if (coarse) o.classList.add('touch'); else o.classList.add('fine');
+    var mode0 = null; try { mode0 = localStorage.getItem('hontori.controls'); } catch (e) {}
+    o.classList.toggle('tapmode', mode0 === 'tap');
     window.addEventListener('touchstart', function () { o.classList.remove('fine'); o.classList.add('touch'); }, { once: true, passive: true });
 
     // choice keyboard navigation (engine handles game keys; this only acts while a choice is open)
@@ -419,6 +435,9 @@ window.H = window.H || {};
 
   H.ui = {
     init: init, say: say, choose: choose, advance: advance, isOpen: isOpen,
+    // control mode: 'stick' (joystick with A and B) or 'tap' (tap to move, tap a thing to use it, double tap to run)
+    controls: function () { try { return localStorage.getItem('hontori.controls'); } catch (e) { return null; } },
+    setControls: function (m) { try { localStorage.setItem('hontori.controls', m); } catch (e) {} var r = document.querySelector('.hui'); if (r) r.classList.toggle('tapmode', m === 'tap'); },
     hud: hud, toast: toast, fade: fade, input: input, elementBadge: elementBadge
   };
 })();
@@ -520,7 +539,7 @@ window.H = window.H || {};
     f['help:' + id] = 1;
     try { H.game.save && H.game.save(); } catch (e) {}
     // shown after a short pause, so the thing it explains is seen first
-    return new Promise(function (res) { queue.push({ title: title, text: text, target: target, res: res }); if (!busy) setTimeout(next, 1000); busy = true; });
+    return new Promise(function (res) { queue.push({ title: title, text: text, target: target, res: res }); if (!busy) setTimeout(next, 500); busy = true; });
   }
   function fox() {
     var st = H.game && H.game.state, m = st && st.party && st.party[0], c = null;
@@ -546,7 +565,7 @@ window.H = window.H || {};
     var W = R.width, Hh = R.height, gw = Math.min(300, W - 20), gh = g.offsetHeight || 70, x, y;
     // rule: the guide never covers what matters. Try spots next to the target, then top, middle and bottom bands,
     // and keep the one that hides the least of the target and of any visible button, card, panel or dialog.
-    var busyEls = [].slice.call(root.querySelectorAll('button, .hb-card, .hb-msg, .hb-intent, .hb-moves, .hb-bar, .hm-sheet.on, .hui-dlg, .hk-btn, .hq, input'))
+    var busyEls = [].slice.call(root.querySelectorAll('button, .hb-card, .hb-msg, .hb-intent, .hb-moves, .hb-bar, .hb-turn, .hb-tr, .hb-rule, .hm-sheet.on, .hui-dlg, .hk-btn, .hq, .hq-pill, .hq-pop, .hui-hud, .hm-top > *, .hm-party > *, .hui-toast, .hui-btn, input'))
       .filter(function (e) { return e.offsetParent !== null && !ov.contains(e); })
       .map(function (e) { var b = e.getBoundingClientRect(); return { x: b.left - R.left, y: b.top - R.top, w: b.width, h: b.height }; })
       .filter(function (b) { return b.w > 0 && b.h > 0 && b.w * b.h < W * Hh * 0.6; });
@@ -563,7 +582,7 @@ window.H = window.H || {};
       gw = w; g.style.width = w + 'px'; gh = g.offsetHeight || gh;
       var cands = [], mx = (W - gw) / 2;
       if (tr) { var tx = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2)); cands.push([tx, tr.y + tr.h + 12], [tx, tr.y - gh - 12]); }
-      for (var f = 0.1; f < 0.86; f += 0.05) cands.push([mx, Hh * f], [10, Hh * f], [W - gw - 10, Hh * f]);
+      for (var f = 0.14; f < 0.86; f += 0.05) cands.push([mx, Hh * f], [10, Hh * f], [W - gw - 10, Hh * f]);
       cands.forEach(function (cnd, i) { var cx = cnd[0], cy = Math.max(10, Math.min(Hh - gh - 10, cnd[1])), sc = cover(cx, cy) + i * 2 + wi * 400; if (!best || sc < best[2]) best = [cx, cy, sc, w, gh]; });
     });
     x = best[0]; y = best[1]; gw = best[3]; gh = best[4];
