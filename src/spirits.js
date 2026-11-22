@@ -210,7 +210,7 @@ window.H = window.H || {};
   function legsSide(p, legs, y0, y1, w, col, farCol, sock) {
     legs.forEach(function (L) {
       var mv = p.mode === 'move', s = mv ? Math.sin(p.gp + L[1] * Math.PI) : 0, dx = Math.round(s * 1.6 * 2) / 2;
-      var up = mv && Math.cos(p.gp + L[1] * Math.PI) > 0.2 ? 1 : 0, yb = y1 - up, c = L[2] ? farCol : col;
+      var up = mv && Math.cos(p.gp + L[1] * Math.PI) < -0.2 ? 1 : 0,  /* a foot lifts while it swings forward (to the left), so the walk reads forwards */ yb = y1 - up, c = L[2] ? farCol : col;
       for (var yy = y0; yy < yb; yy++) {
         var q = (yy - y0) / Math.max(1, yb - y0), xx = L[0] + dx * q;
         p.rect(xx, yy, w, 1, sock && yy >= yb - 2 ? (L[2] ? sock[1] : sock[0]) : c);
@@ -1648,6 +1648,8 @@ window.H = window.H || {};
     var f = Math.floor((t + sd * 3) * (mode === 'move' ? 16 : 12)) % NF;
     var bt = (t + sd * 5) % (2.7 + sd * 2.1), blink = mode !== 'move' && (bt < 0.15 || (sd > 0.5 && bt > 0.32 && bt < 0.42));
     var hov = FLY[key] ? Math.round((Math.sin(t * 2.6 + sd * 6) * 2 - 2) * sc * RS) / RS : 0;
+    // standing still, every hontori floats a little: a slow, soft rise and fall (spirits are light)
+    if (!FLY[key] && mode === 'idle') hov = Math.round((Math.sin(t * 1.7 + sd * 6) * 1.2 - 1.4) * sc * RS) / RS;
     // side views are authored facing left: dir 3 mirrors; for front/back the legacy flip option still applies
     var flip = dir === 3 ? true : dir === 2 ? false : !!opts.flip;
     x = Math.round(x); y = Math.round(y);
