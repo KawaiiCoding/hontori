@@ -186,6 +186,8 @@ window.H = window.H || {};
       .then(function () { return a.say('mom', 'Mom', 'Grandma told us about Wonders. Kids who see. Be brave, and be kind.'); })
       .then(function () { return a.say('dad', 'Dad', 'The old Academy opened its gate again. Go and learn.'); })
       .then(function () { return a.say('mom', 'Mom', 'Look around the house. Five things fit in your bag.'); })
+      .then(function () { return a.say('dad', 'Dad', 'And a little pocket money. Spend it well.'); })
+      .then(function () { var s = a.state; if (s.coins == null) s.coins = 0; if (H.money) H.money.add(25, 'pocket money'); else s.coins += 25; })
       .then(function () { return a.say('hontori', 'Your family sees, your path is clear. Pack your bag, the day is here.'); })
       .then(function () {
         // the home items now lie around the house as small glowing pickups (src/items.js)

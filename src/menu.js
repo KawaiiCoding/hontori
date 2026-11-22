@@ -214,8 +214,16 @@
     var g = game(), st = g.state; els.sheet.innerHTML = '';
     if (open === 'bag') {
       header('Backpack', 'backpack', (H.pickups && H.game.currentMap && H.game.currentMap().name === 'home' && (st.flags || {})['c1:morning']) ? 'Bag ' + H.pickups.count() + ' / ' + H.pickups.cap() : st.items.length ? st.items.length + ' things' : null);
-      if (!st.items.length) mk('div', 'hm-empty', els.sheet, 'Empty for now.');
-      st.items.forEach(function (it) {
+      var MON = H.money, TR = MON ? MON.TRADE : {};
+      if (MON) { var pr = mk('div', 'hm-mana', els.sheet); pr.appendChild(K().img('coin')); mk('span', '', pr, 'Purse: ' + MON.fmt(MON.get())); }
+      var main = st.items.filter(function (it) { return !TR[it.id]; }), pouch = st.items.filter(function (it) { return TR[it.id]; });
+      if (!main.length) mk('div', 'hm-empty', els.sheet, 'Empty for now.');
+      if (pouch.length) {
+        var ps = mk('div', 'hm-sec', els.sheet), ph = mk('h3', '', ps); ph.appendChild(K().img('coin')); ph.appendChild(document.createTextNode('Trade pouch   worth ' + MON.fmt(MON.pouchValue())));
+        note('Sell these at Nettle\'s shop.', ps);
+        pouch.forEach(function (it) { var r = mk('div', 'hm-row', ps); r.style.padding = '6px 10px'; var cc = itemCanvas(it); cc.className = 'itm'; r.appendChild(cc); var inf = mk('div', 'inf', r); mk('div', 'nm', inf, TR[it.id][0] + (it.n > 1 ? '  x' + it.n : '')); mk('div', 'sub', inf, TR[it.id][3] + '  ' + MON.fmt(MON.value(it.id)) + ' each'); });
+      }
+      main.forEach(function (it) {
         var r = mk('div', 'hm-row', els.sheet); r.style.padding = '8px 10px';
         var c = itemCanvas(it); c.className = 'itm'; r.appendChild(c);
         var i = mk('div', 'inf', r); mk('div', 'nm', i, it.name + (it.n > 1 ? '  x' + it.n : '')).style.fontSize = '16px';

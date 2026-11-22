@@ -21,9 +21,12 @@ window.H = window.H || {};
 
   function ramen(c) {
     return say(c, 'innkeeper', 'Big Bo', 'A hot bowl of ramen for you and your friends?')
-      .then(function () { return choose(['Eat ramen', 'No thanks']); })
+      .then(function () { var M = H.money, f = (H.game.state.flags || {}); return choose([(M ? 'Eat ramen, ' + (f.ramenFree ? M.fmt(M.PRICE.ramen) : 'first bowl free') : 'Eat ramen'), 'No thanks']); })
       .then(function (i) {
         if (i !== 0) return say(c, 'innkeeper', 'Big Bo', 'The pot will be here when you are hungry.');
+        var M = H.money, st0 = (H.game && H.game.state) || {}, cost = M ? M.PRICE.ramen : 0;
+        if (M && st0.flags && st0.flags.ramenFree && !M.spend(cost)) return say(c, 'innkeeper', 'Big Bo', 'A bowl is ' + M.fmt(cost) + '. Come back when your pocket jingles.');
+        if (M && st0.flags && !st0.flags.ramenFree) { st0.flags.ramenFree = 1; toast(c, 'First bowl is free'); } else if (M) toast(c, '-' + M.fmt(cost));
         var party = (H.game && H.game.state && H.game.state.party) || [];
         party.forEach(function (p) { p.hp = p.maxHp; if (H.progress && H.progress.staMax) p.sta = H.progress.staMax(p.level); });
         if (H.game && H.game.state) H.game.state.mana = H.game.state.maxMana || 3;
@@ -40,18 +43,30 @@ window.H = window.H || {};
     ['spirit_snack', 'Spirit Snack', 'heart'], ['charm', 'Backpack Charm', 'backpack']
   ];
   function shop(c) {
-    return say(c, 'shopkeeper', 'Nettle', 'Pick one, first visit treats are on me.')
-      .then(function () { return choose(GOODS.map(function (g) { return g[1]; }).concat(['Nothing'])); })
+    var M = H.money, st = (H.game && H.game.state) || {};
+    if (!M) return say(c, 'shopkeeper', 'Nettle', 'Browse all you like, dear.');
+    var pv = M.pouchValue();
+    return say(c, 'shopkeeper', 'Nettle', 'Welcome, dear. You have ' + M.fmt(M.get()) + '.')
+      .then(function () { return choose(['Buy something', pv ? 'Sell your trade pouch (' + M.fmt(pv) + ')' : 'Sell (pouch is empty)', 'Nothing today']); })
       .then(function (i) {
-        var g = GOODS[i];
-        if (!g) return say(c, 'shopkeeper', 'Nettle', 'Browse all you like, dear.');
-        if (H.game && H.game.addItem) H.game.addItem(g[0], g[1], g[2]);
-        sfx(c, 'confirm'); emit(c, 'sparkle', 8, -10); toast(c, 'Got ' + g[1]); save();
-        var tip = g[0] === 'ember_dust' ? 'Ember Dust wakes a fainted fire spirit.' :
-          g[0] === 'tide_pearl' ? 'A Tide Pearl wakes a fainted water spirit.' :
-          g[0] === 'herb' ? 'An Herb restores a little mana in battle.' :
-          g[0] === 'spirit_snack' ? 'A Spirit Snack restores a little mana in battle.' : 'Clip it on, it brings a little luck.';
-        return say(c, 'shopkeeper', 'Nettle', tip);
+        if (i === 1) {
+          if (!pv) return say(c, 'shopkeeper', 'Nettle', 'Bring me herbs, pebbles, feathers. I pay fair.');
+          M.sellPouch(); sfx(c, 'confirm'); emit(c, 'sparkle', 8, -10);
+          return say(c, 'shopkeeper', 'Nettle', 'Lovely finds. Here you are.');
+        }
+        if (i !== 0) return say(c, 'shopkeeper', 'Nettle', 'Browse all you like, dear.');
+        return choose(GOODS.map(function (g) { return g[1] + ', ' + M.fmt(M.PRICE[g[0]] || 5) + (M.can(M.PRICE[g[0]] || 5) ? '' : ' (not enough)'); }).concat(['Nothing'])).then(function (k) {
+          var g = GOODS[k]; if (!g) return say(c, 'shopkeeper', 'Nettle', 'Take your time.');
+          var price = M.PRICE[g[0]] || 5;
+          if (!M.spend(price)) return say(c, 'shopkeeper', 'Nettle', 'That one is ' + M.fmt(price) + '. Sell me some finds first?');
+          if (H.game && H.game.addItem) H.game.addItem(g[0], g[1], g[2]);
+          sfx(c, 'confirm'); emit(c, 'sparkle', 8, -10); toast(c, 'Got ' + g[1] + '  -' + M.fmt(price)); save();
+          var tip = g[0] === 'ember_dust' ? 'Ember Dust wakes a fainted fire spirit.' :
+            g[0] === 'tide_pearl' ? 'A Tide Pearl wakes a fainted water spirit.' :
+            g[0] === 'herb' ? 'An Herb restores a little mana in battle.' :
+            g[0] === 'spirit_snack' ? 'A Spirit Snack restores a little mana in battle.' : 'Clip it on, it brings a little luck.';
+          return say(c, 'shopkeeper', 'Nettle', tip);
+        });
       });
   }
 

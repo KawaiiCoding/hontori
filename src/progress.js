@@ -197,6 +197,7 @@ window.H = window.H || {};
     result = result || {}; info = info || {};
     var s = st(), party = s.party || [];
     drainWand(placed); placed = [];
+    try { H.money && H.money.afterBattle(result, info); } catch (e) { console.warn(e); }
     if (!party.length || !(result.won || result.captured)) { H.game && H.game.save && H.game.save(); return; }
     var lead = party[0], fl = info.foeLevel || (lead && lead.level) || 1;
     var base = Math.round((10 + fl * 6) * (info.trainer ? 1.5 : 1) * (result.captured ? 1.2 : 1));
