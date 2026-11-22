@@ -69,4 +69,4 @@ New rules are added here as they are given. When something in the code disagrees
 51. Hontori moves use stamina (ST). Only a real rest refills it: a bed, a night's sleep, ramen, or the teddy. The teddy works almost anywhere, never in schools, tournaments or dungeons.
 52. Hontori evolve at levels 5, 10, 20 and 25 through an Element Bloom: the hontori curls into a shell of its element and the kid opens it with the V. Original look, nothing borrowed from other games.
 53. Everything must be original and safe for app stores: no names, screens, sounds or phrases taken from other games, films or books (no Pokemon, Nintendo or Harry Potter echoes). The Academy rival is Cole, not Ash.
-
+54. Store text, screenshots and ads never describe Hontori as "like Pokemon" or any other game. The genre (spirit companions, evolution, eight rings) is fine; borrowed names, looks and phrases are not. In-game words are our own: classmate, rival, Wonder, never trainer.
