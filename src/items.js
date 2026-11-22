@@ -8,13 +8,13 @@ window.H = window.H || {};
   // where each item rests at home: [x, y, sort row]; sort row lets things sit on top of furniture
   var SPOT = {
     lantern: [3, 16], cookbook: [1, 3], teddy: [28, 3, 4], map: [21, 2], compass: [22, 2], bread: [4, 5, 6],
-    slingshot: [24, 3], scarf: [2, 12], candle: [16, 3], kite: [28, 7], mirror: [8, 13], backpack: [23, 9]
+    slingshot: [24, 3], kite: [28, 7], mirror: [8, 13], backpack: [23, 9]
   };
   var USE = {
-    backpack: 'Room for one more thing', lantern: 'Light at night; dark hontori come near', teddy: 'Rest outdoors like in a bed',
-    cookbook: 'Cook at a stove to heal your party', compass: 'Points the way to your goal', scarf: 'Strong wind will not slow you',
+    backpack: 'One more pocket in your bag', lantern: 'Light at night; dark hontori come near', teddy: 'Rest outdoors like in a bed',
+    cookbook: 'Cook at a stove to heal your party', compass: 'Points the way to your goal',
     slingshot: 'Knock apples from fruit trees', bread: 'Calms a wild hontori in battle', map: 'Shows the area you are in',
-    candle: 'Sleep with it for extra mana', kite: 'Fly it on a windy day to see far', mirror: 'Shows hontori hidden in the air'
+    kite: 'Fly it on a windy day to see far', mirror: 'Shows hontori hidden in the air'
   };
 
   function S() { return (H.game && H.game.state) || { items: [] }; }
@@ -62,7 +62,7 @@ window.H = window.H || {};
       H.game.addItem(id, m.name, id); sfx('pickup');
       if (c && c.emit) c.emit('sparkle', c.x, c.y, 8);
       toast('Bag ' + count() + ' / ' + cap());
-      if (id === 'backpack') once('backpack', 'Room for one more thing');
+      if (id === 'backpack') once('backpack', 'One more pocket in your bag');
       if (id === 'map') once('map', 'The map button shows the area');
       save();
     });
@@ -123,16 +123,11 @@ window.H = window.H || {};
   }
 
   // ---------- hooks into the world
-  H.speedMul = function (env) {
-    if (env.indoor || env.weather !== 'wind') return 1;
-    if (has('scarf')) { once('scarf', 'The scarf keeps the wind off'); return 1; }
-    once('wind', 'Strong wind slows you down');
-    return 1.18;
-  };
+  // the kid always wears a scarf, so wind never slows them
+  H.speedMul = function () { return 1; };
   H.onSleep = H.onSleep || [];
   H.onSleep.push(function () {
     var st = S(); st.day = (st.day || 0) + 1;
-    if (has('candle')) { st.mana = (st.maxMana || 3) + 1; toast('The candle burned all night: +1 mana'); }
   });
   H.doorGuard = function (door, mapName) {
     if (mapName !== 'home' || door.to !== 'village' || !active() || has('map') || !H.story) return null;
@@ -155,7 +150,7 @@ window.H = window.H || {};
     });
     // lantern: a soft circle of light around the kid at night outdoors
     if (has('lantern') && !env.indoor && night(env)) {
-      lights.push({ x: player.x, y: player.y - 8, r: 70, color: '#ffd890', flicker: true });
+      lights.push({ x: player.x + 6, y: player.y - 2, r: 64, color: '#ffd890', flicker: true, soft: true });
       once('lantern', 'The lantern lights the way. Dark hontori come closer.');
     }
   });
@@ -209,6 +204,8 @@ window.H = window.H || {};
       return go();
     };
     H.interact.__items = true;
+    // scarf and candle were removed from the house (the kid wears a scarf; the lantern is the one light)
+    var it0 = S().items || []; for (var q = it0.length - 1; q >= 0; q--) if (it0[q].id === 'scarf' || it0[q].id === 'candle') it0.splice(q, 1);
     // old saves packed with the grid picker: keep the map they could not choose yet
     if (F()['c1:packed'] && !has('map')) { F()['map:gift'] = true; var m = meta('map'); H.game.addItem('map', m.name, 'map'); }
   }

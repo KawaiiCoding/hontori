@@ -585,7 +585,7 @@ window.H = window.H || {};
 
   // ---------------- Items ----------------
   var list = [
-    { id: 'backpack', name: 'Backpack', desc: 'A patched canvas backpack. Room for snacks and secrets.' },
+    { id: 'backpack', name: 'Bean Bag', desc: 'A little bean bag that clips to the backpack. One more pocket.' },
     { id: 'lantern', name: 'Lantern', desc: 'A brass lantern. Its flame leans toward hidden things.' },
     { id: 'teddy', name: 'Teddy', desc: 'One-eared bear. Has seen every bad dream and won.' },
     { id: 'cookbook', name: 'Cookbook', desc: "Mom's recipes, with sauce stains as bookmarks." },
@@ -601,11 +601,12 @@ window.H = window.H || {};
 
   var icons = {};
   icons.backpack = function (g) {
-    P(g, 5, 1, OL, 6, 3); P(g, 6, 2, '#7a5030', 4, 1);
-    box(g, 3, 3, 10, 12, '#5a8a50', '#7aaa68', '#3a6034', OL);
-    box(g, 4, 8, 8, 6, '#4a7a42', '#6a9a5a', '#2f5028', OL);
-    P(g, 3, 6, OL, 10, 1); P(g, 7, 6, '#d9b45a', 2, 3); P(g, 7, 7, OL, 2, 1);
-    P(g, 9, 10, '#e0a040', 2, 2);
+    // a small round bean bag with a drawstring and a clip
+    P(g, 7, 0, OL, 2, 3); P(g, 7, 1, '#d9b45a', 2, 1);
+    P(g, 5, 3, OL, 6, 2); P(g, 6, 3, '#c87a3a', 4, 1);
+    disc(g, 8, 10, 6, OL); disc(g, 8, 10, 5, '#d08a44'); disc(g, 7, 9, 3, '#e4a85c');
+    P(g, 5, 4, '#a85a28', 6, 1); P(g, 6, 13, '#a85a28', 5, 1);
+    P(g, 6, 9, '#f4d09a'); P(g, 10, 11, '#8a4a20'); P(g, 8, 12, '#8a4a20'); P(g, 11, 8, '#8a4a20');
   };
   icons.lantern = function (g) {
     P(g, 6, 0, OL, 4, 2); P(g, 7, 0, '#d9b45a', 2, 1);

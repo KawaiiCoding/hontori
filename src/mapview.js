@@ -159,7 +159,7 @@
     function zb(icon, tip) { var b = H.kit.x(zm); b.title = tip; b.setAttribute('aria-label', tip); b.firstChild.src = H.icons.url(icon, 2); return b; }
     var zin = zb('plus', 'Closer'), zout = zb('minus', 'Whole area');
     var lg = document.createElement('div'); lg.className = 'lg'; box.appendChild(lg);
-    [['#efc77e', 'Road'], ['#3f86c8', 'Water'], ['#c0503a', 'Building'], ['#ffd98a', 'Door'], ['#ffffff', 'Person'], ['#ff3c28', 'You']]
+    [['#efc77e', 'Road'], ['#3f86c8', 'Water'], ['#ffd98a', 'Door'], ['#ffffff', 'Person'], ['#ff3c28', 'You']]
       .concat(questTarget(m.name, map) ? [['#ffcf3a', 'Quest']] : []).forEach(function (l) {
         var s = document.createElement('span'), i = document.createElement('i'); i.style.background = l[0]; i.style.boxShadow = 'inset 0 0 0 1px rgba(0,0,0,.35)'; s.appendChild(i); s.appendChild(document.createTextNode(l[1])); lg.appendChild(s);
       });

@@ -145,7 +145,7 @@ window.H = window.H || {};
           if (sx + r < 0 || sy + r < 0 || sx - r > w || sy - r > h) continue;
           dx.globalAlpha = clamp(0.75 + 0.25 * f, 0, 1);
           dx.drawImage(hole, sx - r, sy - r, r * 2, r * 2);
-          dx.drawImage(hole, sx - r * 0.5, sy - r * 0.5, r, r); // bright core
+          if (!L.soft) dx.drawImage(hole, sx - r * 0.5, sy - r * 0.5, r, r); // bright core
         }
         dx.globalAlpha = 1;
         dx.globalCompositeOperation = 'source-over';
@@ -161,8 +161,10 @@ window.H = window.H || {};
           sx = L.x - camX; sy = L.y - camY;
           if (sx + r < 0 || sy + r < 0 || sx - r > w || sy - r > h) continue;
           g = glow(L.color || '#ffc070');
-          ctx.globalAlpha = clamp(gs * (0.8 + 0.2 * f), 0, 1) * 0.55;
+          // soft lights (carried by the kid) skip the hot core so faces stay readable
+          ctx.globalAlpha = clamp(gs * (0.8 + 0.2 * f), 0, 1) * (L.soft ? 0.28 : 0.55);
           ctx.drawImage(g, sx - r, sy - r, r * 2, r * 2);
+          if (L.soft) continue;
           ctx.globalAlpha = clamp(gs * f, 0, 1) * 0.5;
           ctx.drawImage(g, sx - r * 0.35, sy - r * 0.35, r * 0.7, r * 0.7);
         }

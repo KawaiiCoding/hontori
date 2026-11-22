@@ -428,7 +428,7 @@
       ents.push({ y: py + i.fh * T, d: () => { H.fx.shadow(ctx, px + i.fw * 8, py + i.fh * T - 1, i.fw * 8 + 4, 6, env); H.buildings.draw(ctx, b.type, px, py, env); } }); });
     npcs.forEach(n => ents.push({ y: n.py, d: () => { H.fx.shadow(ctx, n.px, n.py, 6, 2, env); H.chars.draw(ctx, n.key, n.px, n.py, n.dir || 0, 0, env, { npc: true, seed: n.seed, idle: n.idle, talking: n.talking }); } }));
     ents.push({ y: player.y, d: () => { H.fx.shadow(ctx, player.x, player.y, 6, 2, env); H.chars.draw(ctx, 'kid', Math.round(player.x), Math.round(player.y), player.dir, player.frame, env); } });
-    if (spirit) { lights.push({ x: spirit.x, y: spirit.y, r: 28, color: '#b8642a', flicker: true });
+    if (spirit) { lights.push({ x: spirit.x, y: spirit.y, r: 28, color: '#b8642a', flicker: true, soft: true });
       ents.push({ y: (spirit.gy ?? spirit.y + 10), d: () => { const gy = spirit.gy ?? spirit.y + 10, h = spirit.h || 0;
         H.fx.shadow(ctx, spirit.x, gy, Math.max(3, 5 - h * 0.25), 2, env);
         H.spirits.draw(ctx, spirit.key, Math.round(spirit.x), Math.round(spirit.y), env, { scale: 0.75, dir: spirit.dir || 0, noShadow: true, moving: !!spirit.moving, sit: !!spirit.sit }); } }); }
