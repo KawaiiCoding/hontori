@@ -509,6 +509,15 @@
     loadMap(Q.get('scene') || 'home', Q.get('tx') ? +Q.get('tx') : undefined, Q.get('ty') ? +Q.get('ty') : undefined);
     if (Q.get('time')) env.time = +Q.get('time'); if (Q.get('weather')) env.weather = Q.get('weather');
     if (Q.get('nointro')) { H.game.state.party = [mkMember('hontori')]; H.game.state.intro = true; spirit = { key: 'hontori', x: player.x + 14, y: player.y - 10 }; }
+    // test jump: ?debug=1&nointro=1&ch=2 starts with Chapter 1 finished (Academy, spells, letter) and a level 5 hontori
+    if (DEBUG && Q.get('ch') === '2') {
+      const s = H.game.state, f = s.flags = s.flags || {};
+      ['c1:morning', 'c1:complete', 'c1:pip', 'c1:pond', 'c1:brook', 'c1:fenn', 'c1:well', 'visited:school', 'visited:whisperwood', 'ev:c1_night', 'ev:c1_morning', 'ev:c1_letter', 'ev:c2_start'].forEach(k => f[k] = true);
+      s.academy = true; s.academyDuels = { boy: true, girl: true }; s.spells = ['mend', 'bind']; s.spellLoadout = ['mend', 'bind']; s.coins = 60;
+      const m = s.party[0]; m.level = 5; if (H.progress) { m.stage = 2; H.progress.fix(m); m.hp = m.maxHp; m.sta = H.progress.staMax(5); }
+      H.game.addItem('wand', 'Spirit Wand', 'wand'); H.game.addItem('map', 'Map', 'map'); f['map:gift'] = true;
+      if (H.story) { ['academy', 'pawprints', 'elder', 'woods'].forEach(q => { try { H.story.start(q, true); } catch (e) {} }); setTimeout(() => { try { H.story.start('leafring'); } catch (e) {} }, 300); }
+    }
     else (H.title ? H.title.ready : Promise.resolve()).then(() => setTimeout(runIntro, 500));
   }
   H.progress && H.progress.migrate(H.game.state); // fills new save fields, moves old wand keys into the Sanctum
