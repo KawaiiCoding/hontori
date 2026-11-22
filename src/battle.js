@@ -1443,7 +1443,7 @@
     });
 
     // ---------------- go
-    renderUI(); say(TR ? (TR.name || 'A trainer') + ' wants a practice duel.' : 'A jealous hontori blocks the way!');
+    renderUI(); say(TR ? (TR.name || 'A classmate') + ' raises a wand for a practice duel.' : 'A jealous hontori blocks the way!');
     setTimeout(showBanner, 300);
     setTimeout(function () { if (!done) beginTurn(); }, 2700);
 
