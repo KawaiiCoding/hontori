@@ -140,11 +140,11 @@ window.H = window.H || {};
     { key: 'fisher', x: 46, y: 9, dir: 3, lines: [['Old Oru', 'The river is quiet today.'], ['Old Oru', 'Something big stirs upstream.']] },
     { key: 'grandma', x: 11, y: 12, dir: 1, lines: [['Grandma Ula', 'I feed the ducks every morning.'], ['Grandma Ula', 'The pond sparkles back if you wait.']] },
     { key: 'farmer', x: 7, y: 17, dir: 0, lines: [['Farmer Hob', 'Apples are nearly ripe.'], ['Farmer Hob', 'Help yourself to a windfall.']] },
-    { key: 'guard', x: 32, y: 37, dir: 0, lines: [['Guard Bram', 'The south gate is open.'], ['Guard Bram', 'Take a friend into the tall grass.']] },
+    { key: 'guard', x: 32, y: 37, dir: 0, lines: [['Guard Bram', 'The south gate is open.'], ['Guard Bram', 'Take a friend into the meadows.']] },
     { key: 'gardener', x: 57, y: 13, dir: 2, lines: [['Ivy', 'These flowers hum at dusk.'], ['Ivy', 'Please step around the seedlings.']] },
     { key: 'traveler', x: 56, y: 24, dir: 2, lines: [['Rowan', 'I walked a long way to see your fair.'], ['Rowan', 'Your village feels warm.']] },
     { key: 'kid2', x: 19, y: 36, dir: 0, lines: [['Kip', 'I am racing the snails today.'], ['Kip', 'The slow one always wins.']] },
-    { key: 'boy', x: 52, y: 28, dir: 3, lines: [['Tobin', 'Never walk the tall grass alone.'], ['Tobin', 'A spark with ears zapped my kite.']] },
+    { key: 'boy', x: 52, y: 28, dir: 3, lines: [['Tobin', 'Never walk the meadows alone.'], ['Tobin', 'A spark with ears zapped my kite.']] },
     { key: 'girl', x: 34, y: 26, dir: 0, lines: [['Tansy', 'The well hums when it is quiet.'], ['Tansy', 'Grandma says that is just the wind.']] }
   ];
   npcs.forEach(function (n) { res(n.x - 1, n.y - 1, n.x + 1, n.y + 1); });

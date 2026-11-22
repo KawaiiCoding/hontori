@@ -355,7 +355,7 @@ window.H = window.H || {};
         ['Mira', 'I\'m going to be the first person in Emberbrook to catch a water sprite. Or at least wave at one.']
       ] },
       { key: 'boy', x: 46, y: 32, dir: 3, lines: [
-        ['Tobin', 'Don\'t go in the tall grass without a buddy! Things rustle in there.'],
+        ['Tobin', 'Don\'t go into the meadows without a buddy! Things rustle in there.'],
         ['Tobin', 'Yesterday a little spark zapped my kite string clean in half. A spark! With ears!'],
         ['Tobin', 'There\'s a trail through the middle, past the sign. I dare you. ...I double-dare you.']
       ] },

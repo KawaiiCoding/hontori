@@ -1,6 +1,6 @@
 window.H = window.H || {};
 // academy: Emberbrook Academy, the first school. Madam Sorrel teaches the basic sigils,
-// students Ash and Mira hold practice duels, and a Novice Certificate waits at the end.
+// students Cole and Mira hold practice duels, and a Novice Certificate waits at the end.
 (function () {
   'use strict';
   var H = window.H;
@@ -17,7 +17,7 @@ window.H = window.H || {};
   ];
   var FALLBACK = { shield: 'mend', boost: 'veil' };
   var STUDENTS = {
-    boy: { name: 'Ash', enemy: 'electric', level: 1, lesson: 'stun',
+    boy: { name: 'Cole', enemy: 'electric', level: 1, lesson: 'stun',
       hello: 'Want a practice duel? My spark is getting bigger.', win: 'You got me. Good duel.', lose: 'Good try. Rest a moment and come back.' },
     girl: { name: 'Mira', enemy: 'water', level: 2, lesson: 'sleep',
       hello: 'A practice duel? My little otter is quick.', win: 'Well drawn. My otter needs a nap now.', lose: 'The water was kind to me this time.' }
@@ -144,13 +144,13 @@ window.H = window.H || {};
       var L = LESSONS[i];
       if (lessonDone(s, L)) return teach(c, i).then(after);
       if (i !== nx) return sorrel(c, 'One step at a time. Finish ' + LESSONS[nx].name + ' first.');
-      if (!unlocked(s, i)) return sorrel(c, 'Binding comes after a real duel. Ask Ash or Mira for one.');
+      if (!unlocked(s, i)) return sorrel(c, 'Binding comes after a real duel. Ask Cole or Mira for one.');
       return teach(c, i).then(after);
     });
     function after() {
       var s2 = st();
       if (!s2.academyGraduated && ready(s2)) return graduate(c);
-      if (nextLesson(s2) >= 0 && LESSONS[nextLesson(s2)].needDuel && !duelsWon(s2)) return sorrel(c, 'Next, duel a classmate. Ash and Mira are waiting.');
+      if (nextLesson(s2) >= 0 && LESSONS[nextLesson(s2)].needDuel && !duelsWon(s2)) return sorrel(c, 'Next, duel a classmate. Cole and Mira are waiting.');
     }
   }
 

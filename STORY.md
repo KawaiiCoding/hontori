@@ -53,7 +53,7 @@ Expose Orlen Vael and pass a new law, so hontori are known and respected by ever
 - **Mom and Dad**: loving, Veilbound, keep almost noticing.
 - **Elder Wisteria**: once walked with a light hontori. Sets a second cup of tea each morning. Knows about the sealed well.
 - **Madam Sorrel**: teacher at Emberbrook Academy.
-- **Ash and Mira**: classmates and friendly rivals.
+- **Cole and Mira**: classmates and friendly rivals.
 - **Wren**: a girl who also got an Academy letter.
 - **Tobin**: a small boy who leaves milk out for a lost water hontori.
 - **Orlen Vael**: the kind face of the old law.

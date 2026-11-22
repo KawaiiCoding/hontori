@@ -802,7 +802,7 @@
     var swBtn = mk('button', 'hb-btn hb-ic', bar, pxIc('swap', ICON.swap) + '<span class="tl">Switch</span>'), escBtn = mk('button', 'hb-btn hb-ic hb-esc', bar, pxIc('run', ICON.esc) + '<span class="tl">Escape</span><span class="m"><b></b><b></b><b></b></span>');
     swBtn.setAttribute('aria-label', 'Switch'); escBtn.setAttribute('aria-label', 'Escape');
     var strip = mk('div', 'hb-strip', el); strip.hidden = true;
-    if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Trainer') + ' - practice duel'); }
+    if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Rival') + ' - practice duel'); }
     var banner = mk('div', 'hb-banner', el);
     var endBtn = mk('button', 'hb-end', el, 'Continue'); endBtn.hidden = true;
     requestAnimationFrame(function () { el.classList.add('on'); });
@@ -865,7 +865,7 @@
     function card(c, f) {
       var low = f.hp / f.max < 0.3, h = '<div class="nm"><span>' + f.name + '</span><span class="lv">Lv ' + f.lvl + '</span></div>' + nbar('', low ? 'low' : '', f.hp / f.max, 'HP', Math.max(0, Math.ceil(f.hp)) + ' / ' + f.max);
       if (f === me) {
-        h += nbar('sta thin', '', me.sta / me.staMax, 'Stamina', me.sta + ' / ' + me.staMax);
+        h += nbar('sta thin', '', me.sta / me.staMax, 'ST', me.sta + ' / ' + me.staMax);
         // EXP is shown on the results card and in the party view, not during the fight
       }
       h += '<div class="st"></div>';
@@ -905,7 +905,7 @@
         if (m.pow && mx !== 1) mark = '<span style="position:absolute;top:5px;right:6px">' + edgeIcon(mx, mx < 1 ? 2 : 1, 20) + '</span>';
         var ico = ''; try { ico = '<img class="ic" alt="" src="' + H.icons.url(m.el || me.el, 2) + '">'; } catch (e) {}
         b.innerHTML = mark + '<b>' + ico + m.name + '</b><span class="kind">' + (m.pow ? 'Attack' : 'Support') + '</span><i>' + (m.pow ? 'Power ' + m.pow + '. ' : '') + m.desc.replace(/ Rests 2 turns\./, '') + '</i>' + (cd > 0 ? '<span class="cd">Rest ' + cd + '</span>' : fainted ? '<span class="cd">Fainted</span>' : me.asleep ? '<span class="cd">Asleep</span>' : '');
-        var sc = SCOST(m); var kd = b.querySelector('.kind'); if (kd) kd.insertAdjacentHTML('afterend', '<span class="sc">' + sc + ' stamina</span>');
+        var sc = SCOST(m); var kd = b.querySelector('.kind'); if (kd) kd.insertAdjacentHTML('afterend', '<span class="sc">' + sc + ' ST</span>');
         b.classList.toggle('off', cd > 0 || fainted || busy || done || me.sta < sc);
       });
       breathBtn.hidden = !(tiredAll() && me.hp > 0 && !done); breathBtn.classList.toggle('off', busy || done);
@@ -1115,7 +1115,7 @@
       busy = false; renderUI(); say(hintLine());
       mvBtns.forEach(function (b) { b.classList.toggle('hot', tut === 0); });
       if (tut === 1) { sheetBtn.classList.add('hot'); chips.mend.classList.add('hot'); }
-      if (TR && TR.lesson && round === 1 && SPELLS[TR.lesson] && can(TR.lesson)) setTimeout(function () { if (!busy && !done) say((TR.name || 'Trainer') + ': try the ' + SPELLS[TR.lesson].name + ' (' + SPELLS[TR.lesson].how + ').'); }, 50);
+      if (TR && TR.lesson && round === 1 && SPELLS[TR.lesson] && can(TR.lesson)) setTimeout(function () { if (!busy && !done) say((TR.name || 'Rival') + ': try the ' + SPELLS[TR.lesson].name + ' (' + SPELLS[TR.lesson].how + ').'); }, 50);
     }
 
     // ---------------- damage
@@ -1376,7 +1376,7 @@
       foe.fx.alpha = 0.6; result.won = true;
       if (!TR) { GS.seen = GS.seen || []; if (GS.seen.indexOf(foe.key) < 0) GS.seen.push(foe.key); }
       await wait(500);
-      say(TR ? (TR.name || 'Trainer') + ': Well fought.' : '');
+      say(TR ? (TR.name || 'Rival') + ': Well fought.' : '');
       finish();
     }
     function captured() {

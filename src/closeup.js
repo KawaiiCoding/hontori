@@ -112,7 +112,7 @@
       ['Lost hontori', 'A small water hontori was seen by the pond at dusk. Please be gentle with it.', 'blue', 6, 6, -4],
       ['Ramen night', 'The Steaming Bowl. Warm bowls restore body and mana alike.', 'pink', 52, 4, 3],
       ['Academy notice', 'Entrance trial at dawn. Bring one calm hontori and a steady hand.', 'green', 8, 42, 2],
-      ['Take care', 'Jealous hontori hide in the tall grass. Weaken them before you try to bind.', '', 50, 40, -3],
+      ['Take care', 'Jealous hontori hide in the wild meadows. Weaken them before you try to bind.', '', 50, 40, -3],
       ['Wanted', 'Ember Dust for the old forge. Ask the shopkeeper.', '', 28, 74, 1]
     ];
     return open(function (wrap) {

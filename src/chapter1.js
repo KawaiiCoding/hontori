@@ -19,7 +19,7 @@ window.H = window.H || {};
   ST.defineQuest({ id: 'academy', icon: 'book', title: 'The Academy', desc: 'The old school up the north road has opened its gate again.', steps: [
     { id: 'go', text: 'Go to Emberbrook Academy, up the road north of the square', done: function (s) { return !!s.academy || !!s.flags['visited:school']; } },
     { id: 'trial', text: 'Pass the gate trial', done: function (s) { return !!s.academy; } },
-    { id: 'duel', text: 'Win a practice duel with Ash or Mira', done: function () { return duels(); } },
+    { id: 'duel', text: 'Win a practice duel with Cole or Mira', done: function () { return duels(); } },
     { id: 'bind', text: 'Learn the Binding Spiral from Madam Sorrel', done: function () { return spells().indexOf('bind') >= 0; } }
   ], reward: function () {
     ST.start('woods'); ST.start('pawprints');

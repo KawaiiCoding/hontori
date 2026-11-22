@@ -63,7 +63,7 @@ window.H = window.H || {};
   var NOTES = [
     'Wanted: whoever keeps stealing fish cakes, wet pawprints seen.',
     'Lost: a glowing puff, last seen near a woodpile.',
-    'The tall grass is lively at dusk, so bring a buddy.',
+    'The meadows are lively at dusk, so bring a buddy.',
     'Ask the Elder why the old well hums at night.'
   ];
   var BANNER = {
