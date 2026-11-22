@@ -145,14 +145,19 @@ window.H = window.H || {};
     if (c.tileAt(x, y) !== 'water') return;
     var t = env.t || 0, cx = (player.tx + D[0] * 1.8) * 16 + 8, cy = (player.ty + D[1] * 1.8) * 16 + 9, k = (t * 0.9) % 1;   // out on the water, past the fox
     ents.push({ y: 1e9, d: function () {   // drawn on top so the fox never hides it
-    ctx.save();
-    ctx.strokeStyle = 'rgba(127,216,255,' + (0.8 - k * 0.8).toFixed(2) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx, cy + 2, 3 + k * 6, 1.5 + k * 2.5, 0, 0, 7); ctx.stroke();
-    // the hook sigil, gently bobbing
-    var by = cy - 5 + Math.sin(t * 3) * 1;
-    ctx.strokeStyle = '#7fd8ff'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(cx + 1.5, by - 5); ctx.lineTo(cx + 1.5, by); ctx.arc(cx - 0.5, by, 2, 0, Math.PI); ctx.stroke();
-    ctx.restore(); } });
-    lights.push({ x: cx, y: cy, r: 14, color: '#7fd8ff', flicker: true });
+      ctx.save();
+      // a ripple ring where the line would land
+      ctx.strokeStyle = 'rgba(220,245,255,' + (0.9 - k * 0.9).toFixed(2) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx, cy + 3, 3 + k * 6, 1.5 + k * 2.5, 0, 0, 7); ctx.stroke();
+      // a small marker above it, like the game's buttons: dark rounded square, light border, a pixel hook inside
+      var bx = Math.round(cx) - 7, by = Math.round(cy - 18 + Math.sin(t * 3) * 1.2);
+      ctx.fillStyle = 'rgba(18,20,40,.92)'; ctx.fillRect(bx + 1, by, 12, 14); ctx.fillRect(bx, by + 1, 14, 12);
+      ctx.fillStyle = '#bfe8ff'; ctx.fillRect(bx + 1, by - 1, 12, 1); ctx.fillRect(bx + 1, by + 14, 12, 1); ctx.fillRect(bx - 1, by + 1, 1, 12); ctx.fillRect(bx + 14, by + 1, 1, 12);
+      ctx.fillStyle = 'rgba(18,20,40,.92)'; ctx.fillRect(bx + 5, by + 14, 4, 2); ctx.fillRect(bx + 6, by + 16, 2, 1);   // little tail pointing down to the water
+      ctx.fillStyle = '#7fd8ff';
+      [[8, 2], [8, 3], [8, 4], [8, 5], [8, 6], [8, 7], [8, 8], [7, 9], [6, 10], [5, 10], [4, 9], [4, 8], [5, 7]].forEach(function (q) { ctx.fillRect(bx + q[0], by + q[1], 1.2, 1.2); });
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + 8, by + 2, 1, 1);
+      ctx.restore(); } });
+    lights.push({ x: cx, y: cy, r: 8, color: '#7fd8ff', flicker: false, soft: true });
     try { H.ui.helper('fishspot', 'Fishing', 'Water in front of you. Press A, or tap the water, to cast the Fishing Sigil.', 'water'); } catch (e) {}
   });
   // a fisher who sits on the bank has a line in the water, with a bobber that dips now and then
