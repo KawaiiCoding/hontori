@@ -4,7 +4,7 @@ window.H = window.H || {};
 (function () {
   'use strict';
   var H = window.H;
-  var HOW = { circle: 'Draw a circle', U: 'Draw a cup shape', peak: 'Draw a peak', zigzag: 'Draw a zigzag', wave: 'Draw a wave', spiral: 'Draw a spiral from the outside in', star: 'Draw a star in one line', V: 'Draw a V' };
+  var HOW = { circle: 'Draw a circle', U: 'Draw a cup shape', peak: 'Draw a peak', zigzag: 'Draw a zigzag', wave: 'Draw a wave', spiral: 'Draw a spiral from the outside in', star: 'Draw a star in one line', V: 'Draw a V', hook: 'Draw a hook: straight down, then curl up to the left' };
   var CSS = '.hsb{position:absolute;inset:0;z-index:58;display:flex;align-items:center;justify-content:center;background:rgba(6,6,16,.78);opacity:0;transition:opacity .25s;font-family:Nunito,"M PLUS Rounded 1c",system-ui,sans-serif;color:#f4f1e8}' +
     '.hsb.on{opacity:1}.hsb .bx{width:min(88%,360px);padding:18px 16px 14px;border-radius:22px;text-align:center;background:linear-gradient(180deg,#1d2040,#101226);border:2px solid #ffd98a;box-shadow:0 0 40px rgba(255,217,138,.35),0 12px 40px rgba(0,0,0,.6)}' +
     '.hsb small{display:block;font-size:12px;font-weight:900;letter-spacing:4px;text-transform:uppercase;color:#ffd98a}' +
@@ -20,14 +20,15 @@ window.H = window.H || {};
     var B = (H.battle && H.battle.SPELLS) || {}, sp = B[id] || { name: id, desc: '', how: '' }, st = S();
     if (!document.getElementById('hsb-css')) { var c = document.createElement('style'); c.id = 'hsb-css'; c.textContent = CSS; document.head.appendChild(c); }
     var L = st.spellLoadout = st.spellLoadout || [], added = false;
-    if (L.indexOf(id) < 0 && L.length < 4) { L.push(id); added = true; }
+    var world = !!sp.world;
+    if (!world && L.indexOf(id) < 0 && L.length < 4) { L.push(id); added = true; }
     try { H.game.save(); } catch (e) {}
     showing = true;
     return new Promise(function (res) {
       var o = document.createElement('div'); o.className = 'hsb';
       var svg = ''; try { svg = H.gesture.sigilSVG(id, sp.col || '#ffd98a', false); } catch (e) {}
       o.innerHTML = '<div class="bx"><small>New spell learned</small><div class="sg">' + svg + '</div><b>' + sp.name + '</b><p>' + (sp.desc || '') + (sp.cost ? '. Costs ' + sp.cost + ' mana.' : '.') + '</p>' +
-        '<p class="w">' + (HOW[sp.how] || '') + '. ' + (added ? 'It is ready for battle.' : 'Add it to your four battle spells in the spell book.') + '<br>Find it any time in Menu, Spells.</p>' +
+        '<p class="w">' + (HOW[sp.how] || '') + '. ' + (world ? (id === 'fish' ? 'Face any water and press A, or tap the water.' : '') : added ? 'It is ready for battle.' : 'Add it to your four battle spells in the spell book.') + '<br>Find it any time in Menu, Spells.</p>' +
         '<div class="row"><button class="bk">Spell book</button><button class="ok">Got it</button></div></div>';
       (document.getElementById('root') || document.body).appendChild(o);
       try { H.audio && H.audio.sfx('spell'); } catch (e) {}

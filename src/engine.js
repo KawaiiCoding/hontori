@@ -138,7 +138,7 @@
     const door = (map.doors || []).find(d => d.x === x && d.y === y);
     const npc = npcs.find(n => !n.away && n.x === x && n.y === y);
     const box = !!(H.dynBlocked && H.dynBlocked(mapName, x, y)) && !!H.pushAt;
-    const thing = npc || (H.pickups && H.pickups.at(mapName, x, y)) || objectAt(x, y) || (y + 1 < map.h && objectAt(x, y) ) || null;
+    const thing = npc || (H.pickups && H.pickups.at(mapName, x, y)) || objectAt(x, y) || (tileAt(x, y) === 'water' && H.onWater ? { water: 1 } : null);
     const free = (a, b) => !blocked(a, b) || (map.doors || []).some(d => d.x === a && d.y === b);
     // BFS from the kid to the goal tiles
     const goals = [];
@@ -302,7 +302,11 @@
     if (!H.interact) return;
     // wall decor hangs one tile above the floor edge, so look one tile further up when facing a wall
     const hit = (H.pickups && H.pickups.at(mapName, x, y)) || objectAt(x, y) || (player.dir === 1 ? objectAt(x, y - 1) : null);
-    if (!hit) return;
+    if (!hit) {
+      // water you face: fishing (src/fishing.js)
+      if (H.onWater && tileAt(x, y) === 'water') { busy = true; Promise.resolve().then(() => H.onWater({ say, emit, sfx, env, map, mapName, x: x * T + 8, y: y * T + 8, player, hasSpirit: !!spirit, battle: (k, o) => startBattle(k, o) })).catch(e => console.warn(e)).then(() => { busy = false; }); }
+      return;
+    }
     busy = true; sfx('confirm');
     const c = { say, toast: (t) => H.ui && H.ui.toast(t), emit, sfx, note: (m) => { try { H.audio && H.audio.note(m); } catch (e) {} },
       env, map, mapName, x: hit.cx, y: hit.cy, player, hasSpirit: !!spirit, object: hit.o,

@@ -21,6 +21,13 @@
     '.ht-btn{position:relative;min-width:200px;justify-content:center;font-size:20px;animation:htp 1.6s ease-in-out infinite}',
     '@keyframes htp{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}',
     '.ht-btn[hidden]{display:none}',
+    '.ht-ctl{position:relative;z-index:3;margin-top:16px;text-align:center;color:#f4f1e8}.ht-ctl[hidden]{display:none}',
+    '.ht-ctl-q{font-size:14px;font-weight:900;margin-bottom:8px;opacity:.9}',
+    '.ht-seg{display:flex;gap:8px;justify-content:center}',
+    '.ht-opt{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:130px;padding:9px 12px;border-radius:14px;border:2px solid rgba(255,255,255,.2);background:rgba(20,22,48,.75);color:#fff;font:inherit;cursor:pointer}',
+    '.ht-opt b{font-size:15px;font-weight:900}.ht-opt small{font-size:11px;font-weight:700;opacity:.7}',
+    '.ht-opt.on{border-color:#ffd98a;background:rgba(255,217,138,.18);box-shadow:0 0 14px rgba(255,217,138,.35)}',
+    '.ht-ctl-n{margin-top:8px;font-size:12px;font-weight:700;opacity:.6}',
     '.ht-hint{position:relative;font-size:13px;opacity:.55}'
   ].join('');
 
@@ -47,6 +54,18 @@
     var bar = mk('div', 'ht-bar', overlay), fill = mk('b', '', bar);
     var btn = H.kit ? H.kit.btn(overlay, { icon: 'wand', label: ' ', kind: 'gold' }) : mk('button', '', overlay); btn.classList.add('ht-btn'); btn.hidden = true;
     var btnLabel = btn.querySelector('.t span') || btn;
+    // how to move: chosen right here, changeable later in the menu
+    var ctl = mk('div', 'ht-ctl', overlay); ctl.hidden = true;
+    mk('div', 'ht-ctl-q', ctl, 'How do you want to move?');
+    var seg = mk('div', 'ht-seg', ctl), cur = null;
+    try { cur = localStorage.getItem('hontori.controls'); } catch (e) {}
+    if (!cur) cur = 'stick';
+    [['stick', 'Joystick', 'Stick, A and B'], ['tap', 'Tap to move', 'Tap, double tap to run']].forEach(function (o) {
+      var b = mk('button', 'ht-opt', seg); mk('b', '', b, o[1]); mk('small', '', b, o[2]);
+      b.dataset.m = o[0]; b.classList.toggle('on', cur === o[0]);
+      b.addEventListener('click', function (e) { e.stopPropagation(); cur = o[0]; [].forEach.call(seg.children, function (x) { x.classList.toggle('on', x.dataset.m === cur); }); });
+    });
+    mk('div', 'ht-ctl-n', ctl, 'You can change this later in the menu.');
     var hint = mk('div', 'ht-hint', overlay, 'Preparing the world...');
 
     // animate the fox on the title
@@ -77,7 +96,7 @@
       var hasSave = false; try { var sv = JSON.parse(localStorage.getItem('hontori.save.v1') || 'null'); hasSave = !!(sv && sv.state && sv.state.intro); } catch (e) {}
       bar.style.display = 'none';
       btnLabel.textContent = hasSave ? 'Continue' : 'Start';
-      btn.hidden = false;
+      btn.hidden = false; ctl.hidden = false;
       hint.textContent = hasSave ? 'Your journey is saved on this device' : 'Sound on for the full magic';
     }
     requestAnimationFrame(step);
@@ -85,6 +104,7 @@
     function go(e) {
       if (btn.hidden) return;
       if (e) e.preventDefault();
+      try { localStorage.setItem('hontori.controls', cur); if (H.ui && H.ui.setControls) H.ui.setControls(cur); } catch (_) {}
       try { H.audio && H.audio.unlock && H.audio.unlock(); } catch (_) {} // start sound inside the tap (required on iPhone)
       overlay.classList.add('out');
       setTimeout(function () { live = false; overlay.remove(); }, 650);

@@ -53,7 +53,8 @@
     sleep: { name: 'Dream Veil', cost: 2, col: '#b9a8ff', on: 'foe', desc: 'Foe may fall asleep', how: 'wave' },
     bind: { name: 'Binding Spiral', cost: 2, col: '#ffd98a', on: 'foe', desc: 'Bind a weak foe', how: 'spiral' },
     revive: { name: 'Phoenix Star', cost: 3, col: '#fff0d0', on: 'me', desc: 'Revive with a material', how: 'star' },
-    veil: { name: 'Velum Aperi', cost: 0, col: '#ffd98a', on: 'me', desc: 'Lift the veil', how: 'V' }
+    veil: { name: 'Velum Aperi', cost: 0, col: '#ffd98a', on: 'me', desc: 'Lift the veil', how: 'V', world: true },
+    fish: { name: 'Fishing Sigil', cost: 1, col: '#7fd8ff', on: 'me', desc: 'Casts a line of light into water', how: 'hook', world: true }
   };
   var ORDER = ['mend', 'shield', 'boost', 'stun', 'sleep', 'bind', 'revive'];
 
@@ -94,7 +95,9 @@
     // five-point star in one stroke: from the lower left up to the top first
     revive: (function () { var a = []; for (var i = 0; i <= 5; i++) { var ang = Math.PI * 0.7 + i * Math.PI * 4 / 5; a.push([Math.cos(ang), Math.sin(ang)]); } return a; })(),
     // the veil spell from the intro: a V, opening the curtain
-    veil: [[0, 0], [0.5, 1], [1, 0]]
+    veil: [[0, 0], [0.5, 1], [1, 0]],
+    // the fishing sigil: a hook, straight down, then curling up to the left
+    fish: [[0.7, 0], [0.7, 0.62]].concat(circ(12, 0, Math.PI, 0.45, 0.62, 0.25, 0.3)).concat([[0.2, 0.45]])
   };
   var TEMPLATES = {};
   Object.keys(RAW).forEach(function (k) { TEMPLATES[k] = { closed: k === 'mend' || k === 'revive', rot: k === 'bind', pts: normalize(RAW[k]) }; });

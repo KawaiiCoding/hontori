@@ -120,11 +120,12 @@ window.H = window.H || {};
     return { id: id, name: (d && d.name) || f[0], cost: cost, mastery: Math.max(1, Math.min(5, (st().spellMastery || {})[id] || 1)) };
   }
   function fixSpells(s) {
+    var WORLD = { veil: 1, fish: 1 };
     if (!Array.isArray(s.spells)) s.spells = s.spells || [];
     if (!s.spellMastery || typeof s.spellMastery !== 'object') s.spellMastery = {};
     s.spells.forEach(function (id) { if (!s.spellMastery[id]) s.spellMastery[id] = 1; });
     if (!Array.isArray(s.spellLoadout)) s.spellLoadout = s.spells.slice(0, 4);
-    s.spellLoadout = s.spellLoadout.filter(function (id, i, a) { return s.spells.indexOf(id) >= 0 && a.indexOf(id) === i; }).slice(0, 4);
+    s.spellLoadout = s.spellLoadout.filter(function (id, i, a) { return s.spells.indexOf(id) >= 0 && a.indexOf(id) === i && !WORLD[id]; }).slice(0, 4);
   }
   function wandAward(amount, quiet) {
     var s = st(); s.wandLevel = s.wandLevel || 1; s.wandExp = s.wandExp || 0;

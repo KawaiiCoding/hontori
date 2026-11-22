@@ -318,7 +318,7 @@
       header('Spell Loadout', 'book', (st.spellLoadout || []).length + ' of 4 ready for battle');
       P() && P().fixSpells(st);
       if (!(st.spells || []).length) mk('div', 'hm-empty', els.sheet, 'No spells learned yet.');
-      (st.spells || []).forEach(function (id) {
+      (st.spells || []).filter(function (id) { return id !== 'fish' && id !== 'veil'; }).forEach(function (id) {
         var inf = P().spellInfo(id), on = st.spellLoadout.indexOf(id) >= 0;
         var row = pickRow(els.sheet, on, glyphEl(id), inf.name, '', function () {
           var L = st.spellLoadout, k = L.indexOf(id);
