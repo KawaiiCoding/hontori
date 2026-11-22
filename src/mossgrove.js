@@ -40,7 +40,8 @@ window.H = window.H || {};
   var npcs = [
     { key: 'warden', x: 22, y: 13, dir: 0, lines: [['Warden Fern', 'Rootwood Hall teaches the patience of roots.'], ['Warden Fern', 'Come inside when you are ready.']] },
     { key: 'shopkeeper', x: 14, y: 17, dir: 3, lines: [['Pell', 'Seeds, herbs and fair trades.'], ['Pell', 'I buy what the forest gives you.']] },
-    { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wonders used to come every spring.']] },
+    // Granny Burr sits in the square by day and goes home at dusk
+    { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wonders used to come every spring.']], sched: [{ from: 7, to: 18 }, { from: 18, to: 7, away: true }] },
     { key: 'kid2', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'I am not a Wonder. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
     { key: 'traveler', x: 24, y: 25, dir: 1, lines: [['Rowan', 'The bridge to Tidewell washed out in the spring rain.'], ['Rowan', 'They say the builders will be done soon.']] }
   ];
@@ -111,7 +112,28 @@ window.H = window.H || {};
   };
   // hall door: the middle of the school front
   H.maps.mossgrove.doors.push({ x: 20, y: 8, to: 'rootwood_hall', tx: DOOR, ty: HH - 2, dir: 1 });
-  // houses: closed doors are just walls for now (no interiors yet)
+  // ---------- the two Mossgrove houses (rule: every open door leads somewhere)
+  function room(w, h, door, floor) {
+    var r = []; for (var yy = 0; yy < h; yy++) { var row = []; for (var xx = 0; xx < w; xx++) row.push(xx === 0 || xx === w - 1 || yy === h - 1 ? 'V' : yy < 2 ? 'W' : floor); r.push(row); }
+    r[h - 1][door] = floor; for (yy = 5; yy < 8; yy++) for (xx = 4; xx < 9; xx++) r[yy][xx] = 'R'; return r.map(function (q) { return q.join(''); });
+  }
+  var LG = { F: 'floor_wood', R: 'rug', W: 'wall', V: 'void', H: 'floor_herring', S: 'floor_stone', K: 'floor_tile', B: 'carpet_blue' };
+  var houses = [
+    { name: 'moss_house1', title: 'Granny Burr\'s Cottage', b: buildings[1], w: 14, h: 10, door: 7, floor: 'H',
+      props: [pr('window', 3, 1), pr('picture', 6, 1), pr('window', 10, 1), pr('fireplace', 6, 2), pr('stove', 1, 2), pr('cupboard', 2, 2), pr('armchair', 4, 3),
+        pr('bed', 11, 2), pr('dresser', 12, 5), pr('table', 2, 6), pr('chair', 3, 6), pr('plant', 12, 8), pr('cat_bed', 1, 8), pr('herb_rack', 9, 1), pr('bookshelf', 9, 2)],
+      npcs: [{ key: 'grandma', x: 5, y: 6, dir: 0, lines: [['Granny Burr', 'Tea is always warm here. Sit, if you like.'], ['Granny Burr', 'My husband was a Wonder. He wrote everything down.']], sched: [{ from: 18, to: 7 }, { from: 7, to: 18, away: true }] }] },
+    { name: 'moss_house2', title: 'Pell\'s House', b: buildings[2], w: 14, h: 10, door: 7, floor: 'F',
+      props: [pr('window', 2, 1), pr('wall_map', 5, 1), pr('window', 10, 1), pr('shop_shelf', 1, 2), pr('barrel_in', 3, 2), pr('barrel_in', 4, 2), pr('desk', 8, 2), pr('chair', 8, 3), pr('bed', 11, 2),
+        pr('table', 9, 6), pr('chair', 10, 6), pr('chest', 1, 7), pr('potted_tree', 12, 8), pr('lantern_hang', 7, 1), pr('toybox', 12, 6)],
+      npcs: [{ key: 'kid2', x: 6, y: 6, dir: 0, lines: [['Pip Pell', 'Dad trades with half the forest.'], ['Pip Pell', 'He says the bridge men drink too much tea.']] }] }
+  ];
+  houses.forEach(function (h) {
+    var dx = h.b.x + 2, dy = h.b.y + 3;
+    H.maps[h.name] = { name: h.title, w: h.w, h: h.h, tileset: 'indoor', ground: room(h.w, h.h, h.door, h.floor), legend: LG, props: h.props, buildings: [], npcs: h.npcs,
+      doors: [{ x: h.door, y: h.h - 1, to: 'mossgrove', tx: dx, ty: dy + 1, dir: 0 }], spawn: { x: h.door, y: h.h - 2, dir: 1 }, door: h.door };
+    H.maps.mossgrove.doors.push({ x: dx, y: dy, to: h.name, tx: h.door, ty: h.h - 2, dir: 1 });
+  });
 
   // ---------- open a path through the south edge of Whisperwood
   function link() {
