@@ -511,7 +511,7 @@ window.H = window.H || {};
     '.hg-b{position:relative;min-width:0;padding:7px 11px 8px;border-radius:14px;background:#fffaf0;color:#2a1d10;box-shadow:0 4px 14px rgba(0,0,0,.4);font-size:14px;font-weight:800;line-height:1.3}' +
     '.hg-b:before{content:"";position:absolute;left:-6px;top:14px;border-top:6px solid transparent;border-bottom:6px solid transparent;border-right:7px solid #fffaf0}' +
     '.hg-b b{display:block;font-size:11px;font-weight:900;color:#c0602a;letter-spacing:.3px;text-transform:uppercase}' +
-    '.hg-b span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}';
+    '.hg-b span{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}';
   function css() { if (document.getElementById('hg-style')) return; var s = document.createElement('style'); s.id = 'hg-style'; s.textContent = CSS; document.head.appendChild(s); }
   function flags() { var st = H.game && H.game.state; if (!st) return null; return (st.flags = st.flags || {}); }
   function seen(id) { var f = flags(); return !!(f && f['help:' + id]); }
@@ -557,12 +557,16 @@ window.H = window.H || {};
       if (tr) { var ix = Math.max(0, Math.min(cx + gw, tr.x + tr.w) - Math.max(cx, tr.x)), iy = Math.max(0, Math.min(cy + gh, tr.y + tr.h) - Math.max(cy, tr.y)); c += ix * iy * 20; }
       return c;
     }
-    var cands = [], mx = (W - gw) / 2;
-    if (tr) { var tx = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2)); cands.push([tx, tr.y + tr.h + 12], [tx, tr.y - gh - 12]); }
-    [0.12, 0.3, 0.45, 0.6, 0.75].forEach(function (f) { cands.push([mx, Hh * f], [10, Hh * f], [W - gw - 10, Hh * f]); });
-    var best = null;
-    cands.forEach(function (cnd, i) { var cx = cnd[0], cy = Math.max(10, Math.min(Hh - gh - 10, cnd[1])), sc = cover(cx, cy) + i * 2; if (!best || sc < best[2]) best = [cx, cy, sc]; });
-    x = best[0]; y = best[1];
+    // try a wide and a narrow bubble; a narrow one fits into side gaps (for example beside a hontori in battle)
+    var best = null, full = gw;
+    [full, Math.min(full, 210), Math.min(full, 170)].forEach(function (w, wi) {
+      gw = w; g.style.width = w + 'px'; gh = g.offsetHeight || gh;
+      var cands = [], mx = (W - gw) / 2;
+      if (tr) { var tx = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2)); cands.push([tx, tr.y + tr.h + 12], [tx, tr.y - gh - 12]); }
+      for (var f = 0.1; f < 0.86; f += 0.05) cands.push([mx, Hh * f], [10, Hh * f], [W - gw - 10, Hh * f]);
+      cands.forEach(function (cnd, i) { var cx = cnd[0], cy = Math.max(10, Math.min(Hh - gh - 10, cnd[1])), sc = cover(cx, cy) + i * 2 + wi * 400; if (!best || sc < best[2]) best = [cx, cy, sc, w, gh]; });
+    });
+    x = best[0]; y = best[1]; gw = best[3]; gh = best[4];
     g.style.left = x + 'px'; g.style.top = y + 'px'; g.style.width = gw + 'px';
     var gone = false;
     function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; ov.classList.remove('on'); setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); o.res(true); next(); }, 200); }

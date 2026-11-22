@@ -18,8 +18,8 @@ window.H = window.H || {};
   rect(19, 9, 20, 11, 'c');            // hall steps
   rect(4, 15, 12, 16, 'p');            // west lane
   rect(27, 15, 34, 16, 'p');           // east lane
-  rect(19, 19, 20, 26, 'p');           // south lane to the closed Tidewell road
-  rect(21, 26, 38, 27, 'p');           // the road east (closed for now)
+  rect(19, 19, 20, 26, 'p');           // south lane to the closed road east
+  rect(21, 26, 38, 27, 'p');           // the road east to Whistling Pass (closed for now)
   for (y = 3; y < 10; y++) for (x = 30; x < 38; x++) { var dx = (x - 33.5) / 3.8, dy = (y - 6) / 3; if (dx * dx + dy * dy < 1) set(x, y, 'w'); }
   for (y = 2; y < 11; y++) for (x = 29; x < 39; x++) if (g[y][x] === 'g' && ['w'].indexOf((g[y - 1] || [])[x]) + ['w'].indexOf((g[y + 1] || [])[x]) + ['w'].indexOf(g[y][x - 1]) + ['w'].indexOf(g[y][x + 1]) > -4) set(x, y, 's');
   rect(3, 20, 9, 24, 't'); rect(28, 19, 35, 23, 't');   // meadows
@@ -43,7 +43,7 @@ window.H = window.H || {};
     // Granny Burr sits in the square by day and goes home at dusk
     { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wonders used to come every spring.']], sched: [{ from: 7, to: 18 }, { from: 18, to: 7, away: true }] },
     { key: 'kid2', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'I am not a Wonder. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
-    { key: 'traveler', x: 24, y: 25, dir: 1, lines: [['Rowan', 'The bridge to Tidewell washed out in the spring rain.'], ['Rowan', 'They say the builders will be done soon.']] }
+    { key: 'traveler', x: 24, y: 25, dir: 1, lines: [['Rowan', 'Rocks came down on the road to Whistling Pass.'], ['Rowan', 'They say it will be clear soon.']] }
   ];
   npcs.forEach(function (n) { res(n.x - 1, n.y - 1, n.x + 1, n.y + 1); });
 
@@ -55,7 +55,7 @@ window.H = window.H || {};
   [[32, 5], [35, 7]].forEach(function (p) { put('lilypad', p[0], p[1], true); });
   put('mushroom_ring', 6, 26); put('mushroom_ring', 33, 24); put('rock', 11, 22); put('rock', 27, 22); put('log_pile', 2, 18);
   put('garden_bed', 10, 15 - 1); put('butterfly_bush', 12, 9); put('sign', 21, 24, true); put('stone_wall_h', 37, 25, true);
-  put('fence_v', 38, 26, true); put('fence_v', 38, 27, true);   // the closed Tidewell road
+  put('fence_v', 38, 26, true); put('fence_v', 38, 27, true);   // the closed road to Whistling Pass
   // a ring of trees all around, thicker in the corners
   for (y = 0; y < HT; y++) for (x = 0; x < W; x++) {
     var edge = x < 2 || y < 2 || x > W - 3 || y > HT - 3, r = hash(x, y, 1);
@@ -65,7 +65,7 @@ window.H = window.H || {};
 
   H.maps.mossgrove = {
     name: 'Mossgrove',
-    labels: [{ x: 20, y: 2, name: 'Rootwood Hall' }, { x: 33, y: 2, name: 'Mirror Pond' }, { x: 33, y: 28, name: 'Road to Tidewell' }],
+    labels: [{ x: 20, y: 2, name: 'Rootwood Hall' }, { x: 33, y: 2, name: 'Mirror Pond' }, { x: 33, y: 28, name: 'Road to Whistling Pass' }],
     w: W, h: HT, tileset: 'outdoor',
     ground: g.map(function (r) { return r.join(''); }),
     legend: { g: 'grass', t: 'tallgrass', f: 'flowers', p: 'path', c: 'cobble', w: 'water', s: 'sand', b: 'bridge' },

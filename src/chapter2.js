@@ -19,8 +19,8 @@ window.H = window.H || {};
     { id: 'sprouts', text: 'Wand trial: wake the three wilted sprouts in the Hall', done: function () { return F('c2:sprouts'); } },
     { id: 'duel', text: 'Ring duel with Warden Fern. No switching hontori.', done: function () { return F('c2:ring'); } }
   ], reward: function () { ST.start('tidewell'); } });
-  ST.defineQuest({ id: 'tidewell', icon: 'drop', title: 'The Washed-out Bridge', desc: 'The road east of Mossgrove leads to Tidewell.', steps: [
-    { id: 'wait', text: 'The bridge to Tidewell is being rebuilt. Rowan in Mossgrove knows more.', done: function () { return false; } }
+  ST.defineQuest({ id: 'tidewell', icon: 'wind', title: 'The Rockslide', desc: 'The road east of Mossgrove climbs to Whistling Pass.', steps: [
+    { id: 'wait', text: 'A rockslide blocks the road to Whistling Pass. Rowan in Mossgrove knows more.', done: function () { return false; } }
   ] });
 
   // map markers
@@ -117,7 +117,7 @@ window.H = window.H || {};
       .then(function () { return a.say('hontori', 'A friendly word, a closed grey eye. We smile, we listen, we pass by.'); });
   } });
   ST.defineEvent({ id: 'c2_rowan', when: 'talk', npc: 'Rowan', map: 'mossgrove', cond: function (s) { return !!s.flags['c2:ring']; }, run: function (a) {
-    return a.say('traveler', 'Rowan', 'The Tidewell bridge? The builders say the next tide moon.')
+    return a.say('traveler', 'Rowan', 'The road to Whistling Pass? A rockslide closed it. They are clearing it now.')
       .then(function () { return a.say('traveler', 'Rowan', 'Until then, the forest has plenty to find. Keep your eyes open.'); });
   } });
 

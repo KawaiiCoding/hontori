@@ -11,18 +11,62 @@ window.H = window.H || {};
     slingshot: [24, 3], kite: [28, 7], mirror: [8, 13], backpack: [23, 9]
   };
   var USE = {
-    backpack: 'One more pocket in your bag', lantern: 'Light at night; dark hontori come near', teddy: 'Rest anywhere, except schools, tournaments and dungeons',
-    cookbook: 'Cook at a stove to heal your party', compass: 'Points the way to your goal',
-    slingshot: 'Knock apples from fruit trees', bread: 'Calms a wild hontori in battle', map: 'Shows the area you are in',
-    kite: 'Fly it on a windy day to see far', mirror: 'Shows hontori hidden in the air'
+    backpack: 'One more pocket, wherever you go', lantern: 'Lights every road at night. Dark hontori come near.', teddy: 'Rest on the road: health and stamina come back',
+    cookbook: 'Cook at any stove to heal your party by half', compass: 'Points to your goal in every area',
+    slingshot: 'An apple from each fruit tree, once a day', bread: 'Calms a wild hontori once. A fresh loaf waits at home each day.', map: 'Shows each area as you walk it',
+    kite: 'On a windy day, shows a wide area on the map', mirror: 'Shows hidden hontori, in the woods most of all'
   };
+  // names and icons for things that do not come from home (also heals old saves)
+  var OTHER = {
+    wand: ['Spirit Wand', 'wand'], novice_cert: ['Novice Certificate', 'scroll'], grey_letter: ['Sealed Letter', 'scroll'], ring_leaf: ['Leaf Ring', 'grass'],
+    herb: ['Herb', 'grass'], ember_dust: ['Ember Dust', 'fire'], tide_pearl: ['Tide Pearl', 'water'], spirit_snack: ['Spirit Snack', 'heart'],
+    charm: ['Backpack Charm', 'star'], ramen: ['Ramen', 'bowl']
+  };
+  // key things can never be dropped and never use a pocket
+  var KEYS = { wand: 1, map: 1, novice_cert: 1, grey_letter: 1 };
+  function isKey(id) { return !!KEYS[id] || /^ring_/.test(id); }
+  // only things from home use a pocket
+  function pocket(id) { return !!SPOT[id] && !isKey(id); }
+  // what kind of thing it is: 'pocket', 'key', 'trade' or 'supply'
+  function kind(id) { return isKey(id) ? 'key' : SPOT[id] ? 'pocket' : (H.money && H.money.TRADE[id]) ? 'trade' : 'supply'; }
+  function nice(id) { return String(id).replace(/_/g, ' ').replace(/\b[a-z]/g, function (ch) { return ch.toUpperCase(); }); }
+  // name and icon for any id that can exist
+  function info(id) {
+    var m = H.items && H.items.list.filter(function (x) { return x.id === id; })[0], t = H.money && H.money.TRADE[id], o = OTHER[id];
+    if (m) return { name: m.name, icon: id };
+    if (t) return { name: t[0], icon: t[1] };
+    if (o) return { name: o[0], icon: o[1] };
+    return { name: nice(id), icon: /^ring_/.test(id) ? 'star' : 'backpack' };
+  }
+  // heal the item list: drop broken or removed entries, merge doubles, fill in names and icons
+  function tidy() {
+    var st = S(), list = st.items, seen = {}, out = [], changed = false;
+    if (!list || !list.length) return false;
+    list.forEach(function (it) {
+      if (!it || !it.id || it.id === 'scarf' || it.id === 'candle') { changed = true; return; }
+      var n = it.n == null ? 1 : Math.floor(Number(it.n));
+      if (!(n > 0)) { changed = true; return; }
+      // one of each thing from home and of each key thing
+      if ((SPOT[it.id] || isKey(it.id)) && n > 1) n = 1;
+      if (seen[it.id]) { if (!SPOT[it.id] && !isKey(it.id)) seen[it.id].n += n; changed = true; return; }
+      var i = info(it.id);
+      if (it.n !== n || !it.name || it.name === it.id || !it.icon || ((SPOT[it.id] || OTHER[it.id]) && (it.name !== i.name || it.icon !== i.icon))) changed = true;
+      it.n = n;
+      if (!it.name || it.name === it.id || SPOT[it.id] || OTHER[it.id]) it.name = i.name;
+      if (!it.icon || SPOT[it.id] || OTHER[it.id]) it.icon = i.icon;
+      seen[it.id] = it; out.push(it);
+    });
+    if (changed) { list.length = 0; out.forEach(function (it) { list.push(it); }); }
+    return changed;
+  }
 
   function S() { return (H.game && H.game.state) || { items: [] }; }
   function F() { var s = S(); return (s.flags = s.flags || {}); }
   function has(id) { return (S().items || []).some(function (i) { return i.id === id; }); }
   function meta(id) { return (H.items && H.items.list.filter(function (x) { return x.id === id; })[0]) || { id: id, name: id }; }
   function active() { return !!F()['c1:morning']; }
-  function count() { return Object.keys(SPOT).filter(function (id) { return has(id) && !(id === 'map' && F()['map:gift']); }).length; }
+  function count() { return Object.keys(SPOT).filter(function (id) { return pocket(id) && has(id); }).length; }
+  function label() { return 'Pockets ' + count() + ' / ' + cap(); }
   function cap() { return 5 + (has('backpack') ? 1 : 0); }
   function cur() { return H.game && H.game.currentMap ? H.game.currentMap() : null; }
   function api() { return H.story && H.story.api ? H.story.api({}) : null; }
@@ -43,7 +87,8 @@ window.H = window.H || {};
     try { H.items.draw(g, id, 0, 0); } catch (e) {}
     return (urls[id] = c.toDataURL());
   }
-  function onFloor(id) { return active() && !has(id); }
+  // bread is eaten in battle: a fresh loaf waits at home the next day
+  function onFloor(id) { return active() && !has(id) && !(id === 'bread' && F()['bread:day'] === (S().day || 0) + 1); }
 
   // ---------- picking things up
   function at(mapName, x, y) {
@@ -52,27 +97,35 @@ window.H = window.H || {};
     return null;
   }
   function pickup(id, c) {
-    var a = api(), m = meta(id), full = count() >= cap();
-    if (!a) return Promise.resolve();
-    var p = a.choose([{ label: 'Take the ' + m.name, icon: iconUrl(id), desc: full ? 'Bag is full. Put one back first.' : USE[id] }, { label: 'Leave it' }]);
+    var a = api(), m = meta(id), full = pocket(id) && count() >= cap();
+    if (!a || busy || has(id)) return Promise.resolve();
+    busy = true;
+    var p = a.choose([{ label: 'Take the ' + m.name, icon: iconUrl(id), desc: full ? 'Pockets are full. Put one thing back first.' : USE[id] }, { label: 'Leave it' }]);
     if (full) { var b = document.querySelector('.hui-ch button'); if (b) b.style.opacity = '.45'; }
     return p.then(function (i) {
-      if (i !== 0) return;
-      if (full) { toast('Bag is full'); return; }
+      busy = false;
+      if (i !== 0 || has(id)) return;
+      if (full) { toast('Pockets are full'); return; }
       H.game.addItem(id, m.name, id); sfx('pickup');
+      if (id === 'bread') F()['bread:day'] = (S().day || 0) + 1;
       if (c && c.emit) c.emit('sparkle', c.x, c.y, 8);
-      toast('Bag ' + count() + ' / ' + cap());
-      if (id === 'backpack') once('backpack', 'One more pocket in your bag');
+      toast(pocket(id) ? label() : 'Got the ' + m.name);
+      if (id === 'backpack') once('backpack', 'The Bean Bag adds one pocket. You now have six.');
       if (id === 'map') once('map', 'The map button shows the area');
       save();
-    });
+    }, function () { busy = false; });
   }
-  function putBack(id) {
-    if (id === 'backpack' && count() > 5) { toast('Take one out first'); return; }
-    var st = S(), it = st.items.filter(function (i) { return i.id === id; })[0]; if (!it) return;
-    st.items.splice(st.items.indexOf(it), 1); sfx('confirm'); toast(meta(id).name + ' put back');
-    H.menu && H.menu.refresh(); save();
+  // why a thing cannot leave the bag right now (null when it can)
+  function held(id) { return id === 'backpack' && has(id) && count() > 5 ? 'The Bean Bag is full. Take one other thing out first.' : null; }
+  // take one out of the bag: things from home go back to their spot, the rest stay where they fall
+  function remove(id, verb) {
+    var st = S(), it = (st.items || []).filter(function (i) { return i.id === id; })[0]; if (!it || isKey(id)) return false;
+    var why = held(id); if (why) { toast(why); return false; }
+    if (it.n > 1) it.n--; else st.items.splice(st.items.indexOf(it), 1);
+    sfx('confirm'); toast(verb === 'back' ? it.name + ' put back' : SPOT[id] ? it.name + ' sent home' : it.name + ' dropped');
+    save(); return true;
   }
+  function putBack(id) { return remove(id, 'back'); }
 
   // ---------- uses
   function cook(c, base) {
@@ -113,7 +166,7 @@ window.H = window.H || {};
   function actions(it) {
     var c = cur(), out = []; if (!c) return out;
     var id = it.id;
-    if (c.name === 'home' && SPOT[id] && !(id === 'map' && F()['map:gift'])) out.push({ label: 'Put back', desc: 'Back to its spot', run: function () { putBack(id); } });
+    if (c.name === 'home' && pocket(id)) out.push({ label: 'Put back', desc: 'Back to its spot', run: function () { putBack(id); } });
     if (id === 'teddy') {
       // rest anywhere, except where it would not be fair: schools, tournaments, dungeons
       var no = c.map.noRest || /academy|school|tourn|arena|dungeon|cave|tower/i.test(c.name) ? 'Not here. Rest is not allowed in schools, tournaments or dungeons.' : null;
@@ -158,7 +211,7 @@ window.H = window.H || {};
       once('lantern', 'The lantern lights the way. Dark hontori come closer.');
     }
   });
-  var frame = 0, pill = null, compA = 0, compAng = 0, compX = 0, compY = 0;
+  var busy = false, frame = 0, pill = null, compA = 0, compAng = 0, compX = 0, compY = 0;
   H.screenDraw = H.screenDraw || [];
   H.screenDraw.push(function (ctx, VW, VH, env, mapName, camX, camY, player) {
     // compass: a small, soft arrow at the screen edge, only while the goal is off-screen; it fades in and out
@@ -187,11 +240,11 @@ window.H = window.H || {};
     // bag counter while at home
     if (!pill) { pill = document.createElement('div'); pill.style.cssText = 'position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 172px);z-index:30;padding:5px 12px;border-radius:12px;background:rgba(18,20,40,.82);border:2px solid rgba(255,255,255,.22);color:#f4f1e8;font:900 14px Nunito,system-ui,sans-serif;pointer-events:none'; (document.getElementById('root') || document.body).appendChild(pill); }
     var show = mapName === 'home' && active(); pill.hidden = !show;
-    if (show) { var txt = 'Bag ' + count() + ' / ' + cap(); if (pill.textContent !== txt) pill.textContent = txt; }
+    if (show) { var txt = label(); if (pill.textContent !== txt) pill.textContent = txt; }
     // first-need tips out in the world
     if (!env.indoor && H.game.state.intro) {
-      if (has('teddy') && night(env)) once('teddy', 'With the teddy you can rest almost anywhere (backpack).');
-      if (has('kite') && env.weather === 'wind') once('kite', 'A windy day. The kite could fly (backpack).');
+      if (has('teddy') && night(env)) once('teddy', 'With the teddy you can rest almost anywhere. Open your backpack.');
+      if (has('kite') && env.weather === 'wind') once('kite', 'A windy day. The kite could fly. Open your backpack.');
       if (has('mirror')) once('mirror', 'The mirror shows hontori hidden in the air');
     }
   });
@@ -209,11 +262,13 @@ window.H = window.H || {};
     };
     H.interact.__items = true;
     // scarf and candle were removed from the house (the kid wears a scarf; the lantern is the one light)
-    var it0 = S().items || []; for (var q = it0.length - 1; q >= 0; q--) if (it0[q].id === 'scarf' || it0[q].id === 'candle') it0.splice(q, 1);
+    // old saves: doubles, empty stacks and nameless things are healed too
+    if (tidy()) save();
     // old saves packed with the grid picker: keep the map they could not choose yet
     if (F()['c1:packed'] && !has('map')) { F()['map:gift'] = true; var m = meta('map'); H.game.addItem('map', m.name, 'map'); }
   }
   if (document.readyState === 'complete') setTimeout(wrap, 0); else addEventListener('load', wrap);
 
-  H.pickups = { at: at, has: has, count: count, cap: cap, iconUrl: iconUrl, actions: actions, uses: USE, spots: SPOT };
+  H.pickups = { at: at, has: has, count: count, cap: cap, label: label, active: active, iconUrl: iconUrl, actions: actions, uses: USE, spots: SPOT,
+    pocket: pocket, isKey: isKey, kind: kind, info: info, held: held, remove: remove, tidy: tidy };
 })();

@@ -23,18 +23,23 @@ The fire fox has no name until the player gives it one.
 Eight regions, each with an element town and a School of Magic. Each school holds a trial; passing it earns that school's ring.
 The first school, **Emberbrook Academy**, teaches the basics only and gives no ring, just a Novice Certificate.
 
-| # | Region | Element |
-|---|--------|---------|
-| 1 | Emberbrook (home, Academy) | basics |
-| 2 | Whisperwood | grass |
-| 3 | Tidewell | water |
-| 4 | Whistling Pass | wind |
-| 5 | Voltmere | electric |
-| 6 | Deepstone | earth |
-| 7 | Gloamhollow | dark |
-| 8 | Dawnspire | light |
-| 9 | Cinderhold | fire |
+Ordered from easiest to hardest, so the starter and what the kid binds along the way always have an answer to the next school.
+The fire starter is strong against the first two; from the third on the kid needs the hontori bound on the road.
 
+| # | Region and school | Element | Strong against it | Trial (each school is its own kind of test) |
+|---|---|---|---|---|
+| 0 | Emberbrook Academy | basics | - | Novice Certificate, no ring |
+| 1 | Mossgrove, Rootwood Hall | grass | fire, wind | Leaf maze (push leaf piles onto moss pads), wand trial (wake the sprouts), duel with no switching |
+| 2 | Whistling Pass, the Spire of Gales | wind | electric, fire | Ride the gusts up a cliff path, then a duel in strong wind |
+| 3 | Tidewell, the Tide School | water | grass, electric | Tide pools that rise and fall, then a duel where the sleeping spell is banned |
+| 4 | Voltmere, the Copper Tower | electric | earth | Light the circuit by turning switches, then a duel on a charged floor |
+| 5 | Deepstone, the Hollow Mountain | earth | water, grass | Push boulders through mine tunnels, then two duels in a row with no rest |
+| 6 | Cinderhold, the Ember Forge | fire | water, earth | A one-on-one duel of spell casters, wand against wand, no hontori |
+| 7 | Gloamhollow, the Night Library | dark | light | A maze lit only by your lantern, then a duel at midnight |
+| 8 | Dawnspire, the Glass Tower | light | dark | Turn mirrors to carry a sunbeam, then a duel at noon |
+| 9 | The Council Hall | dark and light | both | Grand Archmage Orlen Vael and his two-element hontori (Duskmantle line) |
+
+Inside the great schools the students and teachers use stronger two-element hontori (see src/spirits.js DUAL).
 (Eight elemental schools, regions 2 to 9; Emberbrook is the starting village.)
 
 ## The antagonist
@@ -76,7 +81,7 @@ Expose Orlen Vael and pass a new law, so hontori are known and respected by ever
    - Ranger Moss keeps the south edge of Whisperwood closed until Chapter 1 is complete (the letter).
    - **The Leaf Ring**: reach Mossgrove, meet Warden Fern in Rootwood Hall, the wand trial (wake three wilted sprouts with the Mending Sigil), then a ring duel where switching is not allowed.
    - After the ring a grey-cloaked visitor says the Archmage wants to meet promising Wonders.
-   - The road east to Tidewell is closed: the bridge washed out (Rowan). Chapter 3 starts there.
+   - The road east to Whistling Pass is closed by a rockslide (Rowan). Chapter 3 starts there.
 3. **Tidewell**
 4. **Whistling Pass**
 5. **Voltmere**
