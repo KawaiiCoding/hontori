@@ -168,14 +168,19 @@ window.H = window.H || {};
       }
     }
     // outline: one art pixel (two device pixels) on the four sides, as the 1x outline was
-    var add = [], oc = s.out;
+    // soft coloured outline: each edge pixel is a deep shade of the leaf or bark next to it (no black line)
+    var add = [], src = [];
     for (Y = 0; Y < Hh; Y++) for (X = 0; X < W; X++) {
       i = Y * W + X;
       if (o[i]) continue;
-      if ((X > 0 && o[i - 1]) || (X > 1 && o[i - 2]) || (X < W - 1 && o[i + 1]) || (X < W - 2 && o[i + 2]) ||
-          (Y > 0 && o[i - W]) || (Y > 1 && o[i - 2 * W]) || (Y < Hh - 1 && o[i + W]) || (Y < Hh - 2 && o[i + 2 * W])) add.push(i);
+      var nb = (X > 0 && o[i - 1]) || (X < W - 1 && o[i + 1]) || (Y > 0 && o[i - W]) || (Y < Hh - 1 && o[i + W]) ||
+          (X > 1 && o[i - 2]) || (X < W - 2 && o[i + 2]) || (Y > 1 && o[i - 2 * W]) || (Y < Hh - 2 && o[i + 2 * W]);
+      if (nb) { add.push(i); src.push(nb); }
     }
-    for (i = 0; i < add.length; i++) o[add[i]] = oc;
+    for (i = 0; i < add.length; i++) {
+      var v = src[i], r = v & 255, gg = (v >>> 8) & 255, b = (v >>> 16) & 255;
+      o[add[i]] = (0xff << 24 | ((b * 0.42) & 255) << 16 | ((gg * 0.42) & 255) << 8 | ((r * 0.38) & 255)) >>> 0;
+    }
     x2.putImageData(id, 0, 0);
     return c;
   }
