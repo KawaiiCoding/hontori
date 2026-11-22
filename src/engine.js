@@ -235,6 +235,8 @@
       else if (st.do === 'shake') { shake = 0.8; sfx('cough'); emit('smoke', fx, fy, 20); emit('ember', fx, fy, 20); await wait(700); }
       else if (st.do === 'spiritAppear') await spiritEntrance(fp);
       else if (st.do === 'giveWand') { sfx('wand'); emit('magic', player.x, player.y - 20, 40); H.ui && H.ui.toast('Received: Spirit Wand'); await wait(900); }
+      // practice: the V is drawn but nothing is lifted yet, just a soft glow on the wand
+      else if (st.do === 'practice') { if (H.gesture && H.gesture.prompt) await H.gesture.prompt('veil', st.text || 'Practise the V'); sfx('confirm'); emit('sparkle', player.x, player.y - 16, 12); await wait(500); }
       else if (st.do === 'spell') { if (H.gesture && H.gesture.prompt) await H.gesture.prompt('veil', 'Draw a V to lift the veil'); sfx('spell'); emit('magic', player.x, player.y - 16, 90); emit('sparkle', player.x, player.y - 16, 60); flash = 1; await wait(1200); }
       else if (st.do === 'fade') { if (H.ui) await H.ui.fade(600); }
     }
