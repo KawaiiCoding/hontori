@@ -80,17 +80,17 @@
   function dist(a, b) { var d = 0; for (var i = 0; i < N; i++) d += Math.hypot(a[i][0] - b[i][0], a[i][1] - b[i][1]); return d / N; }
   function circ(n, a0, a1, cx, cy, rx, ry) { var a = []; for (var i = 0; i <= n; i++) { var t = a0 + (a1 - a0) * i / n; a.push([cx + Math.cos(t) * rx, cy + Math.sin(t) * ry]); } return a; }
   var RAW = {
-    mend: circ(32, -Math.PI / 2, Math.PI * 1.5, 0, 0, 1, 1),
+    mend: circ(32, Math.PI, Math.PI * 3, 0, 0, 1, 1), // starts on the left, goes over the top
     // a cup: down the left side, round bottom, up the right side
     shield: [[0, 0], [0, 0.3]].concat(circ(16, Math.PI, 0, 0.5, 0.45, 0.5, 0.55)).concat([[1, 0.3], [1, 0]]).map(function (q, i) { return i > 1 && i < 19 ? [q[0], q[1] < 0.45 ? 0.45 : q[1]] : q; }),
     // a peak / caret
     boost: [[0, 1], [0.5, 0], [1, 1]],
-    stun: [[0.35, 0], [0.75, 0.38], [0.25, 0.62], [0.65, 1]],
+    stun: [[0.25, 0], [0.75, 0.38], [0.25, 0.62], [0.75, 1]],
     sleep: (function () { var a = []; for (var i = 0; i <= 40; i++) { var x = i / 40; a.push([x, 0.5 + 0.22 * Math.sin(x * Math.PI * 4)]); } return a; })(),
-    // spiral drawn from the outside in (2 turns)
-    bind: (function () { var a = []; for (var i = 0; i <= 60; i++) { var t = i / 60, r = 1 - t * 0.85, ang = -Math.PI / 2 + t * Math.PI * 4; a.push([Math.cos(ang) * r, Math.sin(ang) * r]); } return a; })(),
-    // five-point star in one stroke
-    revive: (function () { var a = []; for (var i = 0; i <= 5; i++) { var ang = -Math.PI / 2 + i * Math.PI * 4 / 5; a.push([Math.cos(ang), Math.sin(ang)]); } return a; })(),
+    // spiral drawn from the outside in (2 turns), starting on the left
+    bind: (function () { var a = []; for (var i = 0; i <= 60; i++) { var t = i / 60, r = 1 - t * 0.85, ang = Math.PI + t * Math.PI * 4; a.push([Math.cos(ang) * r, Math.sin(ang) * r]); } return a; })(),
+    // five-point star in one stroke: from the lower left up to the top first
+    revive: (function () { var a = []; for (var i = 0; i <= 5; i++) { var ang = Math.PI * 0.7 + i * Math.PI * 4 / 5; a.push([Math.cos(ang), Math.sin(ang)]); } return a; })(),
     // the veil spell from the intro: a V, opening the curtain
     veil: [[0, 0], [0.5, 1], [1, 0]]
   };
@@ -122,7 +122,7 @@
     var SMOOTH = { mend: 1, sleep: 1, bind: 1, absorb: 1 };
     (allowed || ORDER.concat(['veil'])).forEach(function (k) {
       var T = TEMPLATES[k]; if (!T) return;
-      if (SMOOTH[k] && corners >= 2) return;
+      if (SMOOTH[k] && corners >= (k === 'bind' || k === 'absorb' ? 4 : 2)) return;
       if (k === 'revive' && corners < 3) return;
       var shifts = T.closed ? 12 : 1, cands = [g, gr];
       if (T.rot) { cands = []; for (var r = 0; r < 16; r++) { var a = r / 16 * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
@@ -132,7 +132,7 @@
         for (var ci = 0; ci < cands.length; ci++) { var d = dist(cands[ci], tp); if (d < bestD) { bestD = d; best = k; } }
       }
     });
-    var lim = (best === 'revive' ? 0.16 : 0.2) + ((tol && tol[best]) || 0);
+    var lim = (best === 'revive' ? 0.16 : best === 'bind' || best === 'absorb' ? 0.29 : 0.2) + ((tol && tol[best]) || 0);
     return { kind: bestD < lim ? best : null, guess: best, d: bestD, acc: Math.max(0, Math.min(1, 1 - bestD / lim)) };
   }
   function recognize(raw, allowed) { var s = score(raw, allowed); return s && s.kind; }
@@ -605,6 +605,11 @@
     '.hb-hp{height:8px;border-radius:5px;background:rgba(0,0,0,.55);overflow:hidden;margin-top:5px}',
     '.hb-hp b{display:block;height:100%;width:100%;background:linear-gradient(90deg,#57d07a,#9cf0a6);transition:width .5s}',
     '.hb-hp b.low{background:linear-gradient(90deg,#ff7a5a,#ffb08a)}',
+    '.hb-bn{position:relative;height:13px;border-radius:6px;background:rgba(0,0,0,.6);overflow:hidden;margin-top:4px}',
+    '.hb-bn b{display:block;height:100%;transition:width .5s;background:linear-gradient(90deg,#57d07a,#9cf0a6)}',
+    '.hb-bn b.low{background:linear-gradient(90deg,#ff7a5a,#ffb08a)}.hb-bn.sta b{background:linear-gradient(90deg,#e0a83a,#ffd98a)}.hb-bn.xp b{background:linear-gradient(90deg,#5a8aff,#9fc0ff)}',
+    '.hb-bn span{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:0 6px;font-size:10px;font-weight:900;line-height:1;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000}',
+    '.hb-bn.thin{height:11px}.hb-bn.thin span{font-size:9px}',
     '.hb-card .st{font-size:11px;font-weight:800;margin-top:4px;display:flex;flex-wrap:wrap;gap:3px;align-items:center;min-height:16px}',
     '.hb-tag{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:900;background:rgba(255,255,255,.12);color:#fff}',
     '.hb-foe{right:10px;top:calc(env(safe-area-inset-top,0px) + 50px)}',
@@ -614,7 +619,8 @@
     '.hb-intent small{font-size:11px;font-weight:800;opacity:.8}',
     '.hb-intent.pulse{animation:hbp 1s ease-in-out infinite}',
     '@keyframes hbp{50%{transform:scale(1.08)}}',
-    '.hb-msg{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 164px);text-align:center;font-weight:900;font-size:clamp(14px,4.2vmin,19px);text-shadow:0 2px 0 rgba(0,0,0,.7),0 0 8px rgba(0,0,0,.6);pointer-events:none;min-height:24px}',
+    '.hb-msg{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);box-sizing:border-box;bottom:calc(env(safe-area-inset-bottom,0px) + 166px);text-align:center;font-weight:800;font-size:clamp(14px,4vmin,17px);line-height:1.3;color:#fff;padding:7px 14px;border-radius:14px;background:rgba(10,12,30,.88);border:2px solid rgba(255,255,255,.14);box-shadow:0 4px 12px rgba(0,0,0,.4);pointer-events:none}',
+    '.hb-msg:empty{display:none}',
     '.hb-moves{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);display:grid;grid-template-columns:repeat(3,1fr);gap:6px}',
     '.hb-mv{position:relative;border:0;border-radius:14px;padding:7px 6px 6px;min-height:66px;overflow:hidden;text-align:left;font:inherit;color:#fff;cursor:pointer;background:linear-gradient(180deg,color-mix(in srgb,var(--mc) 55%,#1a1c38),#14162e);box-shadow:inset 0 0 0 2px var(--mc),inset 0 2px 0 rgba(255,255,255,.18),0 4px 0 color-mix(in srgb,var(--mc) 45%,#000),0 6px 12px rgba(0,0,0,.35);transition:transform .08s;touch-action:manipulation}',
     '.hb-mv b{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:900;line-height:1.1;padding-right:44px}',
@@ -627,6 +633,8 @@
     '.hb-mv.off{filter:grayscale(.85) brightness(.6)}',
     '.hb-mv .cd{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;background:rgba(10,10,24,.55)}',
     '.hb-mv.hot{animation:hbp 1s ease-in-out infinite}',
+    '.hb-mv .sc{display:inline-block;margin-left:5px;font-size:9px;font-weight:900;color:#ffd98a;text-transform:uppercase;letter-spacing:.5px}',
+    '.hb-breath{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:3;background:linear-gradient(180deg,#ffd98a,#e0a83a);color:#2a1405}',
     '.hb-bar{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 116px);display:flex;align-items:center;gap:6px;height:40px}',
     '.hb-mana{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:12px;background:rgba(14,16,36,.84);font-weight:900;font-size:12px}',
     '.hb-pip{width:11px;height:11px;border-radius:50%;border:2px solid #9fd0ff;box-sizing:border-box}',
@@ -738,9 +746,11 @@
     var party = GS.party || [];
     var act = 0; for (var ai = 0; ai < party.length; ai++) if ((party[ai].hp == null ? 1 : party[ai].hp) > 0) { act = ai; break; }
     var lead = party[act] || { key: 'hontori', level: 1, hp: 20, maxHp: 20 };
+    function SMX(L) { return H.progress && H.progress.staMax ? H.progress.staMax(L) : 10 + (L || 1); }
+    function SCOST(mv) { return H.progress && H.progress.staCost ? H.progress.staCost(mv) : 1; }
     function mkMe(m) {
       var sp = specOf(m.key);
-      return { src: m, key: m.key, el: sp.element, hp: Math.max(0, m.hp == null ? 20 : m.hp), max: m.maxHp || 20, lvl: m.level || 1, atk: m.atk || 0, stage: m.stage, name: m.nick || sp.name || (cap(sp.element) + ' Hontori'), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
+      return { src: m, key: m.key, el: sp.element, hp: Math.max(0, m.hp == null ? 20 : m.hp), max: m.maxHp || 20, lvl: m.level || 1, atk: m.atk || 0, stage: m.stage, staMax: SMX(m.level), sta: Math.max(0, Math.min(SMX(m.level), m.sta == null ? SMX(m.level) : m.sta)), name: m.nick || sp.name || (cap(sp.element) + ' Hontori'), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
     }
     function movesOf(m) {
       var M = H.moves, out = [];
@@ -758,7 +768,7 @@
     var fk = TR ? (TR.spirit || 'electric') : (opts.enemy || pool[Math.floor(Math.random() * pool.length)]), fs = specOf(fk);
     var flvl = TR ? (TR.level || 1) : (opts.level || Math.max(1, me.lvl + (Math.random() < 0.3 ? -1 : Math.random() < 0.6 ? 0 : 1)));
     var fmax = 15 + flvl * 3;
-    var foe = { key: fk, el: fs.element, hp: fmax, max: fmax, lvl: flvl, stage: opts.stage || TR && TR.stage, name: TR ? (TR.name + "'s " + cap(fs.element) + ' Hontori') : ('Jealous ' + (fs.name || cap(fs.element))), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
+    var foe = { key: fk, el: fs.element, hp: fmax, max: fmax, lvl: flvl, stage: opts.stage || TR && TR.stage, name: TR ? TR.name : ('Jealous ' + (fs.name || cap(fs.element))), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
     var MOV = movesOf(lead), FMOV = H.moves.MOVES[foe.el] || H.moves.MOVES.fire;
     var maxMana = GS.maxMana || 3; if (GS.mana == null) GS.mana = maxMana; var mana = Math.min(maxMana, GS.mana);
     var known = (GS.spells && GS.spells.length ? GS.spells : ['mend']).map(function (s) { return s === 'absorb' ? 'bind' : s; });
@@ -777,7 +787,8 @@
     function costOf(k) { var c = SPELLS[k].cost; if (!c) return c; return Math.max(1, c - (perks.costCut || 0) - (mastery(k) >= 4 ? 1 : 0)); }
     function tolOf(k) { return Math.min(0.07, (perks.tolerance || 0) * 0.5 + 0.01 * (mastery(k) - 1)); }
     var TOL = {}; loadout.forEach(function (k) { TOL[k] = tolOf(k); });
-    var GRADE = { flawless: ['Flawless', 1.25, '#ffd24a', 3], strong: ['Strong', 1, '#bfe4ff', 2], rough: ['Rough', 0.8, '#a8a8b8', 1] };
+    var GRADE = { flawless: ['Flawless', 1.25, '#ffd24a', 3], strong: ['Strong', 1, '#bfe4ff', 2], rough: ['Weak', 0.7, '#a8a8b8', 1] };
+    GRADE.flawless[1] = 1.3;
     function gradeOf(sc) { var a = sc ? sc.acc : 0.5; return a >= 0.55 ? 'flawless' : a >= 0.25 ? 'strong' : 'rough'; }
     var result = { won: false, captured: false, fled: false, foeKey: fk, foeLevel: flvl, trainer: TR ? (TR.name || true) : null };
 
@@ -803,7 +814,7 @@
       HL('turn', 'Turns', 'This shows whose turn it is.', 'star', '.hb-turn.on');
       HL('mana', 'Mana', 'Blue orbs are mana. Spells use them up.', 'crystal', manaEl);
     }, 1200);
-    sheetBtn.addEventListener('click', function () { HL('bspells', 'Spells', 'Draw a sigil on the field to cast. One spell each turn.', 'wand', sheet); sheetOpen = sheet.hidden; sheet.hidden = !sheetOpen; el.classList.toggle('sheet-open', sheetOpen); });
+    sheetBtn.addEventListener('click', function () { HL('bspells', 'Spells', 'Draw a sigil on the field to cast. One spell each turn.', 'wand', sheet); if (known.length > 4) HL('loadout4', 'Four spells', 'You know ' + known.length + ' spells, but only 4 come into battle. Choose them in Menu, Spells.', 'book', sheet); sheetOpen = sheet.hidden; sheet.hidden = !sheetOpen; el.classList.toggle('sheet-open', sheetOpen); });
     new MutationObserver(function () { el.classList.toggle('sheet-open', !sheet.hidden); }).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
 
     // spell cheat-sheet
@@ -812,6 +823,8 @@
     function fillChip(k) {
       var S = SPELLS[k], kn = known.indexOf(k) >= 0, c = chips[k];
       c.className = 'hb-sp' + (kn ? (can(k) ? '' : ' spare') : ' lock');
+      // only the 4 chosen spells come into battle; the rest live in the spell book
+      c.hidden = !can(k); if (c.hidden) return;
       if (!kn) { c.innerHTML = sigilSVG(k, S.col, true) + '<span class="lk">' + ICON.lock + '</span>' + S.name + '<span class="d">' + (k === 'bind' ? 'Academy' : 'Later school') + '</span>'; return; }
       var ml = mastery(k), pips = '';
       for (var i = 1; i <= 5; i++) pips += '<i class="' + (i <= ml ? 'on' : '') + '"></i>';
@@ -850,14 +863,19 @@
     function say(t) { msg.textContent = t; }
     var tags = { asleep: ['Asleep', '#b9a8ff'], stun: ['Stunned', '#ffe27a'], shield: ['Warded', '#8fd8ff'], boost: ['Rallied', '#ffb35a'], root: ['Rooted', '#7ed957'], glow: ['Glow', '#ff8a3c'], harden: ['Shell', '#c9935a'], tail: ['Tailwind', '#9ff0e0'], veil: ['Veiled', '#a070ff'], mist: ['Misted', '#cfe9ff'], guard: ['Guard', '#8fd8ff'], charged: ['Charged', '#ffcf5a'] };
     function card(c, f) {
-      var low = f.hp / f.max < 0.3, h = '<div class="nm"><span>' + f.name + '</span><span class="lv">Lv ' + f.lvl + '</span></div><div class="hb-hp"><b class="' + (low ? 'low' : '') + '" style="width:' + Math.max(0, Math.round(100 * f.hp / f.max)) + '%"></b></div><div class="st"></div>';
+      var low = f.hp / f.max < 0.3, h = '<div class="nm"><span>' + f.name + '</span><span class="lv">Lv ' + f.lvl + '</span></div>' + nbar('', low ? 'low' : '', f.hp / f.max, 'HP', Math.max(0, Math.ceil(f.hp)) + ' / ' + f.max);
+      if (f === me) {
+        h += nbar('sta thin', '', me.sta / me.staMax, 'Stamina', me.sta + ' / ' + me.staMax);
+        // EXP is shown on the results card and in the party view, not during the fight
+      }
+      h += '<div class="st"></div>';
       c.innerHTML = h; var st = c.querySelector('.st');
       try { var b = H.ui.elementBadge(f.el); b.style.marginLeft = '0'; st.appendChild(b); } catch (e) { mk('span', 'hb-tag', st, cap(f.el)); }
-      if (f === me) mk('span', '', st, '&nbsp;' + f.hp + ' / ' + f.max);
       if (f === foe) { var m = matrix(me.el, foe.el), m2 = matrix(foe.el, me.el); var ic = document.createElement('span'); ic.innerHTML = edgeIcon(m, m2, 24); ic.style.display = 'inline-flex'; st.appendChild(ic); }
       Object.keys(tags).forEach(function (k) { if (f[k]) tag(st, tags[k][0], tags[k][1]); });
       if (f === me && f.hp <= 0) tag(st, 'Fainted', '#ff8a7a');
     }
+    function nbar(cls, bcls, fr, label, val) { return '<div class="hb-bn ' + cls + '"><b class="' + bcls + '" style="width:' + Math.max(0, Math.min(100, Math.round(100 * fr))) + '%"></b><span><em style="font-style:normal">' + label + '</em><em style="font-style:normal">' + val + '</em></span></div>'; }
     function edgeIcon(m, m2, px) {
       px = px || 22; var up = m > 1, down = !up && m2 > 1, col = up ? '#57d07a' : down ? '#ff6a5a' : '#8a90a8';
       var path = up ? 'M12 5 L19 14 L14 14 L14 19 L10 19 L10 14 L5 14 Z' : down ? 'M12 19 L19 10 L14 10 L14 5 L10 5 L10 10 L5 10 Z' : 'M6 9 H18 V11 H6 Z M6 13 H18 V15 H6 Z';
@@ -869,6 +887,10 @@
       var mine = !busy && !done, txt = done ? '' : mine ? 'Your turn' : 'Enemy turn';
       if (turnPill._t !== txt) { turnPill._t = txt; turnPill.textContent = txt; turnPill.className = 'hb-turn' + (txt ? ' on' : '') + (mine ? ' me' : ''); }
     }
+    function tiredAll() { return MOV.every(function (m) { return me.sta < SCOST(m); }); }
+    var breathBtn = mk('button', 'hb-btn hb-breath', el, 'Catch breath');
+    breathBtn.hidden = true;
+    breathBtn.addEventListener('click', function () { if (busy || done || me.hp <= 0) return; var bm = { id: 'breath', name: 'Catch breath', breath: true, desc: '' }; runRound(quickFoe() ? [foeAct, function () { return meAct(bm); }] : [function () { return meAct(bm); }, foeAct]); });
     function renderUI() {
       card(foeCard, foe); card(meCard, me);
       manaEl.innerHTML = 'Mana ' + Array.apply(null, Array(maxMana)).map(function (_, i) { return '<span class="hb-pip' + (i < mana ? ' on' : '') + '"></span>'; }).join('');
@@ -883,8 +905,10 @@
         if (m.pow && mx !== 1) mark = '<span style="position:absolute;top:5px;right:6px">' + edgeIcon(mx, mx < 1 ? 2 : 1, 20) + '</span>';
         var ico = ''; try { ico = '<img class="ic" alt="" src="' + H.icons.url(m.el || me.el, 2) + '">'; } catch (e) {}
         b.innerHTML = mark + '<b>' + ico + m.name + '</b><span class="kind">' + (m.pow ? 'Attack' : 'Support') + '</span><i>' + (m.pow ? 'Power ' + m.pow + '. ' : '') + m.desc.replace(/ Rests 2 turns\./, '') + '</i>' + (cd > 0 ? '<span class="cd">Rest ' + cd + '</span>' : fainted ? '<span class="cd">Fainted</span>' : me.asleep ? '<span class="cd">Asleep</span>' : '');
-        b.classList.toggle('off', cd > 0 || fainted || busy || done);
+        var sc = SCOST(m); var kd = b.querySelector('.kind'); if (kd) kd.insertAdjacentHTML('afterend', '<span class="sc">' + sc + ' stamina</span>');
+        b.classList.toggle('off', cd > 0 || fainted || busy || done || me.sta < sc);
       });
+      breathBtn.hidden = !(tiredAll() && me.hp > 0 && !done); breathBtn.classList.toggle('off', busy || done);
       ORDER.forEach(function (k) { var ok = can(k) && mana >= costOf(k) && !spellUsed && canCast(k) === true; chips[k].classList.toggle('no', can(k) && !ok); });
       var others = party.some(function (m, i) { return i !== act && (m.hp == null ? 1 : m.hp) > 0; });
       swBtn.hidden = party.length < 2; swBtn.classList.toggle('off', !others || busy || done);
@@ -1136,6 +1160,8 @@
       if (me.hp <= 0) return;
       if (me.asleep) { me.asleep = 0; say('It dozes, then wakes.'); float(POS.me.x, POS.me.y - 20, 'Zzz', '#b9a8ff'); await wait(900); return; }
       if (m.cd) me.cd[m.id] = m.cd;
+      if (!m.breath) { me.sta = Math.max(0, me.sta - SCOST(m)); if (me.src) me.src.sta = me.sta; }
+      if (m.breath) { var gb = Math.min(me.staMax - me.sta, 3); me.sta += gb; if (me.src) me.src.sta = me.sta; say(me.name + ' catches its breath.'); float(POS.me.x, POS.me.y - 20, '+' + gb + ' stamina', '#ffd98a', true); renderUI(); await wait(800); return; }
       if (m.pow) { say(m.name + '!'); sfx('spell'); await attack('me', m); return; }
       // utility moves
       var X = mkX('me', 'me'); X.b = X.a;
@@ -1180,6 +1206,7 @@
       var m = MOV[i];
       if (me.hp <= 0) { say(canCast('revive') === true ? 'It fainted. Draw the Phoenix Star.' : 'It fainted.'); return; }
       if (me.cd[m.id] > 0) { say(m.name + ' needs rest.'); return; }
+      if (me.sta < SCOST(m)) { HL('stamina', 'Stamina', 'Moves use stamina. Only a real rest fills it again: a bed, ramen, or the teddy outdoors.', 'heart', meCard); say(tiredAll() ? 'Too tired. Catch your breath, switch, or step away.' : 'Not enough stamina for ' + m.name + '.'); return; }
       runRound(quickFoe() ? [foeAct, function () { return meAct(m); }] : [function () { return meAct(m); }, foeAct]);
     }
     async function runRound(order) {
@@ -1208,11 +1235,12 @@
       var gk = gradeOf(sc), G = GRADE[gk], gm = G[1], ml0 = mastery(kind);
       showGrade(G, cx, cy - Math.max(12, sz * 0.62) - 6);
       GS.spellXp[kind] = (GS.spellXp[kind] || 0) + G[3];
+      try { H.progress && H.progress.wandAward && H.progress.wandAward(G[3], false); } catch (e) {} // neater sigils teach the wand more
       var ml1 = mastery(kind); GS.spellMastery[kind] = ml1;
       say(S.name + '!');
       if (ml1 > ml0) setTimeout(function () { float(cx, cy - 4, 'Mastery ' + ml1, '#ffd98a', true); }, 500);
       fillChip(kind); TOL[kind] = tolOf(kind);
-      if (!(GS.flags = GS.flags || {}).tipGrade) { GS.flags.tipGrade = 1; setTimeout(function () { if (!done) say('Neater sigils cast stronger.'); }, 900); }
+      if (!(GS.flags = GS.flags || {}).tipGrade) { GS.flags.tipGrade = 1; setTimeout(function () { if (!done) say('Neater sigils are stronger and teach the wand more.'); }, 900); }
       // 1) the drawn stroke snaps to the perfect sigil and flares; 2) it sinks to the ground under the target; 3) magic circle + light pillar
       var t0 = 0, rr = Math.max(12, sz * 0.62);
       await new Promise(function (res) {
@@ -1246,7 +1274,7 @@
         me.hp = Math.min(me.max, Math.ceil(me.max / 2 * gm)); me.asleep = 0; float(P.x, P.y - 16, '+' + me.hp, '#9cf0a6', true);
         say(matName(matKey()) + ' glows. It rises again.');
         H.menu && H.menu.refresh && H.menu.refresh();
-      } else if (kind === 'bind') { await bind(sc, gm); if (done) return; }
+      } else if (kind === 'bind') { HL('bindtries', 'Binding', 'You get 3 tries in each battle, one spell each turn. Weaker foes are easier to bind.', 'spiral', foeCard); await bind(sc, gm); if (done) return; }
       renderUI(); await wait(700);
       if (done) return;
       busy = false; renderUI(); if (!done) say(hintLine());
@@ -1333,6 +1361,7 @@
     }
     var closeNow = function () {};
     function saveHp() {
+      if (me.src) me.src.sta = me.sta;
       // health carries over; a fainted hontori stays fainted until it rests (bed, ramen) or is revived.
       // practice duels end gently: nobody is left fainted, but nobody is healed for free either.
       if (me.src) me.src.hp = Math.max(TR ? 1 : 0, me.hp);
@@ -1387,7 +1416,7 @@
       var minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9, cx = 0, cy = 0;
       tr.forEach(function (q) { minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); });
       cx = (minx + maxx) / 2; cy = (miny + maxy) / 2;
-      var why = !kind ? 'The ink crumbles. Try again.' : spellUsed ? 'One spell each turn.' : mana < costOf(kind) ? 'Not enough mana for the ' + SPELLS[kind].name + '.' : canCast(kind);
+      var why = !kind ? 'Steady hands are needed. Try again.' : spellUsed ? 'One spell each turn.' : mana < costOf(kind) ? 'Not enough mana for the ' + SPELLS[kind].name + '.' : canCast(kind);
       guideKind = null;
       if (kind === 'bind' && (TR || opts.noCapture)) { repelHand(); ink.ash(); return; } // another person's hontori: they push the spell away
       if (why !== true) { say(why); ink.ash(); sfx('bump'); return; }

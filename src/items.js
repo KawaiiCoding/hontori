@@ -11,7 +11,7 @@ window.H = window.H || {};
     slingshot: [24, 3], kite: [28, 7], mirror: [8, 13], backpack: [23, 9]
   };
   var USE = {
-    backpack: 'One more pocket in your bag', lantern: 'Light at night; dark hontori come near', teddy: 'Rest outdoors like in a bed',
+    backpack: 'One more pocket in your bag', lantern: 'Light at night; dark hontori come near', teddy: 'Rest anywhere, except schools, tournaments and dungeons',
     cookbook: 'Cook at a stove to heal your party', compass: 'Points the way to your goal',
     slingshot: 'Knock apples from fruit trees', bread: 'Calms a wild hontori in battle', map: 'Shows the area you are in',
     kite: 'Fly it on a windy day to see far', mirror: 'Shows hontori hidden in the air'
@@ -98,7 +98,7 @@ window.H = window.H || {};
     });
   }
   function rest() {
-    var c = cur(); if (!c || c.env.indoor) return;
+    var c = cur(); if (!c) return;
     H.ui && H.ui.fade(900); setTimeout(function () { c.env.time = (c.env.time + 8) % 24; H.ui && H.ui.hud(c.env, c.map.name || c.name); toast('Eight hours later'); }, 450);
   }
   function kite() {
@@ -114,7 +114,11 @@ window.H = window.H || {};
     var c = cur(), out = []; if (!c) return out;
     var id = it.id;
     if (c.name === 'home' && SPOT[id] && !(id === 'map' && F()['map:gift'])) out.push({ label: 'Put back', desc: 'Back to its spot', run: function () { putBack(id); } });
-    if (id === 'teddy' && !c.env.indoor) out.push({ label: 'Rest', desc: 'Sleep 8 hours here', run: rest });
+    if (id === 'teddy') {
+      // rest anywhere, except where it would not be fair: schools, tournaments, dungeons
+      var no = c.map.noRest || /academy|school|tourn|arena|dungeon|cave|tower/i.test(c.name) ? 'Not here. Rest is not allowed in schools, tournaments or dungeons.' : null;
+      out.push({ label: 'Rest', desc: no || 'Rest 8 hours here. Health and stamina come back.', off: !!no, run: rest });
+    }
     if (id === 'kite' && !c.env.indoor) {
       var why = c.env.weather !== 'wind' ? 'Needs a windy day' : !openGround(c) ? 'Needs open grass' : null;
       out.push({ label: 'Fly', desc: why || 'See a large area', off: !!why, run: kite });
@@ -186,7 +190,7 @@ window.H = window.H || {};
     if (show) { var txt = 'Bag ' + count() + ' / ' + cap(); if (pill.textContent !== txt) pill.textContent = txt; }
     // first-need tips out in the world
     if (!env.indoor && H.game.state.intro) {
-      if (has('teddy') && night(env)) once('teddy', 'With the teddy you can rest out here (backpack)');
+      if (has('teddy') && night(env)) once('teddy', 'With the teddy you can rest almost anywhere (backpack).');
       if (has('kite') && env.weather === 'wind') once('kite', 'A windy day. The kite could fly (backpack).');
       if (has('mirror')) once('mirror', 'The mirror shows hontori hidden in the air');
     }

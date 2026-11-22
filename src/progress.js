@@ -18,6 +18,10 @@ window.H = window.H || {};
   function need(L) { var d = L - 1; return Math.round(12 + 6 * d + 0.9 * d * d); }   // EXP from L to L+1
   function hpAt(L, stage) { return 20 + (L - 1) * 4 + ((stage || 1) - 1) * 4; }
   function atkAt(L, stage) { return Math.round(5 + (L - 1) * 1.5 + ((stage || 1) - 1) * 2); }
+  // stamina: hontori moves use it; only rest refills it (bed, sleep, ramen, the teddy outdoors)
+  function staMax(L) { return 10 + (L || 1); }
+  function staCost(mv) { var p = (mv && mv.pow) || 0; return !p ? 1 : p <= 6 ? 1 : p <= 8 ? 2 : 3; }
+  function restMember(m) { if (!m) return; if (m.maxHp) m.hp = m.maxHp; m.sta = staMax(m.level); }
   function stageFor(L) { var s = 1; for (var i = 1; i < STAGE_LV.length; i++) if (L >= STAGE_LV[i]) s = i + 1; return s; }
 
   function newMember(key, level) {
@@ -34,6 +38,7 @@ window.H = window.H || {};
     if (m.hp == null || m.hp > m.maxHp) m.hp = m.maxHp;
     m.atk = atkAt(m.level, m.stage);
     if (m.nick === undefined) m.nick = null;
+    if (m.sta == null || m.sta > staMax(m.level)) m.sta = staMax(m.level);
     fixMoves(m);
     return m;
   }
@@ -178,6 +183,7 @@ window.H = window.H || {};
 
   // ---------- battle hook
   var P = H.progress = {
+    staMax: staMax, staCost: staCost, rest: restMember,
     STAGE_LV: STAGE_LV, need: need, newMember: newMember, fix: fix, award: award, canEvolve: canEvolve, stageFor: stageFor,
     stageName: stageName, displayName: displayName, wandNeed: wandNeed, wandAward: wandAward, lesson: lesson,
     capacity: capacity, spellPower: spellPower, captureBonus: captureBonus, maxManaAt: maxManaAt,

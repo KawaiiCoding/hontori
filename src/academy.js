@@ -169,7 +169,7 @@ window.H = window.H || {};
           trainer: { name: S.name, key: key, spirit: enemy, level: S.level, lesson: S.lesson, noCapture: true } }))
           .then(function (r) {
             var party = (H.game && H.game.state && H.game.state.party) || [];
-            party.forEach(function (p) { if (p && p.maxHp) p.hp = p.maxHp; }); // practice spirits rest quickly
+            party.forEach(function (p) { if (p && p.maxHp) p.hp = p.maxHp; if (p && H.progress && H.progress.staMax) p.sta = H.progress.staMax(p.level); }); // practice spirits rest quickly
             if (r && r.fled) return say(c, key, S.name, 'Running is allowed. Come back anytime.');
             if (r && r.won === false) { save(); return say(c, key, S.name, S.lose); }
             var s2 = st(), first = !s2.academyDuels[key];

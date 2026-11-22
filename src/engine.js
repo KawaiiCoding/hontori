@@ -329,7 +329,7 @@
     if (!st.intro) return;
     const mm = st.maxMana || 3; if (st.mana == null) st.mana = mm;
     // a long jump forward in time means a night in bed: mana is full again
-    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6) { (H.onSleep || []).forEach(fn => { try { fn(env, mapName); } catch (e) { console.warn(e); } }); if (st.mana < (st.maxMana || 3)) st.mana = st.maxMana || 3; (st.party || []).forEach(p => { if (p.maxHp) p.hp = p.maxHp; }); H.menu && H.menu.refresh && H.menu.refresh(); } }
+    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6) { (H.onSleep || []).forEach(fn => { try { fn(env, mapName); } catch (e) { console.warn(e); } }); if (st.mana < (st.maxMana || 3)) st.mana = st.maxMana || 3; (st.party || []).forEach(p => { if (p.maxHp) p.hp = p.maxHp; if (H.progress && H.progress.staMax) p.sta = H.progress.staMax(p.level); }); H.menu && H.menu.refresh && H.menu.refresh(); } }
     lastTime = env.time;
     if (busy || menuOpen || st.mana >= mm) { if (st.mana >= mm) manaT = 0; return; }
     manaT += dt;

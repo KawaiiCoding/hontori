@@ -25,7 +25,7 @@ window.H = window.H || {};
       .then(function (i) {
         if (i !== 0) return say(c, 'innkeeper', 'Big Bo', 'The pot will be here when you are hungry.');
         var party = (H.game && H.game.state && H.game.state.party) || [];
-        party.forEach(function (p) { p.hp = p.maxHp; });
+        party.forEach(function (p) { p.hp = p.maxHp; if (H.progress && H.progress.staMax) p.sta = H.progress.staMax(p.level); });
         if (H.game && H.game.state) H.game.state.mana = H.game.state.maxMana || 3;
         sfx(c, 'sparkle'); emit(c, 'sparkle', 16, -10); emit(c, 'smoke', 6, -14);
         toast(c, 'Party healed. Mana restored.');
