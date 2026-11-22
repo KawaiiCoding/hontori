@@ -20,6 +20,8 @@
     '.hmap .hk-x{position:absolute;right:8px;top:6px}',
     '.hmap .zm{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:8px}',
     '.hmap .zm .hk-x{position:static}',
+    '.hmap .wt{display:flex;gap:6px;justify-content:center;margin:0 0 8px}.hmap .wt button{border:2px solid #8a6a40;border-radius:12px;background:rgba(255,255,255,.35);color:#4a3420;font:900 14px Nunito,system-ui,sans-serif;padding:6px 16px;cursor:pointer}.hmap .wt button.on{background:#8a6a40;color:#fff6dc}',
+    '.hmap .wv{position:absolute;inset:0;z-index:2}',
     '.hmap .lg{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;margin-top:8px;color:#4a3420;font-size:12px;font-weight:800}',
     '.hmap .lg span{display:flex;align-items:center;gap:4px}.hmap .lg i{width:12px;height:12px;border-radius:3px;display:inline-block}'
   ].join('\n');
@@ -142,6 +144,52 @@
     g.restore();
   }
 
+  // ---------- the world map: every region as a place on a parchment, linked by roads.
+  // Visited places have names; the next place you have heard of shows its name and why it is closed; the rest are quiet marks.
+  var REG = [
+    { id: 'emberbrook', n: 'Emberbrook', x: 0.42, y: 0.16, maps: ['home', 'village', 'tavern', 'shop', 'school', 'house_a1', 'house_a2', 'house_a3'], el: 'fire' },
+    { id: 'whisperwood', n: 'Whisperwood', x: 0.42, y: 0.38, maps: ['whisperwood'], el: 'grass' },
+    { id: 'mossgrove', n: 'Mossgrove', x: 0.32, y: 0.58, maps: ['mossgrove', 'rootwood_gate', 'rootwood_hall', 'moss_house1', 'moss_house2'], el: 'grass', ring: 'grass' },
+    { id: 'pass', n: 'Whistling Pass', x: 0.66, y: 0.56, maps: [], el: 'wind', why: 'Rockslide' },
+    { x: 0.8, y: 0.76 }, { x: 0.58, y: 0.84 }, { x: 0.86, y: 0.36 }, { x: 0.2, y: 0.82 }, { x: 0.12, y: 0.42 }, { x: 0.7, y: 0.18 }, { x: 0.38, y: 0.95 }
+  ];
+  var ROADS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [3, 6], [5, 7], [7, 8], [6, 9], [5, 10]];
+  function regionOf(mapName) { for (var i = 0; i < REG.length; i++) if (REG[i].maps && REG[i].maps.indexOf(mapName) >= 0) return i; return -1; }
+  function visited(r) { var f = (H.game && H.game.state && H.game.state.flags) || {}; return !!(r.maps && r.maps.some(function (k) { return f['visited:' + k]; })); }
+  function drawWorld(c, W, Hh, dpr, t, here) {
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(Hh * dpr); c.style.width = W + 'px'; c.style.height = Hh + 'px'; }
+    var g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // parchment, a sea to the south-east, hills and a mountain ridge by the pass
+    g.fillStyle = '#e6d3a4'; g.fillRect(0, 0, W, Hh);
+    g.fillStyle = '#b8d0c8'; g.beginPath(); g.ellipse(W * 1.02, Hh * 1.02, W * 0.42, Hh * 0.3, 0, 0, 7); g.fill();
+    g.fillStyle = 'rgba(110,150,80,.35)'; [[0.42, 0.3, 0.2, 0.16], [0.3, 0.6, 0.16, 0.1], [0.15, 0.4, 0.12, 0.1]].forEach(function (e) { g.beginPath(); g.ellipse(W * e[0], Hh * e[1], W * e[2], Hh * e[3], 0, 0, 7); g.fill(); });
+    g.fillStyle = 'rgba(120,100,80,.45)'; for (var k = 0; k < 6; k++) { var mx = W * (0.6 + k * 0.05), my = Hh * (0.44 + (k % 2) * 0.03); g.beginPath(); g.moveTo(mx - 12, my + 12); g.lineTo(mx, my - 8); g.lineTo(mx + 12, my + 12); g.closePath(); g.fill(); }
+    var cur = regionOf(here), known = REG.map(function (r, i) { return visited(r) || i === cur; });
+    var heard = REG.map(function (r, i) { return !known[i] && !!r.n && ROADS.some(function (e) { return (e[0] === i && known[e[1]]) || (e[1] === i && known[e[0]]); }); });
+    // roads: solid where walked, dashed toward places not reached yet
+    ROADS.forEach(function (e) { var a = REG[e[0]], b = REG[e[1]], both = known[e[0]] && known[e[1]], any = known[e[0]] || known[e[1]];
+      g.strokeStyle = both ? '#8a5a30' : any ? 'rgba(138,90,48,.6)' : 'rgba(138,90,48,.18)'; g.lineWidth = both ? 4 : 3; g.setLineDash(both ? [] : [6, 6]);
+      g.beginPath(); g.moveTo(a.x * W, a.y * Hh); g.quadraticCurveTo((a.x + b.x) / 2 * W + 18, (a.y + b.y) / 2 * Hh, b.x * W, b.y * Hh); g.stroke(); });
+    g.setLineDash([]);
+    g.textAlign = 'center'; g.font = '900 13px Nunito, system-ui, sans-serif';
+    REG.forEach(function (r, i) {
+      var x = r.x * W, y = r.y * Hh;
+      if (known[i] || heard[i]) {
+        g.fillStyle = known[i] ? '#fff6dc' : 'rgba(255,246,220,.6)'; g.strokeStyle = '#6a4424'; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, 14, 0, 7); g.fill(); g.stroke();
+        try { var im = iconImg(r.el); if (im.complete) { g.globalAlpha = known[i] ? 1 : 0.5; g.drawImage(im, x - 10, y - 10, 20, 20); g.globalAlpha = 1; } } catch (e2) {}
+        if (r.ring && (H.game.state.rings || []).indexOf(r.ring) >= 0) { g.strokeStyle = '#e0b040'; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 18, 0, 7); g.stroke(); }
+        var lab = r.n + (heard[i] && r.why ? ' (' + r.why + ')' : '');
+        var tw = g.measureText(lab).width + 12; g.fillStyle = 'rgba(255,248,230,.92)'; g.fillRect(x - tw / 2, y + 18, tw, 18); g.strokeStyle = 'rgba(80,50,20,.5)'; g.lineWidth = 1; g.strokeRect(x - tw / 2, y + 18, tw, 18);
+        g.fillStyle = '#3a2814'; g.fillText(lab, x, y + 31);
+      } else { g.fillStyle = 'rgba(80,60,40,.25)'; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); g.fillStyle = 'rgba(80,60,40,.55)'; g.fillText('?', x, y + 5); }
+    });
+    if (cur >= 0) { var cx = REG[cur].x * W - 26, cy = REG[cur].y * Hh, rr = 6 * (0.9 + 0.15 * Math.sin(t / 200));
+      g.fillStyle = '#ff3c28'; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, rr, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = '#3a2814'; g.font = '800 11px Nunito, system-ui, sans-serif'; g.textAlign = 'right'; g.fillText('You', cx - 9, cy + 4); g.textAlign = 'center'; }
+  }
+  var icCache = {};
+  function iconImg(el) { if (!icCache[el]) { var im = new Image(); im.src = H.icons.url(el, 2); icCache[el] = im; } return icCache[el]; }
+
   function show() {
     var m = H.game && H.game.currentMap && H.game.currentMap();
     if (!m || !m.map || document.querySelector('.hmap')) return;
@@ -153,7 +201,15 @@
     var o = document.createElement('div'); o.className = 'hmap';
     var box = document.createElement('div'); box.className = 'box'; o.appendChild(box);
     var h = document.createElement('h3'); h.appendChild(H.kit.img('map')); h.appendChild(document.createTextNode(map.name || m.name)); box.appendChild(h);
+    var tabs = document.createElement('div'); tabs.className = 'wt'; box.appendChild(tabs);
+    var tA = document.createElement('button'); tA.textContent = 'This area'; tA.className = 'on'; tabs.appendChild(tA);
+    var tW = document.createElement('button'); tW.textContent = 'World'; tabs.appendChild(tW);
     var vp = document.createElement('div'); vp.className = 'vp'; box.appendChild(vp);
+    var wv = document.createElement('canvas'); wv.className = 'wv'; wv.hidden = true; vp.appendChild(wv);
+    var worldOn = false;
+    function setTab(w) { worldOn = w; tA.classList.toggle('on', !w); tW.classList.toggle('on', w); wv.hidden = !w; zm.hidden = w; lg.style.visibility = w ? 'hidden' : 'visible'; h.lastChild.textContent = w ? 'The World' : (map.name || m.name); }
+    tA.addEventListener('click', function (e) { e.stopPropagation(); setTab(false); });
+    tW.addEventListener('click', function (e) { e.stopPropagation(); setTab(true); });
     var cv = document.createElement('canvas'); vp.appendChild(cv);
     var zm = document.createElement('div'); zm.className = 'zm'; vp.appendChild(zm);
     function zb(icon, tip) { var b = H.kit.x(zm); b.title = tip; b.setAttribute('aria-label', tip); b.firstChild.src = H.icons.url(icon, 2); return b; }
@@ -183,6 +239,7 @@
     size(); z = fit; clamp();
     function draw(t) {
       if (!live) return;
+      if (worldOn) { drawWorld(wv, W, Hh, dpr, t, m.name); requestAnimationFrame(draw); return; }
       g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#141020'; g.fillRect(0, 0, W, Hh);
       g.imageSmoothingEnabled = z < 1; g.drawImage(base, ox, oy, map.w * S * z, map.h * S * z);
       g.imageSmoothingEnabled = true; g.drawImage(fog, ox, oy, map.w * S * z, map.h * S * z);

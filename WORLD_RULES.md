@@ -76,3 +76,4 @@ New rules are added here as they are given. When something in the code disagrees
 58. Spells learned outside battle (the V, the Fishing Sigil) never take one of the four battle slots.
 59. The player is never hidden: roads, entrances and arrival points never run behind a building or a tall object, and if the kid does step behind something tall, a soft see-through outline shows where they are.
 60. Nothing exists only in words: anything the story says (a rockslide, a locked gate, a washed-out bridge, a closed shop) is also shown in the world, clearly, and tells the player what it is when they touch it.
+61. Everything new respects the look of the world: same pixel style, palette, outline and scale as what is already there. Reuse the existing pieces (the wooden sign, the fences, the rocks) before drawing a new one, and a new piece must look like it always belonged.

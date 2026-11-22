@@ -55,7 +55,7 @@ window.H = window.H || {};
   put('mushroom_ring', 6, 26); put('mushroom_ring', 33, 24); put('fruit_tree', 10, 20); put('fruit_tree', 27, 18); put('rock', 11, 22); put('rock', 27, 22); put('log_pile', 2, 18);
   put('garden_bed', 10, 15 - 1); put('butterfly_bush', 12, 9); put('sign', 21, 24, true);
   // the road to Whistling Pass is buried under a rockslide: a big heap of boulders across both lanes, a warning sign before it
-  put('rockslide', 35, 14, true); put('rockslide', 37, 14, true); put('slide_sign', 34, 17, true);
+  put('rockslide', 35, 14, true); put('rockslide', 37, 14, true); props.push({ type: 'sign', x: 34, y: 17, text: 'Road to Whistling Pass. Closed: rockslide. Workers are clearing it.' }); hard[17][34] = 1;
   // a ring of trees all around, thicker in the corners
   for (y = 0; y < HT; y++) for (x = 0; x < W; x++) {
     var edge = x < 2 || y < 2 || x > W - 3 || y > HT - 3, r = hash(x, y, 1);
