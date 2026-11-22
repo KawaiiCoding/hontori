@@ -97,7 +97,7 @@
       bar.style.display = 'none';
       btnLabel.textContent = hasSave ? 'Continue' : 'Start';
       btn.hidden = false; ctl.hidden = false;
-      hint.textContent = hasSave ? 'Your journey is saved on this device' : 'Sound on for the full magic';
+      hint.textContent = hasSave ? '' : 'Sound on for the full magic';
     }
     requestAnimationFrame(step);
 
