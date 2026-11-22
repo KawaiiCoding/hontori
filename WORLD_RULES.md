@@ -78,3 +78,4 @@ New rules are added here as they are given. When something in the code disagrees
 60. Nothing exists only in words: anything the story says (a rockslide, a locked gate, a washed-out bridge, a closed shop) is also shown in the world, clearly, and tells the player what it is when they touch it.
 61. Everything new respects the look of the world: same pixel style, palette, outline and scale as what is already there. Reuse the existing pieces (the wooden sign, the fences, the rocks) before drawing a new one, and a new piece must look like it always belonged.
 62. Roads stay open: lamps, rocks, signs and other solid things stand beside a road, never on it. Only a real story block (like a rockslide) may close a road, and it must be shown clearly.
+63. Every item is shown by a clear icon that looks like the thing itself (a fish looks like a fish, a pouch like a pouch). No borrowed or generic symbols for real objects.

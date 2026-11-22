@@ -45,7 +45,7 @@
     '.hm-pouch .pt{display:flex;flex-direction:column;gap:2px}.hm-pouch b{font-size:16px;font-weight:900;color:#ffe2b0}.hm-pouch span{font-size:12px;font-weight:700;color:#f4dcc0;opacity:.9}',
     '.hm-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}',
     '.hm-slot2{position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:14px;border:2px solid rgba(200,146,90,.45);background:radial-gradient(circle at 50% 40%,rgba(255,220,170,.12),rgba(40,28,20,.55));color:#fff;font:inherit;cursor:pointer;padding:4px}',
-    '.hm-slot2 canvas{width:32px;height:32px;image-rendering:pixelated}.hm-slot2 small{font-size:10px;font-weight:900;color:#ffd98a}.hm-slot2 .n{position:absolute;right:5px;top:3px;font-style:normal;font-size:10px;font-weight:900;background:rgba(0,0,0,.5);border-radius:6px;padding:0 4px}',
+    '.hm-slot2 canvas{width:40px;height:40px;image-rendering:pixelated}.hm-slot2 small{font-size:10px;font-weight:900;color:#ffd98a}.hm-slot2 .n{position:absolute;right:5px;top:3px;font-style:normal;font-size:10px;font-weight:900;background:rgba(0,0,0,.5);border-radius:6px;padding:0 4px}',
     '.hm-slot2.on{border-color:#ffd98a;box-shadow:0 0 10px rgba(255,217,138,.4)}',
     '.hm-slotinfo{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13px;font-weight:700;line-height:1.4;color:#e8e0d0}.hm-slotinfo b{font-size:15px;color:#fff}.hm-slotinfo span{color:#ffd98a}',
     '.hm-tabs{display:flex;gap:6px;margin:0 0 10px}.hm-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:12px;border:2px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;font:inherit;cursor:pointer}',
@@ -120,7 +120,8 @@
   function itemCanvas(it) {
     var c = document.createElement('canvas'); c.width = c.height = 32; var g = c.getContext('2d'); g.imageSmoothingEnabled = false;
     try {
-      if (H.items && H.items.list.some(function (x) { return x.id === it.id; })) { g.scale(2, 2); H.items.draw(g, it.id, 0, 0); }
+      if (H.itemIcons && H.itemIcons.has(it.id)) { g.scale(2, 2); H.itemIcons.draw(g, it.id); }
+      else if (H.items && H.items.list.some(function (x) { return x.id === it.id; })) { g.scale(2, 2); H.items.draw(g, it.id, 0, 0); }
       else {
         // every id has an icon: the known one first, then the saved one, then a plain bag
         var known = H.pickups && H.pickups.info ? H.pickups.info(it.id).icon : null, names = (H.icons && H.icons.names) || [];
@@ -288,8 +289,8 @@
       var tabs = [['pocket', 'Backpack', on ? PK.count() + ' / ' + PK.cap() : String(by.pocket.length)], ['supply', 'Supplies', String(by.supply.length)], ['trade', 'Pouch', MON ? MON.fmt(MON.pouchValue()).replace(/ (gold|silver|copper)/g, function (m, w) { return w[0]; }) : '0'], ['key', 'Key things', String(by.key.length)]];
       if (!bagTab) bagTab = 'pocket';
       var tb = mk('div', 'hm-tabs', els.sheet);
-      var TI = { pocket: 'backpack', supply: 'heart', trade: 'coin', key: 'star' };
-      tabs.forEach(function (t) { var b = mk('button', 'hm-tab' + (bagTab === t[0] ? ' on' : ''), tb); try { b.appendChild(K().img(TI[t[0]])); } catch (e) {} mk('b', '', b, t[1]); mk('small', '', b, t[2]); b.addEventListener('click', function () { bagTab = t[0]; render(); }); });
+      var TI = { pocket: 'backpack', supply: 'heart', trade: 'pouch', key: 'star' };
+      tabs.forEach(function (t) { var b = mk('button', 'hm-tab' + (bagTab === t[0] ? ' on' : ''), tb); try { if (TI[t[0]] === 'pouch' && H.itemIcons) { var pim = document.createElement('img'); pim.alt = ''; pim.src = H.itemIcons.url('pouch', 2); b.appendChild(pim); } else b.appendChild(K().img(TI[t[0]])); } catch (e) {} mk('b', '', b, t[1]); mk('small', '', b, t[2]); b.addEventListener('click', function () { bagTab = t[0]; render(); }); });
       if (bagTab === 'pocket') {
       if (on) {
         // the tab already shows the count: just a quiet line here
@@ -304,7 +305,7 @@
       if (bagTab === 'key' && by.key.length) { var s3 = mk('div', 'hm-sec', els.sheet); note('Always with you. They cannot be dropped.', s3).style.margin = '0 0 6px'; by.key.forEach(function (it) { bagRow(it, s3, PK); }); }
       if (bagTab === 'trade' && by.trade.length) {
         // the merchant pouch: a leather pouch header with what it is all worth, then the finds as slots
-        var pv = MON.pouchValue(), ph = mk('div', 'hm-pouch', els.sheet), pic = mk('div', 'pi', ph); pic.appendChild(K().img('coin'));
+        var pv = MON.pouchValue(), ph = mk('div', 'hm-pouch', els.sheet), pic = mk('div', 'pi', ph); (function () { var im = document.createElement('img'); im.alt = ''; im.src = H.itemIcons ? H.itemIcons.url('pouch', 2) : ''; pic.appendChild(im); })();
         var pt = mk('div', 'pt', ph); mk('b', '', pt, 'Merchant pouch'); mk('span', '', pt, 'Worth ' + MON.fmt(pv) + '. Nettle buys it all.');
         var grid = mk('div', 'hm-slots', els.sheet), sel = null, info = mk('div', 'hm-slotinfo', els.sheet);
         info.textContent = 'Tap a find to read about it.';
