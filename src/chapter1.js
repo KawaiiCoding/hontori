@@ -208,7 +208,7 @@ window.H = window.H || {};
     var path = [], k0 = goal[0] + ',' + goal[1]; if (!(k0 in prev)) return Promise.resolve();
     for (var cur = goal; cur; cur = prev[cur[0] + ',' + cur[1]]) path.unshift(cur);
     // smooth steps with the same walking frames the kid uses (1, 0, 3, 0 ...)
-    var steps = 0;
+    var steps = 0; n.hold = true;   // the day schedule must not pull her back while she walks
     return path.slice(1).reduce(function (p, step) { return p.then(function () {
       n.dir = step[0] > n.x ? 3 : step[0] < n.x ? 2 : step[1] > n.y ? 0 : 1;
       var fx = n.x, fy = n.y; n.x = step[0]; n.y = step[1]; n.slot = -3; steps++;

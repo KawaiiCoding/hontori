@@ -86,7 +86,7 @@
   function schedOf(n) { return (n.src && n.src.sched) || n.sched; }
   function slotOf(n) { const h = env.time; return (schedOf(n) || []).findIndex(s => s.from <= s.to ? h >= s.from && h < s.to : h >= s.from || h < s.to); }
   function applySched(force) {
-    npcs.forEach(n => { const sc = schedOf(n); if (!sc) return; const i = slotOf(n); if (i < 0 || (i === n.slot && sc === n.sc0)) return;
+    npcs.forEach(n => { const sc = schedOf(n); if (!sc || n.hold) return; /* hold: a scene moved this person, leave them be */ const i = slotOf(n); if (i < 0 || (i === n.slot && sc === n.sc0)) return;
       const s = sc[i], near = Math.abs(player.tx - n.x) + Math.abs(player.ty - n.y) < 7;
       if (!force && near && !n.away && !s.away) return;
       if (!force && near && (n.away || s.away) && !env.indoor) return;
