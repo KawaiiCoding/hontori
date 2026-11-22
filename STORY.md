@@ -71,7 +71,12 @@ Expose Orlen Vael and pass a new law, so hontori are known and respected by ever
    - The pond needs night. Time only moves by sleeping (8 hours), so from morning the kid sleeps twice; the quest step says so and the map marker points to the kid's bed until dusk.
    - Every quest step carries a map marker (step.target in src/chapter1.js): the spot on the current map, or the door that leads toward it.
    - One-time tips appear when they first matter: first battle (tap a move), first hurt hontori after a wild battle (Mend in the party panel, costs mana), low mana (herbs, ramen), first weakened wild hontori before the spiral is known (the Academy teaches binding), first night (sleep in a bed).
-2. **Whisperwood** - the forest road and the first ring school.
+2. **Whisperwood and Mossgrove** - the forest road and the first ring school.
+   Built in src/mossgrove.js and src/chapter2.js:
+   - Ranger Moss keeps the south edge of Whisperwood closed until Chapter 1 is complete (the letter).
+   - **The Leaf Ring**: reach Mossgrove, meet Warden Fern in Rootwood Hall, the wand trial (wake three wilted sprouts with the Mending Sigil), then a ring duel where switching is not allowed.
+   - After the ring a grey-cloaked visitor says the Archmage wants to meet promising Wonders.
+   - The road east to Tidewell is closed: the bridge washed out (Rowan). Chapter 3 starts there.
 3. **Tidewell**
 4. **Whistling Pass**
 5. **Voltmere**

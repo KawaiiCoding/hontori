@@ -776,6 +776,8 @@
     var maxMana = GS.maxMana || 3; if (GS.mana == null) GS.mana = maxMana; var mana = Math.min(maxMana, GS.mana);
     var known = (GS.spells && GS.spells.length ? GS.spells : ['mend']).map(function (s) { return s === 'absorb' ? 'bind' : s; });
     if (opts.spells) known = opts.spells;
+    // ring trials may forbid some spells (for example no sleeping spell)
+    if (TR && TR.ban) known = known.filter(function (k) { return TR.ban.indexOf(k) < 0; });
     var perks = { power: 1 + 0.05 * ((GS.wandLevel || 1) - 1), costCut: 0, tolerance: 0 };
     try { if (H.progress && H.progress.wandPerks) perks = H.progress.wandPerks(); } catch (e) {}
     var wandMul = perks.power || 1;
@@ -914,7 +916,7 @@
       breathBtn.hidden = !(tiredAll() && me.hp > 0 && !done); breathBtn.classList.toggle('off', busy || done);
       ORDER.forEach(function (k) { var ok = can(k) && mana >= costOf(k) && !spellUsed && canCast(k) === true; chips[k].classList.toggle('no', can(k) && !ok); });
       var others = party.some(function (m, i) { return i !== act && (m.hp == null ? 1 : m.hp) > 0; });
-      swBtn.hidden = party.length < 2; swBtn.classList.toggle('off', !others || busy || done);
+      swBtn.hidden = party.length < 2 || !!(TR && TR.noSwitch); swBtn.classList.toggle('off', !others || busy || done); // ring trials may forbid switching
       var ec = escChance(), lvl = ec < 0.4 ? 1 : ec < 0.7 ? 2 : 3;
       escBtn.classList.toggle('off', !!TR || busy || done); escBtn.setAttribute('data-l', TR ? 0 : lvl);
       var it = INTENT[foe.stun ? 'stunned' : foe.asleep ? 'asleep' : intent] || INTENT.strike;

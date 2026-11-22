@@ -1,0 +1,121 @@
+window.H = window.H || {};
+// Mossgrove: a small green village at the south end of Whisperwood, home of Rootwood Hall,
+// the School of Grass (the first ring school). Linked to the south edge of Whisperwood at load.
+(function () {
+  'use strict';
+  var H = window.H;
+  if (!H.maps) H.maps = {};
+  var W = 40, HT = 30;
+  function hash(x, y, s) { var n = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul((s | 0) + 11, 982451653)) | 0; n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; }
+  var g = []; for (var y0 = 0; y0 < HT; y0++) { var r0 = []; for (var x0 = 0; x0 < W; x0++) r0.push('g'); g.push(r0); }
+  function set(x, y, ch) { if (x >= 0 && y >= 0 && x < W && y < HT) g[y][x] = ch; }
+  function rect(x0, y0, x1, y1, ch) { for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) set(x, y, ch); }
+  var x, y;
+
+  // ground: the forest road comes in from the north, a mossy square, lanes to the houses, a pond to the east
+  rect(19, 0, 20, 12, 'p');            // road from Whisperwood
+  rect(13, 12, 26, 18, 'c');           // square
+  rect(19, 9, 20, 11, 'c');            // hall steps
+  rect(4, 15, 12, 16, 'p');            // west lane
+  rect(27, 15, 34, 16, 'p');           // east lane
+  rect(19, 19, 20, 26, 'p');           // south lane to the closed Tidewell road
+  rect(21, 26, 38, 27, 'p');           // the road east (closed for now)
+  for (y = 3; y < 10; y++) for (x = 30; x < 38; x++) { var dx = (x - 33.5) / 3.8, dy = (y - 6) / 3; if (dx * dx + dy * dy < 1) set(x, y, 'w'); }
+  for (y = 2; y < 11; y++) for (x = 29; x < 39; x++) if (g[y][x] === 'g' && ['w'].indexOf((g[y - 1] || [])[x]) + ['w'].indexOf((g[y + 1] || [])[x]) + ['w'].indexOf(g[y][x - 1]) + ['w'].indexOf(g[y][x + 1]) > -4) set(x, y, 's');
+  rect(3, 20, 9, 24, 't'); rect(28, 19, 35, 23, 't');   // meadows
+  rect(14, 19, 17, 22, 'f'); rect(22, 19, 25, 22, 'f');  // flower beds
+
+  var props = [], hard = [];
+  for (y = 0; y < HT; y++) { hard.push([]); for (x = 0; x < W; x++) hard[y].push(0); }
+  function free(x, y, w, h) { for (var j = y; j < y + (h || 1); j++) for (var i = x; i < x + (w || 1); i++) { if (i < 0 || j < 0 || i >= W || j >= HT || hard[j][i] || g[j][i] === 'p' || g[j][i] === 'c' || g[j][i] === 'w') return false; } return true; }
+  function put(type, x, y, force) { if (!force && !free(x, y)) return false; props.push({ type: type, x: x, y: y }); hard[y][x] = 1; return true; }
+  function res(x0, y0, x1, y1) { for (var j = y0; j <= y1; j++) for (var i = x0; i <= x1; i++) if (j >= 0 && i >= 0 && j < HT && i < W) hard[j][i] = 1; }
+
+  var buildings = [
+    { type: 'school', x: 15, y: 3 },     // Rootwood Hall
+    { type: 'house_a', x: 4, y: 10 },
+    { type: 'house_a', x: 28, y: 11 }
+  ];
+  buildings.forEach(function (b) { var f = { school: [10, 6], house_a: [5, 4] }[b.type]; res(b.x - 1, b.y - 1, b.x + f[0], b.y + f[1]); });
+  var npcs = [
+    { key: 'gardener', x: 22, y: 13, dir: 0, lines: [['Warden Fern', 'Rootwood Hall teaches the patience of roots.'], ['Warden Fern', 'Come inside when you are ready.']] },
+    { key: 'shopkeeper', x: 14, y: 17, dir: 3, lines: [['Pell', 'Seeds, herbs and fair trades.'], ['Pell', 'I buy what the forest gives you.']] },
+    { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wonders used to come every spring.']] },
+    { key: 'kid2', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'I am not a Wonder. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
+    { key: 'traveler', x: 24, y: 25, dir: 1, lines: [['Rowan', 'The bridge to Tidewell washed out in the spring rain.'], ['Rowan', 'They say the builders will be done soon.']] }
+  ];
+  npcs.forEach(function (n) { res(n.x - 1, n.y - 1, n.x + 1, n.y + 1); });
+
+  // square: a well, benches, lamps; the pond has reeds and lilies
+  put('well', 19, 15, true); put('bench', 15, 13, true); put('bench', 24, 17, true);
+  put('lamp', 13, 12, true); put('lamp', 26, 12, true); put('lamp', 13, 18, true); put('lamp', 26, 18, true);
+  put('flowerbed', 16, 15, true); put('flowerbed', 23, 15, true);
+  [[30, 4], [37, 5], [29, 8], [36, 9], [33, 10]].forEach(function (p) { put('reeds', p[0], p[1]); });
+  [[32, 5], [35, 7]].forEach(function (p) { put('lilypad', p[0], p[1], true); });
+  put('mushroom_ring', 6, 26); put('mushroom_ring', 33, 24); put('rock', 11, 22); put('rock', 27, 22); put('log_pile', 2, 18);
+  put('garden_bed', 10, 15 - 1); put('butterfly_bush', 12, 9); put('sign', 21, 24, true); put('stone_wall_h', 37, 25, true);
+  put('fence_v', 38, 26, true); put('fence_v', 38, 27, true);   // the closed Tidewell road
+  // a ring of trees all around, thicker in the corners
+  for (y = 0; y < HT; y++) for (x = 0; x < W; x++) {
+    var edge = x < 2 || y < 2 || x > W - 3 || y > HT - 3, r = hash(x, y, 1);
+    if (edge && free(x, y) && r < 0.7) put(r < 0.35 ? 'pine' : 'tree', x, y);
+    else if (!edge && g[y][x] === 'g' && free(x, y) && r < 0.05) put(r < 0.02 ? 'bush' : 'tree', x, y);
+  }
+
+  H.maps.mossgrove = {
+    name: 'Mossgrove',
+    labels: [{ x: 20, y: 2, name: 'Rootwood Hall' }, { x: 33, y: 2, name: 'Mirror Pond' }, { x: 33, y: 28, name: 'Road to Tidewell' }],
+    w: W, h: HT, tileset: 'outdoor',
+    ground: g.map(function (r) { return r.join(''); }),
+    legend: { g: 'grass', t: 'tallgrass', f: 'flowers', p: 'path', c: 'cobble', w: 'water', s: 'sand', b: 'bridge' },
+    props: props, buildings: buildings, npcs: npcs,
+    doors: [{ x: 19, y: 0, to: 'whisperwood', tx: 24, ty: 38, dir: 1 }, { x: 20, y: 0, to: 'whisperwood', tx: 25, ty: 38, dir: 1 }],
+    spawn: { x: 19, y: 1, dir: 0 },
+    wildCount: 5, wildLevel: [3, 6],
+    zones: [{ x: 33, y: 6, r: 5, key: 'water', w: 3 }, { x: 6, y: 22, r: 4, key: 'grass', w: 4 }, { x: 31, y: 21, r: 4, key: 'grass', w: 3 }]
+  };
+
+  // ---------- Rootwood Hall (inside): a long green room with a guest bed at the back
+  var HW = 20, HH = 13, hg = [];
+  for (y = 0; y < HH; y++) { var rr = []; for (x = 0; x < HW; x++) rr.push(x === 0 || x === HW - 1 || y === HH - 1 ? 'V' : y < 2 ? 'W' : 'F'); hg.push(rr); }
+  hg[HH - 1][10] = 'F'; for (y = 3; y < 9; y++) for (x = 7; x < 13; x++) hg[y][x] = 'R';
+  function pr(t, x, y) { return { type: t, x: x, y: y }; }
+  H.maps.rootwood_hall = {
+    name: 'Rootwood Hall', w: HW, h: HH, tileset: 'indoor', noRest: true,
+    ground: hg.map(function (r) { return r.join(''); }),
+    legend: { F: 'floor_wood', R: 'rug', W: 'wall', V: 'void', H: 'floor_herring', S: 'floor_stone', K: 'floor_tile', B: 'carpet_blue' },
+    props: [
+      pr('window', 3, 1), pr('picture', 6, 1), pr('window', 9, 1), pr('window', 13, 1), pr('picture', 16, 1),
+      pr('bookshelf', 1, 2), pr('bookshelf', 3, 2), pr('potted_tree', 6, 2), pr('potted_tree', 13, 2), pr('desk', 15, 2), pr('chair', 15, 3),
+      pr('plant', 1, 6), pr('plant', 1, 8), pr('plant', 18, 6), pr('plant', 18, 8),
+      pr('bed', 17, 9), pr('chest', 15, 10), pr('candles', 2, 10), pr('potted_tree', 5, 10)
+    ],
+    npcs: [
+      { key: 'gardener', x: 10, y: 4, dir: 0, lines: [['Warden Fern', 'Roots first, then leaves.'], ['Warden Fern', 'Rest in the guest bed if you need it.']] },
+      { key: 'girl', x: 4, y: 6, dir: 2, lines: [['Wren', 'You came too! I knew you would.'], ['Wren', 'Fern is strict, but kind.']] }
+    ],
+    doors: [{ x: 10, y: HH - 1, to: 'mossgrove', tx: 20, ty: 9, dir: 0 }],
+    spawn: { x: 10, y: HH - 2, dir: 1 }, door: 10
+  };
+  // hall door: the middle of the school front
+  H.maps.mossgrove.doors.push({ x: 20, y: 8, to: 'rootwood_hall', tx: 10, ty: HH - 2, dir: 1 });
+  // houses: closed doors are just walls for now (no interiors yet)
+
+  // ---------- open a path through the south edge of Whisperwood
+  function link() {
+    var ww = H.maps.whisperwood; if (!ww || ww.__moss) return; ww.__moss = true;
+    var rows = ww.ground.map(function (r) { return r.split(''); }), wh = ww.h;
+    var path = Object.keys(ww.legend).filter(function (k) { return ww.legend[k] === 'path'; })[0] || 'p';
+    [24, 25].forEach(function (cx) {
+      for (var yy = wh - 1; yy >= 0; yy--) { var ch = rows[yy][cx]; if (ch === path && yy < wh - 2) break; if (ww.legend[ch] === 'water') rows[yy][cx] = Object.keys(ww.legend).filter(function (k) { return ww.legend[k] === 'bridge'; })[0] || ch; else rows[yy][cx] = path; }
+    });
+    ww.ground = rows.map(function (r) { return r.join(''); });
+    ww.props = (ww.props || []).filter(function (p) { return !((p.x >= 23 && p.x <= 26) && rows[p.y] && rows[p.y][24] === path && p.y > 2); });
+    ww.npcs = ww.npcs || [];
+    ww.npcs.push({ key: 'guard', x: 26, y: wh - 3, dir: 2, lines: [['Ranger Moss', 'Mossgrove lies south of here.'], ['Ranger Moss', 'Mind the roots on the path, young Wonder.']] });
+    ww.doors = ww.doors || [];
+    ww.doors.push({ x: 24, y: wh - 1, to: 'mossgrove', tx: 19, ty: 1, dir: 0 }, { x: 25, y: wh - 1, to: 'mossgrove', tx: 20, ty: 1, dir: 0 });
+    ww.labels = (ww.labels || []).concat([{ x: 25, y: wh - 3, name: 'Road to Mossgrove' }]);
+  }
+  link();
+})();
