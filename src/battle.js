@@ -856,7 +856,8 @@
     var endBtn = mk('button', 'hb-end', el, 'Continue'); endBtn.hidden = true;
     requestAnimationFrame(function () { el.classList.add('on'); });
     sheetOpen = false; sheet.hidden = true;
-    function HL(id, t, x, ic, el) { if (H.ui && H.ui.helper) H.ui.helper(id, t, x, ic, el); }
+    // battle tips only while the fight is still on; a tip that comes too late waits for the next battle
+    function HL(id, t, x, ic, el) { if (H.ui && H.ui.helper && !done) H.ui.helper(id, t, x, ic, el, function () { return !done && !!el; }); }
     setTimeout(function () {
       HL('moves', 'Moves', 'Tap a move and I attack. Hold one to read it back.', 'claw', movesEl);
       HL('intent', 'Foe', 'Up here you see what the foe plans next.', 'info', intentEl);

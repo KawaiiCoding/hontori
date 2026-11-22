@@ -537,12 +537,12 @@ window.H = window.H || {};
   function css() { if (document.getElementById('hg-style')) return; var s = document.createElement('style'); s.id = 'hg-style'; s.textContent = CSS; document.head.appendChild(s); }
   function flags() { var st = H.game && H.game.state; if (!st) return null; return (st.flags = st.flags || {}); }
   function seen(id) { var f = flags(); return !!(f && f['help:' + id]); }
-  function helper(id, title, text, icon, target) {
+  function helper(id, title, text, icon, target, still) {
     var f = flags(); if (!f || f['help:' + id]) return Promise.resolve(false);
     f['help:' + id] = 1;
     try { H.game.save && H.game.save(); } catch (e) {}
     // shown after a short pause, so the thing it explains is seen first
-    return new Promise(function (res) { queue.push({ title: title, text: text, target: target, res: res }); if (!busy) setTimeout(next, 500); busy = true; });
+    return new Promise(function (res) { queue.push({ id: id, title: title, text: text, target: target, res: res, still: still }); if (!busy) setTimeout(next, 500); busy = true; });
   }
   function fox() {
     var st = H.game && H.game.state, m = st && st.party && st.party[0], c = null;
@@ -556,7 +556,9 @@ window.H = window.H || {};
     var root = document.getElementById('root') || document.body, R = root.getBoundingClientRect();
     var ov = document.createElement('div'); ov.className = 'hg';
     var t = typeof o.target === 'string' ? document.querySelector(o.target) : o.target, tr = null;
-    if (t && t.getBoundingClientRect && t.offsetParent !== null) { var b = t.getBoundingClientRect(); if (b.width && b.height) tr = { x: b.left - R.left, y: b.top - R.top, w: b.width, h: b.height }; }
+    if (t && t.getBoundingClientRect && t.offsetParent !== null && document.body.contains(t)) { var b = t.getBoundingClientRect(); if (b.width && b.height) tr = { x: b.left - R.left, y: b.top - R.top, w: b.width, h: b.height }; }
+    // the moment has passed (target gone, hidden, or the caller says it no longer applies): skip it, let it show next time
+    if ((o.target && !tr) || (o.still && !o.still())) { var fl0 = flags(); if (fl0) delete fl0['help:' + o.id]; o.res(false); setTimeout(next, 0); return; }
     if (tr) { var ring = document.createElement('div'); ring.className = 'hg-ring'; ring.style.cssText = 'left:' + (tr.x - 4) + 'px;top:' + (tr.y - 4) + 'px;width:' + (tr.w + 8) + 'px;height:' + (tr.h + 8) + 'px'; ov.appendChild(ring); }
     var g = document.createElement('div'); g.className = 'hg-g';
     var fx = document.createElement('div'); fx.className = 'hg-fox'; var fc = fox(); if (fc) fx.appendChild(fc); g.appendChild(fx);
@@ -584,9 +586,14 @@ window.H = window.H || {};
     [full, Math.min(full, 210), Math.min(full, 170)].forEach(function (w, wi) {
       gw = w; g.style.width = w + 'px'; gh = g.offsetHeight || gh;
       var cands = [], mx = (W - gw) / 2;
-      if (tr) { var tx = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2)); cands.push([tx, tr.y + tr.h + 12], [tx, tr.y - gh - 12]); }
+      if (tr) { var tx = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2)), my = tr.y + tr.h / 2 - gh / 2;
+        cands.push([tx, tr.y + tr.h + 12], [tx, tr.y - gh - 12], [tr.x + tr.w + 12, my], [tr.x - gw - 12, my], [10, tr.y - gh - 12], [W - gw - 10, tr.y - gh - 12], [10, tr.y + tr.h + 12], [W - gw - 10, tr.y + tr.h + 12]); }
       for (var f = 0.14; f < 0.86; f += 0.05) cands.push([mx, Hh * f], [10, Hh * f], [W - gw - 10, Hh * f]);
-      cands.forEach(function (cnd, i) { var cx = cnd[0], cy = Math.max(10, Math.min(Hh - gh - 10, cnd[1])), sc = cover(cx, cy) + i * 2 + wi * 400; if (!best || sc < best[2]) best = [cx, cy, sc, w, gh]; });
+      cands.forEach(function (cnd) {
+        var cx = Math.max(10, Math.min(W - gw - 10, cnd[0])), cy = Math.max(10, Math.min(Hh - gh - 10, cnd[1]));
+        // anything covered costs a lot; after that, nearer to the target is better
+        var d = 0; if (tr) { var nx = Math.max(cx, Math.min(cx + gw, tr.x + tr.w / 2)), ny = Math.max(cy, Math.min(cy + gh, tr.y + tr.h / 2)); d = Math.sqrt((nx - tr.x - tr.w / 2) * (nx - tr.x - tr.w / 2) + (ny - tr.y - tr.h / 2) * (ny - tr.y - tr.h / 2)); }
+        var sc = cover(cx, cy) * 40 + d + wi * 25; if (!best || sc < best[2]) best = [cx, cy, sc, w, gh]; });
     });
     x = best[0]; y = best[1]; gw = best[3]; gh = best[4];
     g.style.left = x + 'px'; g.style.top = y + 'px'; g.style.width = gw + 'px';
@@ -606,7 +613,7 @@ window.H = window.H || {};
       }
     }
     var gone = false;
-    function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; ov.classList.remove('on'); setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); o.res(true); next(); }, 200); }
+    function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; ov.classList.remove('on'); setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); o.res(true); setTimeout(next, 400); }, 200); }
     // it never blocks: a tap on the bubble closes it, any other tap closes it and still goes through
     g.addEventListener('click', close);
     var anyTap = function () { document.removeEventListener('pointerdown', anyTap, true); setTimeout(function () { close(); }, 0); };
