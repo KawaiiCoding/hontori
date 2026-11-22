@@ -194,8 +194,28 @@ window.H = window.H || {};
       });
   } });
   // leaving without the map: Mom stops the kid once and hands it over (it does not take a bag slot)
+  // an npc walks over to the kid (shortest path around furniture), one tile at a time
+  function walkTo(key, near) {
+    var c = H.game.currentMap && H.game.currentMap(), list = H.game.npcs ? H.game.npcs() : [];
+    var n = list.filter(function (q) { return q.key === key && !q.away; })[0];
+    if (!c || !n) return Promise.resolve();
+    var goal = near, start = n.x + ',' + n.y, prev = {}, Q = [[n.x, n.y]]; prev[start] = null;
+    var free = function (x, y) { return (x === n.x && y === n.y) || !c.blocked(x, y) || (x === goal[0] && y === goal[1]); };
+    while (Q.length) { var q = Q.shift(); if (q[0] === goal[0] && q[1] === goal[1]) break;
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { var x = q[0] + d[0], y = q[1] + d[1], k = x + ',' + y; if (k in prev || !free(x, y) || (x === c.player.tx && y === c.player.ty)) return; prev[k] = q; Q.push([x, y]); }); }
+    var path = [], k0 = goal[0] + ',' + goal[1]; if (!(k0 in prev)) return Promise.resolve();
+    for (var cur = goal; cur; cur = prev[cur[0] + ',' + cur[1]]) path.unshift(cur);
+    return path.slice(1).reduce(function (p, step) { return p.then(function () {
+      n.dir = step[0] > n.x ? 3 : step[0] < n.x ? 2 : step[1] > n.y ? 0 : 1;
+      n.x = step[0]; n.y = step[1]; n.px = n.x * 16 + 8; n.py = n.y * 16 + 15; n.slot = -3;
+      return new Promise(function (r) { setTimeout(r, 140); });
+    }); }, Promise.resolve()).then(function () { n.dir = c.player.ty < n.y ? 1 : c.player.ty > n.y ? 0 : c.player.tx > n.x ? 3 : 2; });
+  }
   ST.defineEvent({ id: 'c1_mapgift', when: 'manual', once: false, run: function (a) {
-    return a.say('mom', 'Mom', 'Wait. You will need this.')
+    var c = H.game.currentMap && H.game.currentMap(), p = c ? c.player : null;
+    return a.say('mom', 'Mom', 'Wait, sweetheart.')
+      .then(function () { return p ? walkTo('mom', [p.tx, p.ty - 1]) : null; })
+      .then(function () { return a.say('mom', 'Mom', 'You will need this. Your grandma drew it.'); })
       .then(function () {
         a.state.flags['map:gift'] = true;
         a.give('map', 'Map', 'map');

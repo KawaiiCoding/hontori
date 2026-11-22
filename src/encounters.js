@@ -15,7 +15,7 @@ window.H = window.H || {};
     electric: { f: { lamp: 3, metal: 2, open: 0.3 }, day: 0.8, night: 1, wx: { rain: 3, wind: 1.3, clear: 0.6 }, rare: 0.35 },
     earth:    { f: { rock: 2.5, path: 0.5, sand: 0.6, wall: 1.2, field: 0.8 }, day: 1, night: 0.8, wx: { rain: 0.8 }, rare: 0.9 },
     hontori:  { f: { warm: 3, open: 0.4, path: 0.3 }, day: 1.3, night: 0.25, wx: { clear: 1.4, rain: 0.25, snow: 0.3, fog: 0.6 }, rare: 0.4 },
-    dark:     { f: { shade: 1.3, mushroom: 3, tree: 0.4 }, day: 0.08, night: 2.6, wx: { fog: 2.2, rain: 1.1 }, rare: 0.8 },
+    dark:     { f: { shade: 1.6, mushroom: 3, tree: 0.8, tallgrass: 1.2, open: 0.7, path: 0.4 }, day: 0.08, night: 3, wx: { fog: 2.2, rain: 1.1 }, rare: 0.8 },
     light:    { f: { flowers: 1.4, statue: 5, open: 0.4 }, day: 1.2, night: 0.08, wx: { clear: 1.4, rain: 0.4, fog: 0.5 }, rare: 0.3 },
     // second wave
     frog:       { f: { lilypad: 3, reeds: 2.2, water: 1.4, tallgrass: 0.3 }, day: 0.8, night: 1.3, wx: { rain: 2.6, fog: 1.3, clear: 0.8 }, rare: 0.8 },
