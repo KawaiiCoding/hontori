@@ -21,7 +21,7 @@
     '.hmap .zm{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:8px}',
     '.hmap .zm .hk-x{position:static}',
     '.hmap .wt{display:flex;gap:6px;justify-content:center;margin:0 0 8px}.hmap .wt button{border:2px solid #8a6a40;border-radius:12px;background:rgba(255,255,255,.35);color:#4a3420;font:900 14px Nunito,system-ui,sans-serif;padding:6px 16px;cursor:pointer}.hmap .wt button.on{background:#8a6a40;color:#fff6dc}',
-    '.hmap .wv{position:absolute;inset:0;z-index:2}',
+    '.hmap .wv{position:absolute;inset:0;z-index:2}.hmap .wv[hidden],.hmap .zm[hidden]{display:none}',
     '.hmap .lg{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;margin-top:8px;color:#4a3420;font-size:12px;font-weight:800}',
     '.hmap .lg span{display:flex;align-items:center;gap:4px}.hmap .lg i{width:12px;height:12px;border-radius:3px;display:inline-block}'
   ].join('\n');
@@ -156,36 +156,66 @@
   var ROADS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [3, 6], [5, 7], [7, 8], [6, 9], [5, 10]];
   function regionOf(mapName) { for (var i = 0; i < REG.length; i++) if (REG[i].maps && REG[i].maps.indexOf(mapName) >= 0) return i; return -1; }
   function visited(r) { var f = (H.game && H.game.state && H.game.state.flags) || {}; return !!(r.maps && r.maps.some(function (k) { return f['visited:' + k]; })); }
+  // the world is painted like the area map: same palette, pixel scale and labels; places you do not know stay in fog
+  var wcache = { key: '', c: null };
+  function worldPixels(PW, PH, known, heard) {
+    var c = document.createElement('canvas'); c.width = PW; c.height = PH; var g = c.getContext('2d');
+    function px(x, y, col) { g.fillStyle = col; g.fillRect(x | 0, y | 0, 1, 1); }
+    function hsh(x, y) { var n = (x * 374761393 + y * 668265263) | 0; n = (n ^ (n >>> 13)) * 1274126177; return ((n ^ (n >>> 16)) >>> 0) / 4294967296; }
+    // land and sea
+    for (var y = 0; y < PH; y++) for (var x = 0; x < PW; x++) {
+      var u = x / PW, v = y / PH, sea = (u - 1.02) * (u - 1.02) / 0.18 + (v - 1.02) * (v - 1.02) / 0.09 < 1;
+      if (sea) px(x, y, hsh(x, y) < 0.06 ? '#6aa8e0' : COL.water);
+      else { var r = hsh(x, y); px(x, y, r < 0.12 ? COL.tallgrass : r < 0.2 ? COL.flowers : COL.grass); }
+    }
+    // sandy coast
+    for (y = 1; y < PH - 1; y++) for (x = 1; x < PW - 1; x++) {
+      var d = g.getImageData(x, y, 1, 1).data; if (d[2] > 150) continue;
+      var n2 = g.getImageData(x + 1, y, 1, 1).data, n3 = g.getImageData(x, y + 1, 1, 1).data;
+      if (n2[2] > 150 || n3[2] > 150) px(x, y, COL.sand);
+    }
+    // forests (little round trees like the area map), mountains by the pass
+    for (var k = 0; k < 140; k++) { var tx = hsh(k, 7) * PW, ty = hsh(k, 9) * PH, uu = tx / PW, vv = ty / PH;
+      if ((uu - 1.02) * (uu - 1.02) / 0.2 + (vv - 1.02) * (vv - 1.02) / 0.11 < 1) continue;
+      g.fillStyle = '#2f5f2c'; g.fillRect(tx - 1, ty - 1, 3, 3); g.fillStyle = '#3f7a38'; g.fillRect(tx - 1, ty - 1, 2, 2); }
+    for (k = 0; k < 7; k++) { var mx = PW * (0.58 + k * 0.045), my = PH * (0.45 + (k % 2) * 0.03);
+      for (var h = 0; h < 7; h++) { g.fillStyle = h < 2 ? '#f0f0f4' : '#8a8478'; g.fillRect(mx - h, my - 7 + h, h * 2 + 1, 1); g.fillStyle = '#6a6458'; g.fillRect(mx, my - 7 + h, h + 1, 1); } }
+    // roads in path colour; dotted toward places not reached yet
+    ROADS.forEach(function (e) { var a = REG[e[0]], b = REG[e[1]], both = known[e[0]] && known[e[1]], any = known[e[0]] || known[e[1]];
+      if (!any) return;
+      var x0 = a.x * PW, y0 = a.y * PH, x1 = b.x * PW, y1 = b.y * PH, n = Math.ceil(Math.hypot(x1 - x0, y1 - y0));
+      for (var i = 0; i <= n; i++) { if (!both && (i >> 1) % 2) continue; var q = i / n, xx = x0 + (x1 - x0) * q + Math.sin(q * 3.14) * 3, yy = y0 + (y1 - y0) * q;
+        g.fillStyle = COL.path; g.fillRect(xx | 0, yy | 0, 2, 2); } });
+    // fog over everything you have not seen, the same deep colour as the area map
+    var fog = document.createElement('canvas'); fog.width = PW; fog.height = PH; var f = fog.getContext('2d');
+    f.fillStyle = '#141020'; f.fillRect(0, 0, PW, PH); f.globalCompositeOperation = 'destination-out';
+    REG.forEach(function (r, i) { if (!known[i] && !heard[i]) return; var rad = (known[i] ? 0.2 : 0.11) * PW, gr = f.createRadialGradient(r.x * PW, r.y * PH, rad * 0.4, r.x * PW, r.y * PH, rad);
+      gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); f.fillStyle = gr; f.fillRect(0, 0, PW, PH); });
+    g.drawImage(fog, 0, 0);
+    return c;
+  }
   function drawWorld(c, W, Hh, dpr, t, here) {
     if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(Hh * dpr); c.style.width = W + 'px'; c.style.height = Hh + 'px'; }
     var g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // parchment, a sea to the south-east, hills and a mountain ridge by the pass
-    g.fillStyle = '#e6d3a4'; g.fillRect(0, 0, W, Hh);
-    g.fillStyle = '#b8d0c8'; g.beginPath(); g.ellipse(W * 1.02, Hh * 1.02, W * 0.42, Hh * 0.3, 0, 0, 7); g.fill();
-    g.fillStyle = 'rgba(110,150,80,.35)'; [[0.42, 0.3, 0.2, 0.16], [0.3, 0.6, 0.16, 0.1], [0.15, 0.4, 0.12, 0.1]].forEach(function (e) { g.beginPath(); g.ellipse(W * e[0], Hh * e[1], W * e[2], Hh * e[3], 0, 0, 7); g.fill(); });
-    g.fillStyle = 'rgba(120,100,80,.45)'; for (var k = 0; k < 6; k++) { var mx = W * (0.6 + k * 0.05), my = Hh * (0.44 + (k % 2) * 0.03); g.beginPath(); g.moveTo(mx - 12, my + 12); g.lineTo(mx, my - 8); g.lineTo(mx + 12, my + 12); g.closePath(); g.fill(); }
     var cur = regionOf(here), known = REG.map(function (r, i) { return visited(r) || i === cur; });
     var heard = REG.map(function (r, i) { return !known[i] && !!r.n && ROADS.some(function (e) { return (e[0] === i && known[e[1]]) || (e[1] === i && known[e[0]]); }); });
-    // roads: solid where walked, dashed toward places not reached yet
-    ROADS.forEach(function (e) { var a = REG[e[0]], b = REG[e[1]], both = known[e[0]] && known[e[1]], any = known[e[0]] || known[e[1]];
-      g.strokeStyle = both ? '#8a5a30' : any ? 'rgba(138,90,48,.6)' : 'rgba(138,90,48,.18)'; g.lineWidth = both ? 4 : 3; g.setLineDash(both ? [] : [6, 6]);
-      g.beginPath(); g.moveTo(a.x * W, a.y * Hh); g.quadraticCurveTo((a.x + b.x) / 2 * W + 18, (a.y + b.y) / 2 * Hh, b.x * W, b.y * Hh); g.stroke(); });
-    g.setLineDash([]);
-    g.textAlign = 'center'; g.font = '900 13px Nunito, system-ui, sans-serif';
+    var SC = Math.max(2, Math.floor(W / 110)), PW = Math.ceil(W / SC), PH = Math.ceil(Hh / SC), key = PW + 'x' + PH + known.join() + heard.join();
+    if (wcache.key !== key) { wcache.key = key; wcache.c = worldPixels(PW, PH, known, heard); }
+    g.imageSmoothingEnabled = false; g.drawImage(wcache.c, 0, 0, PW * SC, PH * SC);
+    // places: the element icon, a gold ring where the ring is earned, labels like the area map
+    var labs = [];
     REG.forEach(function (r, i) {
-      var x = r.x * W, y = r.y * Hh;
-      if (known[i] || heard[i]) {
-        g.fillStyle = known[i] ? '#fff6dc' : 'rgba(255,246,220,.6)'; g.strokeStyle = '#6a4424'; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, 14, 0, 7); g.fill(); g.stroke();
-        try { var im = iconImg(r.el); if (im.complete) { g.globalAlpha = known[i] ? 1 : 0.5; g.drawImage(im, x - 10, y - 10, 20, 20); g.globalAlpha = 1; } } catch (e2) {}
-        if (r.ring && (H.game.state.rings || []).indexOf(r.ring) >= 0) { g.strokeStyle = '#e0b040'; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 18, 0, 7); g.stroke(); }
-        var lab = r.n + (heard[i] && r.why ? ' (' + r.why + ')' : '');
-        var tw = g.measureText(lab).width + 12; g.fillStyle = 'rgba(255,248,230,.92)'; g.fillRect(x - tw / 2, y + 18, tw, 18); g.strokeStyle = 'rgba(80,50,20,.5)'; g.lineWidth = 1; g.strokeRect(x - tw / 2, y + 18, tw, 18);
-        g.fillStyle = '#3a2814'; g.fillText(lab, x, y + 31);
-      } else { g.fillStyle = 'rgba(80,60,40,.25)'; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); g.fillStyle = 'rgba(80,60,40,.55)'; g.fillText('?', x, y + 5); }
+      if (!known[i] && !heard[i]) return;
+      var x = Math.round(r.x * W), y = Math.round(r.y * Hh);
+      g.fillStyle = '#2a1d10'; g.beginPath(); g.arc(x, y, 12, 0, 7); g.fill(); g.fillStyle = known[i] ? '#ffd98a' : '#8a7a5a'; g.beginPath(); g.arc(x, y, 10, 0, 7); g.fill();
+      try { var im = iconImg(r.el); if (im.complete) { g.globalAlpha = known[i] ? 1 : 0.55; g.drawImage(im, x - 8, y - 8, 16, 16); g.globalAlpha = 1; } } catch (e2) {}
+      if (r.ring && (H.game.state.rings || []).indexOf(r.ring) >= 0) { g.strokeStyle = '#ffcf3a'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 15, 0, 7); g.stroke(); }
+      labs.push({ t: r.n + (heard[i] && r.why ? ': ' + r.why : ''), x: x, y: y + 22 });
     });
-    if (cur >= 0) { var cx = REG[cur].x * W - 26, cy = REG[cur].y * Hh, rr = 6 * (0.9 + 0.15 * Math.sin(t / 200));
-      g.fillStyle = '#ff3c28'; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, rr, 0, 7); g.fill(); g.stroke();
-      g.fillStyle = '#3a2814'; g.font = '800 11px Nunito, system-ui, sans-serif'; g.textAlign = 'right'; g.fillText('You', cx - 9, cy + 4); g.textAlign = 'center'; }
+    drawLabels(g, labs.map(function (l) { return { t: l.t, x: l.x - 0.5, y: l.y - 0.5 }; }), 0, 0, 1, W, Hh);
+    if (cur >= 0) { var cx = Math.round(REG[cur].x * W) + 18, cy = Math.round(REG[cur].y * Hh) - 10, rr = 5 * (0.9 + 0.15 * Math.sin(t / 200));
+      g.fillStyle = 'rgba(255,60,40,.3)'; g.beginPath(); g.arc(cx, cy, rr * 2, 0, 7); g.fill();
+      g.fillStyle = '#ff3c28'; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, rr, 0, 7); g.fill(); g.stroke(); }
   }
   var icCache = {};
   function iconImg(el) { if (!icCache[el]) { var im = new Image(); im.src = H.icons.url(el, 2); icCache[el] = im; } return icCache[el]; }
@@ -207,7 +237,7 @@
     var vp = document.createElement('div'); vp.className = 'vp'; box.appendChild(vp);
     var wv = document.createElement('canvas'); wv.className = 'wv'; wv.hidden = true; vp.appendChild(wv);
     var worldOn = false;
-    function setTab(w) { worldOn = w; tA.classList.toggle('on', !w); tW.classList.toggle('on', w); wv.hidden = !w; zm.hidden = w; lg.style.visibility = w ? 'hidden' : 'visible'; h.lastChild.textContent = w ? 'The World' : (map.name || m.name); }
+    function setTab(w) { worldOn = w; tA.classList.toggle('on', !w); tW.classList.toggle('on', w); wv.hidden = !w; zm.style.zIndex = w ? 3 : ''; lg.style.visibility = w ? 'hidden' : 'visible'; h.lastChild.textContent = w ? 'The World' : (map.name || m.name); }
     tA.addEventListener('click', function (e) { e.stopPropagation(); setTab(false); });
     tW.addEventListener('click', function (e) { e.stopPropagation(); setTab(true); });
     var cv = document.createElement('canvas'); vp.appendChild(cv);
@@ -254,17 +284,19 @@
     }
     requestAnimationFrame(draw);
     // zoom buttons go between the whole map and a close view around the kid
-    zin.addEventListener('click', function (e) { e.stopPropagation(); z = Math.min(zMax(), z * 2); centreKid(); });
-    zout.addEventListener('click', function (e) { e.stopPropagation(); zoomAt(z / 2, W / 2, Hh / 2); });
-    vp.addEventListener('wheel', function (e) { e.preventDefault(); var r = vp.getBoundingClientRect(); zoomAt(z * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    zin.addEventListener('click', function (e) { e.stopPropagation(); if (worldOn) { setTab(false); z = fit; clamp(); return; } z = Math.min(zMax(), z * 2); centreKid(); });
+    zout.addEventListener('click', function (e) { e.stopPropagation(); if (worldOn) return; if (z <= fit * 1.01) { setTab(true); return; } zoomAt(z / 2, W / 2, Hh / 2); });
+    vp.addEventListener('wheel', function (e) { e.preventDefault(); if (worldOn) { if (e.deltaY < 0) setTab(false); return; } if (e.deltaY > 0 && z <= fit * 1.01) { setTab(true); return; } var r = vp.getBoundingClientRect(); zoomAt(z * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
     // drag to pan, two fingers to pinch
     var pts = {}, pinch = null;
     function loc(e) { var r = vp.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
-    vp.addEventListener('pointerdown', function (e) { if (e.target !== cv) return; pts[e.pointerId] = loc(e); try { cv.setPointerCapture(e.pointerId); } catch (_) {} pinch = null; e.preventDefault(); });
+    vp.addEventListener('pointerdown', function (e) { if (e.target !== cv && e.target !== wv) return; pts[e.pointerId] = loc(e); try { cv.setPointerCapture(e.pointerId); } catch (_) {} pinch = null; e.preventDefault(); });
     vp.addEventListener('pointermove', function (e) {
       if (!pts[e.pointerId]) return; var p = loc(e), ids = Object.keys(pts);
       if (ids.length >= 2) {
         pts[e.pointerId] = p; var a = pts[ids[0]], b = pts[ids[1]], d = Math.hypot(a[0] - b[0], a[1] - b[1]), mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+        if (pinch && !worldOn && d < pinch.d * 0.8 && z <= fit * 1.01) { setTab(true); pinch = null; return; }
+        if (pinch && worldOn && d > pinch.d * 1.25) { setTab(false); pinch = null; return; }
         if (pinch) { zoomAt(z * d / Math.max(1, pinch.d), mx, my); ox += mx - pinch.mx; oy += my - pinch.my; clamp(); }
         pinch = { d: d, mx: mx, my: my };
       } else { var q0 = pts[e.pointerId]; ox += p[0] - q0[0]; oy += p[1] - q0[1]; clamp(); pts[e.pointerId] = p; }
