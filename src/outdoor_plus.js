@@ -40,13 +40,24 @@ window.H = window.H || {};
       for (var j = 0; j < h; j++) sp(g, x + i, y + j, pick(ramp, v, x + i, y + j));
     }
   }
+  // soft coloured outline: every edge pixel takes a deep shade of the colour it touches (no black line).
+  // An explicit colour (c) still wins, for the few pieces that want a fixed edge.
+  var DK = {};
+  function deep(col) {
+    if (DK[col]) return DK[col];
+    var m = /^#([0-9a-f]{6})$/i.exec(col || ''), out = OUT;
+    if (m) { var n = parseInt(m[1], 16), r = (n >> 16) & 255, gg = (n >> 8) & 255, b = n & 255;
+      out = '#' + [r * 0.38, gg * 0.42, b * 0.46].map(function (v) { v = Math.round(v); return (v < 16 ? '0' : '') + v.toString(16); }).join(''); }
+    return (DK[col] = out);
+  }
   function outline(g, c) {
     var add = [];
     for (var y = 0; y < g.h; y++) for (var x = 0; x < g.w; x++) {
       if (gp(g, x, y)) continue;
-      if (gp(g, x - 1, y) || gp(g, x + 1, y) || gp(g, x, y - 1) || gp(g, x, y + 1)) add.push(x, y);
+      var nb = gp(g, x - 1, y) || gp(g, x + 1, y) || gp(g, x, y - 1) || gp(g, x, y + 1);
+      if (nb) add.push(x, y, nb);
     }
-    for (var i = 0; i < add.length; i += 2) sp(g, add[i], add[i + 1], c || OUT);
+    for (var i = 0; i < add.length; i += 3) sp(g, add[i], add[i + 1], c || deep(add[i + 2]));
   }
   function newCanvas(w, h) {
     if (typeof document !== 'undefined') { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
