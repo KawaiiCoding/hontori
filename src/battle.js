@@ -770,6 +770,8 @@
     var flvl = TR ? (TR.level || 1) : (opts.level || Math.max(1, me.lvl + (Math.random() < 0.3 ? -1 : Math.random() < 0.6 ? 0 : 1)));
     var fmax = 15 + flvl * 3;
     var foe = { key: fk, el: fs.element, hp: fmax, max: fmax, lvl: flvl, stage: opts.stage || TR && TR.stage, name: TR ? TR.name : ('Jealous ' + (fs.name || cap(fs.element))), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
+    // the wand remembers every hontori you meet
+    if (!TR) { GS.seen = GS.seen || []; if (GS.seen.indexOf(fk) < 0) GS.seen.push(fk); }
     var MOV = movesOf(lead), FMOV = H.moves.MOVES[foe.el] || H.moves.MOVES.fire;
     var maxMana = GS.maxMana || 3; if (GS.mana == null) GS.mana = maxMana; var mana = Math.min(maxMana, GS.mana);
     var known = (GS.spells && GS.spells.length ? GS.spells : ['mend']).map(function (s) { return s === 'absorb' ? 'bind' : s; });
@@ -1384,6 +1386,7 @@
       GS.flags = GS.flags || {}; GS.flags.boundOnce = true;
       done = true; sfx('wand'); result.captured = true; result.won = true; say('Bound into your wand!');
       GS.seen = GS.seen || []; if (GS.seen.indexOf(foe.key) < 0) GS.seen.push(foe.key);
+      GS.bound = GS.bound || []; if (GS.bound.indexOf(foe.key) < 0) GS.bound.push(foe.key);
       var joined = H.game && H.game.addHontori ? H.game.addHontori(foe.key) : false;
       if (!joined) { GS.wand = GS.wand || []; GS.wand.push(foe.key); }
       setTimeout(function () { say(joined ? 'It joins your party.' : 'It rests inside the wand.'); finish(); }, 900);

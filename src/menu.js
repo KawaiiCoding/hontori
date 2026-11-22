@@ -252,6 +252,8 @@
         if (st.party.length > 1 && P()) kb(bs, { icon: 'crystal', label: 'Rest', desc: 'Into the Sanctum', kind: 'alt', sm: true, onClick: function () { P().toSanctum(i); } });
       });
       if (P()) kb(acts(), { icon: 'crystal', label: 'Wand Sanctum', desc: (st.sanctum || []).length + ' / ' + P().capacity() + ' resting in your wand', onClick: function () { sel = null; show('sanctum'); } });
+    } else if (open === 'memory') {
+      renderMemory(st);
     } else if (open === 'sanctum') {
       renderSanctum(g, st);
     } else if (open === 'spells') {
@@ -300,6 +302,7 @@
         var wa = acts(sec);
         kb(wa, { icon: 'crystal', label: 'Wand Sanctum', desc: 'Resting hontori', onClick: function () { sel = null; show('sanctum'); } });
         kb(wa, { icon: 'book', label: 'Spell Loadout', desc: 'Pick 4 for battle', onClick: function () { show('spells'); } });
+        kb(wa, { icon: 'paw', label: 'Wand Memory', desc: 'Hontori you met and bound', onClick: function () { memSel = null; show('memory'); } });
       }
       var a = acts();
       kb(a, { icon: 'scroll', label: 'Save', desc: 'Also saves by itself', kind: 'alt', onClick: function () { g.save && g.save(); hide(); H.ui && H.ui.toast('Game saved'); } });
@@ -310,6 +313,50 @@
     }
   }
 
+  // Wand Memory: one list of every hontori kind, each labelled Bound, Met or Unknown
+  var memSel = null, memFilter = 'all';
+  function memState(st, key) {
+    var own = (st.party || []).concat(st.sanctum || []).some(function (m) { return m.key === key; }) || (st.bound || []).indexOf(key) >= 0 || (st.wand || []).indexOf(key) >= 0;
+    if (own) return 'bound';
+    return (st.seen || []).indexOf(key) >= 0 ? 'met' : 'unknown';
+  }
+  function renderMemory(st) {
+    var all = (H.spirits && H.spirits.list) || [], TOTAL = 100;
+    var nb = 0, nm = 0; all.forEach(function (s) { var k = memState(st, s.key); if (k === 'bound') nb++; if (k !== 'unknown') nm++; });
+    if (memSel) {
+      var s = memSel, ms = memState(st, s.key), stg = (H.spirits.stages && H.spirits.stages[s.key]) || [];
+      header(ms === 'unknown' ? 'Not met yet' : (stg[0] && stg[0].name) || s.name, 'paw', ms === 'bound' ? 'Bound' : ms === 'met' ? 'Met' : '');
+      var d = mk('div', 'hm-det', els.sheet); if (ms !== 'unknown') d.appendChild(copyCanvas(portrait(s.key, 1), 96));
+      var inf = mk('div', 'inf', d); inf.style.flex = '1';
+      if (ms !== 'unknown') {
+        try { if (H.ui && H.ui.elementBadge) inf.appendChild(H.ui.elementBadge(s.element)); } catch (e) {}
+        note((stg[0] && stg[0].desc) || '', inf).style.opacity = '1';
+        if (ms === 'bound') note('Forms: ' + stg.map(function (x) { return x.name; }).join(', '), inf);
+        else note('Bind one to learn its forms.', inf);
+      } else note('The wand has not met this one. Look in other places, times and weather.', inf);
+      kb(acts(), { icon: 'back', label: 'Back', kind: 'alt', onClick: function () { memSel = null; render(); } });
+      return;
+    }
+    header('Wand Memory', 'paw', 'Met ' + nm + ', bound ' + nb + ', out of ' + TOTAL);
+    var fr = mk('div', 'hm-btns', els.sheet); fr.style.cssText = 'flex-direction:row;gap:6px;margin-bottom:8px';
+    [['all', 'All'], ['bound', 'Bound'], ['met', 'Met only']].forEach(function (f) { var b = kb(fr, { label: f[1], kind: memFilter === f[0] ? '' : 'alt', sm: true, onClick: function () { memFilter = f[0]; render(); } }); b.style.flex = '1'; });
+    var grid = mk('div', 'hm-sg', els.sheet);
+    all.forEach(function (s, i) {
+      var ms = memState(st, s.key);
+      if (memFilter === 'bound' && ms !== 'bound') return;
+      if (memFilter === 'met' && ms !== 'met') return;
+      var c = mk('div', 'hm-sc', grid);
+      // no spoilers: an unknown kind shows only a quiet mark, never its picture
+      if (ms === 'unknown') { var qm = mk('div', '', c, '?'); qm.style.cssText = 'width:60px;height:60px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.05);font-size:26px;font-weight:900;opacity:.4'; }
+      else c.appendChild(copyCanvas(portrait(s.key, 1), 96));
+      mk('span', 'lv', c, '#' + (i + 1));
+      if (ms === 'unknown') { c.style.opacity = '.6'; mk('div', '', c, 'Not met'); }
+      else { var stg = (H.spirits.stages && H.spirits.stages[s.key]) || []; mk('div', '', c, (stg[0] && stg[0].name) || s.name); var t = mk('span', 'hm-tag', c, ms === 'bound' ? 'Bound' : 'Met'); t.style.cssText = 'display:inline-block;margin-top:3px;' + (ms === 'met' ? 'background:rgba(159,208,255,.25);color:#bfe4ff' : ''); }
+      c.addEventListener('click', function () { memSel = s; render(); });
+    });
+    if (!grid.children.length) mk('div', 'hm-empty', els.sheet, memFilter === 'bound' ? 'None bound yet.' : 'None here yet.');
+    kb(acts(), { icon: 'back', label: 'Back', kind: 'alt', onClick: function () { show('menu'); } });
+  }
   function renderSanctum(g, st) {
     var sn = st.sanctum || [], cap = P() ? P().capacity() : 12;
     var m = sel != null ? sn[sel] : null;
