@@ -16,6 +16,9 @@ window.H = window.H || {};
   function pos() { var c = H.game && H.game.currentMap && H.game.currentMap(); return c && c.player ? { x: c.player.tx, y: c.player.ty, name: c.name } : null; }
 
   // ---------------------------------------------------------------- quests
+  ST.defineQuest({ id: 'night', icon: 'moon', title: 'Sleep Tight', desc: 'It is late. Tomorrow starts something new.', steps: [
+    { id: 'bed', text: 'Go to bed in your room', done: function (s) { return !!s.flags['c1:morning']; } }
+  ] });
   ST.defineQuest({ id: 'academy', icon: 'book', title: 'The Academy', desc: 'The old school up the north road has opened its gate again.', steps: [
     { id: 'go', text: 'Go to Emberbrook Academy, up the road north of the square', done: function (s) { return !!s.academy || !!s.flags['visited:school']; } },
     { id: 'trial', text: 'Pass the gate trial', done: function (s) { return !!s.academy; } },
@@ -90,16 +93,40 @@ window.H = window.H || {};
   function setGuard() {
     var g = npcBy('village', 'Guard Bram'); if (!g) return;
     if (ST.isDone('academy')) setLines(g, [['Guard Bram', 'The south gate is open for you now.'], ['Guard Bram', 'Keep to the path in Whisperwood.']]);
-    else setLines(g, [['Guard Bram', 'The south road is closed to new wands.'], ['Guard Bram', 'Come back once the Academy has taught you.']]);
+    else setLines(g, [['Guard Bram', 'The south road is closed to new Wonders.'], ['Guard Bram', 'Come back once the Academy has taught you.']]);
   }
-  function setParents() {
-    if (!F('c1:morning')) return;
-    setLines(npcBy('home', 'Mom'), [['Mom', 'Take a snack if you go out.'], ['Mom', 'Be home before the lanterns are lit.']]);
-    setLines(npcBy('home', 'Dad'), [['Dad', 'The hearth stays warm all day now.'], ['Dad', 'Old houses have their moods, I suppose.']]);
-  }
+  // Mom and Dad keep their own day (see PARENTS below); before the spell they cannot see the hontori
+  function setParents() { if (H.game && H.game.applySched) H.game.applySched(true); }
   function sync() { if (!ST.isDone('academy')) setGuard(); else openWoods(); setParents(); }
   H.onMapEnter = H.onMapEnter || [];
   H.onMapEnter.unshift(function () { sync(); });
+
+  // Mom and Dad: different places and words through the day. After the first morning they can see the hontori.
+  var PARENTS = {
+    mom: [
+      { from: 6, to: 11, x: 3, y: 3, dir: 0, lines: [['Mom', 'Eat something warm before you go, Wonder.'], ['Mom', 'Your little fox can have the crust.']] },
+      { from: 11, to: 17, x: 9, y: 10, dir: 3, lines: [['Mom', 'Out exploring? Good. Wave at Wren for me.'], ['Mom', 'Come home if you get tired.']] },
+      { from: 17, to: 21, x: 2, y: 3, dir: 0, lines: [['Mom', 'Soup tonight. The fox keeps the stove warm.'], ['Mom', 'Tell me one thing you learned today.']] },
+      { from: 21, to: 24, x: 15, y: 11, dir: 0, lines: [['Mom', 'Late again. I am proud of you.'], ['Mom', 'Bed soon, my brave one.']] },
+      { from: 0, to: 6, away: true }
+    ],
+    dad: [
+      { from: 6, to: 11, x: 4, y: 8, dir: 0, lines: [['Dad', 'Morning, Wonder. Big day?'], ['Dad', 'The road is yours. Just keep to the path.']] },
+      { from: 11, to: 17, x: 12, y: 5, dir: 2, lines: [['Dad', 'I am reading about the old schools.'], ['Dad', 'Eight elements, it says. You will see them all.']] },
+      { from: 17, to: 21, x: 15, y: 4, dir: 0, lines: [['Dad', 'The fire burns cleaner since your friend came.'], ['Dad', 'Any new hontori today?']] },
+      { from: 21, to: 24, x: 18, y: 8, dir: 2, lines: [['Dad', 'Still up? Me too. Old habits.'], ['Dad', 'Rest well. Tomorrow is another road.']] },
+      { from: 0, to: 6, away: true }
+    ]
+  };
+  (function () {
+    var home = H.maps && H.maps.home; if (!home) return;
+    (home.npcs || []).forEach(function (n) {
+      var plan = PARENTS[n.key]; if (!plan) return;
+      // the very first night they stay where the intro left them, with their old lines
+      var first = [{ from: 0, to: 24, lines: n.lines.slice() }];
+      Object.defineProperty(n, 'sched', { configurable: true, enumerable: true, get: function () { return F('c1:morning') ? plan : first; } });
+    });
+  })();
 
   // near the closed south edge, the guard calls out once per approach
   var gateArmed = true;
@@ -110,21 +137,56 @@ window.H = window.H || {};
     return gateArmed;
   }, run: function (a) {
     gateArmed = false;
-    return a.say('guard', 'Guard Bram', 'Hold on. The south road is closed to new wands.')
-      .then(function () { return a.say('guard', 'Guard Bram', 'Learn your craft at the Academy first.'); })
+    // Bram steps into the road in front of the kid
+    try { var p0 = pos(), gn = (H.game.npcs() || []).filter(function (n) { return n.key === 'guard'; })[0]; if (gn && p0) { gn.x = p0.x; gn.y = Math.min(V.h - 1, p0.y + 1); gn.px = gn.x * 16 + 8; gn.py = gn.y * 16 + 15; gn.dir = 1; gn.slot = -2; } } catch (e) {}
+    return a.say('guard', 'Guard Bram', 'Hold on, young Wonder. The south road is not safe for you yet.')
+      .then(function () { return a.say('guard', 'Guard Bram', 'When the Academy says you are ready, I will open the gate.'); })
       .then(function () { return a.say('hontori', 'The woods are deep, the road is long. First the Academy, then we are strong.'); });
   } });
 
+  // ---------------------------------------------------------------- the first night: explore the house, then bed
+  aim('night', 'bed', function () { return spot('home', 28, 3); });
+  ST.defineEvent({ id: 'c1_night', when: 'auto', map: 'home', cond: function (s) { return s.intro && !s.flags['c1:morning']; }, run: function (a) {
+    ST.start('night');
+    return a.say('hontori', 'Look around, but keep it light. Then off to bed, and sleep tight.');
+  } });
+  // the first night the door stays shut: Mom or Dad sends the kid to bed
+  function firstNight() { var s = S(); return !!(s.intro && !(s.flags && s.flags['c1:morning'])); }
+  var door0 = H.doorGuard;
+  H.doorGuard = function (door, mapName) {
+    if (mapName === 'home' && door.to === 'village' && firstNight()) return ST.run('c1_nightdoor');
+    return door0 ? door0(door, mapName) : null;
+  };
+  ST.defineEvent({ id: 'c1_nightdoor', when: 'manual', once: false, run: function (a) {
+    return a.say('mom', 'Mom', 'It is the middle of the night, sweetheart. Bed first.')
+      .then(function () { return a.say('hontori', 'The night is long, the road can wait. Your bed is warm, so do not be late.'); });
+  } });
+  // sleeping in the kid's bed that first night starts the morning
+  function hookBed() {
+    if (!H.interact || H.interact.__night) return; H.interact.__night = true;
+    var run0 = H.interact.run;
+    H.interact.run = function (t, c) {
+      if ((t === 'kid_bed' || t === 'bed') && firstNight()) return ST.run('c1_morning', c);
+      return run0.apply(this, arguments);
+    };
+  }
+  if (document.readyState === 'complete') setTimeout(hookBed, 0); else addEventListener('load', function () { setTimeout(hookBed, 0); });
+
   // ---------------------------------------------------------------- morning and the backpack
-  ST.defineEvent({ id: 'c1_morning', when: 'auto', map: 'home', cond: function (s) { return s.intro && !s.flags['c1:morning']; }, run: function (a) {
-    return a.blackout(function () { a.setTime(8); }, 1800)
+  ST.defineEvent({ id: 'c1_morning', when: 'manual', map: 'home', run: function (a) {
+    a.sfx('sleep');
+    return a.blackout(function () { a.setTime(8); }, 2200)
       .then(function () { return a.say('kid', 'Morning already.'); })
-      .then(function () { return a.say('mom', 'Mom', 'Good morning, sweetheart. You slept by the fireplace again.'); })
-      .then(function () { return a.say('mom', 'Mom', 'There is warm porridge on the stove.'); })
-      .then(function () { return a.say('dad', 'Dad', 'The chimney finally stopped grumbling.'); })
-      .then(function () { return a.say('dad', 'Dad', 'Wren says the old Academy opened its gate again.'); })
-      .then(function () { return a.say('hontori', 'They cannot see, and that is fine. Pack your bag, the sun will shine.'); })
-      .then(function () { return a.say('mom', 'Mom', 'Take what you need, five things fit in your bag.'); })
+      .then(function () { return a.say('mom', 'Mom', 'Good morning, sweetheart. You look like you have a secret.'); })
+      .then(function () { return a.say('hontori', 'They cannot see me, not just yet. Lift their veil, they will not forget.'); })
+      .then(function () { return a.draw('veil', 'Draw the V for Mom and Dad'); })
+      .then(function () { a.sfx('spell'); a.emit('magic', 60, 0, -10); return a.wait(900); })
+      .then(function () { return a.say('mom', 'Mom', 'Oh. A little fox made of fire.'); })
+      .then(function () { return a.say('dad', 'Dad', 'So the chimney was not grumbling. It was knocking.'); })
+      .then(function () { return a.say('mom', 'Mom', 'Grandma told us about Wonders. Kids who see. Be brave, and be kind.'); })
+      .then(function () { return a.say('dad', 'Dad', 'The old Academy opened its gate again. Go and learn.'); })
+      .then(function () { return a.say('mom', 'Mom', 'Look around the house. Five things fit in your bag.'); })
+      .then(function () { return a.say('hontori', 'Your family sees, your path is clear. Pack your bag, the day is here.'); })
       .then(function () {
         // the home items now lie around the house as small glowing pickups (src/items.js)
         a.setFlag('c1:morning'); setParents();

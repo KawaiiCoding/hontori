@@ -344,6 +344,8 @@ window.H = window.H || {};
     isDone: isDone, isActive: isActive, current: current, nextStep: nextStep,
     defineEvent: defineEvent, events: function () { return events; }, fire: fire, run: function (id, ctx) { var ev = events.filter(function (e) { return e.id === id; })[0]; return ev ? run(ev, ctx || { mapName: mapName }) : null; },
     api: api, openLog: openLog, idle: idle, tagNpcs: tagNpcs,
+    // a story talk is ready for this npc: skip the small talk and go straight to it
+    pendingTalk: function (n, mn) { return !!find('talk', { type: 'talk', npc: npcName(n), mapName: mn || mapName, object: n }); },
     get busy() { return running; },
     get env() { return env; },
     get mapName() { return mapName; }

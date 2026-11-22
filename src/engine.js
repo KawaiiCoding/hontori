@@ -68,7 +68,7 @@
       for (let y = 0; y < i.fh; y++) for (let x = 0; x < i.fw; x++) if (!(x === dx && y === dy)) block(b.x + x, b.y + y); });
     (map.passable || []).forEach(([x, y]) => { if (solid[y]) solid[y][x] = false; }); // e.g. stepping stones over a stream
     try { ambient = H.ambient && H.ambient.create ? H.ambient.create(map) : null; } catch (e) { console.warn(e); ambient = null; }
-    npcs = (map.npcs || []).map((n, i) => ({ ...n, seed: (n.x * 13 + n.y * 7 + i * 31) % 97 / 97, px: n.x * T + 8, py: n.y * T + 15 }));
+    npcs = (map.npcs || []).map((n, i) => ({ ...n, src: n, seed: (n.x * 13 + n.y * 7 + i * 31) % 97 / 97, px: n.x * T + 8, py: n.y * T + 15 }));
     const s = map.spawn || { x: 1, y: 1, dir: 0 };
     player.tx = tx ?? s.x; player.ty = ty ?? s.y; player.dir = dir ?? s.dir ?? 0;
     player.x = player.tx * T + 8; player.y = player.ty * T + 15; player.moving = false; camSnap = true;
@@ -79,10 +79,21 @@
     try { H.audio && H.audio.setScene(name, env); } catch (e) {}
     // story/quest hooks: listeners get (mapName, map) after every map load
     (H.onMapEnter || []).forEach(fn => { try { fn(name, map); } catch (e) { console.warn(e); } });
+    try { applySched(true); } catch (e) { console.warn(e); }
   }
 
   const tileAt = (x, y) => (grid[y] && grid[y][x]) || (env.indoor ? 'void' : 'grass');
-  const blocked = (x, y) => x < 0 || y < 0 || x >= map.w || y >= map.h || solid[y][x] || npcs.some(n => n.x === x && n.y === y) || !!(H.pickups && H.pickups.at(mapName, x, y));
+  function schedOf(n) { return (n.src && n.src.sched) || n.sched; }
+  function slotOf(n) { const h = env.time; return (schedOf(n) || []).findIndex(s => s.from <= s.to ? h >= s.from && h < s.to : h >= s.from || h < s.to); }
+  function applySched(force) {
+    npcs.forEach(n => { const sc = schedOf(n); if (!sc) return; const i = slotOf(n); if (i < 0 || (i === n.slot && sc === n.sc0)) return;
+      const s = sc[i], near = Math.abs(player.tx - n.x) + Math.abs(player.ty - n.y) < 7;
+      if (!force && near && !n.away && !s.away) return;
+      if (!force && near && (n.away || s.away) && !env.indoor) return;
+      n.slot = i; n.sc0 = sc; n.away = !!s.away; if (s.x != null) { n.x = s.x; n.y = s.y; n.px = s.x * T + 8; n.py = s.y * T + 15; } if (s.dir != null) n.dir = s.dir;
+      if (s.lines) n.lines = s.lines; });
+  }
+  const blocked = (x, y) => x < 0 || y < 0 || x >= map.w || y >= map.h || solid[y][x] || npcs.some(n => !n.away && n.x === x && n.y === y) || !!(H.pickups && H.pickups.at(mapName, x, y));
   let pickBump = ''; // the home item the kid last walked into (so holding the stick does not reopen the choice)
   const DIRS = [[0, 1], [0, -1], [-1, 0], [1, 0]];
 
@@ -329,7 +340,7 @@
     if (!st.intro) return;
     const mm = st.maxMana || 3; if (st.mana == null) st.mana = mm;
     // a long jump forward in time means a night in bed: mana is full again
-    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6) { (H.onSleep || []).forEach(fn => { try { fn(env, mapName); } catch (e) { console.warn(e); } }); if (st.mana < (st.maxMana || 3)) st.mana = st.maxMana || 3; (st.party || []).forEach(p => { if (p.maxHp) p.hp = p.maxHp; if (H.progress && H.progress.staMax) p.sta = H.progress.staMax(p.level); }); H.menu && H.menu.refresh && H.menu.refresh(); } }
+    if (lastTime != null) { const jump = (env.time - lastTime + 24) % 24; if (jump >= 6) { (H.onSleep || []).forEach(fn => { try { fn(env, mapName); } catch (e) { console.warn(e); } }); try { applySched(true); } catch (e) {} if (st.mana < (st.maxMana || 3)) st.mana = st.maxMana || 3; (st.party || []).forEach(p => { if (p.maxHp) p.hp = p.maxHp; if (H.progress && H.progress.staMax) p.sta = H.progress.staMax(p.level); }); H.menu && H.menu.refresh && H.menu.refresh(); } }
     lastTime = env.time;
     if (busy || menuOpen || st.mana >= mm) { if (st.mana >= mm) manaT = 0; return; }
     manaT += dt;
@@ -352,9 +363,10 @@
     else if (inp.act && H.ui && H.ui.isOpen()) { H.ui.advance(); }
     else if (!busy && !player.moving) {
       if (inp.act) {
-        const [ddx, ddy] = DIRS[player.dir]; const n = npcs.find(n => n.x === player.tx + ddx && n.y === player.ty + ddy);
+        const [ddx, ddy] = DIRS[player.dir]; const n = npcs.find(n => !n.away && n.x === player.tx + ddx && n.y === player.ty + ddy);
         if (n && n.lines) { busy = true; n.dir = [1, 0, 3, 2][player.dir]; sfx('confirm');
-          (async () => { n.talking = true; for (const l of n.lines.slice(0, 2)) await say(n.key, l[0], l[1]);
+          (async () => { n.talking = true; const story = n.svc === 'story:talk' && H.story && H.story.pendingTalk && H.story.pendingTalk(n, mapName);
+            if (!story) for (const l of n.lines.slice(0, 2)) await say(n.key, l[0], l[1]);
             // shopkeepers offer their service right after talking
             const svc = n.svc || { innkeeper: 'tavern_counter', shopkeeper: 'shop_counter' }[n.key]; // an npc may name its own service via npc.svc
             if (svc && H.interact && H.interact.has(svc)) { busy = true; try { await H.interact.run(svc, { say, toast: (t) => H.ui && H.ui.toast(t), emit, sfx, note: () => {}, env, map, mapName, x: n.px, y: n.py, player, hasSpirit: !!spirit, object: n, setTime: (h) => { env.time = h; }, fade: (ms) => (H.ui ? H.ui.fade(ms) : Promise.resolve()) }); } catch (e) { console.warn(e); } }
@@ -426,7 +438,7 @@
     (map.buildings || []).forEach(b => { const i = H.buildings.info[b.type], px = b.x * T, py = b.y * T;
       (i.lights || []).forEach(l => pushLight(l, px, py));
       ents.push({ y: py + i.fh * T, d: () => { H.fx.shadow(ctx, px + i.fw * 8, py + i.fh * T - 1, i.fw * 8 + 4, 6, env); H.buildings.draw(ctx, b.type, px, py, env); } }); });
-    npcs.forEach(n => ents.push({ y: n.py, d: () => { H.fx.shadow(ctx, n.px, n.py, 6, 2, env); H.chars.draw(ctx, n.key, n.px, n.py, n.dir || 0, 0, env, { npc: true, seed: n.seed, idle: n.idle, talking: n.talking }); } }));
+    npcs.forEach(n => !n.away && ents.push({ y: n.py, d: () => { H.fx.shadow(ctx, n.px, n.py, 6, 2, env); H.chars.draw(ctx, n.key, n.px, n.py, n.dir || 0, 0, env, { npc: true, seed: n.seed, idle: n.idle, talking: n.talking }); } }));
     ents.push({ y: player.y, d: () => { H.fx.shadow(ctx, player.x, player.y, 6, 2, env); H.chars.draw(ctx, 'kid', Math.round(player.x), Math.round(player.y), player.dir, player.frame, env); } });
     if (spirit) { lights.push({ x: spirit.x, y: spirit.y, r: 28, color: '#b8642a', flicker: true, soft: true });
       ents.push({ y: (spirit.gy ?? spirit.y + 10), d: () => { const gy = spirit.gy ?? spirit.y + 10, h = spirit.h || 0;
@@ -481,6 +493,7 @@
   }
   H.game.battle = startBattle;
   H.game.currentMap = () => ({ name: mapName, map, player, env, blocked, tileAt });
+  H.game.npcs = () => npcs; H.game.applySched = applySched;
 
   let last = performance.now();
   function loop(now) { checkSize(); const dt = Math.min(0.05, (now - last) / 1000); last = now; update(dt); render(); requestAnimationFrame(loop); }
@@ -502,5 +515,5 @@
   H.menu && H.menu.init(document.getElementById('root'));
   requestAnimationFrame(loop);
   setInterval(() => { if (H.game.state.intro && !busy) H.game.save(); }, 30000);
-  setInterval(() => H.ui && H.ui.hud(env, map.name || mapName), 1000);
+  setInterval(() => { H.ui && H.ui.hud(env, map.name || mapName); try { applySched(false); } catch (e) {} }, 1000);
 })();
