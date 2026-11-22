@@ -521,6 +521,9 @@ window.H = window.H || {};
   var H = window.H, busy = false, queue = [];
   var CSS = '.hg{position:absolute;inset:0;z-index:9000;background:transparent;opacity:0;transition:opacity .2s;pointer-events:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:Nunito,"M PLUS Rounded 1c",system-ui,-apple-system,sans-serif}' +
     '.hg.on{opacity:1}' +
+    '.hg-arrow{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}' +
+    '.hg-dart{transform-box:fill-box;transform-origin:center;animation:hgA .45s ease-in-out 2}' +
+    '@keyframes hgA{50%{transform:scale(1.45)}}' +
     '.hg-ring{position:absolute;border-radius:14px;box-shadow:0 0 0 3px rgba(255,214,120,.95),0 0 18px 4px rgba(255,190,90,.6);animation:hgP 1.4s ease-in-out infinite;pointer-events:none}' +
     '@keyframes hgP{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}' +
     '.hg-g{position:absolute;pointer-events:auto;display:flex;align-items:flex-start;gap:6px;max-width:min(300px,calc(100% - 20px));transition:left .35s ease,top .35s ease}' +
@@ -565,10 +568,10 @@ window.H = window.H || {};
     var W = R.width, Hh = R.height, gw = Math.min(300, W - 20), gh = g.offsetHeight || 70, x, y;
     // rule: the guide never covers what matters. Try spots next to the target, then top, middle and bottom bands,
     // and keep the one that hides the least of the target and of any visible button, card, panel or dialog.
-    var busyEls = [].slice.call(root.querySelectorAll('button, .hb-card, .hb-msg, .hb-intent, .hb-moves, .hb-bar, .hb-turn, .hb-tr, .hb-rule, .hm-sheet.on, .hui-dlg, .hk-btn, .hq, .hq-pill, .hq-pop, .hui-hud, .hm-top > *, .hm-party > *, .hui-toast, .hui-btn, input'))
+    var busyEls = [].slice.call(root.querySelectorAll('button, .hb-card, .hb-msg, .hb-intent, .hb-moves, .hb-bar, .hb-turn, .hb-tr, .hb-rule, .hm-sheet.on, .hui-dlg, .hk-btn, .hq, .hq-pill, .hq-pop, .hq-sheet, .hq-sheet *, .hm-sheet.on *, .hui-hud, .hm-top > *, .hm-party > *, .hui-toast, .hui-btn, input'))
       .filter(function (e) { return e.offsetParent !== null && !ov.contains(e); })
       .map(function (e) { var b = e.getBoundingClientRect(); return { x: b.left - R.left, y: b.top - R.top, w: b.width, h: b.height }; })
-      .filter(function (b) { return b.w > 0 && b.h > 0 && b.w * b.h < W * Hh * 0.6; });
+      .filter(function (b) { return b.w > 0 && b.h > 0 && b.w * b.h < W * Hh * 0.92; });
     try { if (H.ui.helperAvoid) busyEls = busyEls.concat(H.ui.helperAvoid() || []); } catch (e) {}
     function cover(cx, cy) {
       var c = 0;
@@ -587,6 +590,21 @@ window.H = window.H || {};
     });
     x = best[0]; y = best[1]; gw = best[3]; gh = best[4];
     g.style.left = x + 'px'; g.style.top = y + 'px'; g.style.width = gw + 'px';
+    // in battle only: a golden arrow from the bubble to the highlighted thing, so the eye follows it
+    if (tr && document.querySelector('.hb')) {
+      var bx = Math.max(x, Math.min(x + gw, tr.x + tr.w / 2)), by = tr.y + tr.h / 2 < y ? y : y + gh;   // leave from the bubble edge facing the target
+      var tx = tr.x + tr.w / 2, ty = tr.y + tr.h / 2 < y ? tr.y + tr.h + 6 : tr.y - 6;                    // stop just short of the ring
+      if (tx < x || tx > x + gw) bx = tx < x ? x : x + gw, by = Math.max(y + 8, Math.min(y + gh - 8, ty));
+      var dx = tx - bx, dy = ty - by, len = Math.sqrt(dx * dx + dy * dy);
+      if (len > 18) {
+        // one simple dart, the same shape as the compass arrow, right in front of the thing; it pulses twice
+        var ang = Math.atan2(dy, dx) * 180 / Math.PI, ax = tx - dx / len * 14, ay = ty - dy / len * 14;
+        var NS = 'http://www.w3.org/2000/svg', sv = document.createElementNS(NS, 'svg');
+        sv.setAttribute('class', 'hg-arrow'); sv.setAttribute('width', W); sv.setAttribute('height', Hh);
+        sv.innerHTML = '<g transform="translate(' + ax + ' ' + ay + ') rotate(' + ang + ')"><g class="hg-dart"><path d="M12 0 L-8 -9 L-3 0 L-8 9 Z" fill="#ffe2a0" stroke="#3a2410" stroke-width="2.5" stroke-linejoin="round"/></g></g>';
+        ov.insertBefore(sv, ov.firstChild);
+      }
+    }
     var gone = false;
     function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; ov.classList.remove('on'); setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); o.res(true); next(); }, 200); }
     // it never blocks: a tap on the bubble closes it, any other tap closes it and still goes through
