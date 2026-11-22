@@ -230,7 +230,7 @@
     var i = mk('div', 'inf', r); mk('div', 'nm', i, (it.name || it.id) + (it.n > 1 ? '  x' + it.n : '')).style.fontSize = '16px';
     var d = itemDesc(it); if (d) mk('div', 'sub', i, d).style.margin = '2px 0 0';
     var ax = PK ? PK.actions(it) : [], home = !!(PK && PK.spots[it.id]);
-    if (!ax.length || ax.every(function (x) { return x.label === 'Put back'; })) mk('span', 'hm-tag', i.firstChild, PASSIVE[it.id] || 'In use').style.marginLeft = '8px';
+    if (!ax.length || ax.every(function (x) { return x.label === 'Put back'; })) (function (tg) { tg.style.marginLeft = 'auto'; tg.style.flex = 'none'; })(mk('span', 'hm-tag', i.firstChild, PASSIVE[it.id] || 'In use'));
     if (!(PK ? PK.isKey(it.id) : /^(wand|map|novice_cert|grey_letter|ring_.*)$/.test(it.id))) {
       var stuck = PK && PK.held ? PK.held(it.id) : null, atHome = ax.some(function (x) { return x.label === 'Put back'; });
       if (stuck) ax.forEach(function (x) { if (x.label === 'Put back') { x.off = true; x.desc = 'Take one other thing out first'; } });
