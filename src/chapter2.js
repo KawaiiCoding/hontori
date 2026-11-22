@@ -119,7 +119,7 @@ window.H = window.H || {};
       .then(function () { return a.choose(['Begin the ring duel', 'Not yet']); })
       .then(function (i) {
         if (i !== 0) return a.say('warden', 'Warden Fern', 'Roots do not hurry. Neither do I.');
-        return a.battle('grass', { trainer: { name: 'Warden Fern', key: 'warden', spirit: 'grass', level: 6, stage: 2, noCapture: true, noSwitch: true }, noCapture: true })
+        return a.battle('grass', { trainer: { name: 'Warden Fern', key: 'warden', spirit: 'sunsprout', level: 6, stage: 2, noCapture: true, noSwitch: true, school: { name: 'Rootwood Hall', el: 'grass', col: '#7ed957', rule: 'No switching' } }, noCapture: true })
           .then(function (r) {
             var party = S().party || []; party.forEach(function (p) { if (p && p.hp <= 0) p.hp = 1; });
             if (!r || !r.won) return a.say('warden', 'Warden Fern', 'Not this time. Rest, think, and come back.');

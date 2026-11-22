@@ -699,7 +699,21 @@
     '.hb-banner .wx{margin-top:4px;font-size:12px;font-weight:800;opacity:.8}',
     '.hb-end{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:0;border-radius:999px;padding:14px 30px;font:inherit;font-size:18px;font-weight:900;color:#2a1405;background:linear-gradient(180deg,#ffd98a,#ff9a3c);box-shadow:0 5px 0 #a8501c;cursor:pointer}',
     '.hb-tr{position:absolute;left:10px;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:999px;background:rgba(14,16,36,.84);font-weight:900;font-size:12px;pointer-events:none}',
-    '.hb-tr canvas{position:static;width:30px;height:30px;border-radius:50%;background:#2a2c48}'
+    '.hb-tr canvas{position:static;width:30px;height:30px;border-radius:50%;background:#2a2c48}',
+    '.hb-school{box-shadow:inset 0 0 0 3px var(--sc),inset 0 0 60px color-mix(in srgb,var(--sc) 35%,transparent)}',
+    '.hb-school .hb-card{border-color:color-mix(in srgb,var(--sc) 70%,#fff)}',
+    '.hb-rule{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 106px);padding:4px 10px;border-radius:10px;font-size:11px;font-weight:900;letter-spacing:.3px;background:color-mix(in srgb,var(--sc) 30%,#0e1024);border:2px solid var(--sc);pointer-events:none}',
+    '.hb-title{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--sc) 45%,#0b0c1c),#06070f 70%);animation:hbtIn .6s ease-out both;cursor:pointer}',
+    '.hb-title.out{animation:hbtOut .5s ease-in both}',
+    '.hb-title .crest{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,color-mix(in srgb,var(--sc) 60%,#fff) 0,var(--sc) 45%,#14162e 72%);box-shadow:0 0 0 4px #ffd98a,0 0 40px var(--sc);animation:hbtSpin 2.6s ease-in-out both}',
+    '.hb-title .crest img{width:64px;height:64px;image-rendering:pixelated}',
+    '.hb-title small{margin-top:14px;font-size:13px;font-weight:900;letter-spacing:6px;text-transform:uppercase;color:#ffd98a}',
+    '.hb-title b{font-size:clamp(26px,8vw,40px);font-weight:900;text-shadow:0 0 18px var(--sc),0 3px 0 #000}',
+    '.hb-title span{font-size:16px;font-weight:800;opacity:.9}',
+    '.hb-title em{margin-top:8px;font-style:normal;font-size:13px;font-weight:900;padding:5px 14px;border-radius:12px;border:2px solid var(--sc);background:rgba(0,0,0,.35)}',
+    '@keyframes hbtIn{from{opacity:0;transform:scale(1.15)}to{opacity:1;transform:none}}',
+    '@keyframes hbtOut{to{opacity:0;transform:scale(.92)}}',
+    '@keyframes hbtSpin{from{transform:rotate(-200deg) scale(.2)}55%{transform:rotate(10deg) scale(1.08)}to{transform:none}}'
   ].join('\n');
   var ICON = {
     swap: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 H18 M14 4 L18 8 L14 12 M20 16 H6 M10 12 L6 16 L10 20"/></svg>',
@@ -809,7 +823,17 @@
     var swBtn = mk('button', 'hb-btn hb-ic', bar, pxIc('swap', ICON.swap) + '<span class="tl">Switch</span>'), escBtn = mk('button', 'hb-btn hb-ic hb-esc', bar, pxIc('run', ICON.esc) + '<span class="tl">Escape</span><span class="m"><b></b><b></b><b></b></span>');
     swBtn.setAttribute('aria-label', 'Switch'); escBtn.setAttribute('aria-label', 'Escape');
     var strip = mk('div', 'hb-strip', el); strip.hidden = true;
-    if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Rival') + ' - practice duel'); }
+    if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Rival') + (TR.school ? ' - Ring Duel' : ' - practice duel')); }
+    // great schools: a themed frame, the trial's rule always visible, and a title card before the duel
+    var SCH = TR && TR.school;
+    if (SCH) {
+      el.classList.add('hb-school'); el.style.setProperty('--sc', SCH.col || '#ffd98a');
+      if (SCH.rule) mk('div', 'hb-rule', el, 'Rule: ' + SCH.rule);
+      var card0 = mk('div', 'hb-title', el), ic0 = ''; try { ic0 = '<img alt="" src="' + H.icons.url(SCH.el, 4) + '">'; } catch (e) {}
+      card0.innerHTML = '<div class="crest">' + ic0 + '</div><small>Ring Duel</small><b>' + SCH.name + '</b><span>' + (TR.name || '') + '</span>' + (SCH.rule ? '<em>' + SCH.rule + '</em>' : '');
+      var hideCard = function () { card0.classList.add('out'); setTimeout(function () { card0.remove(); }, 500); };
+      card0.addEventListener('click', hideCard); setTimeout(hideCard, 2600); sfx('spell');
+    }
     var banner = mk('div', 'hb-banner', el);
     var endBtn = mk('button', 'hb-end', el, 'Continue'); endBtn.hidden = true;
     requestAnimationFrame(function () { el.classList.add('on'); });

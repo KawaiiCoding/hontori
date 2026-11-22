@@ -15,9 +15,15 @@ Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CO
 - Ash renamed Cole (store safety). No "trainer" or "tall grass" wording.
 - Chapter 2: Mossgrove, Rootwood Hall, the Leaf Ring.
 
+## Schools (plan in STORY.md, order by difficulty)
+- Done: 1 Rootwood Hall (grass): Root Maze push puzzle, wand trial, Ring Duel with no switching vs Warden Fern (Sunsprout, grass/light), title card and themed frame (TR.school = { name, el, col, rule }).
+- Next: 2 Spire of Gales (wind) at Whistling Pass, reached when the rockslide east of Mossgrove is cleared. Gust-riding cliff path puzzle (H.puzzles can grow a 'gust' piece), duel in strong wind.
+- Two-element hontori (src/spirits.js DUAL) belong to teachers and students of the great schools and to rare wild places near each school.
+
 ## Open after this round
 - Element Bloom shell is drawn smooth; redraw it in pixel style to match the game.
-- Rootwood Hall uses the Academy building (purple roof): give it a green roof and its own crest.
+- Rootwood Hall outside still uses the Academy building (purple roof): give it a green roof and its own crest.
+- The Backpack Charm from the shop has no effect yet.
 - Mossgrove houses have no interiors yet; Pell and Rowan need time-of-day lines.
 - Chapter 3 (Tidewell) starts at the washed-out bridge east of Mossgrove.
 - Delete or move the three Pokemon-cover mp3 files out of the project folder before any app build.
