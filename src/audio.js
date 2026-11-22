@@ -75,6 +75,18 @@ window.H = window.H || {};
       }
     }
   };
+  // duels: a steady, focused tune in D minor. Driving bass pulse, clear plucked melody, nothing harsh.
+  SONGS.duel = {
+    bpm: 116, bpb: 4, style: 'duel', transpose: 0, form: ['A', 'B', 'A', 'B'],
+    sections: {
+      A: { ch: 'Dm Bb C Am Dm Bb Gm A7',
+        mel: 'D5:.5 F5:.5 A5:1 G5:.5 F5:.5 E5:1 | D5:.5 F5:.5 Bb5:1 A5:.5 G5:.5 F5:1 | E5:.5 G5:.5 C6:1 Bb5:.5 A5:.5 G5:1 | A5:1.5 E5:.5 C5:1 E5:1 | ' +
+             'F5:.5 A5:.5 D6:1 C6:.5 A5:.5 F5:1 | G5:.5 F5:.5 D5:1 F5:.5 G5:.5 Bb5:1 | A5:1 G5:.5 F5:.5 E5:1 G5:1 | A5:2 C#5:1 E5:1' },
+      B: { ch: 'F C Gm Dm Bb F Gm A7',
+        mel: 'C6:1.5 A5:.5 F5:1 A5:1 | G5:1.5 E5:.5 C5:1 E5:1 | D5:.5 G5:.5 Bb5:1 A5:.5 G5:.5 D5:1 | F5:2 A5:1 F5:1 | ' +
+             'D6:1 C6:.5 Bb5:.5 A5:1 F5:1 | A5:1 G5:.5 F5:.5 C5:2 | Bb4:.5 D5:.5 G5:1 F5:.5 E5:.5 D5:1 | E5:1 C#5:1 A4:2' }
+    }
+  };
   // calm night variant of the village tune: slower, lower key, fewer voices
   SONGS.village_night = {
     bpm: 76, bpb: 4, style: 'nocturne', transpose: -2, form: ['A', 'B', 'A2'],
@@ -97,6 +109,9 @@ window.H = window.H || {};
           if (style === 'lullaby') {
             add(t, n.m, n.d, 'box', 0.34 * acc);
             if (repeat && n.d >= 2) add(t + 1, n.m + 12, 1, 'box', 0.09);
+          } else if (style === 'duel') {
+            add(t, n.m, n.d, 'pluck', 0.3 * acc);
+            if (isB && n.d >= 1) add(t, n.m - 12, n.d, 'soft', 0.08);
           } else if (style === 'pastoral') {
             add(t, n.m, n.d, 'pluck', 0.36 * acc);
             if (isB) add(t, n.m - 12, n.d, 'soft', 0.1);
@@ -125,6 +140,11 @@ window.H = window.H || {};
               add(bt + 2, c[2] + 24, 1, 'box', 0.06);
               if (repeat && b % 2 === 1) add(bt + 2.5, c[0] + 36, 0.5, 'box', 0.045);
             }
+          } else if (style === 'duel') {
+            // a steady eighth-note pulse (root and fifth), a quiet pad, a soft lift on beats 2 and 4
+            for (k = 0; k < cd * 2; k++) add(ct + k * 0.5, (k % 4 === 3 ? c[2] : c[0]) - 12, 0.45, 'bass', k % 2 ? 0.13 : 0.19);
+            for (k = 0; k < 3; k++) add(ct, c[k] + 12, cd, 'pad', 0.045);
+            for (k = 1; k < cd; k += 2) add(ct + k, c[1] + 24, 0.4, 'box', 0.045);
           } else if (style === 'pastoral') {
             add(ct, c[0] - 12, 1, 'bass', 0.3);
             if (cd >= 4) {
@@ -348,7 +368,9 @@ window.H = window.H || {};
   }
 
   // ------------------------------------------------------------------ music scheduler
+  var forceKey = null;   // a battle can ask for its own tune
   function musicKey(mapName, env) {
+    if (forceKey) return forceKey;
     if (mapName === 'home') return 'home';
     if (mapName == null) return env && env.indoor ? 'home' : null;
     return isNight(env) ? 'village_night' : 'village';
@@ -536,6 +558,12 @@ window.H = window.H || {};
           else { if (ctx.resume) ctx.resume(); if (silentEl) { var pr = silentEl.play(); if (pr && pr.catch) pr.catch(function () {}); } }
         });
       }
+    },
+    // battle music: H.audio.battle('duel') during a duel, H.audio.battle(null) after
+    battle: function (key) {
+      forceKey = key && SONGS[key] ? key : null;
+      wantKey = musicKey(curMap, lastEnv) || wantKey;
+      if (ctx && ctx.state === 'running' && wantKey) startTune(wantKey);
     },
     setScene: function (mapName, env) {
       curMap = mapName;

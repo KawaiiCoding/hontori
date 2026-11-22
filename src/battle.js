@@ -837,6 +837,8 @@
     var strip = mk('div', 'hb-strip', el); strip.hidden = true;
     if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Rival') + (TR.school ? ' - Ring Duel' : '')); }
     // great schools: a themed frame, the trial's rule always visible, and a title card before the duel
+    // duels have their own steady tune; the world music comes back after
+    if (TR) try { H.audio && H.audio.battle && H.audio.battle('duel'); } catch (e) {}
     var SCH = TR && TR.school;
     if (SCH) {
       el.classList.add('hb-school'); el.style.setProperty('--sc', SCH.col || '#ffd98a');
@@ -1510,7 +1512,7 @@
 
     return new Promise(function (resolve) {
       function close() {
-        if (ended) return; ended = true; live = false; if (H.ui) H.ui.helperAvoid = null; el.classList.remove('on'); window.removeEventListener('resize', size); setTimeout(function () { el.remove(); }, 350);
+        if (ended) return; ended = true; live = false; if (H.ui) H.ui.helperAvoid = null; try { H.audio && H.audio.battle && H.audio.battle(null); } catch (e) {} el.classList.remove('on'); window.removeEventListener('resize', size); setTimeout(function () { el.remove(); }, 350);
         // report who fought so EXP is shared; progress marks itself handled
         var P = H.progress;
         if (P && typeof P.onBattleEnd === 'function' && !opts.noProgress) {
