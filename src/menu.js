@@ -40,6 +40,14 @@
     '.hm-row .sub{font-size:13px;opacity:.75;margin:2px 0 6px;white-space:pre-wrap}',
     '.hm-bar{height:8px;border-radius:4px;background:rgba(0,0,0,.5);overflow:hidden}',
     '.hm-bar b{display:block;height:100%;background:linear-gradient(90deg,#57d07a,#9cf0a6)}',
+    '.hm-pouch{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:0 0 10px;border-radius:16px;background:linear-gradient(180deg,#6a4426,#4a2e18);border:2px solid #c8925a;box-shadow:inset 0 2px 0 rgba(255,220,160,.25),0 4px 10px rgba(0,0,0,.3)}',
+    '.hm-pouch .pi{width:42px;height:42px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 30%,#ffe9a8,#c8902a);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}.hm-pouch .pi img{width:26px;height:26px;image-rendering:pixelated}',
+    '.hm-pouch .pt{display:flex;flex-direction:column;gap:2px}.hm-pouch b{font-size:16px;font-weight:900;color:#ffe2b0}.hm-pouch span{font-size:12px;font-weight:700;color:#f4dcc0;opacity:.9}',
+    '.hm-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}',
+    '.hm-slot2{position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:14px;border:2px solid rgba(200,146,90,.45);background:radial-gradient(circle at 50% 40%,rgba(255,220,170,.12),rgba(40,28,20,.55));color:#fff;font:inherit;cursor:pointer;padding:4px}',
+    '.hm-slot2 canvas{width:32px;height:32px;image-rendering:pixelated}.hm-slot2 small{font-size:10px;font-weight:900;color:#ffd98a}.hm-slot2 .n{position:absolute;right:5px;top:3px;font-style:normal;font-size:10px;font-weight:900;background:rgba(0,0,0,.5);border-radius:6px;padding:0 4px}',
+    '.hm-slot2.on{border-color:#ffd98a;box-shadow:0 0 10px rgba(255,217,138,.4)}',
+    '.hm-slotinfo{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13px;font-weight:700;line-height:1.4;color:#e8e0d0}.hm-slotinfo b{font-size:15px;color:#fff}.hm-slotinfo span{color:#ffd98a}',
     '.hm-tabs{display:flex;gap:6px;margin:0 0 10px}.hm-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:12px;border:2px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;font:inherit;cursor:pointer}',
     '.hm-tab img{width:22px;height:22px;image-rendering:pixelated;margin-bottom:2px}.hm-tab b{font-size:12.5px;font-weight:900;white-space:nowrap}.hm-tab small{font-size:11px;font-weight:800;opacity:.65}.hm-tab.on{border-color:#ffc56b;background:rgba(255,197,107,.16)}',
     '.hm-purse{display:flex;align-items:center;gap:10px;margin:2px 0 10px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.06)}.hm-purse .pl{font-weight:900;font-size:14px;margin-right:auto}',
@@ -295,8 +303,17 @@
       if (bagTab === 'supply' && by.supply.length) { var s2 = mk('div', 'hm-sec', els.sheet); note('Used up in battle. No pocket needed.', s2).style.margin = '0 0 6px'; by.supply.forEach(function (it) { bagRow(it, s2, PK); }); }
       if (bagTab === 'key' && by.key.length) { var s3 = mk('div', 'hm-sec', els.sheet); note('Always with you. They cannot be dropped.', s3).style.margin = '0 0 6px'; by.key.forEach(function (it) { bagRow(it, s3, PK); }); }
       if (bagTab === 'trade' && by.trade.length) {
-        var ps = bagSec('Trade pouch   worth ' + MON.fmt(MON.pouchValue()), 'coin', 'Sell these at Nettle\'s shop. No pocket needed.');
-        by.trade.forEach(function (it) { var r = mk('div', 'hm-row', ps); r.style.padding = '6px 10px'; var cc = itemCanvas(it); cc.className = 'itm'; r.appendChild(cc); var inf = mk('div', 'inf', r); mk('div', 'nm', inf, TR[it.id][0] + (it.n > 1 ? '  x' + it.n : '')); mk('div', 'sub', inf, TR[it.id][3] + '  ' + MON.fmt(MON.value(it.id)) + ' each'); });
+        // the merchant pouch: a leather pouch header with what it is all worth, then the finds as slots
+        var pv = MON.pouchValue(), ph = mk('div', 'hm-pouch', els.sheet), pic = mk('div', 'pi', ph); pic.appendChild(K().img('coin'));
+        var pt = mk('div', 'pt', ph); mk('b', '', pt, 'Merchant pouch'); mk('span', '', pt, 'Worth ' + MON.fmt(pv) + '. Nettle buys it all.');
+        var grid = mk('div', 'hm-slots', els.sheet), sel = null, info = mk('div', 'hm-slotinfo', els.sheet);
+        info.textContent = 'Tap a find to read about it.';
+        by.trade.forEach(function (it) {
+          var c = mk('button', 'hm-slot2', grid), cc = itemCanvas(it); c.appendChild(cc);
+          if ((it.n || 1) > 1) mk('i', 'n', c, 'x' + it.n);
+          mk('small', '', c, MON.fmt(MON.value(it.id)).replace(/ (gold|silver|copper)/g, function (m, w) { return w[0]; }));
+          c.addEventListener('click', function () { if (sel) sel.classList.remove('on'); sel = c; c.classList.add('on'); info.innerHTML = '<b>' + TR[it.id][0] + (it.n > 1 ? '  x' + it.n : '') + '</b><br>' + TR[it.id][3] + '<br><span>' + MON.fmt(MON.value(it.id)) + ' each</span>'; });
+        });
       }
     } else if (open === 'party') {
       header('Your Hontori', 'paw', st.party.length + ' of ' + MAX + ' travel with you');
