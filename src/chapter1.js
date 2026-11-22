@@ -97,7 +97,10 @@ window.H = window.H || {};
   }
   // Mom and Dad keep their own day (see PARENTS below); before the spell they cannot see the hontori
   function setParents() { if (H.game && H.game.applySched) H.game.applySched(true); }
-  function sync() { if (!ST.isDone('academy')) setGuard(); else openWoods(); setParents(); }
+  function sync() {
+    if (!ST.isDone('academy')) setGuard(); else openWoods(); setParents();
+    if (S().academy) setLines(npcBy('village', 'Gatekeeper'), [['Gatekeeper', 'Welcome back, young Wonder. The doors are open to you.'], ['Gatekeeper', 'Madam Sorrel is inside.']]);
+  }
   H.onMapEnter = H.onMapEnter || [];
   H.onMapEnter.unshift(function () { sync(); });
 

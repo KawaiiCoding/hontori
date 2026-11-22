@@ -140,6 +140,8 @@ window.H = window.H || {};
     { key: 'fisher', x: 46, y: 9, dir: 3, lines: [['Old Oru', 'The river is quiet today.'], ['Old Oru', 'Something big stirs upstream.']] },
     { key: 'grandma', x: 11, y: 12, dir: 1, lines: [['Grandma Ula', 'I feed the ducks every morning.'], ['Grandma Ula', 'The pond sparkles back if you wait.']] },
     { key: 'farmer', x: 7, y: 17, dir: 0, lines: [['Farmer Hob', 'Apples are nearly ripe.'], ['Farmer Hob', 'Help yourself to a windfall.']] },
+    // the Academy gatekeeper stands beside the door; he holds the sight test before the first visit
+    { key: 'gatekeeper', x: 32, y: 10, dir: 2, lines: [['Gatekeeper', 'Only open eyes may enter the Academy.'], ['Gatekeeper', 'Walk up to the door when you are ready.']] },
     { key: 'guard', x: 32, y: 37, dir: 0, lines: [['Guard Bram', 'The south gate is open.'], ['Guard Bram', 'Take a friend into the meadows.']] },
     { key: 'gardener', x: 57, y: 13, dir: 2, lines: [['Ivy', 'These flowers hum at dusk.'], ['Ivy', 'Please step around the seedlings.']] },
     { key: 'traveler', x: 56, y: 24, dir: 2, lines: [['Rowan', 'I walked a long way to see your fair.'], ['Rowan', 'Your village feels warm.']] },

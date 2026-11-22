@@ -108,6 +108,7 @@ window.H = window.H || {};
     els.place = mk('span', 'pl', els.hud);
     mk('span', 'sep', els.hud);
     els.time = mk('span', 'tm', els.hud);
+    els.wSep = mk('span', 'sep', els.hud); els.wTxt = mk('span', 'tm', els.hud);   // weather in words when it matters (Windy, Rain...)
 
     els.dlg = mk('div', 'hui-dlg', o);
     els.por = mk('div', 'hui-por none', els.dlg);
@@ -389,6 +390,8 @@ window.H = window.H || {};
     els.wIcon.title = w;
     els.place.textContent = placeName || '';
     els.time.textContent = timeStr;
+    var WN = { wind: 'Windy', rain: 'Rain', storm: 'Storm', snow: 'Snow', fog: 'Fog', cloudy: 'Cloudy' };
+    els.wTxt.textContent = showW ? (WN[w] || '') : ''; els.wTxt.hidden = els.wSep.hidden = !showW;
   }
 
   // ---- toast ----

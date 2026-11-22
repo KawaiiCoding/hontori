@@ -202,12 +202,12 @@ window.H = window.H || {};
     w = w < 0 ? 0 : w > 1 ? 1 : w;
     var h1 = hash(px | 0, py | 0), h2 = hash((py | 0) + 91, (px | 0) + 17);
     // a gust front crosses the map from the left (the grass uses the same front), trees follow a beat later
-    var gust = Math.sin(t * 1.5 - px * 0.02625 - py * 0.01 - 0.6) * 0.5 + 0.5; gust *= gust;
+    var gust = Math.sin(t * 0.9 - px * 0.02625 - py * 0.01 - 0.6) * 0.5 + 0.5; gust *= gust;
     var lean = w * (1.5 + 9 * gust) +
-               Math.sin(t * (0.9 + w * 1.4) + h1 * 6.283) * (0.9 + w * 2.2) +
-               Math.sin(t * (2.3 + w * 2) + h2 * 6.283) * (0.3 + w * 0.9);
+               Math.sin(t * (0.6 + w * 0.7) + h1 * 6.283) * (0.9 + w * 2.0) +
+               Math.sin(t * (1.3 + w * 0.9) + h2 * 6.283) * (0.3 + w * 0.7);   /* calm, slow sways; wind makes them bigger, not frantic */
     var b = Math.round(lean * amp); b = b < W_BMIN ? W_BMIN : b > W_BMAX ? W_BMAX : b;
-    var p = Math.floor(t * (2.5 + w * 9) + h2 * W_PH) % W_PH; if (p < 0) p += W_PH;
+    var p = Math.floor(t * (1.4 + w * 3) + h2 * W_PH) % W_PH; if (p < 0) p += W_PH;
     var k = (b - W_BMIN) * W_PH + p, c = s.frames[k] || (s.frames[k] = windFrame(s, b, p));
     ctx.drawImage(c, Math.round(px + s.ox) - W_PL, Math.round(py + s.oy) - W_PT, c.width / WK, c.height / WK);
   }
