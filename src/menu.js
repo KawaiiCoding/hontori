@@ -46,7 +46,8 @@
     '.hm-act{flex:1;min-width:120px;border:0;border-radius:14px;padding:14px 10px;font:inherit;font-weight:900;font-size:16px;color:#14162a;background:#8fd0ff;cursor:pointer}',
     '.hm-act.warn{background:rgba(255,255,255,.12);color:#ffb3a8}',
     '.hm-note{font-size:13px;opacity:.7;margin-top:10px;line-height:1.35}',
-    '.hm-bar.xp{height:6px;margin-top:4px}.hm-bar.xp b{background:linear-gradient(90deg,#6fb8ff,#bfe4ff)}.hm-bar.wd b{background:linear-gradient(90deg,#ffb54a,#ffe6a0)}',
+    '.hm-bar.lb{position:relative;height:14px;margin-top:4px}.hm-bar.lb span{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:0 6px;font-size:10px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000}.hm-bar.lb em{font-style:normal}.hm-bar.st b{background:linear-gradient(90deg,#e0a83a,#ffd98a)}',
+    '.hm-bar.xp{height:6px;margin-top:4px}.hm-bar.xp.lb{height:14px}.hm-bar.xp b{background:linear-gradient(90deg,#6fb8ff,#bfe4ff)}.hm-bar.wd b{background:linear-gradient(90deg,#ffb54a,#ffe6a0)}',
     '.hm-btns{display:flex;flex-direction:column;gap:6px;flex:none}',
     '.hm-sec{margin-top:16px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1)}',
     '.hm-sec h3{margin:0 0 6px;font-size:17px;font-weight:900}',
@@ -78,7 +79,7 @@
   function P() { return H.progress; }
   function stageName(p) { try { return P() ? P().stageName(p.key, p.stage || 1) : spec(p.key).name; } catch (e) { return spec(p.key).name; } }
   function xpFrac(p) { try { return P() ? Math.min(1, (p.exp || 0) / P().need(p.level || 1)) : 0; } catch (e) { return 0; } }
-  function bar(parent, frac, cls) { var b = mk('div', 'hm-bar' + (cls ? ' ' + cls : ''), parent), f = mk('b', '', b); f.style.width = Math.round(100 * Math.max(0, Math.min(1, frac))) + '%'; return b; }
+  function bar(parent, frac, cls, label, val) { var b = mk('div', 'hm-bar' + (cls ? ' ' + cls : '') + (label ? ' lb' : ''), parent), f = mk('b', '', b); f.style.width = Math.round(100 * Math.max(0, Math.min(1, frac))) + '%'; if (label) { var t = mk('span', '', b); mk('em', '', t, label); mk('em', '', t, val); } return b; }
   var sel = null, confirmRel = false, swapPick = false, moveFor = null;
   var GLYPH = {
     attack: '<path d="M5 25 L15 5 L25 25 Z" />', mend: '<circle cx="15" cy="15" r="10" />', stun: '<path d="M11 4 L21 12 L9 18 L19 26" />',
@@ -177,7 +178,8 @@
     if (mending || mn < 1 || p.hp >= p.maxHp) return;
     mending = true; hide();
     H.ui && H.ui.helper && H.ui.helper('mend', 'Mend', 'Draw a circle to heal. It costs one mana.', 'mend');
-    var ask = H.gesture && H.gesture.prompt ? Promise.resolve(H.gesture.prompt('mend', 'Draw a circle to mend')) : Promise.resolve();
+    var pips = ''; for (var q = 0; q < mm; q++) pips += '<span style="display:inline-block;width:12px;height:12px;margin:0 2px;border-radius:50%;border:2px solid #9fd0ff;vertical-align:middle;' + (q < mn ? 'background:' + (q === mn - 1 ? '#ffd98a' : '#7fc8ff') : '') + '"></span>';
+    var ask = H.gesture && H.gesture.prompt ? Promise.resolve(H.gesture.prompt('mend', 'Draw a circle to mend', 'Mana ' + pips + ' ' + mn + ' / ' + mm + '. Mend uses 1 (the gold one).')) : Promise.resolve();
     ask.then(function () {
       var cur = st.mana == null ? mm : st.mana;
       if (cur >= 1 && p.hp < p.maxHp) {
@@ -199,6 +201,15 @@
     return d ? String(d).split(/(?<=\.)\s/)[0] : '';
   }
 
+  // passive things work by themselves: they show a small tag instead of a button
+  var PASSIVE = { lantern: 'In use at night', compass: 'In use', mirror: 'In use', map: 'Map button', wand: 'Always with you', herb: 'Used in battle', bread: 'Used in battle', ember_dust: 'Used in battle', tide_pearl: 'Used in battle', spirit_snack: 'Used in battle', backpack: 'In use', cookbook: 'Use at a stove', slingshot: 'Use at fruit trees' };
+  function dropItem(it) {
+    var st = game().state, i = st.items.indexOf(it); if (i < 0) return;
+    if (it.id === 'backpack' && H.pickups && H.pickups.count() > 5) { H.ui && H.ui.toast('Take one thing out first'); return; }
+    if (it.n > 1) it.n--; else st.items.splice(i, 1);
+    H.ui && H.ui.toast(it.name + ((H.pickups && H.pickups.spots[it.id]) ? ' goes back home' : ' dropped'));
+    game().save && game().save();
+  }
   function render() {
     var g = game(), st = g.state; els.sheet.innerHTML = '';
     if (open === 'bag') {
@@ -210,7 +221,10 @@
         var i = mk('div', 'inf', r); mk('div', 'nm', i, it.name + (it.n > 1 ? '  x' + it.n : '')).style.fontSize = '16px';
         var d = (H.pickups && H.pickups.uses[it.id]) || itemDesc(it); if (d) mk('div', 'sub', i, d).style.margin = '2px 0 0';
         var ax = H.pickups ? H.pickups.actions(it) : [];
-        if (ax.length) { var ab = mk('div', 'hm-btns', i); ab.style.cssText = 'flex-direction:row;flex-wrap:wrap;margin-top:6px'; ax.forEach(function (x) { var bt = kb(ab, { label: x.label, desc: x.desc, kind: 'alt', sm: true, onClick: function () { if (x.off) return; if (x.label !== 'Put back') hide(); x.run(); if (open) render(); } }); bt.disabled = !!x.off; }); }
+        var KEY = { wand: 1, map: 1, novice_cert: 1 };
+        if (!KEY[it.id]) ax = ax.concat([{ label: 'Drop', desc: (H.pickups && H.pickups.spots[it.id]) ? 'It goes back home' : 'Leave one here', drop: true, run: function () { dropItem(it); } }]);
+        if (!(H.pickups ? H.pickups.actions(it) : []).length) mk('span', 'hm-tag', i.firstChild, PASSIVE[it.id] || 'In use');
+        if (ax.length) { var ab = mk('div', 'hm-btns', i); ab.style.cssText = 'flex-direction:row;flex-wrap:wrap;margin-top:6px'; ax.forEach(function (x) { var bt = kb(ab, { label: x.label, desc: x.desc, kind: 'alt', sm: true, onClick: function () { if (x.off) return; if (x.drop && !bt._sure) { bt._sure = 1; bt.querySelector('span span').textContent = 'Drop it?'; return; } if (x.label !== 'Put back' && !x.drop) hide(); x.run(); if (open) render(); } }); bt.disabled = !!x.off; }); }
       });
     } else if (open === 'party') {
       header('Your Hontori', 'paw', st.party.length + ' of ' + MAX + ' travel with you');
@@ -224,8 +238,11 @@
         var inf = mk('div', 'inf', row), nm = mk('div', 'nm', inf); nm.appendChild(document.createTextNode(displayName(p)));
         try { if (H.ui && H.ui.elementBadge) nm.appendChild(H.ui.elementBadge(s.element)); } catch (e) {}
         if (i === 0) mk('span', 'hm-tag', nm, 'LEAD');
-        mk('div', 'sub', inf, stageName(p) + '   Lv ' + p.level + '   Health ' + p.hp + ' / ' + p.maxHp);
-        bar(inf, p.hp / p.maxHp); bar(inf, xpFrac(p), 'xp');
+        mk('div', 'sub', inf, stageName(p) + '   Lv ' + p.level);
+        var smx = P() && P().staMax ? P().staMax(p.level) : 0, need = P() ? P().need(p.level || 1) : 0;
+        bar(inf, p.hp / p.maxHp, '', 'HP', p.hp + ' / ' + p.maxHp);
+        if (smx) bar(inf, (p.sta == null ? smx : p.sta) / smx, 'st', 'ST', (p.sta == null ? smx : p.sta) + ' / ' + smx);
+        bar(inf, xpFrac(p), 'xp', 'EXP', (p.exp || 0) + ' / ' + need);
         var bs = mk('div', 'hm-btns', card);
         var why = p.hp >= p.maxHp ? 'Already well' : mn < 1 ? 'No mana left' : null;
         var md = kb(bs, { icon: 'mend', label: 'Mend', desc: why || 'Heal, 1 mana', kind: 'alt', sm: true, onClick: function () { mend(p); } }); md.disabled = !!why;

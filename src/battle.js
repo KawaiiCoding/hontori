@@ -239,7 +239,7 @@
   }
 
   // Full-screen "draw this sigil" prompt (intro Velum Aperi, school trial). Resolves when drawn correctly.
-  function prompt(kind, text) {
+  function prompt(kind, text, sub) {
     return new Promise(function (resolve) {
       var root = document.getElementById('root') || document.body;
       var el = document.createElement('div');
@@ -248,6 +248,7 @@
       var tip = document.createElement('div');
       tip.style.cssText = 'position:absolute;left:12px;right:12px;top:16%;text-align:center;color:#fff4d6;font:900 clamp(18px,5vmin,26px) Nunito,system-ui,sans-serif;text-shadow:0 0 12px rgba(255,200,120,.6),0 2px 0 rgba(0,0,0,.6);pointer-events:none';
       tip.textContent = text; el.appendChild(tip); root.appendChild(el);
+      if (sub) { var sb = document.createElement('div'); sb.style.cssText = 'margin-top:8px;font-size:clamp(14px,3.8vmin,18px);color:#bfe4ff;text-shadow:0 2px 0 rgba(0,0,0,.6)'; sb.innerHTML = sub; tip.appendChild(sb); }
       var sp = SPELLS[kind] || SPELLS.veil, col = sp.col;
       var g = cv.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1), drawing = false, live = true, T0 = performance.now(), ink = Ink(2), win = 0, fx = [];
       ink.col = col;
