@@ -148,14 +148,14 @@ window.H = window.H || {};
       ctx.save();
       // a ripple ring where the line would land
       ctx.strokeStyle = 'rgba(220,245,255,' + (0.9 - k * 0.9).toFixed(2) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx, cy + 3, 3 + k * 6, 1.5 + k * 2.5, 0, 0, 7); ctx.stroke();
-      // a small marker above it, like the game's buttons: dark rounded square, light border, a pixel hook inside
-      var bx = Math.round(cx) - 7, by = Math.round(cy - 18 + Math.sin(t * 3) * 1.2);
-      ctx.fillStyle = 'rgba(18,20,40,.92)'; ctx.fillRect(bx + 1, by, 12, 14); ctx.fillRect(bx, by + 1, 14, 12);
-      ctx.fillStyle = '#bfe8ff'; ctx.fillRect(bx + 1, by - 1, 12, 1); ctx.fillRect(bx + 1, by + 14, 12, 1); ctx.fillRect(bx - 1, by + 1, 1, 12); ctx.fillRect(bx + 14, by + 1, 1, 12);
-      ctx.fillStyle = 'rgba(18,20,40,.92)'; ctx.fillRect(bx + 5, by + 14, 4, 2); ctx.fillRect(bx + 6, by + 16, 2, 1);   // little tail pointing down to the water
-      ctx.fillStyle = '#7fd8ff';
-      [[8, 2], [8, 3], [8, 4], [8, 5], [8, 6], [8, 7], [8, 8], [7, 9], [6, 10], [5, 10], [4, 9], [4, 8], [5, 7]].forEach(function (q) { ctx.fillRect(bx + q[0], by + q[1], 1.2, 1.2); });
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + 8, by + 2, 1, 1);
+      // the glowing hook, as before, but with a dark edge so it reads on any water
+      var bx = Math.round(cx) - 5, by = Math.round(cy - 15 + Math.sin(t * 3) * 1.2);
+      var HK = [[6, 0], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], [6, 6], [6, 7], [5, 8], [4, 9], [3, 9], [2, 9], [1, 8], [1, 7], [2, 6]];
+      var glow = ctx.createRadialGradient(bx + 4, by + 5, 0, bx + 4, by + 5, 10); glow.addColorStop(0, 'rgba(127,216,255,.45)'); glow.addColorStop(1, 'rgba(127,216,255,0)');
+      ctx.fillStyle = glow; ctx.fillRect(bx - 8, by - 6, 24, 24);
+      ctx.fillStyle = '#0e2440'; HK.forEach(function (q) { ctx.fillRect(bx + q[0] - 1, by + q[1] - 1, 3, 3); });
+      ctx.fillStyle = '#7fd8ff'; HK.forEach(function (q) { ctx.fillRect(bx + q[0], by + q[1], 1, 1); });
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + 6, by, 1, 2); ctx.fillRect(bx + 2, by + 9, 1, 1);
       ctx.restore(); } });
     lights.push({ x: cx, y: cy, r: 8, color: '#7fd8ff', flicker: false, soft: true });
     try { H.ui.helper('fishspot', 'Fishing', 'Water in front of you. Press A, or tap the water, to cast the Fishing Sigil.', 'water'); } catch (e) {}

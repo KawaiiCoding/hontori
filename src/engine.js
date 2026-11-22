@@ -135,6 +135,13 @@
     const r = canvas.getBoundingClientRect(), x = Math.floor(((cx - r.left) / r.width * VW + camX) / T), y = Math.floor(((cy - r.top) / r.height * VH + camY) / T);
     if (x < 0 || y < 0 || x >= map.w || y >= map.h) return;
     tapRun = !!run;
+    // tapping the water in front of you (or the fishing hook over it) fishes right away
+    if (H.onWater && tileAt(x, y) === 'water' && (H.game.state.spells || []).indexOf('fish') >= 0) {
+      const ddx = x - player.tx, ddy = y - player.ty, ax = Math.abs(ddx) >= Math.abs(ddy), sx = ax ? Math.sign(ddx) : 0, sy = ax ? 0 : Math.sign(ddy);
+      if ((sx || sy) && tileAt(player.tx + sx, player.ty + sy) === 'water' && Math.abs(ddx) + Math.abs(ddy) <= 3) {
+        tapPath = []; tapAct = [player.tx + sx, player.ty + sy]; tapMark = { x, y, t: 0.5 }; return;
+      }
+    }
     const door = (map.doors || []).find(d => d.x === x && d.y === y);
     const npc = npcs.find(n => !n.away && n.x === x && n.y === y);
     const box = !!(H.dynBlocked && H.dynBlocked(mapName, x, y)) && !!H.pushAt;
