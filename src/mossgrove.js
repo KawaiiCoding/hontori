@@ -13,7 +13,7 @@ window.H = window.H || {};
   var x, y;
 
   // ground: the forest road comes in from the north, a mossy square, lanes to the houses, a pond to the east
-  rect(19, 0, 20, 12, 'p');            // road from Whisperwood
+  rect(26, 0, 27, 12, 'p');            // road from Whisperwood: east of the Hall, never behind it
   rect(13, 12, 26, 18, 'c');           // square
   rect(19, 9, 20, 11, 'c');            // hall steps
   rect(4, 15, 12, 16, 'p');            // west lane
@@ -70,8 +70,8 @@ window.H = window.H || {};
     ground: g.map(function (r) { return r.join(''); }),
     legend: { g: 'grass', t: 'tallgrass', f: 'flowers', p: 'path', c: 'cobble', w: 'water', s: 'sand', b: 'bridge' },
     props: props, buildings: buildings, npcs: npcs,
-    doors: [{ x: 19, y: 0, to: 'whisperwood', tx: 24, ty: 38, dir: 1 }, { x: 20, y: 0, to: 'whisperwood', tx: 25, ty: 38, dir: 1 }],
-    spawn: { x: 19, y: 1, dir: 0 },
+    doors: [{ x: 26, y: 0, to: 'whisperwood', tx: 24, ty: 38, dir: 1 }, { x: 27, y: 0, to: 'whisperwood', tx: 25, ty: 38, dir: 1 }],
+    spawn: { x: 26, y: 1, dir: 0 },
     wildCount: 5, wildLevel: [3, 6],
     zones: [{ x: 33, y: 6, r: 5, key: 'water', w: 3 }, { x: 6, y: 22, r: 4, key: 'grass', w: 4 }, { x: 31, y: 21, r: 4, key: 'grass', w: 3 }]
   };
@@ -188,7 +188,7 @@ window.H = window.H || {};
     ww.npcs = ww.npcs || [];
     ww.npcs.push({ key: 'guard', x: 26, y: wh - 3, dir: 2, lines: [['Ranger Moss', 'Mossgrove lies south of here.'], ['Ranger Moss', 'Mind the roots on the path, young Wonder.']] });
     ww.doors = ww.doors || [];
-    ww.doors.push({ x: 24, y: wh - 1, to: 'mossgrove', tx: 19, ty: 1, dir: 0 }, { x: 25, y: wh - 1, to: 'mossgrove', tx: 20, ty: 1, dir: 0 });
+    ww.doors.push({ x: 24, y: wh - 1, to: 'mossgrove', tx: 26, ty: 1, dir: 0 }, { x: 25, y: wh - 1, to: 'mossgrove', tx: 27, ty: 1, dir: 0 });
     ww.labels = (ww.labels || []).concat([{ x: 25, y: wh - 3, name: 'Road to Mossgrove' }]);
   }
   link();

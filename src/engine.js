@@ -518,6 +518,11 @@
     if (H.encounters) try { H.encounters.collect(ents, lights, ctx, env); } catch (e) { console.warn(e); }
     (H.worldDraw || []).forEach(fn => { try { fn(ents, lights, ctx, env, mapName, player); } catch (e) { console.warn(e); } });
     ents.sort((a, b) => a.y - b.y).forEach(e => { try { e.d(); } catch (err) { console.warn(err); } });
+    // never lose the kid: if a building or tall thing in front hides them, draw a soft see-through outline on top
+    (map.buildings || []).forEach(b => { const i = H.buildings.info[b.type]; if (!i) return;
+      const top = b.y * T - (i.ext || 48), bot = (b.y + i.fh) * T, l = b.x * T, r = (b.x + i.fw) * T;
+      if (player.y < bot && player.y > top && player.x > l - 4 && player.x < r + 4) {
+        ctx.save(); ctx.globalAlpha = 0.45; H.chars.draw(ctx, 'kid', Math.round(player.x), Math.round(player.y), player.dir, player.frame, env); ctx.restore(); } });
     if (ambient) try { ambient.draw(ctx, env); } catch (e) { console.warn(e); ambient = null; }
     ctx.restore();
     if (weather && !env.indoor) weather.draw(ctx, camX, camY, env);

@@ -26,10 +26,10 @@ window.H = window.H || {};
 
   // map markers
   function spot(map, x, y) { var cur = here(); if (!cur) return null; if (cur === map) return { map: map, x: x, y: y };
-    var route = { village: { whisperwood: [29, 39], mossgrove: [29, 39], rootwood_hall: [29, 39] }, whisperwood: { mossgrove: [24, 39], rootwood_hall: [24, 39], village: [24, 0] }, mossgrove: { rootwood_hall: [20, 8], rootwood_gate: [20, 8], whisperwood: [19, 0] }, rootwood_gate: { rootwood_hall: [8, 3], mossgrove: [8, 13] }, rootwood_hall: { mossgrove: [13, 21] } };
+    var route = { village: { whisperwood: [29, 39], mossgrove: [29, 39], rootwood_hall: [29, 39] }, whisperwood: { mossgrove: [24, 39], rootwood_hall: [24, 39], village: [24, 0] }, mossgrove: { rootwood_hall: [20, 8], rootwood_gate: [20, 8], whisperwood: [26, 0] }, rootwood_gate: { rootwood_hall: [8, 3], mossgrove: [8, 13] }, rootwood_hall: { mossgrove: [13, 21] } };
     var r = route[cur] && route[cur][map]; return r ? { map: cur, x: r[0], y: r[1] } : null; }
   function aim(qid, sid, fn) { var q = ST.quests[qid], st = q && q.steps.filter(function (s) { return s.id === sid; })[0]; if (st) Object.defineProperty(st, 'target', { configurable: true, get: fn }); }
-  aim('leafring', 'road', function () { return spot('mossgrove', 19, 2); });
+  aim('leafring', 'road', function () { return spot('mossgrove', 26, 2); });
   aim('leafring', 'maze', function () { return spot('rootwood_gate', 8, 5); });
   aim('leafring', 'fern', function () { return spot('rootwood_hall', 13, 12); });
   aim('leafring', 'sprouts', function () { return spot('rootwood_hall', 13, 12); });
