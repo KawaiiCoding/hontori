@@ -519,7 +519,8 @@ window.H = window.H || {};
     var f = flags(); if (!f || f['help:' + id]) return Promise.resolve(false);
     f['help:' + id] = 1;
     try { H.game.save && H.game.save(); } catch (e) {}
-    return new Promise(function (res) { queue.push({ title: title, text: text, target: target, res: res }); if (!busy) setTimeout(next, 60); busy = true; });
+    // shown after a short pause, so the thing it explains is seen first
+    return new Promise(function (res) { queue.push({ title: title, text: text, target: target, res: res }); if (!busy) setTimeout(next, 1000); busy = true; });
   }
   function fox() {
     var st = H.game && H.game.state, m = st && st.party && st.party[0], c = null;
@@ -543,12 +544,25 @@ window.H = window.H || {};
     root.appendChild(ov);
     // the guide floats next to the thing: below it in the top half of the screen, above it in the bottom half
     var W = R.width, Hh = R.height, gw = Math.min(300, W - 20), gh = g.offsetHeight || 70, x, y;
-    if (tr && tr.h > Hh * 0.35) { x = (W - gw) / 2; y = Hh - gh - 14 - 70; }
-    else if (tr) {
-      x = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2));
-      y = tr.y + tr.h / 2 < Hh / 2 ? tr.y + tr.h + 12 : tr.y - gh - 12;
-      y = Math.max(10, Math.min(Hh - gh - 10, y));
-    } else { x = (W - gw) / 2; y = Math.max(10, Hh * 0.16); }
+    // rule: the guide never covers what matters. Try spots next to the target, then top, middle and bottom bands,
+    // and keep the one that hides the least of the target and of any visible button, card, panel or dialog.
+    var busyEls = [].slice.call(root.querySelectorAll('button, .hb-card, .hb-msg, .hb-intent, .hb-moves, .hb-bar, .hm-sheet.on, .hui-dlg, .hk-btn, .hq, input'))
+      .filter(function (e) { return e.offsetParent !== null && !ov.contains(e); })
+      .map(function (e) { var b = e.getBoundingClientRect(); return { x: b.left - R.left, y: b.top - R.top, w: b.width, h: b.height }; })
+      .filter(function (b) { return b.w > 0 && b.h > 0 && b.w * b.h < W * Hh * 0.6; });
+    try { if (H.ui.helperAvoid) busyEls = busyEls.concat(H.ui.helperAvoid() || []); } catch (e) {}
+    function cover(cx, cy) {
+      var c = 0;
+      busyEls.forEach(function (b) { var ix = Math.max(0, Math.min(cx + gw, b.x + b.w) - Math.max(cx, b.x)), iy = Math.max(0, Math.min(cy + gh, b.y + b.h) - Math.max(cy, b.y)); c += ix * iy; });
+      if (tr) { var ix = Math.max(0, Math.min(cx + gw, tr.x + tr.w) - Math.max(cx, tr.x)), iy = Math.max(0, Math.min(cy + gh, tr.y + tr.h) - Math.max(cy, tr.y)); c += ix * iy * 20; }
+      return c;
+    }
+    var cands = [], mx = (W - gw) / 2;
+    if (tr) { var tx = Math.max(10, Math.min(W - gw - 10, tr.x + tr.w / 2 - gw / 2)); cands.push([tx, tr.y + tr.h + 12], [tx, tr.y - gh - 12]); }
+    [0.12, 0.3, 0.45, 0.6, 0.75].forEach(function (f) { cands.push([mx, Hh * f], [10, Hh * f], [W - gw - 10, Hh * f]); });
+    var best = null;
+    cands.forEach(function (cnd, i) { var cx = cnd[0], cy = Math.max(10, Math.min(Hh - gh - 10, cnd[1])), sc = cover(cx, cy) + i * 2; if (!best || sc < best[2]) best = [cx, cy, sc]; });
+    x = best[0]; y = best[1];
     g.style.left = x + 'px'; g.style.top = y + 'px'; g.style.width = gw + 'px';
     var gone = false;
     function close(e) { if (e) { e.stopPropagation(); e.preventDefault(); } if (gone) return; gone = true; ov.classList.remove('on'); setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); o.res(true); next(); }, 200); }

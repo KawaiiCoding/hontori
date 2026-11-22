@@ -13,7 +13,9 @@
     water: ['fire', 'earth'], fire: ['grass', 'wind'], wind: ['grass', 'electric'], grass: ['water', 'earth'],
     electric: ['water', 'wind'], earth: ['electric', 'fire'], dark: ['light'], light: ['dark']
   };
-  function matrix(a, d) {
+  // a two-element defender takes both matchups (multiplied); attacks use the attacker's main element
+  function matrix(a, d, d2) { return d2 ? Math.max(0.36, Math.min(2.56, matrix1(a, d) * matrix1(a, d2))) : matrix1(a, d); }
+  function matrix1(a, d) {
     if (STRONG[a] && STRONG[a].indexOf(d) >= 0) return 1.6;
     if (STRONG[d] && STRONG[d].indexOf(a) >= 0) return 0.6;
     return 1;
@@ -751,7 +753,7 @@
     function SCOST(mv) { return H.progress && H.progress.staCost ? H.progress.staCost(mv) : 1; }
     function mkMe(m) {
       var sp = specOf(m.key);
-      return { src: m, key: m.key, el: sp.element, hp: Math.max(0, m.hp == null ? 20 : m.hp), max: m.maxHp || 20, lvl: m.level || 1, atk: m.atk || 0, stage: m.stage, staMax: SMX(m.level), sta: Math.max(0, Math.min(SMX(m.level), m.sta == null ? SMX(m.level) : m.sta)), name: m.nick || sp.name || (cap(sp.element) + ' Hontori'), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
+      return { src: m, key: m.key, el: sp.element, el2: sp.element2 || null, hp: Math.max(0, m.hp == null ? 20 : m.hp), max: m.maxHp || 20, lvl: m.level || 1, atk: m.atk || 0, stage: m.stage, staMax: SMX(m.level), sta: Math.max(0, Math.min(SMX(m.level), m.sta == null ? SMX(m.level) : m.sta)), name: m.nick || sp.name || (cap(sp.element) + ' Hontori'), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
     }
     function movesOf(m) {
       var M = H.moves, out = [];
@@ -769,7 +771,7 @@
     var fk = TR ? (TR.spirit || 'electric') : (opts.enemy || pool[Math.floor(Math.random() * pool.length)]), fs = specOf(fk);
     var flvl = TR ? (TR.level || 1) : (opts.level || Math.max(1, me.lvl + (Math.random() < 0.3 ? -1 : Math.random() < 0.6 ? 0 : 1)));
     var fmax = 15 + flvl * 3;
-    var foe = { key: fk, el: fs.element, hp: fmax, max: fmax, lvl: flvl, stage: opts.stage || TR && TR.stage, name: TR ? TR.name : ('Jealous ' + (fs.name || cap(fs.element))), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
+    var foe = { key: fk, el: fs.element, el2: fs.element2 || null, hp: fmax, max: fmax, lvl: flvl, stage: opts.stage || TR && TR.stage, name: TR ? TR.name : ('Jealous ' + (fs.name || cap(fs.element))), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
     // the wand remembers every hontori you meet
     if (!TR) { GS.seen = GS.seen || []; if (GS.seen.indexOf(fk) < 0) GS.seen.push(fk); }
     var MOV = movesOf(lead), FMOV = H.moves.MOVES[foe.el] || H.moves.MOVES.fire;
@@ -875,8 +877,8 @@
       }
       h += '<div class="st"></div>';
       c.innerHTML = h; var st = c.querySelector('.st');
-      try { var b = H.ui.elementBadge(f.el); b.style.marginLeft = '0'; st.appendChild(b); } catch (e) { mk('span', 'hb-tag', st, cap(f.el)); }
-      if (f === foe) { var m = matrix(me.el, foe.el), m2 = matrix(foe.el, me.el); var ic = document.createElement('span'); ic.innerHTML = edgeIcon(m, m2, 24); ic.style.display = 'inline-flex'; st.appendChild(ic); }
+      try { var b = H.ui.elementBadge(f.el); b.style.marginLeft = '0'; st.appendChild(b); if (f.el2) { var b2 = H.ui.elementBadge(f.el2); b2.style.marginLeft = '0'; st.appendChild(b2); } } catch (e) { mk('span', 'hb-tag', st, cap(f.el)); }
+      if (f === foe) { var m = matrix(me.el, foe.el, foe.el2), m2 = matrix(foe.el, me.el, me.el2); var ic = document.createElement('span'); ic.innerHTML = edgeIcon(m, m2, 24); ic.style.display = 'inline-flex'; st.appendChild(ic); }
       Object.keys(tags).forEach(function (k) { if (f[k]) tag(st, tags[k][0], tags[k][1]); });
       if (f === me && f.hp <= 0) tag(st, 'Fainted', '#ff8a7a');
     }
@@ -906,7 +908,7 @@
       if (bread && !breadBtn.firstChild) { try { var bi = document.createElement('img'); bi.alt = ''; bi.src = H.pickups.iconUrl('bread'); bi.style.cssText = 'width:20px;height:20px;image-rendering:pixelated;vertical-align:middle;margin-right:4px'; breadBtn.appendChild(bi); } catch (e) {} breadBtn.appendChild(document.createTextNode('Bread')); }
       var fainted = me.hp <= 0;
       MOV.forEach(function (m, i) {
-        var b = mvBtns[i], cd = me.cd[m.id] || 0, mx = matrix(me.el, foe.el), mark = '';
+        var b = mvBtns[i], cd = me.cd[m.id] || 0, mx = matrix(me.el, foe.el, foe.el2), mark = '';
         if (m.pow && mx !== 1) mark = '<span style="position:absolute;top:5px;right:6px">' + edgeIcon(mx, mx < 1 ? 2 : 1, 20) + '</span>';
         var ico = ''; try { ico = '<img class="ic" alt="" src="' + H.icons.url(m.el || me.el, 2) + '">'; } catch (e) {}
         b.innerHTML = mark + '<b>' + ico + m.name + '</b><span class="kind">' + (m.pow ? 'Attack' : 'Support') + '</span><i>' + (m.pow ? 'Power ' + m.pow + '. ' : '') + m.desc.replace(/ Rests 2 turns\./, '') + '</i>' + (cd > 0 ? '<span class="cd">Rest ' + cd + '</span>' : fainted ? '<span class="cd">Fainted</span>' : me.asleep ? '<span class="cd">Asleep</span>' : '');
@@ -941,6 +943,8 @@
       scene = buildScene(W, Hh, biome, env, POS);
     }
     size(); window.addEventListener('resize', size);
+    // the fox guide must not cover the two hontori on the field
+    if (H.ui) H.ui.helperAvoid = function () { return ['foe', 'me'].map(function (k) { var q = POS[k], z = 26 * q.sc; return { x: (q.x - z) * L, y: (q.y - z * 1.2) * L, w: z * 2 * L, h: z * 2.2 * L }; }); };
     function F(who) { return who === 'me' ? me : foe; }
     function mkX(from, to) {
       var A = POS[from], B = POS[to], fa = F(from), fb = F(to);
@@ -1043,7 +1047,7 @@
 
     // ---------------- banner (matchup at start)
     function showBanner() {
-      var m = matrix(me.el, foe.el), m2 = matrix(foe.el, me.el), wm = weatherMul(me.el, env), wf = weatherMul(foe.el, env);
+      var m = matrix(me.el, foe.el, foe.el2), m2 = matrix(foe.el, me.el, me.el2), wm = weatherMul(me.el, env), wf = weatherMul(foe.el, env);
       var b1 = '', b2 = ''; try { b1 = H.ui.elementBadge(me.el).outerHTML; b2 = H.ui.elementBadge(foe.el).outerHTML; } catch (e) { b1 = cap(me.el); b2 = cap(foe.el); }
       banner.innerHTML = '<div class="vs">' + b1 + edgeIcon(m, m2, 34) + b2 + '</div>';
       banner.classList.add('on'); setTimeout(function () { banner.classList.remove('on'); }, 2300);
@@ -1125,7 +1129,7 @@
 
     // ---------------- damage
     function hitCalc(att, def, pow, el, mult) {
-      var mx = matrix(el, def.el), wm = weatherMul(el, env), lv = 1 + 0.12 * (att.lvl - 1), atk = 1 + (att.atk || 0) * 0.05;
+      var mx = matrix(el, def.el, def.el2), wm = weatherMul(el, env), lv = 1 + 0.12 * (att.lvl - 1), atk = 1 + (att.atk || 0) * 0.05;
       var crit = Math.random() < (att.tail ? 0.4 : 0.08), m = mult || 1;
       if (att.glow) m *= 1.5; if (att.boost) m *= 1 + 0.6 * att.boost;
       if (def.guard) m *= 0.5; if (def.harden) m *= 0.5;
@@ -1286,7 +1290,7 @@
     }
     async function bind(sc, gm) {
       var P = POS.foe, acc = sc ? sc.acc : 0.5;
-      var chance = 0.05 + 0.45 * (1 - foe.hp / foe.max) + (foe.asleep ? 0.18 : 0) + (foe.stun ? 0.12 : 0) + 0.15 * acc - 0.07 * (foe.lvl - me.lvl) - (matrix(foe.el, me.el) > 1 ? 0.08 : 0) + (matrix(me.el, foe.el) > 1 ? 0.05 : 0);
+      var chance = 0.05 + 0.45 * (1 - foe.hp / foe.max) + (foe.asleep ? 0.18 : 0) + (foe.stun ? 0.12 : 0) + 0.15 * acc - 0.07 * (foe.lvl - me.lvl) - (matrix(foe.el, me.el, me.el2) > 1 ? 0.08 : 0) + (matrix(me.el, foe.el, foe.el2) > 1 ? 0.05 : 0);
       chance = Math.max(0.05, Math.min(0.85, chance * wandMul * (gm || 1) + (perks.captureBonus || 0) + calm));
       // a spiral of light wraps the foe, then three shakes
       fxs.push({ t: 0, ms: 2000, draw: function (g2, k) { var pts = []; for (var i = 0; i <= 40; i++) { var t = i / 40, a2 = t * 12 + k * 8, r = 22 * (1 - t * 0.8) * (1 - k * 0.3); pts.push([P.x + Math.cos(a2) * r, P.y + Math.sin(a2) * r * 0.8]); } inkStroke(g2, pts, 0.8, '#ffd98a', Math.sin(k * Math.PI)); } });
@@ -1454,7 +1458,7 @@
 
     return new Promise(function (resolve) {
       function close() {
-        if (ended) return; ended = true; live = false; el.classList.remove('on'); window.removeEventListener('resize', size); setTimeout(function () { el.remove(); }, 350);
+        if (ended) return; ended = true; live = false; if (H.ui) H.ui.helperAvoid = null; el.classList.remove('on'); window.removeEventListener('resize', size); setTimeout(function () { el.remove(); }, 350);
         // report who fought so EXP is shared; progress marks itself handled
         var P = H.progress;
         if (P && typeof P.onBattleEnd === 'function' && !opts.noProgress) {

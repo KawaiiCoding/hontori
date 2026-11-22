@@ -1614,6 +1614,7 @@ window.H = window.H || {};
     if (st > 1) { enrich(body, st); var cg = c.getContext('2d'); cg.save(); cg.setTransform(1, 0, 0, 1, 0, 0); cg.drawImage(body, 0, 0); cg.restore(); } // body and layers share the same margin offset
     pc.warp = false; aura(pc, key, f);
     if (st > 1) STG[key](pc, f, st, 'fx');
+    if (DUALK[key]) recolor(c, DUALK[key]);
     return (arr[f] = c);
   }
   function frames(key, dir, mode, stage) {
@@ -1665,6 +1666,7 @@ window.H = window.H || {};
     ctx.translate(x, Math.round(y + hov + yo));
     if (flip) ctx.scale(-1, 1);
     ctx.drawImage(frame(key, k, blink, f, dir === 3 ? 2 : dir, mode, st), -B / 2 * sc, -B / 2 * sc, B * sc, B * sc);
+    if (DUALK[key]) aura2(ctx, key, t + sd * 4, sc);
     ctx.restore();
   }
 
@@ -1686,5 +1688,66 @@ window.H = window.H || {};
     return (pcache[pk] = c);
   }
 
-  H.spirits = { list: list, draw: draw, portrait: portrait, frames: frames, stages: stages };
+  // ---------- two-element hontori: an existing body, recoloured, with a second-element aura drawn around it.
+  // Stronger kinds: they live in the great schools and their wild places. [key, name, base body, element, element2, hue, sat, light, stage names...]
+  var DUAL = [
+    ['frostwhisk', 'Frostwhisk', 'squirrel', 'water', 'wind', 195, 0.55, 1.18, ['Frostwhisk', 'Rimetail', 'Sleetglide', 'Glacisail', 'Borealith'], 'An icy squirrel. Snow falls wherever its tail swings.'],
+    ['mistsizzle', 'Mistsizzle', 'salamander', 'fire', 'water', 170, 0.45, 1.12, ['Mistsizzle', 'Steamgill', 'Vaporcrest', 'Geysmantle', 'Thermaveil'], 'A steam salamander, warm and wet at once.'],
+    ['bogglet', 'Bogglet', 'frog', 'water', 'earth', 32, 0.55, 0.9, ['Bogglet', 'Mudcroak', 'Mirehop', 'Silttoad', 'Bogregent'], 'A mud frog that naps in warm puddles.'],
+    ['thundercaw', 'Thundercaw', 'raven', 'dark', 'electric', 235, 0.75, 0.95, ['Thundercaw', 'Stormquill', 'Voltrook', 'Tempestwing', 'Fulgurex'], 'A storm raven. Sparks crackle in its feathers.'],
+    ['magmite', 'Magmite', 'crab', 'earth', 'fire', 8, 0.85, 0.85, ['Magmite', 'Cindershell', 'Lavaclaw', 'Basaltrex', 'Calderion'], 'A crab of cooling lava. Its shell glows at the seams.'],
+    ['sunsprout', 'Sunsprout', 'tortoise', 'grass', 'light', 58, 0.7, 1.15, ['Sunsprout', 'Dawnshell', 'Gleamgrove', 'Haloak', 'Solarwold'], 'A tortoise whose garden faces the sun.'],
+    ['nightbramble', 'Nightbramble', 'grass', 'grass', 'dark', 285, 0.55, 0.8, ['Nightbramble', 'Duskthorn', 'Shadebriar', 'Gloomrose', 'Umbrathorn'], 'A thorny bun that blooms only at night.'],
+    ['dunewhirl', 'Dunewhirl', 'wind', 'wind', 'earth', 40, 0.5, 1.05, ['Dunewhirl', 'Sandgale', 'Siroccowl', 'Dustvane', 'Desertempest'], 'An owl of sand and wind.'],
+    ['prismite', 'Prismite', 'firefly', 'light', 'electric', 185, 0.8, 1.1, ['Prismite', 'Spectrabug', 'Arclantern', 'Rayvolt', 'Prismaron'], 'A firefly whose light splits into colours.'],
+    ['cinderhawk', 'Cinderhawk', 'raven', 'fire', 'wind', 18, 0.85, 1.05, ['Cinderhawk', 'Ashwing', 'Blazevane', 'Pyregale', 'Infernix'], 'A hawk that rides hot winds.'],
+    ['ripplezap', 'Ripplezap', 'hamster', 'electric', 'water', 205, 0.7, 1.05, ['Ripplezap', 'Tidecell', 'Surgepaw', 'Stormtide', 'Voltmaren'], 'A hamster that charges itself in the rain.'],
+    ['duskmantle', 'Duskmantle', 'light', 'light', 'dark', 265, 0.4, 0.85, ['Duskmantle', 'Twiluma', 'Eclipsel', 'Penumbrae', 'Equinoxis'], 'Half dawn, half night. Rarely seen by anyone.']
+  ];
+  var DUALK = {};
+  DUAL.forEach(function (d) {
+    var key = d[0], base = d[2]; DUALK[key] = { base: base, el2: d[4], h: d[5], s: d[6], l: d[7] };
+    list.push({ key: key, name: d[1], element: d[3], element2: d[4], dual: true });
+    DEF[key] = DEF[base]; STG[key] = STG[base]; OUT[key] = OUT[base]; if (FLY[base]) FLY[key] = 1;
+    BASEK[key] = BASEK[base]; SEED[key] = hash(list.length * 3.7 + 9.1); AURA[key] = AURA[ELK[d[3]]];
+    stages[key] = d[8].map(function (n, i) { return { name: n, desc: i ? 'A grown ' + d[1] + '. ' + d[9] : d[9] }; });
+  });
+  // recolour a finished frame: every body pixel takes the dual's hue, keeps its shading
+  function recolor(c, D) {
+    var g = c.getContext('2d'), id = g.getImageData(0, 0, c.width, c.height), a = id.data;
+    for (var i = 0; i < a.length; i += 4) {
+      if (a[i + 3] < 8) continue;
+      var r = a[i] / 255, gg = a[i + 1] / 255, b = a[i + 2] / 255, mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), L = (mx + mn) / 2, d = mx - mn;
+      if (d < 0.04 && (L < 0.18 || L > 0.92)) continue;   // keep outlines, eye whites and highlights
+      var S = d === 0 ? 0 : d / (1 - Math.abs(2 * L - 1));
+      var nh = D.h / 360, ns = Math.min(1, S * 0.35 + D.s * 0.65), nl = Math.min(0.96, L * D.l);
+      var q = nl < 0.5 ? nl * (1 + ns) : nl + ns - nl * ns, pp = 2 * nl - q;
+      var f = function (t) { t = (t + 1) % 1; return t < 1 / 6 ? pp + (q - pp) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? pp + (q - pp) * (2 / 3 - t) * 6 : pp; };
+      a[i] = f(nh + 1 / 3) * 255; a[i + 1] = f(nh) * 255; a[i + 2] = f(nh - 1 / 3) * 255;
+    }
+    g.putImageData(id, 0, 0);
+  }
+  // the second element shows as a small moving aura: frost, sparks, petals, embers, droplets, dust, wisps, motes
+  var FX2 = {
+    wind: ['#e8f8ff', 'flake'], water: ['#8fd0ff', 'drop'], fire: ['#ffb050', 'ember'], earth: ['#c8a070', 'dust'],
+    electric: ['#fff070', 'spark'], grass: ['#8ee070', 'leaf'], dark: ['#a070ff', 'wisp'], light: ['#fff4c0', 'mote']
+  };
+  function aura2(ctx, key, t, sc) {
+    var D = DUALK[key]; if (!D) return; var F = FX2[D.el2]; ctx.fillStyle = F[0];
+    for (var i = 0; i < 6; i++) {
+      var ph = (t * 0.6 + i / 6) % 1, ang = i * 1.05 + t * 0.8, rx = (9 + (i % 3) * 2) * sc, x, y;
+      if (F[1] === 'ember' || F[1] === 'mote' || F[1] === 'wisp') { x = Math.cos(ang) * rx * 0.8; y = 6 * sc - ph * 22 * sc; }
+      else if (F[1] === 'drop' || F[1] === 'flake' || F[1] === 'leaf') { x = Math.cos(ang) * rx; y = -14 * sc + ph * 22 * sc; }
+      else { x = Math.cos(ang * 2) * rx; y = Math.sin(ang * 2) * rx * 0.6; }
+      ctx.globalAlpha = Math.sin(ph * Math.PI) * 0.9;
+      var s1 = Math.max(1, Math.round(sc));
+      if (F[1] === 'flake') { ctx.fillRect(x - s1, y, s1 * 3, s1); ctx.fillRect(x, y - s1, s1, s1 * 3); }
+      else if (F[1] === 'spark') { ctx.fillRect(x, y, s1 * 2, s1); ctx.fillRect(x + s1, y + s1, s1 * 2, s1); }
+      else if (F[1] === 'leaf') { ctx.fillRect(x, y, s1 * 2, s1); ctx.fillRect(x + s1, y - s1, s1, s1); }
+      else ctx.fillRect(x, y, s1 * (F[1] === 'wisp' ? 2 : 1), s1 * (F[1] === 'drop' ? 2 : 1));
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  H.spirits = { list: list, draw: draw, portrait: portrait, frames: frames, stages: stages, dual: DUALK };
 })();

@@ -207,10 +207,20 @@ window.H = window.H || {};
       [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { var x = q[0] + d[0], y = q[1] + d[1], k = x + ',' + y; if (k in prev || !free(x, y) || (x === c.player.tx && y === c.player.ty)) return; prev[k] = q; Q.push([x, y]); }); }
     var path = [], k0 = goal[0] + ',' + goal[1]; if (!(k0 in prev)) return Promise.resolve();
     for (var cur = goal; cur; cur = prev[cur[0] + ',' + cur[1]]) path.unshift(cur);
+    // smooth steps with the same walking frames the kid uses (1, 0, 3, 0 ...)
+    var steps = 0;
     return path.slice(1).reduce(function (p, step) { return p.then(function () {
       n.dir = step[0] > n.x ? 3 : step[0] < n.x ? 2 : step[1] > n.y ? 0 : 1;
-      n.x = step[0]; n.y = step[1]; n.px = n.x * 16 + 8; n.py = n.y * 16 + 15; n.slot = -3;
-      return new Promise(function (r) { setTimeout(r, 140); });
+      var fx = n.x, fy = n.y; n.x = step[0]; n.y = step[1]; n.slot = -3; steps++;
+      return new Promise(function (r) {
+        var t0 = performance.now(), D = 230;
+        (function tick(now) {
+          var k = Math.min(1, (now - t0) / D);
+          n.px = (fx + (n.x - fx) * k) * 16 + 8; n.py = (fy + (n.y - fy) * k) * 16 + 15;
+          n.frame = k < 0.5 ? (steps % 2 ? 1 : 3) : (steps % 2 ? 2 : 0);
+          if (k < 1) requestAnimationFrame(tick); else { n.frame = 0; r(); }
+        })(t0);
+      });
     }); }, Promise.resolve()).then(function () { n.dir = c.player.ty < n.y ? 1 : c.player.ty > n.y ? 0 : c.player.tx > n.x ? 3 : 2; });
   }
   ST.defineEvent({ id: 'c1_mapgift', when: 'manual', once: false, run: function (a) {
