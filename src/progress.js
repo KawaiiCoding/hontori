@@ -391,7 +391,15 @@ window.H = window.H || {};
         try { var last = root.lastElementChild; if (last && last !== o) last.style.zIndex = '70'; } catch (e) {}
         Promise.resolve(pr).then(function () {
           setPhase('open'); sfx('wand'); applyEvolve(m, to); H.game && H.game.save && H.game.save();
-          for (var i = 0; i < 26; i++) { var a = Math.random() * 6.283, v = 60 + Math.random() * 160; shards.push({ x: 0, y: 0, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, r: Math.random() * 6.283, vr: (Math.random() - .5) * 8, s: 6 + Math.random() * 8, l: 1.4 }); }
+          // the shell breaks along its cracks into real pieces of itself that fly out, spin, fall and fade
+          var egg = eggPixels(1), CW = 8, CH = 8;
+          for (var cy0 = 0; cy0 < egg.height; cy0 += CH) for (var cx0 = 0; cx0 < egg.width; cx0 += CW) {
+            var pc = document.createElement('canvas'); pc.width = CW; pc.height = CH; var pg = pc.getContext('2d'); pg.drawImage(egg, -cx0, -cy0);
+            var dd = pg.getImageData(0, 0, CW, CH).data, any = false; for (var q = 3; q < dd.length; q += 4) if (dd[q] > 0) { any = true; break; }
+            if (!any) continue;
+            var ox0 = cx0 + CW / 2 - egg.width / 2, oy0 = cy0 + CH / 2 - egg.height / 2, ang = Math.atan2(oy0, ox0), sp = 70 + Math.random() * 110;
+            shards.push({ img: pc, ox: ox0, oy: oy0, x: 0, y: 0, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 60, r: 0, vr: (Math.random() - .5) * 7, l: 1.5 });
+          }
           setTimeout(function () { msg.textContent = name + ' bloomed into ' + newName + '.'; finish(true); }, 900);
         });
       }
@@ -403,19 +411,41 @@ window.H = window.H || {};
         if (!live) return; live = false; window.removeEventListener('resize', size); window.removeEventListener('keydown', onKey);
         o.classList.remove('on'); setTimeout(function () { o.remove(); resolve(!!o._ok); }, 260);
       }
-      function shell(cx, cy, r, k, crack) {
-        // an egg-like shell in the element's colours, with soft bands and the element's line pattern
-        g.save(); g.translate(cx, cy);
-        var gr = g.createRadialGradient(-r * 0.3, -r * 0.4, r * 0.1, 0, 0, r * 1.1);
-        gr.addColorStop(0, SH.a); gr.addColorStop(1, SH.b);
-        g.fillStyle = gr; g.globalAlpha = k;
-        g.beginPath(); g.ellipse(0, 0, r * 0.82, r, 0, 0, 6.283); g.fill();
-        g.strokeStyle = SH.line; g.lineWidth = Math.max(1.5, r * 0.035); g.globalAlpha = k * 0.55;
-        for (var i = -2; i <= 2; i++) { g.beginPath(); g.ellipse(0, i * r * 0.28, r * 0.78 * Math.cos(i * 0.5), r * 0.1, 0, 0, 3.1416); g.stroke(); }
-        if (crack > 0) {
-          g.globalAlpha = 1; g.strokeStyle = SH.line; g.lineWidth = Math.max(2, r * 0.05); g.shadowColor = SH.a; g.shadowBlur = 12;
-          cracks.forEach(function (c) { g.beginPath(); g.moveTo(0, 0); var n = Math.ceil(c.length * crack); for (var j = 0; j < n; j++) g.lineTo(c[j][0] * r, c[j][1] * r); g.stroke(); });
+      // the shell is pixel art like every hontori: a small egg painted pixel by pixel (light from the top left,
+      // a deep outline of its own colour, a band pattern of its element), then scaled up with sharp pixels
+      var eggCache = {};
+      function hexRGB(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+      function mix(a, b, t) { return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * t) + ',' + Math.round(a[1] + (b[1] - a[1]) * t) + ',' + Math.round(a[2] + (b[2] - a[2]) * t) + ')'; }
+      function eggPixels(crack) {
+        var key = Math.round(crack * 5); if (eggCache[key]) return eggCache[key];
+        var EW = 30, EH = 38, cv2 = document.createElement('canvas'); cv2.width = EW; cv2.height = EH; var e = cv2.getContext('2d');
+        var A = hexRGB(SH.a), B = hexRGB(SH.b), L = hexRGB(SH.line), D = [B[0] * 0.45, B[1] * 0.45, B[2] * 0.5];
+        var ramp = [mix(D, B, 0.6), mix(B, B, 0), mix(B, A, 0.5), mix(A, A, 0), mix(A, L, 0.6)];
+        function inside(x, y) { var u = (x - 14.5) / 12.5, v = (y - 20) / 17; if (v < 0) u *= 1 + v * 0.18; return u * u + v * v < 1; }
+        for (var y = 0; y < EH; y++) for (var x = 0; x < EW; x++) {
+          if (!inside(x, y)) { if (inside(x - 1, y) || inside(x + 1, y) || inside(x, y - 1) || inside(x, y + 1)) { e.fillStyle = mix(D, D, 0); e.fillRect(x, y, 1, 1); } continue; }
+          var lx = (x - 9) / 14, ly = (y - 10) / 18, lit = 1 - Math.sqrt(lx * lx + ly * ly);   // light from the top left
+          var band = (y % 7 === 3) ? -0.18 : 0, dith = ((x + y) & 1) ? 0.06 : 0;
+          var idx = Math.max(0, Math.min(4, Math.floor((lit + band + dith + 0.35) * 4)));
+          e.fillStyle = ramp[idx]; e.fillRect(x, y, 1, 1);
         }
+        // a few bright pixels for shine, a small element mark in the middle
+        e.fillStyle = mix(L, L, 0); e.fillRect(8, 9, 2, 1); e.fillRect(7, 10, 1, 2); e.fillRect(11, 7, 1, 1);
+        e.fillStyle = mix(L, A, 0.3); e.fillRect(14, 18, 2, 4); e.fillRect(13, 19, 4, 2);
+        if (crack > 0) {
+          e.fillStyle = mix(L, L, 0);
+          cracks.forEach(function (c) { var n = Math.ceil(c.length * crack), px0 = 14.5, py0 = 20;
+            for (var q = 0; q < n; q++) { var tx = 14.5 + c[q][0] * 12.5, ty = 20 + c[q][1] * 17, steps = Math.ceil(Math.max(Math.abs(tx - px0), Math.abs(ty - py0)));
+              for (var st = 0; st <= steps; st++) { var xx = Math.round(px0 + (tx - px0) * st / Math.max(1, steps)), yy = Math.round(py0 + (ty - py0) * st / Math.max(1, steps)); if (inside(xx, yy)) e.fillRect(xx, yy, 1, 1); }
+              px0 = tx; py0 = ty; } });
+        }
+        return (eggCache[key] = cv2);
+      }
+      function shell(cx, cy, r, k, crack) {
+        var egg = eggPixels(crack || 0), sc = Math.max(2, Math.round(r * 2 / egg.height * 1.15)), w = egg.width * sc, hh = egg.height * sc;
+        g.save(); g.imageSmoothingEnabled = false; g.globalAlpha = k;
+        if (crack > 0) { g.shadowColor = SH.a; g.shadowBlur = 18; }
+        g.drawImage(egg, Math.round(cx - w / 2), Math.round(cy - hh / 2), w, hh);
         g.restore();
       }
       for (var c = 0; c < 5; c++) { var a0 = c / 5 * 6.283 + Math.random() * 0.5, pts = []; for (var j = 1; j <= 5; j++) pts.push([Math.cos(a0 + (Math.random() - .5) * 0.6) * j * 0.17, Math.sin(a0 + (Math.random() - .5) * 0.6) * j * 0.2]); cracks.push(pts); }
@@ -452,9 +482,10 @@ window.H = window.H || {};
           if (lt >= 0.5) for (var j2 = shards.length - 1; j2 >= 0; j2--) {
             var sh = shards[j2]; sh.l -= 1 / 60; if (sh.l <= 0) { shards.splice(j2, 1); continue; }
             sh.x += sh.vx / 60; sh.y += sh.vy / 60; sh.vy += 3; sh.r += sh.vr / 60;
-            g.save(); g.translate(cx + sh.x, cy + sh.y); g.rotate(sh.r); g.globalAlpha = Math.min(1, sh.l);
-            g.fillStyle = SH.b; g.beginPath(); g.moveTo(0, -sh.s * k); g.lineTo(sh.s * 0.7 * k, sh.s * 0.5 * k); g.lineTo(-sh.s * 0.6 * k, sh.s * 0.4 * k); g.closePath(); g.fill();
-            g.strokeStyle = SH.line; g.lineWidth = 1; g.stroke(); g.restore();
+            var es = Math.max(2, Math.round(sz * 0.84 / 38 * 1.15));
+            g.save(); g.translate(cx + sh.x + (sh.ox || 0) * es, cy + sh.y + (sh.oy || 0) * es); g.rotate(sh.r); g.globalAlpha = Math.min(1, sh.l);
+            if (sh.img) { g.imageSmoothingEnabled = false; g.drawImage(sh.img, -sh.img.width * es / 2, -sh.img.height * es / 2, sh.img.width * es, sh.img.height * es); }
+            g.restore();
           }
         }
         requestAnimationFrame(frame);

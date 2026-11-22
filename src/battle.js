@@ -838,7 +838,7 @@
     if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Rival') + (TR.school ? ' - Ring Duel' : '')); }
     // great schools: a themed frame, the trial's rule always visible, and a title card before the duel
     // duels have their own steady tune; the world music comes back after
-    if (TR) try { H.audio && H.audio.battle && H.audio.battle('duel'); } catch (e) {}
+    try { H.audio && H.audio.battle && H.audio.battle(TR ? 'duel' : 'wild'); } catch (e) {}   // battles have their own music
     var SCH = TR && TR.school;
     if (SCH) {
       el.classList.add('hb-school'); el.style.setProperty('--sc', SCH.col || '#ffd98a');

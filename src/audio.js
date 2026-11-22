@@ -87,6 +87,8 @@ window.H = window.H || {};
              'D6:1 C6:.5 Bb5:.5 A5:1 F5:1 | A5:1 G5:.5 F5:.5 C5:2 | Bb4:.5 D5:.5 G5:1 F5:.5 E5:.5 D5:1 | E5:1 C#5:1 A4:2' }
     }
   };
+  // wild encounters: the same family as the duel tune, a little brighter and quicker
+  SONGS.wild = { bpm: 124, bpb: 4, style: 'duel', transpose: 2, form: ['B', 'A'], sections: SONGS.duel.sections };
   // calm night variant of the village tune: slower, lower key, fewer voices
   SONGS.village_night = {
     bpm: 76, bpb: 4, style: 'nocturne', transpose: -2, form: ['A', 'B', 'A2'],
