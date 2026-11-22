@@ -81,8 +81,123 @@ window.H = window.H || {};
   function sprite(key, fn) { return cache[key] || (cache[key] = fn()); }
   function mk(g, ox, oy, noOutline) { if (!noOutline) outline(g); return { c: toCanvas(g), ox: ox, oy: oy }; }
 
+  // ---------------- WIND (trees and bushes) ----------------
+  // Art is authored at 1x but shown on a 2x canvas, so wind frames are built at device resolution:
+  // every art pixel is a 2x2 block and the bend moves rows in half-pixel steps. A frame is one
+  // (bend level, flutter phase) pair, built once on first use and cached; drawing only picks and blits.
+  //   bend    : the whole plant leans from the root up, growing with height (the base never moves)
+  //   flutter : a small travelling ripple, strong at the canopy rim and zero in its core
+  //   shimmer : a few highlight pixels dim for a moment as the ripple passes
+  var WK = 2, W_PL = 3, W_PR = 6, W_PT = 1, W_PH = 6, W_BMIN = -4, W_BMAX = 10;
+  var colMemo = {};
+  function col32(c) {
+    var v = colMemo[c];
+    if (v == null) {
+      var n = parseInt(c.slice(1), 16);
+      v = colMemo[c] = (0xff000000 | ((n & 255) << 16) | (n & 0xff00) | ((n >> 16) & 255)) >>> 0;
+    }
+    return v;
+  }
+  function toU32(g) {
+    var a = new Uint32Array(g.w * g.h);
+    for (var i = 0; i < a.length; i++) if (g.d[i]) a[i] = col32(g.d[i]);
+    return { w: g.w, h: g.h, d: a };
+  }
+  // distance (in art pixels) from each canopy pixel to the nearest empty one
+  function edgeDist(g) {
+    var w = g.w, h = g.h, d = new Uint8Array(w * h), x, y, i, v;
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+      i = y * w + x;
+      if (!g.d[i]) { d[i] = 0; continue; }
+      v = 60;
+      v = Math.min(v, (x > 0 ? d[i - 1] : 0) + 1, (y > 0 ? d[i - w] : 0) + 1);
+      d[i] = v;
+    }
+    for (y = h - 1; y >= 0; y--) for (x = w - 1; x >= 0; x--) {
+      i = y * w + x;
+      if (!d[i]) continue;
+      d[i] = Math.min(d[i], (x < w - 1 ? d[i + 1] : 0) + 1, (y < h - 1 ? d[i + w] : 0) + 1);
+    }
+    return d;
+  }
+  // o: { w, h, ox, oy, base (grid or null), can (grid), canX, canY, rootY, topY, pow, shim [[from, to], ...], out }
+  function windSet(o) {
+    var s = {
+      w: o.w, h: o.h, ox: o.ox, oy: o.oy, base: o.base ? toU32(o.base) : null, can: toU32(o.can),
+      canX: o.canX || 0, canY: o.canY || 0, rootY: o.rootY, topY: o.topY || 0, pow: o.pow || 1.5,
+      out: col32(o.out || OUT), shim: {}, hasShim: false, frames: {}
+    };
+    s.dist = edgeDist(s.can);
+    (o.shim || []).forEach(function (q) { s.shim[col32(q[0])] = col32(q[1]); s.hasShim = true; });
+    return s;
+  }
+  function windFrame(s, b, p) {
+    var W = (s.w + W_PL + W_PR) * WK, Hh = (s.h + W_PT) * WK;
+    var c = document.createElement('canvas'); c.width = W; c.height = Hh;
+    var x2 = c.getContext('2d'), id = x2.createImageData(W, Hh), o = new Uint32Array(id.data.buffer);
+    var can = s.can, base = s.base, cw = can.w, ch = can.h, dist = s.dist;
+    var span = s.rootY - s.topY, ang = p / W_PH * Math.PI * 2, A = 0.9 + Math.abs(b) * 0.16;
+    var X, Y, i;
+    for (Y = 0; Y < Hh; Y++) {
+      var ya = Y / WK - W_PT;
+      var u = (s.rootY - ya) / span; u = u < 0 ? 0 : u > 1 ? 1 : u;
+      var bend = b * Math.pow(u, s.pow), rb = Math.round(bend), lift = 0.35 + 0.65 * u;
+      var cyl_ = (Y >> 1) - W_PT - s.canY;
+      for (X = 0; X < W; X++) {
+        var col = 0;
+        // rim factor, read where this pixel would sit without flutter
+        var ex = ((X - rb) >> 1) - W_PL - s.canX, e = 1;
+        if (ex >= 0 && ex < cw && cyl_ >= 0 && cyl_ < ch) {
+          var dd = dist[cyl_ * cw + ex];
+          e = dd <= 1 ? 1 : dd >= 7 ? 0 : 1 - (dd - 1) / 6;
+        }
+        var xa = X / WK;
+        var fx = A * e * lift * Math.sin(ang + ya * 0.55 + xa * 0.31);
+        var fy = Math.round(A * 0.55 * e * lift * Math.sin(ang + xa * 0.42 - ya * 0.2 + 1.3));
+        var sx = ((X - Math.round(bend + fx)) >> 1) - W_PL - s.canX, sy = ((Y - fy) >> 1) - W_PT - s.canY;
+        if (sx >= 0 && sx < cw && sy >= 0 && sy < ch) {
+          col = can.d[sy * cw + sx];
+          if (col && s.hasShim && s.shim[col] && hash(sx + 101, sy + 57) < 0.24 &&
+              ((Math.floor(hash(sx + 7, sy + 211) * W_PH) + p) % W_PH) < 2) col = s.shim[col];
+        }
+        if (!col && base) {
+          var bx = ((X - rb) >> 1) - W_PL, by = (Y >> 1) - W_PT;
+          if (bx >= 0 && bx < base.w && by >= 0 && by < base.h) col = base.d[by * base.w + bx];
+        }
+        if (col) o[Y * W + X] = col;
+      }
+    }
+    // outline: one art pixel (two device pixels) on the four sides, as the 1x outline was
+    var add = [], oc = s.out;
+    for (Y = 0; Y < Hh; Y++) for (X = 0; X < W; X++) {
+      i = Y * W + X;
+      if (o[i]) continue;
+      if ((X > 0 && o[i - 1]) || (X > 1 && o[i - 2]) || (X < W - 1 && o[i + 1]) || (X < W - 2 && o[i + 2]) ||
+          (Y > 0 && o[i - W]) || (Y > 1 && o[i - 2 * W]) || (Y < Hh - 1 && o[i + W]) || (Y < Hh - 2 && o[i + 2 * W])) add.push(i);
+    }
+    for (i = 0; i < add.length; i++) o[add[i]] = oc;
+    x2.putImageData(id, 0, 0);
+    return c;
+  }
+  // per frame: pick a cached frame from wind, time and a per-plant phase, then one drawImage
+  function windDraw(ctx, s, px, py, env, amp) {
+    var t = env && env.t || 0, w = env && env.wind != null ? env.wind : 0.2;
+    if (env && env.weather === 'wind') w = Math.max(w, 0.6);
+    w = w < 0 ? 0 : w > 1 ? 1 : w;
+    var h1 = hash(px | 0, py | 0), h2 = hash((py | 0) + 91, (px | 0) + 17);
+    // a gust front crosses the map from the left (the grass uses the same front), trees follow a beat later
+    var gust = Math.sin(t * 1.5 - px * 0.02625 - py * 0.01 - 0.6) * 0.5 + 0.5; gust *= gust;
+    var lean = w * (1.5 + 9 * gust) +
+               Math.sin(t * (0.9 + w * 1.4) + h1 * 6.283) * (0.9 + w * 2.2) +
+               Math.sin(t * (2.3 + w * 2) + h2 * 6.283) * (0.3 + w * 0.9);
+    var b = Math.round(lean * amp); b = b < W_BMIN ? W_BMIN : b > W_BMAX ? W_BMAX : b;
+    var p = Math.floor(t * (2.5 + w * 9) + h2 * W_PH) % W_PH; if (p < 0) p += W_PH;
+    var k = (b - W_BMIN) * W_PH + p, c = s.frames[k] || (s.frames[k] = windFrame(s, b, p));
+    ctx.drawImage(c, Math.round(px + s.ox) - W_PL, Math.round(py + s.oy) - W_PT, c.width / WK, c.height / WK);
+  }
+  H._treeWind = { set: windSet, draw: windDraw };
+
   // ---------------- TREE ----------------
-  var TREE_FR = 9;
   function treeCanopy() {
     var g = G(48, 46);
     var blobs = [[24, 30, 15, 9], [12, 27, 9, 8], [36, 27, 9, 8], [24, 19, 15, 12], [16, 12, 9, 8], [32, 12, 9, 8], [24, 8, 9, 7]];
@@ -107,84 +222,58 @@ window.H = window.H || {};
     }
     return g;
   }
-  function treeFrames() {
-    var can = treeCanopy();
-    var frames = [];
-    for (var f = 0; f < TREE_FR; f++) {
-      var s = (f - (TREE_FR - 1) / 2) * 0.9; // -3.6 .. 3.6
-      var g = G(56, 62);
-      // trunk with root flare (footprint at x 20..36, y 46..62)
-      cyl(g, 25, 30, 7, 28, BARK);
-      cyl(g, 23, 54, 11, 4, BARK, -0.05);
-      sp(g, 22, 57, BARK[1]); sp(g, 34, 57, BARK[1]);
-      for (var y = 32; y < 56; y += 3) sp(g, 27 + ((y * 7) % 3), y, BARK[0]);
-      rect(g, 25, 30, 7, 5, BARK[0]);
-      // canopy, sheared (top moves most)
-      for (var j = 0; j < can.h; j++) {
-        var off = Math.round(s * Math.pow((can.h - j) / can.h, 1.3));
-        for (var i = 0; i < can.w; i++) {
-          var c = can.d[j * can.w + i]; if (c) sp(g, i + 4 + off, j, c);
-        }
-      }
-      frames.push(mk(g, -20, -46));
-    }
-    return frames;
+  function treeSet() {
+    var g = G(56, 62);
+    // trunk with root flare (footprint at x 20..36, y 46..62)
+    cyl(g, 25, 30, 7, 28, BARK);
+    cyl(g, 23, 54, 11, 4, BARK, -0.05);
+    sp(g, 22, 57, BARK[1]); sp(g, 34, 57, BARK[1]);
+    for (var y = 32; y < 56; y += 3) sp(g, 27 + ((y * 7) % 3), y, BARK[0]);
+    rect(g, 25, 30, 7, 5, BARK[0]);
+    return windSet({ w: 56, h: 62, ox: -20, oy: -46, base: g, can: treeCanopy(), canX: 4, canY: 0, rootY: 54, topY: 0, pow: 1.5,
+      shim: [[LEAF[6], LEAF[5]], [LEAF[5], LEAF[4]]] });
   }
 
   // ---------------- PINE ----------------
-  var PINE_FR = 7;
-  function pineFrames() {
-    var frames = [];
-    for (var f = 0; f < PINE_FR; f++) {
-      var s = (f - (PINE_FR - 1) / 2) * 0.8;
-      var g = G(32, 54);
-      cyl(g, 13, 40, 6, 12, BARK);
-      rect(g, 13, 40, 6, 3, BARK[0]);
-      for (var k = 3; k >= 0; k--) {
-        var top = 2 + k * 9, hgt = 15, hw = 5 + k * 2.6;
-        for (var r = 0; r < hgt; r++) {
-          var Y = top + r;
-          var off = Math.round(s * (54 - Y) / 54 * 1.2);
-          var w = hw * (r + 2) / (hgt + 1);
-          var jag = (r >= hgt - 3) ? Math.floor(hash(k, r) * 2) : 0;
-          for (var dx = -Math.ceil(w); dx <= Math.ceil(w); dx++) {
-            if (Math.abs(dx) > w) continue;
-            if (r === hgt - 1 && ((dx + k) & 3) === 0) continue; // saw-tooth bottom
-            var nx = dx / (w + 0.5);
-            var v = 0.62 - nx * 0.42 - (r / hgt) * 0.38 + (3 - k) * 0.03 + (hash(dx + 40, Y) - 0.5) * 0.18 - jag * 0.05;
-            var X = 16 + dx + off;
-            sp(g, X, Y, pick(PINE, clamp(v, 0, 0.999), X, Y));
-          }
-          // needle highlights
-          if (r % 4 === 1) sp(g, 16 - Math.floor(w * 0.5) + off, Y, PINE[5]);
+  function pineSet() {
+    var base = G(32, 54), g = G(32, 54);
+    cyl(base, 13, 40, 6, 12, BARK);
+    rect(base, 13, 40, 6, 3, BARK[0]);
+    for (var k = 3; k >= 0; k--) {
+      var top = 2 + k * 9, hgt = 15, hw = 5 + k * 2.6;
+      for (var r = 0; r < hgt; r++) {
+        var Y = top + r;
+        var w = hw * (r + 2) / (hgt + 1);
+        var jag = (r >= hgt - 3) ? Math.floor(hash(k, r) * 2) : 0;
+        for (var dx = -Math.ceil(w); dx <= Math.ceil(w); dx++) {
+          if (Math.abs(dx) > w) continue;
+          if (r === hgt - 1 && ((dx + k) & 3) === 0) continue; // saw-tooth bottom
+          var nx = dx / (w + 0.5);
+          var v = 0.62 - nx * 0.42 - (r / hgt) * 0.38 + (3 - k) * 0.03 + (hash(dx + 40, Y) - 0.5) * 0.18 - jag * 0.05;
+          var X = 16 + dx;
+          sp(g, X, Y, pick(PINE, clamp(v, 0, 0.999), X, Y));
         }
+        // needle highlights
+        if (r % 4 === 1) sp(g, 16 - Math.floor(w * 0.5), Y, PINE[5]);
       }
-      frames.push(mk(g, -8, -38));
     }
-    return frames;
+    return windSet({ w: 32, h: 54, ox: -8, oy: -38, base: base, can: g, rootY: 50, topY: 2, pow: 1.6, shim: [[PINE[5], PINE[4]]] });
   }
 
   // ---------------- BUSH ----------------
-  var BUSH_FR = 5;
-  function bushFrames() {
-    var frames = [];
-    for (var f = 0; f < BUSH_FR; f++) {
-      var s = f - 2;
-      var g = G(22, 20);
-      var o = Math.round(s * 0.5);
-      ball(g, 7 + o, 12, 6, 5, BUSH, 0.3, -0.05);
-      ball(g, 15 + o, 12, 6, 5, BUSH, 0.3, -0.05);
-      ball(g, 11 + s, 9, 7, 6, BUSH, 0.3, 0.05);
-      ball(g, 11 + o, 15, 8, 3, BUSH, 0.2, -0.12);
-      var berries = [[8, 9], [14, 7], [16, 13], [6, 14], [11, 12]];
-      for (var b = 0; b < berries.length; b++) {
-        var bx = berries[b][0] + o, by = berries[b][1];
-        sp(g, bx, by, RED[3]); sp(g, bx + 1, by, RED[2]); sp(g, bx, by + 1, RED[1]); sp(g, bx + 1, by + 1, RED[1]);
-        sp(g, bx, by, '#f4a28a');
-      }
-      frames.push(mk(g, -3, -4));
+  function bushSet() {
+    var g = G(22, 20);
+    ball(g, 7, 12, 6, 5, BUSH, 0.3, -0.05);
+    ball(g, 15, 12, 6, 5, BUSH, 0.3, -0.05);
+    ball(g, 11, 9, 7, 6, BUSH, 0.3, 0.05);
+    ball(g, 11, 15, 8, 3, BUSH, 0.2, -0.12);
+    var berries = [[8, 9], [14, 7], [16, 13], [6, 14], [11, 12]];
+    for (var b = 0; b < berries.length; b++) {
+      var bx = berries[b][0], by = berries[b][1];
+      sp(g, bx, by, RED[3]); sp(g, bx + 1, by, RED[2]); sp(g, bx, by + 1, RED[1]); sp(g, bx + 1, by + 1, RED[1]);
+      sp(g, bx, by, '#f4a28a');
     }
-    return frames;
+    return windSet({ w: 22, h: 20, ox: -3, oy: -4, base: null, can: g, rootY: 18, topY: 3, pow: 1.3, shim: [[BUSH[5], BUSH[4]]] });
   }
 
   // ---------------- FENCES ----------------
@@ -449,14 +538,6 @@ window.H = window.H || {};
   };
 
   function isNight(env) { var h = env && env.time != null ? env.time : 12; return h >= 19 || h < 6; }
-  function swayIndex(env, px, py, n, amp) {
-    var t = env && env.t || 0, w = env && env.wind != null ? env.wind : 0.2;
-    var speed = 1.2 + w * 2.2;
-    var s = Math.sin(t * speed + px * 0.07 + py * 0.05) * (0.25 + w * 0.75) +
-            Math.sin(t * speed * 2.3 + px * 0.13) * 0.15 * w;
-    s = clamp(s * amp, -1, 1);
-    return clamp(Math.round((s + 1) / 2 * (n - 1)), 0, n - 1);
-  }
   function blit(ctx, s, px, py) { ctx.drawImage(s.c, Math.round(px + s.ox), Math.round(py + s.oy)); }
 
   H.propsOutdoor = {
@@ -478,18 +559,9 @@ window.H = window.H || {};
     },
     draw: function (ctx, type, px, py, env) {
       env = env || {};
-      if (type === 'tree') {
-        var tf = sprite('tree', treeFrames);
-        return blit(ctx, tf[swayIndex(env, px, py, tf.length, 1)], px, py);
-      }
-      if (type === 'pine') {
-        var pf = sprite('pine', pineFrames);
-        return blit(ctx, pf[swayIndex(env, px, py, pf.length, 0.8)], px, py);
-      }
-      if (type === 'bush') {
-        var bf = sprite('bush', bushFrames);
-        return blit(ctx, bf[swayIndex(env, px + 31, py, bf.length, 0.7)], px, py);
-      }
+      if (type === 'tree') return windDraw(ctx, sprite('tree', treeSet), px, py, env, 1);
+      if (type === 'pine') return windDraw(ctx, sprite('pine', pineSet), px, py, env, 0.85);
+      if (type === 'bush') return windDraw(ctx, sprite('bush', bushSet), px, py, env, 0.45);
       if (type === 'lamp') {
         var n = isNight(env) || (env.time != null && env.time >= 18);
         return blit(ctx, sprite(n ? 'lamp_n' : 'lamp_d', function () { return lamp(n); }), px, py);

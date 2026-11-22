@@ -94,12 +94,6 @@ window.H = window.H || {};
   ];
 
   // ================= TREES =================
-  function shearCanopy(g, can, ox, oy, s) {
-    for (var j = 0; j < can.h; j++) {
-      var off = Math.round(s * Math.pow((can.h - j) / can.h, 1.3));
-      for (var i = 0; i < can.w; i++) { var c = can.d[j * can.w + i]; if (c) sp(g, i + ox + off, j + oy, c); }
-    }
-  }
   function canopy(ramp, blobs, seed, accents) {
     var g = G(46, 42);
     blobs.forEach(function (b, i) { ball(g, b[0], b[1], b[2], b[3], ramp, 0.3, i >= 3 ? 0.04 : -0.06, seed); });
@@ -115,7 +109,7 @@ window.H = window.H || {};
     if (accents) accents(g);
     return g;
   }
-  function fruitTreeFrames() {
+  function fruitTreeSet() {
     var can = canopy(DLEAF, [[23, 28, 14, 8], [12, 24, 9, 8], [34, 24, 9, 8], [23, 17, 15, 11], [16, 10, 9, 7], [30, 10, 9, 7]], 31,
       function (g) {
         for (var a = 0; a < 15; a++) {
@@ -125,20 +119,17 @@ window.H = window.H || {};
           sp(g, x + 2, y + 1, APPLE[1]); sp(g, x, y, APPLE[3]); sp(g, x + 1, y - 1, '#5a3b22');
         }
       });
-    var fr = [];
-    for (var f = 0; f < 7; f++) {
-      var g = G(54, 60);
-      cyl(g, 24, 30, 6, 26, BARK); cyl(g, 22, 52, 10, 4, BARK, -0.05);
-      for (var y = 32; y < 54; y += 4) sp(g, 26, y, BARK[0]);
-      rect(g, 24, 30, 6, 4, BARK[0]);
-      shearCanopy(g, can, 4, 0, (f - 3) * 1.1);
-      // fallen apples near roots
-      rect(g, 16, 55, 2, 2, APPLE[2]); sp(g, 16, 55, APPLE[3]); rect(g, 37, 56, 2, 2, APPLE[1]);
-      fr.push(mk(g, -19, -44));
-    }
-    return fr;
+    var g = G(54, 60);
+    cyl(g, 24, 30, 6, 26, BARK); cyl(g, 22, 52, 10, 4, BARK, -0.05);
+    for (var y = 32; y < 54; y += 4) sp(g, 26, y, BARK[0]);
+    rect(g, 24, 30, 6, 4, BARK[0]);
+    // fallen apples near roots
+    rect(g, 16, 55, 2, 2, APPLE[2]); sp(g, 16, 55, APPLE[3]); rect(g, 37, 56, 2, 2, APPLE[1]);
+    // the apples are part of the canopy, so they ride the wind with it
+    return H._treeWind.set({ w: 54, h: 60, ox: -19, oy: -44, base: g, can: can, canX: 4, canY: 0, rootY: 52, topY: 0, pow: 1.5,
+      shim: [[DLEAF[5], DLEAF[4]]] });
   }
-  function cherryTreeFrames() {
+  function cherryTreeSet() {
     var can = canopy(CHER, [[23, 28, 15, 8], [11, 24, 9, 7], [35, 23, 9, 8], [23, 16, 15, 11], [14, 10, 8, 7], [31, 9, 9, 7], [23, 6, 7, 5]], 57,
       function (g) {
         // peek-through branches
@@ -151,19 +142,15 @@ window.H = window.H || {};
           if (gp(g, sx, sy)) sp(g, sx, sy, CHER[6]);
         }
       });
-    var fr = [];
-    for (var f = 0; f < 7; f++) {
-      var g = G(54, 60);
-      cyl(g, 24, 32, 6, 24, CBARK); cyl(g, 21, 52, 12, 4, CBARK, -0.05);
-      for (var y = 34; y < 54; y += 3) { sp(g, 25, y, CBARK[0]); sp(g, 28, y + 1, CBARK[3]); }
-      // forked limbs
-      for (var k = 0; k < 8; k++) { sp(g, 23 - k, 33 - k, CBARK[1]); sp(g, 30 + k, 32 - k, CBARK[1]); sp(g, 24 - k, 33 - k, CBARK[2]); }
-      shearCanopy(g, can, 4, 0, (f - 3) * 0.9);
-      // fallen petals on ground
-      [[14, 57], [19, 58], [33, 57], [38, 56], [27, 59], [10, 56]].forEach(function (p) { sp(g, p[0], p[1], CHER[4]); });
-      fr.push(mk(g, -19, -44));
-    }
-    return fr;
+    var g = G(54, 60);
+    cyl(g, 24, 32, 6, 24, CBARK); cyl(g, 21, 52, 12, 4, CBARK, -0.05);
+    for (var y = 34; y < 54; y += 3) { sp(g, 25, y, CBARK[0]); sp(g, 28, y + 1, CBARK[3]); }
+    // forked limbs
+    for (var k = 0; k < 8; k++) { sp(g, 23 - k, 33 - k, CBARK[1]); sp(g, 30 + k, 32 - k, CBARK[1]); sp(g, 24 - k, 33 - k, CBARK[2]); }
+    // fallen petals on ground
+    [[14, 57], [19, 58], [33, 57], [38, 56], [27, 59], [10, 56]].forEach(function (p) { sp(g, p[0], p[1], CHER[4]); });
+    return H._treeWind.set({ w: 54, h: 60, ox: -19, oy: -44, base: g, can: can, canX: 4, canY: 0, rootY: 52, topY: 0, pow: 1.5,
+      shim: [[CHER[6], CHER[5]]] });
   }
 
   // ================= SMALL PLANTS =================
@@ -188,24 +175,18 @@ window.H = window.H || {};
     }
     return fr;
   }
-  function butterflyBushFrames() {
-    var fr = [];
-    for (var f = 0; f < 4; f++) {
-      var g = G(24, 26);
-      ball(g, 12, 18, 9, 6, ['#18361f', '#265127', '#387131', '#53923e', '#7cb64e'], 0.35, 0, 8);
-      var off = f - 1.5;
-      for (var s = 0; s < 6; s++) {
-        var x = 5 + s * 3, top = 4 + Math.floor(hash(s, 4, 12) * 6);
-        var o = Math.round(off * (s % 2 ? 0.8 : 1.2));
-        for (var y = top; y < 15; y++) {
-          var xx = x + Math.round(o * (15 - y) / 11);
-          var pc = ['#4a2470', '#7a3fb0', '#a86ae0', '#d6b0ff'][(y + s) % 3 + (y === top ? 1 : 0)];
-          sp(g, xx, y, pc); if (y > top + 1 && y < 13) sp(g, xx + 1, y, (y % 2) ? '#7a3fb0' : '#a86ae0');
-        }
+  function butterflyBushSet() {
+    var g = G(24, 26);
+    ball(g, 12, 18, 9, 6, ['#18361f', '#265127', '#387131', '#53923e', '#7cb64e'], 0.35, 0, 8);
+    for (var s = 0; s < 6; s++) {
+      var x = 5 + s * 3, top = 4 + Math.floor(hash(s, 4, 12) * 6);
+      for (var y = top; y < 15; y++) {
+        var pc = ['#4a2470', '#7a3fb0', '#a86ae0', '#d6b0ff'][(y + s) % 3 + (y === top ? 1 : 0)];
+        sp(g, x, y, pc); if (y > top + 1 && y < 13) sp(g, x + 1, y, (y % 2) ? '#7a3fb0' : '#a86ae0');
       }
-      fr.push(mk(g, -4, -10));
     }
-    return fr;
+    return H._treeWind.set({ w: 24, h: 26, ox: -4, oy: -10, base: null, can: g, rootY: 24, topY: 4, pow: 1.4,
+      shim: [['#7cb64e', '#53923e']] });
   }
   function mushroomRing() {
     var g = G(16, 16);
@@ -542,13 +523,13 @@ window.H = window.H || {};
     if (!INFO[type]) return oldDraw.call(base, ctx, type, px, py, env);
     var fr, v;
     switch (type) {
-      case 'fruit_tree': fr = sprite(type, fruitTreeFrames); return blit(ctx, fr[sway(env, px, py, fr.length, 1)], px, py);
-      case 'cherry_tree': fr = sprite(type, cherryTreeFrames); return blit(ctx, fr[sway(env, px, py, fr.length, 1)], px, py);
+      case 'fruit_tree': return H._treeWind.draw(ctx, sprite(type, fruitTreeSet), px, py, env, 1);
+      case 'cherry_tree': return H._treeWind.draw(ctx, sprite(type, cherryTreeSet), px, py, env, 1);
       case 'flower_patch':
         v = Math.floor(hash(px >> 4, py >> 4, 2) * 3);
         fr = sprite(type + v, function () { return flowerPatchFrames(v); });
         return blit(ctx, fr[sway(env, px + 13, py, fr.length, 1)], px, py);
-      case 'butterfly_bush': fr = sprite(type, butterflyBushFrames); return blit(ctx, fr[sway(env, px + 5, py, fr.length, 0.9)], px, py);
+      case 'butterfly_bush': return H._treeWind.draw(ctx, sprite(type, butterflyBushSet), px, py, env, 0.5);
       case 'reeds': fr = sprite(type, reedsFrames); return blit(ctx, fr[sway(env, px + 3, py, fr.length, 1)], px, py);
       case 'lilypad': fr = sprite(type, lilypadFrames); return blit(ctx, fr[Math.floor((env.t || 0) * 0.8 + px * 0.03) & 1], px, py);
       case 'market_stall':
