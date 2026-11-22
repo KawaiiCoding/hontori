@@ -15,6 +15,7 @@ window.H = window.H || {};
   // ---------------------------------------------------------------- quest
   ST.defineQuest({ id: 'leafring', icon: 'leaf', title: 'The Leaf Ring', desc: 'Rootwood Hall, south of Whisperwood, holds the first ring.', steps: [
     { id: 'road', text: 'Follow the path to the south edge of Whisperwood and on to Mossgrove', done: function (s) { return !!s.flags['visited:mossgrove']; } },
+    { id: 'maze', text: 'Open the root gate: push the leaf piles onto the glowing moss', done: function () { return F('c2:maze'); } },
     { id: 'fern', text: 'Meet Warden Fern inside Rootwood Hall', done: function () { return F('c2:fern'); } },
     { id: 'sprouts', text: 'Wand trial: wake the three wilted sprouts in the Hall', done: function () { return F('c2:sprouts'); } },
     { id: 'duel', text: 'Ring duel with Warden Fern. No switching hontori.', done: function () { return F('c2:ring'); } }
@@ -25,10 +26,11 @@ window.H = window.H || {};
 
   // map markers
   function spot(map, x, y) { var cur = here(); if (!cur) return null; if (cur === map) return { map: map, x: x, y: y };
-    var route = { village: { whisperwood: [29, 39], mossgrove: [29, 39], rootwood_hall: [29, 39] }, whisperwood: { mossgrove: [24, 39], rootwood_hall: [24, 39], village: [24, 0] }, mossgrove: { rootwood_hall: [20, 8], whisperwood: [19, 0] }, rootwood_hall: { mossgrove: [13, 21] } };
+    var route = { village: { whisperwood: [29, 39], mossgrove: [29, 39], rootwood_hall: [29, 39] }, whisperwood: { mossgrove: [24, 39], rootwood_hall: [24, 39], village: [24, 0] }, mossgrove: { rootwood_hall: [20, 8], rootwood_gate: [20, 8], whisperwood: [19, 0] }, rootwood_gate: { rootwood_hall: [8, 3], mossgrove: [8, 13] }, rootwood_hall: { mossgrove: [13, 21] } };
     var r = route[cur] && route[cur][map]; return r ? { map: cur, x: r[0], y: r[1] } : null; }
   function aim(qid, sid, fn) { var q = ST.quests[qid], st = q && q.steps.filter(function (s) { return s.id === sid; })[0]; if (st) Object.defineProperty(st, 'target', { configurable: true, get: fn }); }
   aim('leafring', 'road', function () { return spot('mossgrove', 19, 2); });
+  aim('leafring', 'maze', function () { return spot('rootwood_gate', 8, 5); });
   aim('leafring', 'fern', function () { return spot('rootwood_hall', 13, 12); });
   aim('leafring', 'sprouts', function () { return spot('rootwood_hall', 13, 12); });
   aim('leafring', 'duel', function () { return spot('rootwood_hall', 13, 12); });
@@ -57,6 +59,28 @@ window.H = window.H || {};
       return prev ? prev(door, mapName) : null;
     };
   })(H.doorGuard);
+
+  // Ivo at the maze: explains once, and can reset the leaves if they get stuck
+  ST.defineEvent({ id: 'c2_maze', when: 'auto', map: 'rootwood_gate', cond: function (s) { return !s.flags['c2:maze']; }, run: function (a) {
+    return a.say('kid2', 'Ivo', 'Welcome to the Root Maze. The gate opens when the three leaf piles rest on the glowing moss.')
+      .then(function () { return a.say('kid2', 'Ivo', 'Walk into a pile to push it. If one gets stuck, ask me and I will rake them back.'); });
+  } });
+  (function hook() {
+    if (!H.interact || !H.interact.run) { setTimeout(hook, 300); return; }
+    if (H.interact.__maze) return; H.interact.__maze = true;
+    var has0 = H.interact.has, run0 = H.interact.run;
+    H.interact.has = function (t) { return t === 'leafmaze' || has0.apply(this, arguments); };
+    H.interact.run = function (t, c) {
+      if (t !== 'leafmaze') return run0.apply(this, arguments);
+      var a = ST.api(c || {});
+      if (F('c2:maze')) return a.say('kid2', 'Ivo', 'You solved it. Fern is waiting inside.');
+      return a.choose(['Rake the leaves back', 'Keep trying']).then(function (i) {
+        if (i !== 0) return a.say('kid2', 'Ivo', 'Take your time. Think before you push.');
+        H.puzzles.reset('rootwood_gate'); a.sfx('step');
+        return a.say('kid2', 'Ivo', 'There. Fresh start.');
+      });
+    };
+  })();
 
   // first steps into Mossgrove
   ST.defineEvent({ id: 'c2_arrive', when: 'auto', map: 'mossgrove', cond: function (s) { return !!s.flags['c1:complete']; }, run: function (a) {

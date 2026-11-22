@@ -20,6 +20,7 @@ window.H = window.H || {};
   var info = {
     heart_tree: { fw: 6, fh: 3, solid: true, light: { dx: 48, dy: 4, r: 110, color: '#c8ff90', flicker: true } },
     hall_wall: { fw: 1, fh: 1, solid: false, decor: true },
+    root_wall: { fw: 1, fh: 1, solid: true },
     stone_pillar: { fw: 1, fh: 1, solid: true },
     leaf_window: { fw: 2, fh: 1, solid: false, decor: true, light: { dx: 16, dy: 30, r: 46, color: '#d8ffb0', flicker: false } },
     hall_banner: { fw: 1, fh: 1, solid: false, decor: true },
@@ -72,6 +73,17 @@ window.H = window.H || {};
     P(g, 0, 29, '#3a3a36', 16, 3); P(g, 0, 29, STONE[3], 16, 1);
     for (var x = 0; x < 16; x++) if (hash(x, 9) < 0.5) P(g, x, 26 + (hash(x, 8) * 3 | 0), MOSS[(hash(x, 7) * 3) | 0], 1, 3);
     return { c: s.c, ox: 0, oy: 0 };
+  };
+  art.root_wall = function () {
+    // a living hedge wall: dense leaves on top, a band of twisted roots at the foot
+    var s = mk(16, 28), g = s.g;
+    P(g, 0, 24, 'rgba(20,10,5,0.35)', 16, 4);
+    P(g, 0, 18, OL, 16, 7); for (var i = 0; i < 4; i++) { P(g, i * 4, 18, BARK[1 + (i % 2)], 3, 6); P(g, i * 4, 18, BARK[3], 1, 3); }
+    P(g, 0, 2, OL, 16, 17); P(g, 1, 3, LEAF[0], 14, 15);
+    for (i = 0; i < 46; i++) { var x = 1 + hash(i, 3) * 13, y = 3 + hash(i, 4) * 14; P(g, x, y, hash(i, 5) < 0.4 ? LEAF[1] : hash(i, 5) < 0.8 ? LEAF[2] : LEAF[3], 2, 2); }
+    for (i = 0; i < 8; i++) P(g, 2 + hash(i, 6) * 12, 3 + hash(i, 7) * 4, LEAF[4], 1, 1);
+    P(g, 1, 3, LEAF[3], 14, 1);
+    return { c: s.c, ox: 0, oy: -12 };
   };
   art.stone_pillar = function () {
     var s = mk(16, 60), g = s.g;
@@ -171,6 +183,7 @@ window.H = window.H || {};
     glowcaps: [['Tiny mushrooms that glow on their own.', 'Small and bright in the forest night.']],
     sprout_pot: [['A sprout in a clay pot.', null]],
     stone_dais: [['A stone dais in front of the Heart Tree.', null]],
+    root_wall: [['A hedge grown on old roots, thick as a wall.', 'Roots that twist and roots that turn. Push the leaves, and they will learn.'], ['The roots do not move. The leaves might.', null]],
     moss_runner: [['Soft moss, like a carpet.', null]]
   };
   function hook() {

@@ -93,7 +93,7 @@
       n.slot = i; n.sc0 = sc; n.away = !!s.away; if (s.x != null) { n.x = s.x; n.y = s.y; n.px = s.x * T + 8; n.py = s.y * T + 15; } if (s.dir != null) n.dir = s.dir;
       if (s.lines) n.lines = s.lines; });
   }
-  const blocked = (x, y) => x < 0 || y < 0 || x >= map.w || y >= map.h || solid[y][x] || npcs.some(n => !n.away && n.x === x && n.y === y) || !!(H.pickups && H.pickups.at(mapName, x, y));
+  const blocked = (x, y) => x < 0 || y < 0 || x >= map.w || y >= map.h || solid[y][x] || !!(H.dynBlocked && H.dynBlocked(mapName, x, y)) || npcs.some(n => !n.away && n.x === x && n.y === y) || !!(H.pickups && H.pickups.at(mapName, x, y));
   let pickBump = ''; // the home item the kid last walked into (so holding the stick does not reopen the choice)
   const DIRS = [[0, 1], [0, -1], [-1, 0], [1, 0]];
 
@@ -327,6 +327,8 @@
       return;
     }
     if (!blocked(nx, ny) || door) { pickBump = ''; player.moving = true; player.fx = player.tx; player.fy = player.ty; player.tx = nx; player.ty = ny; player.prog = carry || 0; }
+    // puzzles: walking into a pushable thing moves it one tile if the space behind is free
+    else if (H.pushAt && H.pushAt(mapName, nx, ny, ddx, ddy, blocked)) { player.moving = true; player.fx = player.tx; player.fy = player.ty; player.tx = nx; player.ty = ny; player.prog = 0; }
     else if (H.pickups && H.pickups.at(mapName, nx, ny) && pickBump !== nx + ',' + ny) { pickBump = nx + ',' + ny; player.frame = 0; interactAt(nx, ny); }
     else { player.frame = 0; if (bumpT <= 0) { sfx('bump'); bumpT = 0.4; } }
   }

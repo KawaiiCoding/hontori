@@ -53,7 +53,7 @@ window.H = window.H || {};
   put('flowerbed', 16, 15, true); put('flowerbed', 23, 15, true);
   [[30, 4], [37, 5], [29, 8], [36, 9], [33, 10]].forEach(function (p) { put('reeds', p[0], p[1]); });
   [[32, 5], [35, 7]].forEach(function (p) { put('lilypad', p[0], p[1], true); });
-  put('mushroom_ring', 6, 26); put('mushroom_ring', 33, 24); put('rock', 11, 22); put('rock', 27, 22); put('log_pile', 2, 18);
+  put('mushroom_ring', 6, 26); put('mushroom_ring', 33, 24); put('fruit_tree', 10, 20); put('fruit_tree', 27, 18); put('rock', 11, 22); put('rock', 27, 22); put('log_pile', 2, 18);
   put('garden_bed', 10, 15 - 1); put('butterfly_bush', 12, 9); put('sign', 21, 24, true); put('stone_wall_h', 37, 25, true);
   put('fence_v', 38, 26, true); put('fence_v', 38, 27, true);   // the closed road to Whistling Pass
   // a ring of trees all around, thicker in the corners
@@ -110,8 +110,48 @@ window.H = window.H || {};
     doors: [{ x: DOOR, y: HH - 1, to: 'mossgrove', tx: 20, ty: 9, dir: 0 }, { x: DOOR - 1, y: HH - 1, to: 'mossgrove', tx: 19, ty: 9, dir: 0 }],
     spawn: { x: DOOR, y: HH - 2, dir: 1 }, door: DOOR
   };
-  // hall door: the middle of the school front
-  H.maps.mossgrove.doors.push({ x: 20, y: 8, to: 'rootwood_hall', tx: DOOR, ty: HH - 2, dir: 1 });
+  // ---------- the Root Maze: the entrance of Rootwood Hall. Push the leaf piles onto the glowing moss to open the root gate.
+  var LV = [
+    'RRRRRRRR.RRRRRRR',
+    'R....R.....R...R',
+    'R.L..R..O..R.L.R',
+    'R......R.......R',
+    'RRR.RRR.O.RR.R.R',
+    'R.....L.....R..R',
+    'R.RR.RR.O.R....R',
+    'R..............R',
+    'RRRRRRR...RRRRRR'
+  ];
+  var MW = 16, MT = 4, MH = MT + LV.length + 1, mg = [], mp = [], boxes = [], pads = [];
+  for (y = 0; y < MH; y++) { var mr = []; for (x = 0; x < MW; x++) mr.push(y < MT ? 'W' : y === MH - 1 ? 'V' : 'S'); mg.push(mr); }
+  mg[MH - 1][8] = 'S'; mg[MT - 1][8] = 'S';
+  for (x = 0; x < MW; x++) [0, 2].forEach(function (wy) { mp.push(pr('hall_wall', x, wy)); });
+  mp.push(pr('hall_banner', 4, 1), pr('hall_banner', 12, 1), pr('leaf_window', 1, 1), pr('leaf_window', 13, 1));
+  LV.forEach(function (row, ly) { row.split('').forEach(function (ch, lx) {
+    var my = MT + ly;
+    if (ch === 'R') mp.push(pr('root_wall', lx, my));
+    if (ch === 'L') boxes.push([lx, my]);
+    if (ch === 'O') pads.push([lx, my]);
+  }); });
+  mp.push(pr('glowcaps', 4, MT + 1), pr('glowcaps', 14, MT + 5));
+  H.maps.rootwood_gate = {
+    name: 'Root Maze', w: MW, h: MH, tileset: 'indoor', noRest: true,
+    ground: mg.map(function (r) { return r.join(''); }), legend: { W: 'wall', V: 'void', S: 'floor_stone', F: 'floor_wood' },
+    props: mp, buildings: [],
+    npcs: [{ key: 'kid2', x: 14, y: MT + 7, dir: 2, svc: 'leafmaze', lines: [['Ivo', 'This is the Root Maze. Every student of the Hall solves it.'], ['Ivo', 'Push the leaf piles onto the glowing moss.']] }],
+    doors: [{ x: 8, y: MH - 1, to: 'mossgrove', tx: 20, ty: 9, dir: 0 }, { x: 8, y: MT - 1, to: 'rootwood_hall', tx: DOOR, ty: HH - 2, dir: 1 }],
+    spawn: { x: 8, y: MH - 2, dir: 1 }, door: 8
+  };
+  H.maps.rootwood_hall.doors = [{ x: DOOR, y: HH - 1, to: 'rootwood_gate', tx: 8, ty: MT + 1, dir: 0 }, { x: DOOR - 1, y: HH - 1, to: 'rootwood_gate', tx: 8, ty: MT + 1, dir: 0 }];
+  if (H.puzzles) H.puzzles.def('rootwood_gate', { boxes: boxes, pads: pads, gate: [8, MT], flag: 'c2:maze', onSolve: function () {
+    if (H.ui && H.ui.toast) H.ui.toast('The root gate opens');
+    var a = H.story && H.story.api ? H.story.api({}) : null;
+    if (a) a.say('hontori', 'Leaves to moss, the roots let go. Now to the Hall, the way we know.');
+  } });
+  // the hall door now opens into the maze, not straight into the hall
+  H.maps.mossgrove.doors.push({ x: 20, y: 8, to: 'rootwood_gate', tx: 8, ty: MH - 2, dir: 1 });
+  // the original hall door: the middle of the school front
+
   // ---------- the two Mossgrove houses (rule: every open door leads somewhere)
   function room(w, h, door, floor) {
     var r = []; for (var yy = 0; yy < h; yy++) { var row = []; for (var xx = 0; xx < w; xx++) row.push(xx === 0 || xx === w - 1 || yy === h - 1 ? 'V' : yy < 2 ? 'W' : floor); r.push(row); }
