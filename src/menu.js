@@ -59,8 +59,9 @@
     '.hm-sc .lv{position:absolute;left:6px;top:6px;font-size:11px;font-weight:900;background:rgba(0,0,0,.55);border-radius:8px;padding:1px 6px}',
     '.hm-sc .hui-el{transform:scale(.85)}',
     '.hm-det{display:flex;gap:12px;align-items:center}.hm-det canvas{width:96px;height:96px;border-radius:14px;image-rendering:pixelated;background:rgba(0,0,0,.25);flex:none}',
-    '.hm-mana{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:900;margin:-4px 0 12px;opacity:.95}',
-    '.hm-cry{width:10px;height:14px;clip-path:polygon(50% 0,100% 35%,50% 100%,0 35%);background:rgba(255,255,255,.16)}.hm-cry.on{background:linear-gradient(180deg,#d8f0ff,#5aa8ff)}',
+    /* mana looks the same as in battle: a dark pill with glowing blue orbs */
+    '.hm-mana{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:900;margin:-2px 0 12px;padding:6px 12px;border-radius:12px;background:rgba(14,16,36,.84)}',
+    '.hm-cry{width:13px;height:13px;border-radius:50%;border:2px solid #9fd0ff;box-sizing:border-box}.hm-cry.on{background:radial-gradient(circle at 35% 35%,#fff,#7fc8ff 50%,#3a7ad8);box-shadow:0 0 6px #7fc8ff}',
     '.hm-mend{display:flex;flex-direction:column;align-items:center;line-height:1.1;background:rgba(120,200,255,.22)}.hm-mend small{font-size:10px;font-weight:700;opacity:.8}',
     '.hm-mend .ic{display:inline-block;width:10px;height:10px;border:2px solid #bfe4ff;border-radius:50%;margin-right:5px;vertical-align:-1px}',
     '.hm-mend[disabled]{opacity:.5;cursor:default}',
