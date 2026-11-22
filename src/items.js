@@ -20,13 +20,15 @@ window.H = window.H || {};
   var OTHER = {
     wand: ['Spirit Wand', 'wand'], novice_cert: ['Novice Certificate', 'scroll'], grey_letter: ['Sealed Letter', 'scroll'], ring_leaf: ['Leaf Ring', 'grass'],
     herb: ['Herb', 'grass'], ember_dust: ['Ember Dust', 'fire'], tide_pearl: ['Tide Pearl', 'water'], spirit_snack: ['Spirit Snack', 'heart'],
-    charm: ['Backpack Charm', 'star'], ramen: ['Ramen', 'bowl']
+    charm: ['Backpack Charm', 'star'], ramen: ['Ramen', 'energy']
   };
   // key things can never be dropped and never use a pocket
   var KEYS = { wand: 1, map: 1, novice_cert: 1, grey_letter: 1 };
   function isKey(id) { return !!KEYS[id] || /^ring_/.test(id); }
   // only things from home use a pocket
   function pocket(id) { return !!SPOT[id] && !isKey(id); }
+  // the Bean Bag is itself the sixth pocket, so it does not fill one
+  function fills(id) { return pocket(id) && id !== 'backpack'; }
   // what kind of thing it is: 'pocket', 'key', 'trade' or 'supply'
   function kind(id) { return isKey(id) ? 'key' : SPOT[id] ? 'pocket' : (H.money && H.money.TRADE[id]) ? 'trade' : 'supply'; }
   function nice(id) { return String(id).replace(/_/g, ' ').replace(/\b[a-z]/g, function (ch) { return ch.toUpperCase(); }); }
@@ -65,7 +67,7 @@ window.H = window.H || {};
   function has(id) { return (S().items || []).some(function (i) { return i.id === id; }); }
   function meta(id) { return (H.items && H.items.list.filter(function (x) { return x.id === id; })[0]) || { id: id, name: id }; }
   function active() { return !!F()['c1:morning']; }
-  function count() { return Object.keys(SPOT).filter(function (id) { return pocket(id) && has(id); }).length; }
+  function count() { return Object.keys(SPOT).filter(function (id) { return fills(id) && has(id); }).length; }
   function label() { return 'Pockets ' + count() + ' / ' + cap(); }
   function cap() { return 5 + (has('backpack') ? 1 : 0); }
   function cur() { return H.game && H.game.currentMap ? H.game.currentMap() : null; }
@@ -97,7 +99,7 @@ window.H = window.H || {};
     return null;
   }
   function pickup(id, c) {
-    var a = api(), m = meta(id), full = pocket(id) && count() >= cap();
+    var a = api(), m = meta(id), full = fills(id) && count() >= cap();
     if (!a || busy || has(id)) return Promise.resolve();
     busy = true;
     var p = a.choose([{ label: 'Take the ' + m.name, icon: iconUrl(id), desc: full ? 'Pockets are full. Put one thing back first.' : USE[id] }, { label: 'Leave it' }]);
@@ -109,7 +111,7 @@ window.H = window.H || {};
       H.game.addItem(id, m.name, id); sfx('pickup');
       if (id === 'bread') F()['bread:day'] = (S().day || 0) + 1;
       if (c && c.emit) c.emit('sparkle', c.x, c.y, 8);
-      toast(pocket(id) ? label() : 'Got the ' + m.name);
+      toast(fills(id) ? label() : 'Got the ' + m.name);
       if (id === 'backpack') once('backpack', 'The Bean Bag adds one pocket. You now have six.');
       if (id === 'map') once('map', 'The map button shows the area');
       save();
@@ -122,6 +124,7 @@ window.H = window.H || {};
     var st = S(), it = (st.items || []).filter(function (i) { return i.id === id; })[0]; if (!it || isKey(id)) return false;
     var why = held(id); if (why) { toast(why); return false; }
     if (it.n > 1) it.n--; else st.items.splice(st.items.indexOf(it), 1);
+    if (id === 'bread') delete F()['bread:day'];
     sfx('confirm'); toast(verb === 'back' ? it.name + ' put back' : SPOT[id] ? it.name + ' sent home' : it.name + ' dropped');
     save(); return true;
   }

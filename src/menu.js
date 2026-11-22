@@ -108,7 +108,12 @@
     var c = document.createElement('canvas'); c.width = c.height = 32; var g = c.getContext('2d'); g.imageSmoothingEnabled = false;
     try {
       if (H.items && H.items.list.some(function (x) { return x.id === it.id; })) { g.scale(2, 2); H.items.draw(g, it.id, 0, 0); }
-      else { var ICO = { ember_dust: 'fire', tide_pearl: 'water', herb: 'grass', spirit_snack: 'energy', wand: 'wand', novice_cert: 'scroll', charm: 'backpack' }; var ic = iconCanvas(ICO[it.id] || it.icon || it.id); if (ic) g.drawImage(ic, 0, 0, 32, 32); }
+      else {
+        // every id has an icon: the known one first, then the saved one, then a plain bag
+        var known = H.pickups && H.pickups.info ? H.pickups.info(it.id).icon : null, names = (H.icons && H.icons.names) || [];
+        var pick = [known, it.icon, it.id, 'backpack'].filter(function (n) { return n && names.indexOf(n) >= 0; })[0];
+        var ic = iconCanvas(pick || 'backpack'); if (ic) g.drawImage(ic, 0, 0, 32, 32);
+      }
     } catch (e) {}
     return c;
   }
@@ -197,45 +202,79 @@
   function acts(parent) { return mk('div', 'hk-acts', parent || els.sheet); }
   function note(text, parent) { return mk('div', 'hk-note', parent || els.sheet, text); }
   function itemDesc(it) {
-    var USE = { ember_dust: 'Revives a fainted fire hontori', tide_pearl: 'Revives a fainted water hontori', herb: 'Restores a little mana in battle', spirit_snack: 'Revives other hontori, restores mana', wand: 'Draw spells to help your hontori', novice_cert: 'Proof you finished the Academy', charm: 'A lucky charm' };
-    var d = it.desc || USE[it.id];
+    var USE = { ember_dust: 'Wakes a fainted fire hontori', tide_pearl: 'Wakes a fainted water hontori', herb: 'Restores a little mana in battle', spirit_snack: 'Wakes other fainted hontori, restores mana', wand: 'Draw spells to help your hontori', novice_cert: 'Proof you finished the Academy', charm: 'A lucky charm for your backpack', ramen: 'A warm bowl. Fills stamina.', grey_letter: 'Sealed with grey wax. Not yours to open.', ring_leaf: 'The ring of Rootwood Hall' };
+    var d = (H.pickups && H.pickups.uses[it.id]) || it.desc || USE[it.id];
     if (!d && H.items) { var f = H.items.list.filter(function (x) { return x.id === it.id; })[0]; d = f && f.desc; }
-    return d ? String(d).split(/(?<=\.)\s/)[0] : '';
+    return d ? String(d) : '';
   }
 
   // passive things work by themselves: they show a small tag instead of a button
-  var PASSIVE = { lantern: 'In use at night', compass: 'In use', mirror: 'In use', map: 'Map button', wand: 'Always with you', herb: 'Used in battle', bread: 'Used in battle', ember_dust: 'Used in battle', tide_pearl: 'Used in battle', spirit_snack: 'Used in battle', backpack: 'In use', cookbook: 'Use at a stove', slingshot: 'Use at fruit trees', ring_leaf: 'Earned at Rootwood Hall', grey_letter: 'Keep it safe', novice_cert: 'Proof of the Academy' };
+  var PASSIVE = { lantern: 'In use at night', compass: 'In use', mirror: 'In use', map: 'Map button', wand: 'Always with you', herb: 'Used in battle', bread: 'Used in battle', ember_dust: 'Used in battle', tide_pearl: 'Used in battle', spirit_snack: 'Used in battle', backpack: 'In use', cookbook: 'Use at a stove', slingshot: 'Use at fruit trees', ring_leaf: 'Earned', grey_letter: 'Keep it safe', novice_cert: 'Earned', charm: 'Keepsake', teddy: 'Rest', kite: 'Windy days' };
+  // drop one: things from home go back to their spot, the rest stay behind
   function dropItem(it) {
-    var st = game().state, i = st.items.indexOf(it); if (i < 0) return;
-    if (it.id === 'backpack' && H.pickups && H.pickups.count() > 5) { H.ui && H.ui.toast('Take one thing out first'); return; }
+    if (H.pickups && H.pickups.remove) return H.pickups.remove(it.id);
+    var st = game().state, i = st.items.indexOf(it); if (i < 0) return false;
     if (it.n > 1) it.n--; else st.items.splice(i, 1);
-    H.ui && H.ui.toast(it.name + ((H.pickups && H.pickups.spots[it.id]) ? ' goes back home' : ' dropped'));
-    game().save && game().save();
+    H.ui && H.ui.toast(it.name + ' dropped'); game().save && game().save(); return true;
+  }
+  function bagSec(title, icon, sub) {
+    var s = mk('div', 'hm-sec', els.sheet), h = mk('h3', '', s);
+    if (icon) h.appendChild(K().img(icon)); h.appendChild(document.createTextNode(title));
+    if (sub) note(sub, s).style.margin = '0 0 6px';
+    return s;
+  }
+  var bagWait = 0;
+  function bagRow(it, parent, PK) {
+    var r = mk('div', 'hm-row', parent); r.style.padding = '8px 10px';
+    var c = itemCanvas(it); c.className = 'itm'; r.appendChild(c);
+    var i = mk('div', 'inf', r); mk('div', 'nm', i, (it.name || it.id) + (it.n > 1 ? '  x' + it.n : '')).style.fontSize = '16px';
+    var d = itemDesc(it); if (d) mk('div', 'sub', i, d).style.margin = '2px 0 0';
+    var ax = PK ? PK.actions(it) : [], home = !!(PK && PK.spots[it.id]);
+    if (!ax.length || ax.every(function (x) { return x.label === 'Put back'; })) mk('span', 'hm-tag', i.firstChild, PASSIVE[it.id] || 'In use').style.marginLeft = '8px';
+    if (!(PK ? PK.isKey(it.id) : /^(wand|map|novice_cert|grey_letter|ring_.*)$/.test(it.id))) {
+      var stuck = PK && PK.held ? PK.held(it.id) : null, atHome = ax.some(function (x) { return x.label === 'Put back'; });
+      if (stuck) ax.forEach(function (x) { if (x.label === 'Put back') { x.off = true; x.desc = 'Take one other thing out first'; } });
+      // at home "Put back" already does it; elsewhere Drop sends a home thing back to its spot
+      if (!atHome) ax = ax.concat([{ label: 'Drop', desc: stuck ? 'Take one other thing out first' : home ? 'Goes back to its spot at home' : it.n > 1 ? 'Leave one here' : 'Leave it here', off: !!stuck, drop: true, run: function () { dropItem(it); } }]);
+    }
+    if (!ax.length) return;
+    var ab = mk('div', 'hm-btns', i); ab.style.cssText = 'flex-direction:row;flex-wrap:wrap;margin-top:6px';
+    ax.forEach(function (x) {
+      var bt = kb(ab, { label: x.label, desc: x.desc, kind: 'alt', sm: true, onClick: function () {
+        // rows move up after a change: a second quick tap must not land on the next thing
+        if (x.off || bt._done || Date.now() < bagWait) return;
+        if (x.drop && !bt._sure) { bt._sure = 1; var sp = bt.querySelector('span span'); if (sp) sp.textContent = 'Drop it?'; setTimeout(function () { bt._sure = 0; if (sp && sp.isConnected) sp.textContent = x.label; }, 3000); return; }
+        bt._done = 1; bagWait = Date.now() + 450;
+        if (x.label !== 'Put back' && !x.drop) hide();
+        x.run(); if (open === 'bag') render();
+      } });
+      bt.disabled = !!x.off;
+    });
   }
   function render() {
     var g = game(), st = g.state; els.sheet.innerHTML = '';
     if (open === 'bag') {
-      header('Backpack', 'backpack', (H.pickups && H.game.currentMap && H.game.currentMap().name === 'home' && (st.flags || {})['c1:morning']) ? 'Bag ' + H.pickups.count() + ' / ' + H.pickups.cap() : st.items.length ? st.items.length + ' things' : null);
-      var MON = H.money, TR = MON ? MON.TRADE : {};
+      var PK = H.pickups, MON = H.money, TR = MON ? MON.TRADE : {};
+      st.items = st.items || [];
+      try { if (PK && PK.tidy && PK.tidy()) g.save && g.save(); } catch (e) {}
+      var on = !!(PK && (st.flags || {})['c1:morning']);
+      header('Backpack', 'backpack', on ? PK.label() : null);
       if (MON) { var pr = mk('div', 'hm-mana', els.sheet); pr.appendChild(K().img('coin')); mk('span', '', pr, 'Purse: ' + MON.fmt(MON.get())); }
-      var main = st.items.filter(function (it) { return !TR[it.id]; }), pouch = st.items.filter(function (it) { return TR[it.id]; });
-      if (!main.length) mk('div', 'hm-empty', els.sheet, 'Empty for now.');
-      if (pouch.length) {
-        var ps = mk('div', 'hm-sec', els.sheet), ph = mk('h3', '', ps); ph.appendChild(K().img('coin')); ph.appendChild(document.createTextNode('Trade pouch   worth ' + MON.fmt(MON.pouchValue())));
-        note('Sell these at Nettle\'s shop.', ps);
-        pouch.forEach(function (it) { var r = mk('div', 'hm-row', ps); r.style.padding = '6px 10px'; var cc = itemCanvas(it); cc.className = 'itm'; r.appendChild(cc); var inf = mk('div', 'inf', r); mk('div', 'nm', inf, TR[it.id][0] + (it.n > 1 ? '  x' + it.n : '')); mk('div', 'sub', inf, TR[it.id][3] + '  ' + MON.fmt(MON.value(it.id)) + ' each'); });
+      var kindOf = function (it) { return TR[it.id] ? 'trade' : PK && PK.kind ? PK.kind(it.id) : 'supply'; };
+      var by = { pocket: [], supply: [], key: [], trade: [] };
+      st.items.forEach(function (it) { by[kindOf(it)].push(it); });
+      if (!st.items.length && !on) mk('div', 'hm-empty', els.sheet, 'Empty for now.');
+      if (on) {
+        var s1 = bagSec(PK.label(), 'backpack', 'Only things from home use a pocket.');
+        if (!by.pocket.length) mk('div', 'hm-empty', s1, 'Nothing from home yet.').style.padding = '8px 4px';
+        by.pocket.forEach(function (it) { bagRow(it, s1, PK); });
+      } else by.pocket.forEach(function (it) { bagRow(it, els.sheet, PK); });
+      if (by.supply.length) { var s2 = bagSec('Supplies', 'heart', 'Used up in battle. No pocket needed.'); by.supply.forEach(function (it) { bagRow(it, s2, PK); }); }
+      if (by.key.length) { var s3 = bagSec('Key things', 'star', 'Always with you. They cannot be dropped.'); by.key.forEach(function (it) { bagRow(it, s3, PK); }); }
+      if (by.trade.length) {
+        var ps = bagSec('Trade pouch   worth ' + MON.fmt(MON.pouchValue()), 'coin', 'Sell these at Nettle\'s shop. No pocket needed.');
+        by.trade.forEach(function (it) { var r = mk('div', 'hm-row', ps); r.style.padding = '6px 10px'; var cc = itemCanvas(it); cc.className = 'itm'; r.appendChild(cc); var inf = mk('div', 'inf', r); mk('div', 'nm', inf, TR[it.id][0] + (it.n > 1 ? '  x' + it.n : '')); mk('div', 'sub', inf, TR[it.id][3] + '  ' + MON.fmt(MON.value(it.id)) + ' each'); });
       }
-      main.forEach(function (it) {
-        var r = mk('div', 'hm-row', els.sheet); r.style.padding = '8px 10px';
-        var c = itemCanvas(it); c.className = 'itm'; r.appendChild(c);
-        var i = mk('div', 'inf', r); mk('div', 'nm', i, it.name + (it.n > 1 ? '  x' + it.n : '')).style.fontSize = '16px';
-        var d = (H.pickups && H.pickups.uses[it.id]) || itemDesc(it); if (d) mk('div', 'sub', i, d).style.margin = '2px 0 0';
-        var ax = H.pickups ? H.pickups.actions(it) : [];
-        var KEY = { wand: 1, map: 1, novice_cert: 1, grey_letter: 1 };
-        if (!KEY[it.id] && !/^ring_/.test(it.id)) ax = ax.concat([{ label: 'Drop', desc: (H.pickups && H.pickups.spots[it.id]) ? 'It goes back home' : 'Leave one here', drop: true, run: function () { dropItem(it); } }]);
-        if (!(H.pickups ? H.pickups.actions(it) : []).length) mk('span', 'hm-tag', i.firstChild, PASSIVE[it.id] || 'In use');
-        if (ax.length) { var ab = mk('div', 'hm-btns', i); ab.style.cssText = 'flex-direction:row;flex-wrap:wrap;margin-top:6px'; ax.forEach(function (x) { var bt = kb(ab, { label: x.label, desc: x.desc, kind: 'alt', sm: true, onClick: function () { if (x.off) return; if (x.drop && !bt._sure) { bt._sure = 1; bt.querySelector('span span').textContent = 'Drop it?'; return; } if (x.label !== 'Put back' && !x.drop) hide(); x.run(); if (open) render(); } }); bt.disabled = !!x.off; }); }
-      });
     } else if (open === 'party') {
       header('Your Hontori', 'paw', st.party.length + ' of ' + MAX + ' travel with you');
       var mm = st.maxMana || 3, mn = st.mana == null ? mm : Math.min(mm, st.mana), mrow = mk('div', 'hm-mana', els.sheet); mk('span', '', mrow, 'Mana');
