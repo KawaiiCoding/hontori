@@ -71,24 +71,26 @@ window.H = window.H || {};
   H.onWater = function (c) { registerFish(); return fish(c); };
 
   // ---------- Old Oru: teaches once, then a daily contest
+  // any fisher can teach the sigil the first time you talk; after that, each one offers the contest
   function oru(c) {
     var a = api(c); registerFish();
+    var nm = (c && c.object && c.object.lines && c.object.lines[0] && c.object.lines[0][0]) || 'Old Oru';
     if (!knows()) {
-      return a.say('fisher', 'Old Oru', 'You have the open eyes, I can tell. Then you can fish the way we used to.')
-        .then(function () { return a.say('fisher', 'Old Oru', 'No rod. A hook of light. Straight down, then curl it up to the left.'); })
+      return a.say('fisher', nm, 'You have the open eyes, I can tell. Then you can fish the way we used to.')
+        .then(function () { return a.say('fisher', nm, 'No rod. A hook of light. Straight down, then curl it up to the left.'); })
         .then(function () { return a.draw('fish', 'Draw the hook, like Oru shows you'); })
         .then(function () {
           var s = S(); s.spells = s.spells || []; if (s.spells.indexOf('fish') < 0) s.spells.push('fish'); save();
-          return a.say('fisher', 'Old Oru', 'There. Face any water and cast. Sometimes a fish, sometimes a friend.');
+          return a.say('fisher', nm, 'There. Face any water and cast. Sometimes a fish, sometimes a friend.');
         })
-        .then(function () { return a.say('fisher', 'Old Oru', 'Come back any day. I will race you for the biggest catch.'); });
+        .then(function () { return a.say('fisher', nm, 'Come back any day. I will race you for the biggest catch.'); });
     }
     var s = S(), day = s.day || 0;
-    if (F()['fish:contest'] === day) return a.say('fisher', 'Old Oru', 'One contest a day, or the fish get shy. Tomorrow.');
-    return a.say('fisher', 'Old Oru', 'A contest? Three casts each. The heaviest fish wins.')
+    if (F()['fish:contest'] === day) return a.say('fisher', nm, 'One contest a day, or the fish get shy. Tomorrow.');
+    return a.say('fisher', nm, 'A contest? Three casts each. The heaviest fish wins.')
       .then(function () { return a.choose([{ label: 'Fishing contest', desc: '3 casts, 1 mana each' }, { label: 'Not today' }]); })
       .then(function (i) {
-        if (i !== 0) return a.say('fisher', 'Old Oru', 'The river will wait.');
+        if (i !== 0) return a.say('fisher', nm, 'The river will wait.');
         F()['fish:contest'] = day; save();
         var best = 0, n = 0;
         function one() {
@@ -101,9 +103,9 @@ window.H = window.H || {};
         }
         return one().then(function () {
           var W = waterOf(c.mapName), his = Math.round((W.fish[1][3][0] + Math.random() * (W.fish[1][3][1] - W.fish[1][3][0])) * 10) / 10;
-          return a.say('fisher', 'Old Oru', 'My best: ' + his + ' kg. Yours: ' + best + ' kg.').then(function () {
-            if (best > his) { if (H.money) H.money.add(20, 'contest prize'); return a.say('fisher', 'Old Oru', 'You beat me fair. Here, two silver.'); }
-            return a.say('fisher', 'Old Oru', best ? 'Close one. The river liked me today.' : 'An empty bucket. It happens to all of us.');
+          return a.say('fisher', nm, 'My best: ' + his + ' kg. Yours: ' + best + ' kg.').then(function () {
+            if (best > his) { if (H.money) H.money.add(20, 'contest prize'); return a.say('fisher', nm, 'You beat me fair. Here, two silver.'); }
+            return a.say('fisher', nm, best ? 'Close one. The river liked me today.' : 'An empty bucket. It happens to all of us.');
           });
         });
       });
@@ -132,8 +134,43 @@ window.H = window.H || {};
       return run0.apply(this, arguments);
     };
     // Oru's own service: talking to him starts the lesson or the contest
-    var V = H.maps && H.maps.village;
-    (V && V.npcs || []).forEach(function (n) { if (n.key === 'fisher') { n.svc = 'fishing'; n.lines = [['Old Oru', 'The river is quiet today.']]; } });
+    Object.keys(H.maps || {}).forEach(function (mn) { (H.maps[mn].npcs || []).forEach(function (n) { if (n.key === 'fisher') { n.svc = 'fishing'; n.lines = [n.lines && n.lines[0] ? n.lines[0] : ['Fisher', 'The water is calm today.']]; } }); });
+  })();
+  // when the kid stands facing water and knows the sigil, a small glowing hook ripples on that water: fish here
+  H.worldDraw = H.worldDraw || [];
+  H.worldDraw.push(function (ents, lights, ctx, env, mapName, player) {
+    if (!knows() || !player || player.moving || (H.ui && H.ui.isOpen && H.ui.isOpen())) return;
+    var c = H.game.currentMap && H.game.currentMap(); if (!c || !c.tileAt) return;
+    var D = [[0, 1], [0, -1], [-1, 0], [1, 0]][player.dir] || [0, 1], x = player.tx + D[0], y = player.ty + D[1];
+    if (c.tileAt(x, y) !== 'water') return;
+    var t = env.t || 0, cx = (player.tx + D[0] * 1.8) * 16 + 8, cy = (player.ty + D[1] * 1.8) * 16 + 9, k = (t * 0.9) % 1;   // out on the water, past the fox
+    ents.push({ y: 1e9, d: function () {   // drawn on top so the fox never hides it
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127,216,255,' + (0.8 - k * 0.8).toFixed(2) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx, cy + 2, 3 + k * 6, 1.5 + k * 2.5, 0, 0, 7); ctx.stroke();
+    // the hook sigil, gently bobbing
+    var by = cy - 5 + Math.sin(t * 3) * 1;
+    ctx.strokeStyle = '#7fd8ff'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx + 1.5, by - 5); ctx.lineTo(cx + 1.5, by); ctx.arc(cx - 0.5, by, 2, 0, Math.PI); ctx.stroke();
+    ctx.restore(); } });
+    lights.push({ x: cx, y: cy, r: 14, color: '#7fd8ff', flicker: true });
+    try { H.ui.helper('fishspot', 'Fishing', 'Water in front of you. Press A, or tap the water, to cast the Fishing Sigil.', 'water'); } catch (e) {}
+  });
+  // a fisher who sits on the bank has a line in the water, with a bobber that dips now and then
+  H.worldDraw = H.worldDraw || [];
+  H.worldDraw.push(function (ents, lights, ctx, env, mapName) {
+    var m = H.maps[mapName]; if (!m || !m.npcs) return;
+    m.npcs.forEach(function (n) {
+      if (n.key !== 'fisher' || !n.fixed) return;
+      var dx = n.dir === 3 ? 1 : n.dir === 2 ? -1 : 0, dy = n.dir === 0 ? 1 : n.dir === 1 ? -1 : 0; if (!dx && !dy) return;
+      var t = env.t || 0, rx = n.x * 16 + 8 + dx * 7, ry = n.y * 16 + 1, bx = (n.x + dx * 1.6) * 16 + 8, by = (n.y + dy * 1.6) * 16 + 10 + (Math.sin(t * 2 + n.x) > 0.93 ? 2 : Math.sin(t * 1.3) * 0.6);
+      ents.push({ y: n.y * 16 + 16, d: function () {
+        ctx.strokeStyle = 'rgba(240,240,230,.75)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(rx, ry); ctx.quadraticCurveTo((rx + bx) / 2, Math.min(ry, by) - 2, bx, by - 1); ctx.stroke();
+        ctx.fillStyle = '#e8483a'; ctx.fillRect(Math.round(bx) - 1, Math.round(by) - 2, 2, 2); ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(bx) - 1, Math.round(by) - 1, 2, 1);
+        ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(bx, by, 3 + Math.sin(t * 2) , 1, 0, 0, 7); ctx.stroke();
+      } });
+    });
+  });
+  (function () {
   })();
   H.fishing = { waters: WATERS, cast: cast };
 })();

@@ -42,6 +42,7 @@ window.H = window.H || {};
     // Granny Burr sits in the square by day and goes home at dusk
     { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wonders used to come every spring.']], sched: [{ from: 7, to: 18 }, { from: 18, to: 7, away: true }] },
     { key: 'kid2', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'I am not a Wonder. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
+    { key: 'fisher', x: 29, y: 6, dir: 3, fixed: true, lines: [['Fisher Lin', 'Mirror Pond keeps its fish deep.']] },
     { key: 'traveler', x: 32, y: 17, dir: 3, lines: [['Rowan', 'Rocks came down on the road to Whistling Pass.'], ['Rowan', 'They say it will be clear soon.']] }
   ];
   npcs.forEach(function (n) { res(n.x - 1, n.y - 1, n.x + 1, n.y + 1); });

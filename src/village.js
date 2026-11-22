@@ -137,7 +137,8 @@ window.H = window.H || {};
     { key: 'baker', x: 25, y: 19, dir: 3, lines: [['Rosa', 'Fresh buns, still warm.'], ['Rosa', 'Something nibbles my crusts at night.']] },
     { key: 'innkeeper', x: 22, y: 19, dir: 0, lines: [['Big Bo', 'Ramen is on all day.'], ['Big Bo', 'Wet pawprints keep stealing fish cakes.']] },
     { key: 'shopkeeper', x: 45, y: 20, dir: 2, lines: [['Nettle', 'Potions and packs, fair prices.'], ['Nettle', 'Never travel without a spare boot.']] },
-    { key: 'fisher', x: 46, y: 9, dir: 3, lines: [['Old Oru', 'The river is quiet today.'], ['Old Oru', 'Something big stirs upstream.']] },
+    // Old Oru sits on the bank and always faces the river, line in the water
+    { key: 'fisher', x: 46, y: 9, dir: 3, fixed: true, lines: [['Old Oru', 'The river is quiet today.'], ['Old Oru', 'Something big stirs upstream.']] },
     { key: 'grandma', x: 11, y: 12, dir: 1, lines: [['Grandma Ula', 'I feed the ducks every morning.'], ['Grandma Ula', 'The pond sparkles back if you wait.']] },
     { key: 'farmer', x: 7, y: 17, dir: 0, lines: [['Farmer Hob', 'Apples are nearly ripe.'], ['Farmer Hob', 'Help yourself to a windfall.']] },
     // the Academy gatekeeper stands beside the door; he holds the sight test before the first visit

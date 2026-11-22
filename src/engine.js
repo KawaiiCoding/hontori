@@ -303,7 +303,9 @@
   function interactAt(x, y) {
     if (!H.interact) return;
     // wall decor hangs one tile above the floor edge, so look one tile further up when facing a wall
-    const hit = (H.pickups && H.pickups.at(mapName, x, y)) || objectAt(x, y) || (player.dir === 1 ? objectAt(x, y - 1) : null);
+    let hit = (H.pickups && H.pickups.at(mapName, x, y)) || objectAt(x, y) || (player.dir === 1 ? objectAt(x, y - 1) : null);
+    // facing water with the Fishing Sigil: fishing wins over reeds and lily pads floating there
+    if (hit && H.onWater && tileAt(x, y) === 'water' && (H.game.state.spells || []).indexOf('fish') >= 0 && !/^pickup:/.test(hit.type)) hit = null;
     if (!hit) {
       // water you face: fishing (src/fishing.js)
       if (H.onWater && tileAt(x, y) === 'water') { busy = true; Promise.resolve().then(() => H.onWater({ say, emit, sfx, env, map, mapName, x: x * T + 8, y: y * T + 8, player, hasSpirit: !!spirit, battle: (k, o) => startBattle(k, o) })).catch(e => console.warn(e)).then(() => { busy = false; }); }
@@ -463,7 +465,7 @@
       const lt = trail[trail.length - 1]; if (!lt || Math.hypot(lt[0] - player.x, lt[1] - player.y) >= 2) { trail.push([player.x, player.y]); if (trail.length > 40) trail.shift(); }
     }
     // villagers glance around now and then
-    npcs.forEach(n => { n.look = (n.look ?? Math.random() * 6) - dt; if (n.look <= 0 && !busy) { n.look = 3 + Math.random() * 5; if (Math.random() < 0.6) n.dir = Math.floor(Math.random() * 4); } });
+    npcs.forEach(n => { n.look = (n.look ?? Math.random() * 6) - dt; if (n.look <= 0 && !busy && !n.fixed) { n.look = 3 + Math.random() * 5; if (Math.random() < 0.6) n.dir = Math.floor(Math.random() * 4); } });
     if (spirit) updateSpirit(dt);
     careTick(dt, menuOpen);
     // wild hontori: wander, notice, drift closer; a touch starts a battle
