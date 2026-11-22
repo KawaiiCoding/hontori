@@ -3,6 +3,25 @@
 Live: https://kawaiicoding.github.io/hontori/  (deploys from `main`)
 Story bible: STORY.md. How to add content: CONTENT_GUIDE.md. Module contract: CONTRACT.md.
 
+## Round of 2026-11-22 (done, check on iPhone)
+- First night: explore the house with a Sleep Tight task; the door stays shut; items appear next morning. Morning: lift Mom and Dad's veil, they encourage the adventure.
+- Parents keep a day schedule (morning, day, evening, late, asleep). Engine supports npc.sched for any npc.
+- Story talks come first (Elder Wisteria and others skip small talk when a quest line is ready).
+- Battle: stamina (ST) for moves, Catch breath, HP and ST numbers, readable message pill, only the 4 chosen spells, binding explained (3 tries) and more forgiving, Flawless/Strong/Weak grades also give wand EXP, sigils start on the left.
+- Evolution at levels 5, 10, 20, 25 as the original Element Bloom.
+- Money (copper, silver, gold), trade pouch, shop prices, ramen price, rival purses, foraging.
+- Wand Memory (met / bound list). Backpack In use tags and Drop. Bean Bag instead of a second backpack. Scarf and candle removed.
+- Fox guide never blocks. Mom walks over with the map. Bram and Ranger Moss call the kid a Wonder.
+- Ash renamed Cole (store safety). No "trainer" or "tall grass" wording.
+- Chapter 2: Mossgrove, Rootwood Hall, the Leaf Ring.
+
+## Open after this round
+- Element Bloom shell is drawn smooth; redraw it in pixel style to match the game.
+- Rootwood Hall uses the Academy building (purple roof): give it a green roof and its own crest.
+- Mossgrove houses have no interiors yet; Pell and Rowan need time-of-day lines.
+- Chapter 3 (Tidewell) starts at the washed-out bridge east of Mossgrove.
+- Delete or move the three Pokemon-cover mp3 files out of the project folder before any app build.
+
 ## QA pass (stable-qa)
 - Done: rule 48 fox guide (H.ui.helper(id, title, text, icon, target), once per id in state.flags['help:'+id]) on backpack, menu, party, Sanctum, loadout, moves, Mend, map, quest icon, quest log, battle (moves, foe intent, turn, mana, Spells, Switch, Escape, Bread, Herb) and every home item's first use.
 - Done: map button shown but blocked until the Map is found; toasts sit below the quest icon; game layers never scroll (Safari focus / scrollIntoView shift in battle).
