@@ -16,7 +16,7 @@ window.H = window.H || {};
   function pos() { var c = H.game && H.game.currentMap && H.game.currentMap(); return c && c.player ? { x: c.player.tx, y: c.player.ty, name: c.name } : null; }
 
   // ---------------------------------------------------------------- quests
-  ST.defineQuest({ id: 'night', icon: 'moon', title: 'Sleep Tight', desc: 'It is late. Tomorrow starts something new.', steps: [
+  ST.defineQuest({ id: 'night', icon: 'night', title: 'Sleep Tight', desc: 'It is late. Tomorrow starts something new.', steps: [
     { id: 'bed', text: 'Go to bed in your room', done: function (s) { return !!s.flags['c1:morning']; } }
   ] });
   ST.defineQuest({ id: 'academy', icon: 'book', title: 'The Academy', desc: 'The old school up the north road has opened its gate again.', steps: [

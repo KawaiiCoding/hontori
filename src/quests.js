@@ -283,7 +283,8 @@ window.H = window.H || {};
     if (!id) { lastPill = ''; if (pop) pop.classList.remove('on'); return; }
     var q = quests[id], txt = st ? (typeof st.text === 'function' ? st.text(S()) : st.text) : '';
     pill.querySelector('b').textContent = q.title;
-    var ic = pill.querySelector('.ic'), want = q.icon || 'scroll';
+    // the task button always shows the quest scroll, so it reads as 'tasks' and never looks like money
+    var ic = pill.querySelector('.ic'), want = 'scroll';
     if (ic.getAttribute('data-k') !== want) { ic.setAttribute('data-k', want); try { ic.src = H.icons.url(want, 2); } catch (e) {} }
     pill.querySelector('span').textContent = txt || q.title; pill.title = q.title; pill.setAttribute('aria-label', q.title + ': ' + (txt || ''));
     // a new task or step: slide the line out from the icon for a few seconds, then fold back; a dot stays until tapped
