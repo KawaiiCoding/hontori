@@ -107,6 +107,16 @@ export class HelperCard {
     if (card.title) element('b', '', words, card.title);
     element('span', '', words, card.text || '');
     this.#place(bubble, target, frame, overlay);
+    /* a panel may still be sliding into place: measure again once it has settled, so the card never sits on it */
+    if (node) setTimeout(() => {
+      if (!overlay.isConnected) return;
+      const settled = layer.getBoundingClientRect();
+      const again = this.#rectOf(node, settled);
+      if (!again) return;
+      const ring = overlay.querySelector('.ring');
+      if (ring) ring.style.cssText = `left:${again.x - 4}px;top:${again.y - 4}px;width:${again.w + 8}px;height:${again.h + 8}px`;
+      this.#place(bubble, again, settled, overlay);
+    }, 420);
 
     let gone = false;
     let lingering = 0;
