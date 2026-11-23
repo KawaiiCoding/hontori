@@ -107,7 +107,7 @@ export function install(game, { reveal, refund } = {}) {
     const seriesId = seriesFor(ctx);
     if (!seriesId) return false;
     if (node.done) return rules.done(seriesId);
-    if (node.free) return !rules.done(seriesId) && rules.freeToday(today(game));
+    if (node.free) return !rules.done(seriesId) && rules.freeToday(today(game), seriesId);
     return false;
   });
 

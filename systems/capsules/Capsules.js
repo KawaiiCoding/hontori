@@ -25,7 +25,7 @@
  * Events it emits: "capsules:change" { why: 'turn' | 'wear' | 'off', id }
  */
 
-export const SAVE = { owned: [], worn: {}, shown: [], freeDay: 0, turns: 0 };
+export const SAVE = { owned: [], worn: {}, shown: [], freeDays: {}, turns: 0 };
 
 const RARE_WEIGHT = 0.25;
 
@@ -98,18 +98,19 @@ export class Capsules {
     return !s || this.done(seriesId) ? 0 : Math.max(0, Math.floor(Number(s.price) || 0));
   }
 
-  freeToday(day) {
-    return (Number(this.#state().freeDay) || 0) !== day;
+  /* each machine (series) gives one free turn per day; there are no paid turns */
+  freeToday(day, seriesId = '') {
+    const state = this.#state();
+    if (!state.freeDays || typeof state.freeDays !== 'object') state.freeDays = {};
+    return (Number(state.freeDays[seriesId]) || 0) !== day;
   }
 
   turn(seriesId, { free = false, day = 0 } = {}) {
     const left = this.#prizes(seriesId).filter((p) => !this.owns(p.id));
     if (!left.length) return null;
     const state = this.#state();
-    if (free) {
-      if (!this.freeToday(day)) return null;
-      state.freeDay = day;
-    }
+    if (!this.freeToday(day, seriesId)) return null;
+    state.freeDays[seriesId] = day;
     const prize = this.#pick(left);
     state.owned.push(prize.id);
     state.turns = (Number(state.turns) || 0) + 1;

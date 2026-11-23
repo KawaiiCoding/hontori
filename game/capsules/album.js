@@ -110,13 +110,13 @@ export function installAlbum(game, { rules, prizes, words, text, drawOn, lead })
     build,
   });
 
-  /* the album's row in the Menu, once a prize is owned */
-  extendPanel(registry, 'settings', {
-    after(panel) {
+  /* the album sits at the top of the Backpack, once a prize is owned: your things live there */
+  extendPanel(registry, 'backpack', {
+    before(panel) {
       if (!rules.ownedCount()) return;
       const row = panel.actions();
       const button = new Button(game.art, {
-        icon: 'star', label: t(words.album), desc: t(words.albumDesc), kind: 'alt', onPress: () => swapPanel(game, 'capsules'),
+        icon: 'star', label: t(words.album), desc: t(words.albumDesc), kind: 'gold', onPress: () => swapPanel(game, 'capsules'),
       });
       row.appendChild(button.element);
     },

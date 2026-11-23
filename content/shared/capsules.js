@@ -98,31 +98,13 @@ export default {
               { say: 'shared.capsule.machine.free', who: 'sign' },
               {
                 choose: [
-                  { text: 'shared.capsule.machine.turnFree', then: [{ ext: 'capsule', turn: 'free' }, { helper: 'capsules', title: 'shared.capsule.helper.title', text: 'shared.capsule.helper.text', target: 'hud:settings' }] },
+                  { text: 'shared.capsule.machine.turnFree', then: [{ ext: 'capsule', turn: 'free' }, { helper: 'capsules', title: 'shared.capsule.helper.title', text: 'shared.capsule.helper.text', target: 'hud:backpack' }] },
                   { text: 'shared.capsule.machine.leave', then: [] }
                 ],
                 cancel: 1
               }
             ],
-            else: [
-              { say: 'shared.capsule.machine.paid', who: 'sign', params: { price: { coins: { ext: 'capsule', cost: true } } } },
-              {
-                choose: [
-                  {
-                    text: 'shared.capsule.machine.turnPaid',
-                    then: [
-                      {
-                        spend: { ext: 'capsule', cost: true },
-                        ok: [{ ext: 'capsule', turn: 'paid' }, { helper: 'capsules', title: 'shared.capsule.helper.title', text: 'shared.capsule.helper.text', target: 'hud:settings' }],
-                        fail: [{ say: 'shared.capsule.machine.short', who: 'kid' }]
-                      }
-                    ]
-                  },
-                  { text: 'shared.capsule.machine.leave', then: [] }
-                ],
-                cancel: 1
-              }
-            ]
+            else: [{ say: 'shared.capsule.machine.tomorrow', who: 'sign' }]
           }
         ]
       }

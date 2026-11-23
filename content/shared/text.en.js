@@ -564,6 +564,8 @@ export default {
   'shared.ui.spell.unequip.desc': 'It stays in your spell book',
   'shared.ui.wand.panel': 'Wand',
   'shared.ui.wand.none': 'No wand yet.',
+  'shared.capsule.machine.tomorrow': 'One capsule a day. Come back tomorrow.',
+  'shared.capsule.where': 'Find it in your Backpack, in the Capsule Album.',
   'shared.spell.mend': 'Mending Sigil',
   'shared.spell.mend.desc': 'Heal and wake',
   'shared.spell.how.circle': 'Draw a circle',

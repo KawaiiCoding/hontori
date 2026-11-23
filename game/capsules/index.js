@@ -72,6 +72,14 @@ export function install(game) {
       name: text(prize.name),
       desc: text(prize.desc),
       tap: text(words.tap),
+    }).then((value) => {
+      /* the first prize says where it lives */
+      try {
+        if (rules.ownedCount() === 1) game.ui.toast(text('shared.capsule.where'));
+      } catch (error) {
+        /* a toast is only a hint */
+      }
+      return value;
     }),
     refund: (n) => {
       try {

@@ -104,6 +104,6 @@ New rules are added here as they are given. When something in the code disagrees
 86. In the wind country, kites carry mail. Letters from Mom and Dad arrive by kite from chapter 3 on.
 87. Cole sends a warning kite: he saw grey cloaks carry a hontori away in a jar. Cole chases rings to prove to his father, a ring-smith, that sparks are real.
 88. The Gale Ring from Warden Zephra is the second Warden's vote (rule 79).
-89. Capsule machines (coins only, one free turn a day, no duplicates) give things you can see and use: hats your lead hontori wears, centred on its head; saddle blanket colours; wand inks for the sigil line; keepsakes for your room. Hontori never wear scarves.
+89. Capsule machines (one free turn per machine per in-game day, never for money or coins, no duplicates) give things you can see and use: hats your lead hontori wears, centred on its head; saddle blanket colours; wand inks for the sigil line; keepsakes for your room. Hontori never wear scarves.
 90. The grey letter in Emberbrook comes by a paper bird that glides past and drops the letter at the kid's feet. Paper birds are how the Council sends word.
 91. In Kitewick an old pine stands on a small islet south of the kite post; the stuck letter of The Lost Kite hangs in it.
