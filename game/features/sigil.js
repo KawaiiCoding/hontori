@@ -50,7 +50,8 @@ export function drawSigil(game, sigil, text, sub, { twist } = {}) {
 
 export function installSigil(game) {
   const { registry } = game;
-  registry.add('draw.twist', 'drift', (options) => driftTwist(options));
+  /* a little quicker and wider than the engine's default, so the Gale Loft drawing is a real challenge */
+  registry.add('draw.twist', 'drift', (options) => driftTwist({ period: 3.2, reach: 0.12, ...options }));
 
   registry.add('story.command', 'ext:draw', async (node, ctx) => {
     const sigil = ctx.value(node.sigil);
