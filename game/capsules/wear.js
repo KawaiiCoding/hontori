@@ -97,6 +97,7 @@ function recorder() {
 export function createWear(art, rules, prizeOf) {
   const rec = recorder();
   const found = new Map();
+  const steady = new Map();
   let probe = null;
   let probeCtx = null;
 
@@ -222,7 +223,17 @@ export function createWear(art, rules, prizeOf) {
       const sideView = !!(pose && (pose.dir === 2 || pose.dir === 3));
       /* the creature's own middle (where it stands) in source pixels, used for front and back views */
       const middle = sideView ? null : (-rec.dx) / toLocal;
-      const m = measure(rec.src, rec.sx, rec.sy, rec.sw, rec.sh, unit / toLocal, sideView, middle);
+      /* measured once per kind, stage, direction and pose, then kept: blinks and ear flicks never move the hat;
+         it still follows the picture as it bobs or hovers */
+      const poseKey = `${key}|${pose && pose.stage || 1}|${pose && pose.dir || 0}|${pose && pose.sit ? 's' : pose && pose.moving ? 'm' : 'i'}|${rec.sw}x${rec.sh}`;
+      let m = steady.get(poseKey);
+      if (!m) {
+        m = measure(rec.src, rec.sx, rec.sy, rec.sw, rec.sh, unit / toLocal, sideView, middle);
+        if (m) {
+          if (steady.size > CACHE_CAP) steady.clear();
+          steady.set(poseKey, m);
+        }
+      }
       if (!m) return;
       /* the painter mirrors a picture facing right: the hat's place and the hat are mirrored with it */
       const side = rec.flip ? -1 : 1;
