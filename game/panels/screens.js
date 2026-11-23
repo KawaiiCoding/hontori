@@ -21,7 +21,7 @@
 
 import { element, icon } from '../../ui/dom.js';
 import { Button } from '../../ui/Button.js';
-import { extendPanel, setHead, swapPanel } from '../../ui/PanelExtras.js';
+import { setHead, swapPanel } from '../../ui/PanelExtras.js';
 import { badge, detail, face, grid, gridCard, memberCard, orbs, pickRow, pips, statBar } from '../../ui/RosterKit.js';
 import { sigilSvg } from '../battle-scene/sigils.js';
 
@@ -33,7 +33,7 @@ const REOPEN_WAIT_MS = 8000;
 
 /* where each panel starts, and where its Back leads from the first screen */
 const STARTS = { party: 'party', sanctum: 'sanctum', spells: 'spells', memory: 'memory' };
-const ORIGINS = { party: null, sanctum: 'settings', spells: 'settings', memory: 'settings' };
+const ORIGINS = { party: null, sanctum: 'wand', spells: 'wand', memory: 'wand' };
 const ICONS = { spell: 'book', party: 'paw', moves: 'claw', sanctum: 'crystal', resting: 'crystal', spells: 'book', memory: 'paw', kind: 'paw' };
 const GUIDES = {
   party: { title: 'shared.ui.guide.party.title', text: 'shared.ui.guide.party.text', target: '.hp-strip' },
@@ -429,9 +429,11 @@ export function installScreens(game, roster, guide) {
   }
 
   /* the wand's section at the top of the Menu */
-  extendPanel(registry, 'settings', {
-    before(panel) {
-      if (!hasWand()) return;
+  /* the wand has its own button beside the backpack; the Menu keeps saving, controls and sound */
+  registry.add('panel', 'wand', {
+    icon: 'wand',
+    title: t('shared.ui.wand.panel'),
+    build(panel) {
       const facts = roster.wandFacts();
       const section = element('div', 'ui-wsec');
       const heading = element('h3', '', section);
@@ -441,13 +443,22 @@ export function installScreens(game, roster, guide) {
       element('div', 'ui-note', section, t('shared.ui.wand.facts', facts));
       const row = element('div', 'ui-acts', section);
       for (const [target, iconName, label, desc] of [
-        ['sanctum', 'crystal', 'shared.ui.sanctum.title', 'shared.ui.wand.sanctum.desc'],
         ['spells', 'book', 'shared.ui.spells.title', 'shared.ui.party.moves.desc'],
+        ['sanctum', 'crystal', 'shared.ui.sanctum.title', 'shared.ui.wand.sanctum.desc'],
         ['memory', 'paw', 'shared.ui.wand.memory', 'shared.ui.wand.memory.desc'],
       ]) {
         row.appendChild(new Button(game.art, { icon: iconName, label: t(label), desc: t(desc), onPress: () => swapPanel(game, target) }).element);
       }
       panel.add(section);
+    },
+  });
+  registry.add('hud.button', 'wand', {
+    icon: 'wand', label: t('shared.ui.wand.panel'), order: 15,
+    enabled: () => hasWand(),
+    refreshOn: ['inventory:change', 'story:flag', 'map:enter'],
+    open: () => {
+      if (hasWand()) game.ui.openPanel('wand');
+      else game.ui.toast(t('shared.ui.wand.none'));
     },
   });
 }

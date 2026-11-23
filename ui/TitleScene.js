@@ -59,7 +59,6 @@ export class TitleScene extends Scene {
     const slots = element('div', 'slots', screen);
     for (let slot = 1; slot <= game.save.slots; slot++) this.#addSlot(slots, slot);
     this.#addControls(screen);
-    element('div', 'hint', screen, title.hint);
     /* small text links under the hint, registered by systems (registry kind "title.action") */
     for (const action of game.registry.all('title.action')) {
       if (!action || (typeof action.showIf === 'function' && !action.showIf(game))) continue;
@@ -128,7 +127,6 @@ export class TitleScene extends Scene {
       option.addEventListener('click', () => this.#choose(mode));
       this.#options.push([mode, option]);
     }
-    element('div', 'ctl-n', box, this.game.theme.words.controlsLater || 'You can change this later in the menu.');
     this.#choose(this.#controls);
   }
 
