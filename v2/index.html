@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Hontori</title>
+<meta name="theme-color" content="#07081a">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hontori">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/icon-192.png">
+<style id="hui-font">@font-face{font-family:"Nunito";font-style:normal;font-weight:600 900;font-display:swap;src:url(../assets/fonts/nunito-latin.woff2) format("woff2")}</style>
+<style>
+  html,body{margin:0;height:100%;background:#07080d;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+  /* mobile first: a phone fills the screen; on a wide desktop window the game sits in a centred phone-shaped frame */
+  #root{position:fixed;inset:0;margin:auto;width:100vw;height:100dvh;overflow:hidden}
+  @media (min-aspect-ratio: 3/4) and (pointer:fine){
+    #root{height:min(100dvh,920px);width:calc(min(100dvh,920px)*9/16);border-radius:18px;box-shadow:0 0 0 2px #23263a,0 20px 60px #000}
+  }
+  *{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+  #game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+</style></head><body>
+<div id="root"><canvas id="game" width="384" height="216"></canvas></div>
+<script>
+  /* No zoom on phones: iOS ignores user-scalable=no, so double-tap and pinch gestures are blocked here. */
+  (function () {
+    var last = 0;
+    document.addEventListener('touchend', function (e) { var now = Date.now(); if (now - last < 350) e.preventDefault(); last = now; }, { passive: false });
+    document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
+    document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  })();
+</script>
+<!-- The sprite sheets (assets/sheets/, written by tools/build_sheets.js): the painters copy from them when a picture is baked. -->
+<script src="../src/sheets.js"></script>
+<!-- The painters of the current game, reused as they are (game/HontoriArt.js is their only user). -->
+<script src="../src/icons.js"></script>
+<script src="../src/fx.js"></script>
+<script src="../src/tiles_outdoor.js"></script>
+<script src="../src/tiles_indoor.js"></script>
+<script src="../src/props_outdoor.js"></script>
+<script src="../src/outdoor_plus.js"></script>
+<script src="../src/buildings.js"></script>
+<script src="../src/furniture.js"></script>
+<script src="../src/characters.js"></script>
+<script src="../src/spirits.js"></script>
+<script src="../src/interior_plus.js"></script>
+<script src="../src/hall_props.js"></script>
+<script src="../src/walltops.js"></script>
+<!-- The maps of the current game (game/legacyMaps.js is their only user). -->
+<script src="../src/maps.js"></script>
+<script src="../src/village.js"></script>
+<script src="../src/whisperwood.js"></script>
+<script src="../src/mossgrove.js"></script>
+<script src="../src/interiors_props.js"></script>
+<script src="../src/interiors.js"></script>
+<!-- The music and sound effects of the current game (game/HontoriSound.js is their only user). -->
+<script src="../src/audio.js"></script>
+<!-- The clear pixel icons of the items (game/HontoriArt.js itemIconUrl is their only user). -->
+<script src="../src/item_icons.js"></script>
+<!-- game/main.js starts nothing when imported: the page boots it. -->
+<script type="module">
+  import { boot } from './game/main.js';
+  boot();
+</script>
+<script>
+  /* Offline: the service worker keeps every file of the game on the device. It is used over http(s) only,
+     never with ?debug=1 (so development does not fight a cache), and ?nosw=1 removes it again. */
+  (function () {
+    try {
+      if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+      var q = location.search;
+      if (/[?&]nosw=1/.test(q)) {
+        navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
+        if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { if (/^hontori2-/.test(k)) caches.delete(k); }); }).catch(function () {});
+        return;
+      }
+      if (/[?&]debug=1/.test(q)) return;
+      var reg = function () { navigator.serviceWorker.register('sw.js').catch(function () {}); };
+      if (document.readyState === 'complete') reg(); else window.addEventListener('load', reg);
+    } catch (e) {}
+  })();
+</script>
+</body></html>

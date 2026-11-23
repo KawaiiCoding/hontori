@@ -3,14 +3,24 @@ window.H = window.H || {};
   'use strict';
   var T = 16, TAU = Math.PI * 2;
   var cache = {};
-
+  /* Sheets (src/sheets.js): every cached picture has the sheet key 'tiles:' + its cache key, in group
+     'outdoor'. Sheet first, the painters below stay as the fallback. Without H.sheets nothing changes.
+       gtex dtex stex ctex            ground textures (drawn one 32x32 cell at a time)
+       wt<f>                          water frame f = 0..31
+       deep<k>                        deep-water tint k = 1, 2
+       gd<v>                          grass detail v = 0..7
+       bl<kind><v>_<f>_<em>           blades: kind g, fl, tall; v variant; f sway frame 0..6; em edge mask 0..15 (tall only)
+       fh<v>_<f>                      flower heads v = 0..11, f = 0..6
+       br<horiz><railA><railB>        bridge planks
+       e<tx>_<ty><self><9 ranks>      autotile edge of one map cell; the same key plus f0..f3 = its four foam frames */
+  var SH = H.sheets || null, GROUP = 'outdoor', PRE = 'tiles:';
   function mk(w, h) {
     var c = (typeof document !== 'undefined') ? document.createElement('canvas') : new OffscreenCanvas(w, h);
     c.width = w; c.height = h; return c;
   }
   function get(key, w, h, fn) {
     var c = cache[key];
-    if (!c) { c = mk(w, h); var g = c.getContext('2d'); g.imageSmoothingEnabled = false; fn(g, w, h); cache[key] = c; }
+    if (!c) { c = mk(w, h); var g = c.getContext('2d'); g.imageSmoothingEnabled = false; fn(g, w, h); cache[key] = c; if (SH && SH.recording && key !== 'wbase') SH.rec(GROUP, PRE + key, c); }
     return c;
   }
   function P(g, x, y, col) { g.fillStyle = col; g.fillRect(x | 0, y | 0, 1, 1); }
@@ -62,10 +72,38 @@ window.H = window.H || {};
   // Cached canvases are blitted at half size (ctx is pre-scaled by 2 by the engine).
   // =====================================================================
   var HT = 32;
-  function blit(ctx, c, px, py) { ctx.drawImage(c, px, py, c.width / 2, c.height / 2); }
-  function blitTex(ctx, tex, px, py, tx, ty) {
-    var n = tex.width, sx = ((tx * HT) % n + n) % n, sy = ((ty * HT) % n + n) % n;
-    ctx.drawImage(tex, sx, sy, HT, HT, px, py, T, T);
+  /* show: a whole cached picture of real size w x h; showTex: one tile cell of a repeating n x n texture.
+     `paint` returns the painted canvas and is only called when the sheet cannot serve the key. */
+  function show(ctx, key, px, py, w, h, paint) {
+    if (SH) { SH.draw(ctx, key, px, py, paint, w / 2, h / 2); return; }
+    var c = paint(); if (c) ctx.drawImage(c, px, py, w / 2, h / 2);
+  }
+  function showTex(ctx, key, n, px, py, tx, ty, paint) {
+    var sx = ((tx * HT) % n + n) % n, sy = ((ty * HT) % n + n) % n;
+    if (SH) { SH.drawPart(ctx, key, sx, sy, HT, HT, px, py, T, T, paint); return; }
+    ctx.drawImage(paint(), sx, sy, HT, HT, px, py, T, T);
+  }
+  /* arguments of the picture being drawn, read by the argument-free painters handed to H.sheets */
+  var pK = 'g', pV = 0, pF = 0, pE = 0, pA = false, pB = false, pC = false, pEdge = null;
+  var KIND = { g: 0, fl: 1, tall: 2 }, K_BL = [], K_FH = [], K_GD = [], K_WT = [], K_DEEP = [], K_BR = [];
+  var K_G = PRE + 'gtex', K_D = PRE + 'dtex', K_S = PRE + 'stex', K_C = PRE + 'ctex';
+  function paintBlades() { return blades(pK, pV, pF, pE); }
+  function paintHeads() { return flowerHeads(pV, pF); }
+  function paintDetail() { return grassDetail(pV); }
+  function paintWater() { return waterTex(pF); }
+  function paintDeep() { return deepTile(pV); }
+  function paintBridge() { return bridge(pA, pB, pC); }
+  function paintEdgeBase() { paintEdge(pEdge); return pEdge.base; }
+  function paintEdgeFoam() { paintEdge(pEdge); return pEdge.foam ? pEdge.foam[pF] : null; }
+  function showBlades(ctx, kind, v, f, em, px, py) {
+    var i = ((KIND[kind] * 8 + v) * 7 + f) * 16 + em;
+    pK = kind; pV = v; pF = f; pE = em;
+    show(ctx, K_BL[i] || (K_BL[i] = PRE + 'bl' + kind + v + '_' + f + '_' + em), px, py, HT, HT + (kind === 'tall' ? 24 : 10), paintBlades);
+  }
+  function showHeads(ctx, v, f, px, py) {
+    var i = v * 7 + f;
+    pV = v; pF = f;
+    show(ctx, K_FH[i] || (K_FH[i] = PRE + 'fh' + v + '_' + f), px, py, HT, HT + 8, paintHeads);
   }
   var GT = ['#35792e', '#3f8c35', '#499b3a', '#56ab40', '#66b947'];
 
@@ -269,7 +307,7 @@ window.H = window.H || {};
     2: { lit: [D.hi, D.light], sh: [D.dark, '#b8945e'] }, 1: { lit: ['#d4d0c4', '#b4b0a4'], sh: ['#706c64', '#8a867b'] }
   };
   var BANK = { 4: ['#8a683e', '#6f5030', '#523a20', '#382614'], 3: ['#d9c07c', '#c2a463', '#9c8048', '#7c6436'], 2: ['#b8945e', '#9c7a48', '#7c5e36', '#5a4226'], 1: ['#9a978c', '#7c796f', '#5c5a52', '#42403b'] };
-  var scratch = null, maskCv = null, edgeCache = {};
+  var scratch = null, maskCv = null, edgeCache = {}, recPart = '';
   function margin(tx, ty, ranks, k) { // (coverage - threshold) on a grid with MG px of margin
     var m = new Float32Array(GW * GW), ox = [0, 0, 0], oy = [0, 0, 0], x, y, i, j;
     var ind = []; for (i = 0; i < 9; i++) ind.push(ranks[i] >= k ? 1 : 0);
@@ -293,11 +331,20 @@ window.H = window.H || {};
       ranks.push(rr); has[rr] = 1; if (rr > maxr) maxr = rr;
     }
     if (maxr <= sr) return null;
-    var key = tx + '_' + ty + self + ranks.join('');
-    if (edgeCache[key]) return edgeCache[key];
+    var key = tx + '_' + ty + self + ranks.join(''), res = edgeCache[key];
+    if (!res) {
+      /* a light record; the pictures are painted only if the sheet cannot serve them */
+      res = edgeCache[key] = { tx: tx, ty: ty, sr: sr, ranks: ranks, has: has, base: null, foam: null, kb: PRE + 'e' + key, kf: null };
+      if (sr === 0) res.kf = [res.kb + 'f0', res.kb + 'f1', res.kb + 'f2', res.kb + 'f3'];
+    }
+    return res;
+  }
+  function paintEdge(res) {
+    if (res.base) return;
+    var tx = res.tx, ty = res.ty, sr = res.sr, ranks = res.ranks, has = res.has, i, j, x, y, k;
     if (!scratch) { scratch = mk(HT, HT); maskCv = mk(HT, HT); }
     var out = mk(HT, HT), og = out.getContext('2d'), sg = scratch.getContext('2d'), mg = maskCv.getContext('2d');
-    var res = { base: out, foam: null }, first = null;
+    var first = null, foam = null;
     function M(m, x, y) { return m[(y + MG) * GW + x + MG]; }
     for (k = sr + 1; k <= 4; k++) {
       if (!has[k]) continue;
@@ -343,7 +390,7 @@ window.H = window.H || {};
         else if (dd) P(og, x, y, dd < 9 ? 'rgba(16,52,100,0.5)' : 'rgba(16,52,100,0.25)');
         else { var sv = -M(fm, x, y); if (sv < 0.24) P(og, x, y, sv < 0.12 ? 'rgba(170,228,255,0.34)' : 'rgba(170,228,255,0.16)'); }
       }
-      res.foam = [];
+      foam = [];
       for (var fr = 0; fr < 4; fr++) {
         var fc = mk(HT, HT), fg = fc.getContext('2d'), a = 0.004 + fr * 0.016;
         for (y = 0; y < 32; y++) for (x = 0; x < 32; x++) {
@@ -355,15 +402,18 @@ window.H = window.H || {};
           else if (val >= a + 0.035 && val < a + 0.06 && wv > 0.4) P(fg, x, y, W.foam2);
           else if (val >= a + 0.15 && val < a + 0.175 && wv > 0.56) P(fg, x, y, 'rgba(234,248,255,0.5)');
         }
-        res.foam.push(fc);
+        foam.push(fc);
       }
     }
-    edgeCache[key] = res;
-    return res;
+    res.base = out; res.foam = foam;
+    if (SH && SH.recording) {
+      SH.rec(GROUP, res.kb, out, recPart);
+      if (foam && res.kf) for (i = 0; i < 4; i++) SH.rec(GROUP, res.kf[i], foam[i], recPart);
+    }
   }
   function drawEdges(ctx, px, py, tx, ty, self, nb) {
     var e = edgeTile(tx, ty, self, nb);
-    if (e) blit(ctx, e.base, px, py);
+    if (e) { pEdge = e; show(ctx, e.kb, px, py, HT, HT, paintEdgeBase); }
     return e;
   }
 
@@ -401,10 +451,14 @@ window.H = window.H || {};
   }
   function drawWater(ctx, px, py, tx, ty, env, nb, withShore) {
     var t = env && env.t || 0;
-    blitTex(ctx, waterTex(Math.floor(t * 4) % WF), px, py, tx, ty);
+    pF = Math.floor(t * 4) % WF;
+    showTex(ctx, K_WT[pF] || (K_WT[pF] = PRE + 'wt' + pF), 128, px, py, tx, ty, paintWater);
     var U = nb(0, -1), Dn = nb(0, 1), L = nb(-1, 0), Rr = nb(1, 0);
     var all8 = isWet(U) && isWet(Dn) && isWet(L) && isWet(Rr) && isWet(nb(-1, -1)) && isWet(nb(1, -1)) && isWet(nb(-1, 1)) && isWet(nb(1, 1));
-    if (all8) blit(ctx, deepTile(isWet(nb(0, -2)) && isWet(nb(0, 2)) && isWet(nb(-2, 0)) && isWet(nb(2, 0)) ? 2 : 1), px, py);
+    if (all8) {
+      pV = isWet(nb(0, -2)) && isWet(nb(0, 2)) && isWet(nb(-2, 0)) && isWet(nb(2, 0)) ? 2 : 1;
+      show(ctx, K_DEEP[pV] || (K_DEEP[pV] = PRE + 'deep' + pV), px, py, HT, HT, paintDeep);
+    }
     // sparkles (half-unit pixels)
     for (var k = 0; k < 2; k++) {
       var h = hash(tx, ty, 40 + k), cyc = (t * (0.3 + h * 0.25) + h * 7) % 1;
@@ -419,7 +473,11 @@ window.H = window.H || {};
     }
     if (!withShore) return;
     var e = drawEdges(ctx, px, py, tx, ty, 'water', nb);
-    if (e && e.foam) { var fi = Math.floor(t * 2.5 + hash(tx >> 2, ty >> 2, 8) * 2) % 6; blit(ctx, e.foam[fi < 4 ? fi : 6 - fi], px, py); }
+    if (e && e.kf) {
+      var fi = Math.floor(t * 2.5 + hash(tx >> 2, ty >> 2, 8) * 2) % 6;
+      pEdge = e; pF = fi < 4 ? fi : 6 - fi;
+      show(ctx, e.kf[pF], px, py, HT, HT, paintEdgeFoam);
+    }
   }
 
   // ---------- bridge (32x32) ----------
@@ -457,8 +515,11 @@ window.H = window.H || {};
   function noNb(id) { return function () { return id; }; }
 
   function drawGrassBase(ctx, px, py, tx, ty) {
-    blitTex(ctx, grassTex(), px, py, tx, ty);
-    if (hash(tx, ty, 21) < 0.3) blit(ctx, grassDetail(Math.floor(hash(tx, ty, 1) * NV)), px, py);
+    showTex(ctx, K_G, 256, px, py, tx, ty, grassTex);
+    if (hash(tx, ty, 21) < 0.3) {
+      pV = Math.floor(hash(tx, ty, 1) * NV);
+      show(ctx, K_GD[pV] || (K_GD[pV] = PRE + 'gd' + pV), px, py, HT, HT, paintDetail);
+    }
   }
 
   function draw(ctx, id, px, py, tx, ty, env, nb) {
@@ -469,27 +530,27 @@ window.H = window.H || {};
       case 'grass':
         drawGrassBase(ctx, px, py, tx, ty);
         f = swayFrame(env, tx, ty, 1);
-        blit(ctx, blades('g', v, f), px, py - 5);
+        showBlades(ctx, 'g', v, f, 0, px, py - 5);
         break;
       case 'tallgrass':
         drawGrassBase(ctx, px, py, tx, ty);
         f = swayFrame(env, tx, ty, 1.3);
         var em = (nb(0, -1) !== 'tallgrass' ? 1 : 0) | (nb(0, 1) !== 'tallgrass' ? 2 : 0) | (nb(-1, 0) !== 'tallgrass' ? 4 : 0) | (nb(1, 0) !== 'tallgrass' ? 8 : 0);
-        blit(ctx, blades('tall', v % 6, f, em), px, py - 12);
+        showBlades(ctx, 'tall', v % 6, f, em, px, py - 12);
         break;
       case 'flowers':
         drawGrassBase(ctx, px, py, tx, ty);
         f = swayFrame(env, tx, ty, 1);
-        blit(ctx, blades('fl', v, f), px, py - 5);
-        blit(ctx, flowerHeads(Math.floor(hash(tx, ty, 3) * 12), f), px, py - 4);
+        showBlades(ctx, 'fl', v, f, 0, px, py - 5);
+        showHeads(ctx, Math.floor(hash(tx, ty, 3) * 12), f, px, py - 4);
         break;
       case 'path':
       case 'cobble':
-        blitTex(ctx, id === 'path' ? dirtTex() : cobbleTex(), px, py, tx, ty);
+        if (id === 'path') showTex(ctx, K_D, 128, px, py, tx, ty, dirtTex); else showTex(ctx, K_C, 128, px, py, tx, ty, cobbleTex);
         drawEdges(ctx, px, py, tx, ty, id, nb);
         break;
       case 'sand':
-        blitTex(ctx, sandTex(), px, py, tx, ty);
+        showTex(ctx, K_S, 128, px, py, tx, ty, sandTex);
         var hs = hash(tx, ty, 12);
         if (hs < 0.18) { // shell
           var sx = px + 3 + Math.floor(hash(tx, ty, 13) * 10), sy = py + 3 + Math.floor(hash(tx, ty, 14) * 10);
@@ -508,15 +569,64 @@ window.H = window.H || {};
         var ra, rb;
         if (horiz) { ra = nb(0, -1) === 'water'; rb = nb(0, 1) === 'water'; }
         else { ra = nb(-1, 0) === 'water'; rb = nb(1, 0) === 'water'; }
-        blit(ctx, bridge(horiz, ra, rb), px, py);
+        pA = horiz; pB = ra; pC = rb;
+        var bi = (horiz ? 4 : 0) + (ra ? 2 : 0) + (rb ? 1 : 0);
+        show(ctx, K_BR[bi] || (K_BR[bi] = PRE + 'br' + (horiz ? 1 : 0) + (ra ? 1 : 0) + (rb ? 1 : 0)), px, py, HT, HT, paintBridge);
         break;
       default:
         drawGrassBase(ctx, px, py, tx, ty);
     }
   }
 
+  if (SH) {
+    /* once a sheet is in memory, the painted copies of its pictures are let go */
+    SH.onLoad(function () {
+      var k, e, q, all;
+      for (k in cache) if (SH.has(PRE + k)) delete cache[k];
+      for (k in edgeCache) {
+        e = edgeCache[k]; if (!e.base) continue;
+        all = SH.has(e.kb);
+        if (all && e.kf) for (q = 0; q < 4; q++) if (!SH.has(e.kf[q])) all = false;
+        if (all) { e.base = null; e.foam = null; }
+      }
+    });
+    /* build tool: paint every picture this module can make. Edges come from the map tables. */
+    SH.enumerate(GROUP, function () {
+      var v, f, em, q, kinds = ['g', 'fl'];
+      grassTex(); dirtTex(); sandTex(); cobbleTex();
+      for (f = 0; f < WF; f++) waterTex(f);
+      deepTile(1); deepTile(2);
+      for (v = 0; v < NV; v++) grassDetail(v);
+      for (q = 0; q < 2; q++) for (v = 0; v < NV; v++) for (f = 0; f < 7; f++) blades(kinds[q], v, f, 0);
+      for (v = 0; v < 6; v++) for (f = 0; f < 7; f++) for (em = 0; em < 16; em++) blades('tall', v, f, em);
+      for (v = 0; v < 12; v++) for (f = 0; f < 7; f++) flowerHeads(v, f);
+      for (q = 0; q < 8; q++) bridge(!!(q & 4), !!(q & 2), !!(q & 1));
+      var maps = H.maps || {};
+      Object.keys(maps).sort().forEach(function (name) {
+        var m = maps[name]; if (!m || m.tileset === 'indoor' || !m.ground || !m.legend) return;
+        /* the edges of one map are only ever needed together: one sheet per map */
+        recPart = 'edges-' + name;
+        var first = m.legend[Object.keys(m.legend)[0]];
+        var grid = m.ground.map(function (row) { return Array.prototype.map.call(row, function (ch) { return m.legend[ch] || first; }); });
+        grid.forEach(function (row, ty) {
+          row.forEach(function (id, tx) {
+            if (id !== 'path' && id !== 'cobble' && id !== 'sand' && id !== 'water') return;
+            var e = edgeTile(tx, ty, id, function (dx, dy) { return (grid[ty + dy] && grid[ty + dy][tx + dx]) || 'grass'; });
+            if (e) paintEdge(e);
+          });
+        });
+      });
+      recPart = '';
+    });
+  }
+
   H.tilesOutdoor = {
     draw: draw,
+    /* still[id] is true when what draw() paints for that tile depends only on its id, its position and
+       its eight neighbours: never on time, wind, weather or the hour. Such a tile can be drawn once into
+       a larger picture. Everything else moves: grass, tall grass and flowers sway, water and the water
+       under a bridge flow. An id that is not listed counts as moving. */
+    still: { path: true, cobble: true, sand: true, grass: false, tallgrass: false, flowers: false, water: false, bridge: false },
     solid: { water: true, grass: false, tallgrass: false, flowers: false, path: false, cobble: false, sand: false, bridge: false }
   };
 })();

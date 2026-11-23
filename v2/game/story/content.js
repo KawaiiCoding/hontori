@@ -1,0 +1,24 @@
+/*
+ * content.js
+ * Job: hand Hontori's content folders to the engine, in load order (content/schema.md section 1:
+ * shared, prologue, ch1, ch2, ch3), as registry kind "content". Any system that reads content takes it
+ * from there; a new chapter is one more import and one more entry in FOLDERS.
+ *
+ * Public API:
+ *   registerContent(game)   add every folder that is not registered yet
+ *   FOLDERS                 the folders in load order
+ */
+
+import shared from '../../content/shared/index.js';
+import prologue from '../../content/prologue/index.js';
+import ch1 from '../../content/ch1/index.js';
+import ch2 from '../../content/ch2/index.js';
+import ch3 from '../../content/ch3/index.js';
+
+export const FOLDERS = [shared, prologue, ch1, ch2, ch3];
+
+export function registerContent(game) {
+  for (const folder of FOLDERS) {
+    if (!game.registry.has('content', folder.id)) game.registry.add('content', folder.id, folder);
+  }
+}

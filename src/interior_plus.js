@@ -766,19 +766,72 @@ window.H = window.H || {};
     laundry_basket: { fw: 1, fh: 1, solid: true }
   };
   var builders = { cat_bed: buildCat, candles: buildCandles, wall_shelf: buildShelf, garland: buildGarland };
+  /* still: the picture never changes at run time (everything but the animated pieces) */
+  (function () { for (var k in newInfo) if (!builders[k]) newInfo[k].still = true; })();
 
   var cache = {};
+
+  // ---- sprite sheet keys (group 'indoor', module 'iplus') --------------------------
+  //   iplus:<type>       static piece: the 2x picture HD.blit shows (armchair, desk, wardrobe, ...)
+  //   iplus:<type>:<f>   animated piece, frame f: cat_bed 8 frames at 3 fps, candles 6 at 8 fps,
+  //                      wall_shelf 6 at 4 fps, garland 8 at 4 fps
+  //   iplus:<id><tx>_<ty>[s]  floor tile (floor_herring, floor_stone, carpet_blue) at tile (tx, ty),
+  //                      's' when a wall above casts its shadow: the module's own tile cache key.
+  //                      32x32, drawn at 16x16. These tiles depend on their position, so the
+  //                      enumerator bakes the ones the indoor maps in H.maps use.
+  // Painted at run time: the contact shadow under furniture (AO, two translucent rects).
+  var HDS = HD && HD.Sprites;
+  var AN = { cat_bed: [8, 3], candles: [6, 8], wall_shelf: [6, 4], garland: [8, 4] };
+  var AK = {};
+  (function () { for (var k in AN) { AK[k] = []; for (var f = 0; f < AN[k][0]; f++) AK[k].push(k + ':' + f); } })();
+  /* [ox, oy, w, h] of every picture, so a baked one is drawn without painting it */
+  var META = {
+    armchair: [-1, -8, 18, 26], desk: [0, -12, 16, 30], wardrobe: [0, -26, 32, 42], dresser: [0, -10, 16, 28],
+    kid_bed: [0, -2, 16, 36], toybox: [0, -4, 16, 22], piano: [0, -14, 32, 30], dining_table: [0, -4, 48, 36],
+    counter: [0, -8, 32, 26], sink: [0, -8, 16, 26], firewood: [0, -4, 16, 20], telescope: [0, -12, 16, 28],
+    globe: [0, -10, 16, 26], coat_rack: [0, -16, 16, 32], stairs: [0, -16, 32, 48], doormat: [0, 0, 32, 16],
+    hanging_pots: [0, 0, 32, 16], wall_map: [0, 0, 32, 16], herb_rack: [0, 0, 16, 16], potted_tree: [-1, -20, 18, 36],
+    laundry_basket: [0, -4, 16, 20]
+  };
+  (function () {
+    var FM = { cat_bed: [0, -6, 16, 22], candles: [0, -6, 16, 22], wall_shelf: [0, 0, 32, 16], garland: [0, 0, 32, 16] };
+    for (var k in FM) for (var f = 0; f < AK[k].length; f++) META[AK[k][f]] = FM[k];
+  })();
+  function hdRec(c, ox, oy) { var hc = HD.up2(c); return { c: hc, ox: ox, oy: oy, w: hc.width / 2, h: hc.height / 2 }; }
+  /* paints one picture by its key (without the 'iplus:' prefix), on first use only */
+  function sget(k) {
+    k = String(k);
+    var i = k.indexOf(':');
+    if (i >= 0) {
+      var type = k.slice(0, i), f = +k.slice(i + 1);
+      if (!builders[type]) return null;
+      if (!anim[type]) builders[type]();
+      var A = anim[type], c = A && A.frames && A.frames[f];
+      return c ? hdRec(c, A.ox, A.oy) : null;
+    }
+    var p = painters[k];
+    if (!p) return null;
+    if (!cache[k]) cache[k] = p();
+    var a = cache[k];
+    return a && a.c ? hdRec(a.c, a.ox, a.oy) : null;
+  }
+  var SP = HDS ? new HDS('iplus:', META, sget) : null;
+
   function drawPlus(ctx, type, px, py, env) {
     var t = (env && env.t) || 0;
     px = px | 0; py = py | 0;
     if (builders[type]) {
-      if (!anim[type]) builders[type]();
-      var A = anim[type], n = (A && A.frames && A.frames.length) || 0, fi = n ? ((Math.floor((+t || 0) * A.fps) % n) + n) % n : 0;
-      if (n && A.frames[fi]) HD.blit(ctx, A.frames[fi], px + A.ox, py + A.oy);
+      var an = SP && AN[type];
+      if (!anim[type] && !an) builders[type]();
+      var A = anim[type], n = A ? (A.frames && A.frames.length) || 0 : an[0], fps = A ? A.fps : an[1];
+      var fi = n ? ((Math.floor((+t || 0) * fps) % n) + n) % n : 0;
+      if (SP) { if (n) SP.draw(ctx, (AK[type] && AK[type][fi]) || (type + ':' + fi), px, py); }
+      else if (n && A.frames[fi]) HD.blit(ctx, A.frames[fi], px + A.ox, py + A.oy);
       return true;
     }
     var p = painters[type];
     if (!p) return false;
+    if (SP) { SP.draw(ctx, type, px, py); return true; }
     if (!cache[type]) cache[type] = p();
     var a = cache[type];
     HD.blit(ctx, a.c, px + a.ox, py + a.oy);
@@ -910,10 +963,40 @@ window.H = window.H || {};
 
   var tcache = {};
   var tdraw = { floor_herring: drawHerring, floor_stone: drawStone, carpet_blue: drawCarpetBlue };
+  // one entry per tile picture, found by number (no string built per draw):
+  // TE[id][(ty * 8192 + tx) * 2 + shadow] = { k: sheet key, key: own cache key, id, tx, ty, sh }
+  var TE = {};
+  function tent(id, tx, ty, sh) {
+    var n = (tx >= 0 && ty >= 0 && tx < 8192) ? (ty * 8192 + tx) * 2 + (sh ? 1 : 0) : null;
+    var row = TE[id] || (TE[id] = {}), e = n === null ? null : row[n];
+    if (e) return e;
+    var key = id + tx + '_' + ty + (sh ? 's' : '');
+    e = { k: 'iplus:' + key, key: key, id: id, tx: tx, ty: ty, sh: sh };
+    if (n !== null) row[n] = e;
+    return e;
+  }
+  /* the cached 32x32 picture of a tile entry (painted on first use, recorded while baking) */
+  function tcanvas(e) {
+    var c = tcache[e.key];
+    if (c) return c;
+    c = tmk(); tdraw[e.id](c.getContext('2d'), e.tx, e.ty, e.sh); tcache[e.key] = c;
+    trec(e, c);
+    return c;
+  }
+  function trec(e, c) {
+    var S = H.sheets;
+    if (!S || !S.recording || !S.rec || e.r) return;
+    e.r = 1;
+    try { S.rec('indoor', e.k, c); } catch (er) {}
+  }
+  var tpend = null;
+  function tpaint() { return tpend ? tcanvas(tpend) : null; }
   if (H.tilesIndoor) {
     var TI = H.tilesIndoor;
     TI.solid = TI.solid || {};
     TI.solid.floor_herring = false; TI.solid.floor_stone = false; TI.solid.carpet_blue = false;
+    TI.still = TI.still || {};
+    TI.still.floor_herring = true; TI.still.floor_stone = true; TI.still.carpet_blue = true;
     var origTile = TI.draw;
     TI.draw = function (ctx, id, px, py, tx, ty, env, nb) {
       var fn = tdraw[id];
@@ -921,9 +1004,47 @@ window.H = window.H || {};
       tx = tx | 0; ty = ty | 0;
       var up = nb ? nb(0, -1) : id;
       var sh = up === 'wall' || up === 'void';
-      var key = id + tx + '_' + ty + (sh ? 's' : '');
-      if (!tcache[key]) { var c = tmk(); var g = c.getContext('2d'); fn(g, tx, ty, sh); tcache[key] = c; }
-      ctx.drawImage(tcache[key], Math.round(px * 2) / 2, Math.round(py * 2) / 2, T, T);
+      var e = tent(id, tx, ty, sh), x = Math.round(px * 2) / 2, y = Math.round(py * 2) / 2, S = H.sheets;
+      if (S && S.draw) { tpend = e; try { S.draw(ctx, e.k, x, y, tpaint, T, T); return; } catch (er) {} }
+      ctx.drawImage(tcanvas(e), x, y, T, T);
     };
   }
+
+  // ---- sheet build: every picture this module can show -----------------------------
+  function indoorCells(fn) {
+    var maps = H.maps || {};
+    for (var name in maps) {
+      var m = maps[name];
+      if (!m || m.tileset !== 'indoor' || !m.ground || !m.legend) continue;
+      var first = m.legend[Object.keys(m.legend)[0]];
+      var grid = m.ground.map(function (r) { return Array.from(r).map(function (ch) { return m.legend[ch] || first; }); });
+      for (var y = 0; y < grid.length; y++) for (var x = 0; x < grid[y].length; x++) fn(grid, x, y);
+    }
+  }
+  function enumerate() {
+    var keys = [], k, f;
+    for (k in newInfo) {
+      if (builders[k]) {
+        if (!anim[k]) builders[k]();
+        var A = anim[k], n = (A && A.frames && A.frames.length) || 0;
+        if (AN[k] && (AN[k][0] !== n || AN[k][1] !== A.fps)) try { console.warn('sheets: iplus frame table for ' + k + ' is ' + AN[k] + ', painted ' + n + ',' + A.fps); } catch (e) {}
+        for (f = 0; f < n; f++) keys.push((AK[k] && AK[k][f]) || (k + ':' + f));
+      } else if (painters[k]) keys.push(k);
+    }
+    var r = SP ? SP.all(keys) : { count: 0, pixels: 0 }, seen = {};
+    var tileCount = 0, tilePixels = 0;
+    indoorCells(function (grid, x, y) {
+      var id = grid[y][x];
+      if (!tdraw[id]) return;
+      var up = (grid[y - 1] && grid[y - 1][x]) || 'void';
+      var e = tent(id, x, y, up === 'wall' || up === 'void');
+      if (seen[e.k]) return;
+      seen[e.k] = 1;
+      var c = tcanvas(e);
+      trec(e, c);
+      tileCount++; tilePixels += c.width * c.height;
+    });
+    return { count: r.count + tileCount, pixels: r.pixels + tilePixels, props: r, tiles: { count: tileCount, pixels: tilePixels } };
+  }
+  if (H.sheets && H.sheets.enumerate) try { H.sheets.enumerate('indoor', enumerate); } catch (e) {}
 })();

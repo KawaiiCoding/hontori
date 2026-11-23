@@ -201,7 +201,7 @@ window.H = window.H || {};
       w.bang = Math.max(0, w.bang - dt);
       var pdx = pl.x - w.x, pdy = (pl.y - 4) - w.y, pd = Math.hypot(pdx, pdy);
       // hidden ones (a faint shimmer) only notice a kid who can see them in the mirror
-      var calm = ctx.busy || S.grace > 0 || w.fade < 0 || (w.hidden && !seen());
+      var calm = ctx.busy || S.grace > 0 || w.fade < 0 || (w.hidden && !seen()) || !!(H.game && H.game.riding && H.game.riding());   /* wild hontori leave a rider alone */
       if (!calm && w.state !== 'chase' && w.state !== 'notice' && pd < 3 * T) {
         w.state = 'notice'; w.timer = 0.7; w.bang = 1.1; w.moving = false;
         w.dir = Math.abs(pdx) > Math.abs(pdy) ? (pdx < 0 ? 2 : 3) : (pdy < 0 ? 1 : 0);

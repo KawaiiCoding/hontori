@@ -19,10 +19,28 @@ window.H = window.H || {};
   function save() { try { H.game && H.game.save(); } catch (e) {} }
   function cycle(lines, fx) { return function (c, n) { if (fx) emit(c, fx, 5, -8); return kid(c, step(n, lines)); }; }
 
+  // the guest bed at The Steaming Bowl: a night's rest for 1 silver
+  function guestBed(c) {
+    var M = H.money, cost = M ? M.PRICE.guest_bed : 0;
+    return say(c, 'innkeeper', 'Big Bo', 'The guest bed is ' + (M ? M.fmt(cost) : 'free') + ' a night. Clean sheets, warm quilt.')
+      .then(function () { return choose(['Rest the night', 'Not now']); })
+      .then(function (i) {
+        if (i !== 0) return say(c, 'innkeeper', 'Big Bo', 'It will be made up when you need it.');
+        if (M && !M.spend(cost)) return say(c, 'innkeeper', 'Big Bo', 'A night is ' + M.fmt(cost) + '. Sell Nettle a few finds first.');
+        if (M) toast(c, '-' + M.fmt(cost));
+        sfx(c, 'sleep');
+        return (c.fade ? P(c.fade(800)) : Promise.resolve()).then(function () {
+          var t = (c.env && c.env.time) || 22; if (c.setTime) c.setTime((t + 8) % 24);
+          toast(c, 'Eight hours later'); save();
+          return fox(c, 'Quilt and broth, a cosy den. Rested now, we roam again.');
+        });
+      });
+  }
   function ramen(c) {
     return say(c, 'innkeeper', 'Big Bo', 'A hot bowl of ramen for you and your friends?')
-      .then(function () { var M = H.money, f = (H.game.state.flags || {}); return choose([(M ? 'Eat ramen, ' + (f.ramenFree ? M.fmt(M.PRICE.ramen) : 'first bowl free') : 'Eat ramen'), 'No thanks']); })
+      .then(function () { var M = H.money, f = (H.game.state.flags || {}); return choose([(M ? 'Eat ramen, ' + (f.ramenFree ? M.fmt(M.PRICE.ramen) : 'first bowl free') : 'Eat ramen'), 'Rent the guest bed' + (M ? ', ' + M.fmt(M.PRICE.guest_bed) : ''), 'No thanks']); })
       .then(function (i) {
+        if (i === 1) return guestBed(c);
         if (i !== 0) return say(c, 'innkeeper', 'Big Bo', 'The pot will be here when you are hungry.');
         var M = H.money, st0 = (H.game && H.game.state) || {}, cost = M ? M.PRICE.ramen : 0;
         if (M && st0.flags && st0.flags.ramenFree && !M.spend(cost)) return say(c, 'innkeeper', 'Big Bo', 'A bowl is ' + M.fmt(cost) + '. Come back when your pocket jingles.');
@@ -40,32 +58,40 @@ window.H = window.H || {};
 
   var GOODS = [
     ['herb', 'Herb', 'grass'], ['ember_dust', 'Ember Dust', 'fire'], ['tide_pearl', 'Tide Pearl', 'water'],
-    ['spirit_snack', 'Spirit Snack', 'heart'], ['charm', 'Backpack Charm', 'backpack']
+    ['spirit_snack', 'Spirit Snack', 'heart'], ['charm', 'Backpack Charm', 'backpack'], ['blue_backpack', 'Blue Backpack', 'backpack'], ['saddle', 'Saddle', 'paw']
   ];
+  // the saddle is only offered once the lead hontori is big enough to carry the kid (second evolution)
+  function bigEnough() { var m = ((H.game && H.game.state && H.game.state.party) || [])[0]; return !!(m && (m.stage || 1) >= 3); }
+  function owned(id) { return ((H.game && H.game.state && H.game.state.items) || []).some(function (i) { return i.id === id; }); }
   function shop(c) {
     var M = H.money, st = (H.game && H.game.state) || {};
-    if (!M) return say(c, 'shopkeeper', 'Nettle', 'Browse all you like, dear.');
+    // the keeper's own name: Nettle in Emberbrook, Pell in Mossgrove
+    var NM = (c.object && c.object.lines && c.object.lines[0] && c.object.lines[0][0]) || (c.mapName === 'moss_house2' ? 'Pell' : 'Nettle');
+    if (!M) return say(c, 'shopkeeper', NM, 'Browse all you like, dear.');
     var pv = M.pouchValue();
-    return say(c, 'shopkeeper', 'Nettle', 'Welcome, dear. You have ' + M.fmt(M.get()) + '.')
+    return say(c, 'shopkeeper', NM, 'Welcome, dear. You have ' + M.fmt(M.get()) + '.')
       .then(function () { return choose(['Buy something', pv ? 'Sell your trade pouch (' + M.fmt(pv) + ')' : 'Sell (pouch is empty)', 'Nothing today']); })
       .then(function (i) {
         if (i === 1) {
-          if (!pv) return say(c, 'shopkeeper', 'Nettle', 'Bring me herbs, pebbles, feathers. I pay fair.');
+          if (!pv) return say(c, 'shopkeeper', NM, 'Bring me herbs, pebbles, feathers. I pay fair.');
           M.sellPouch(); sfx(c, 'confirm'); emit(c, 'sparkle', 8, -10);
-          return say(c, 'shopkeeper', 'Nettle', 'Lovely finds. Here you are.');
+          return say(c, 'shopkeeper', NM, 'Lovely finds. Here you are.');
         }
-        if (i !== 0) return say(c, 'shopkeeper', 'Nettle', 'Browse all you like, dear.');
-        return choose(GOODS.map(function (g) { return g[1] + ', ' + M.fmt(M.PRICE[g[0]] || 5) + (M.can(M.PRICE[g[0]] || 5) ? '' : ' (not enough)'); }).concat(['Nothing'])).then(function (k) {
-          var g = GOODS[k]; if (!g) return say(c, 'shopkeeper', 'Nettle', 'Take your time.');
+        if (i !== 0) return say(c, 'shopkeeper', NM, 'Browse all you like, dear.');
+        var goods = GOODS.filter(function (g) { if (g[0] === 'saddle') return bigEnough() && !owned('saddle'); return !((g[0] === 'charm' || g[0] === 'blue_backpack') && owned(g[0])); });
+        return choose(goods.map(function (g) { return g[1] + ', ' + M.fmt(M.PRICE[g[0]] || 5) + (M.can(M.PRICE[g[0]] || 5) ? '' : ' (not enough)'); }).concat(['Nothing'])).then(function (k) {
+          var g = goods[k]; if (!g) return say(c, 'shopkeeper', NM, 'Take your time.');
           var price = M.PRICE[g[0]] || 5;
-          if (!M.spend(price)) return say(c, 'shopkeeper', 'Nettle', 'That one is ' + M.fmt(price) + '. Sell me some finds first?');
+          if (!M.spend(price)) return say(c, 'shopkeeper', NM, 'That one is ' + M.fmt(price) + '. Sell me some finds first?');
           if (H.game && H.game.addItem) H.game.addItem(g[0], g[1], g[2]);
           sfx(c, 'confirm'); emit(c, 'sparkle', 8, -10); toast(c, 'Got ' + g[1] + '  -' + M.fmt(price)); save();
-          var tip = g[0] === 'ember_dust' ? 'Ember Dust wakes a fainted fire spirit.' :
-            g[0] === 'tide_pearl' ? 'A Tide Pearl wakes a fainted water spirit.' :
+          var tip = g[0] === 'ember_dust' ? 'With the Dawn Star, Ember Dust wakes a fainted fire spirit.' :
+            g[0] === 'tide_pearl' ? 'With the Dawn Star, a Tide Pearl wakes a fainted water spirit.' :
             g[0] === 'herb' ? 'An Herb restores a little mana in battle.' :
-            g[0] === 'spirit_snack' ? 'A Spirit Snack restores a little mana in battle.' : 'Clip it on, it brings a little luck.';
-          return say(c, 'shopkeeper', 'Nettle', tip);
+            g[0] === 'spirit_snack' ? 'With the Dawn Star, a Spirit Snack wakes any other fainted spirit.' :
+            g[0] === 'blue_backpack' ? 'The blue one. One more pocket, and it suits you.' :
+            g[0] === 'saddle' ? 'Soft leather, made for a spirit\'s back. Tap the saddle under open sky to ride.' : 'Clip it on. More finds in the forest, and a steadier spiral.';
+          return say(c, 'shopkeeper', NM, tip);
         });
       });
   }
@@ -92,6 +118,7 @@ window.H = window.H || {};
     ramen_pot: ramen,
     tavern_counter: ramen,
     shop_counter: shop,
+    guest_bed: guestBed,
     crystal_orb: function (c) {
       sfx(c, 'sparkle'); emit(c, 'magic', 20, -12);
       return say(c, 'orb', 'Crystal Orb', 'Water and fire, and wind on the wire.')
@@ -119,6 +146,7 @@ window.H = window.H || {};
 
   H.interact.has = function (type) { return !!T[type] || base.has.call(H.interact, type); };
   H.interact.run = function (type, ctx) {
+    if (type === 'bed' && ctx && ctx.mapName === 'tavern') type = 'guest_bed';
     if (!T[type]) return base.run.call(H.interact, type, ctx);
     ctx = ctx || {};
     var n = visits[type] || 0; visits[type] = n + 1;

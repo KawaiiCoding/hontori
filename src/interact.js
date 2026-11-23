@@ -91,9 +91,13 @@ window.H = window.H || {};
       'Time to rest again.'
     ])).then(function () { sfx(c, 'sleep'); return fade(c, 700); })
       .then(function () {
-        if (c.setTime) c.setTime(((c.env && c.env.time) || 22) + 8 >= 24 ? (((c.env && c.env.time) || 22) + 8) % 24 : ((c.env && c.env.time) || 22) + 8); // sleeping skips 8 hours
+        // sleeping skips 8 hours; while the Wet Pawprints quest waits for night, the kid wakes at dusk instead
+        var fl = (window.H && H.game && H.game.state && H.game.state.flags) || {};
+        var toDusk = !!(fl['c1:pip'] && !fl['c1:pond'] && !fl['c1:brook']);
+        var t0 = (c.env && c.env.time) || 22;
+        if (c.setTime) c.setTime(toDusk ? 19 : (t0 + 8) % 24);
         emit(c, 'sparkle', 6, 0, -8);
-        toast(c, 'Eight hours later');
+        toast(c, toDusk ? 'Evening' : 'Eight hours later');
         var hr = (c.env && c.env.time) || 8, night = hr >= 19 || hr < 5;
         return c.hasSpirit ? fox(c, pick(night ? ['Stars are high, the moon rides by.', 'Night is deep, but we have slept.'] : ['Up with the sun, a new day begun.', 'Rest is done, now out we run.']))
           : kid(c, 'I feel rested.');
@@ -103,10 +107,10 @@ window.H = window.H || {};
   function neighbour(c, n) {
     sfx(c, 'knock');
     return kid(c, step(n, [
-      isNight(c) ? 'The lights are out. They must be asleep.' : 'I knock. Nobody answers.',
+      isNight(c) ? 'Warm light behind the curtains.' : 'The door is just below. I can walk in.',
       'It smells like bread inside.',
       'A curtain moves, then stills.'
-    ])).then(function () { return rhyme(c, 'Let them be, and come with me.', 0.3); });
+    ])).then(function () { return rhyme(c, 'A door below, in we go.', 0.3); });
   }
 
   // ---------- handlers: fn(ctx, visitIndex) -> Promise ----------
@@ -391,14 +395,14 @@ window.H = window.H || {};
         .then(function () { return rhyme(c, 'Jars that gleam, more than they seem.', 0.45); });
     },
     school: function (c, n) {
-      sfx(c, 'locked'); emit(c, 'magic', 6, 0, -20);
-      return kid(c, step(n, ['The door is locked.', 'A crest glows above the door.', 'Still locked.']))
+      sfx(c, 'sparkle'); emit(c, 'magic', 6, 0, -20);
+      return kid(c, step(n, ['A crest glows above the big door.', 'The stone is warm, like it is breathing.', 'Voices hum inside.']))
         .then(function () {
           if (!c.hasSpirit) return null;
           return fox(c, step(n, [
-            'A door of old, its secrets hold.',
-            'Not yet, not now, wait and see how.',
-            'Patience, friend, it opens in the end.'
+            'A door of old, a crest of gold.',
+            'Walls of stone, a door below, step up close and in we go.',
+            'Big and grand, the door is at hand.'
           ]));
         });
     }

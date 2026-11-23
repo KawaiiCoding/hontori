@@ -181,12 +181,14 @@ window.H = window.H || {};
     return a.blackout(function () { a.setTime(8); }, 2200)
       .then(function () { return a.say('kid', 'Morning already.'); })
       .then(function () { return a.say('mom', 'Mom', 'Good morning, sweetheart. You look like you have a secret.'); })
-      .then(function () { return a.say('hontori', 'They cannot see me, not just yet. Lift their veil, they will not forget.'); })
+      .then(function () { return a.say('hontori', 'They wish to see, they cannot yet. Lift their veil, they will not forget.'); })
       .then(function () { return a.draw('veil', 'Draw the V for Mom and Dad'); })
       .then(function () { a.sfx('spell'); a.emit('magic', 60, 0, -10); return a.wait(900); })
       .then(function () { return a.say('mom', 'Mom', 'Oh. A little fox made of fire.'); })
+      .then(function () { return a.say('mom', 'Mom', 'It only works on those who wish to see. We always wished.'); })
       .then(function () { return a.say('dad', 'Dad', 'So the chimney was not grumbling. It was knocking.'); })
       .then(function () { return a.say('mom', 'Mom', 'Grandma told us about Wonders. Kids who see. Be brave, and be kind.'); })
+      .then(function () { return a.say('mom', 'Mom', 'Your grandma had a spirit friend once. One day it was gone.'); })
       .then(function () { return a.say('dad', 'Dad', 'The old Academy opened its gate again. Go and learn.'); })
       .then(function () { return a.say('mom', 'Mom', 'Look around the house. Five things fit in your bag.'); })
       .then(function () { return a.say('dad', 'Dad', 'And a little pocket money. Spend it well.'); })
@@ -240,8 +242,8 @@ window.H = window.H || {};
 
   // ---------------------------------------------------------------- Wet Pawprints
   ST.defineEvent({ id: 'c1_pip', when: 'talk', map: 'house_a2', npc: 'Tobin', run: function (a) {
-    return a.say('boy', 'Tobin', 'You believe me, right? It was real.')
-      .then(function () { return a.say('boy', 'Tobin', 'The pawprints always lead to the pond.'); })
+    return a.say('tobin', 'Tobin', 'You believe me, right? It was real.')
+      .then(function () { return a.say('tobin', 'Tobin', 'The pawprints always lead to the pond.'); })
       .then(function () { return a.say('hontori', 'Wet little paws, a pond at night. We wait for dusk and the water light.'); })
       .then(function () { ST.start('pawprints'); a.setFlag('c1:pip'); });
   } });
@@ -261,7 +263,7 @@ window.H = window.H || {};
     a.setFlag('c1:pond');
     return a.say('kid', 'Ripples... and two small eyes.')
       .then(function () { return a.say('hontori', 'Gentle now, it is afraid. Tire it first, then the spiral is made.'); })
-      .then(function () { return a.battle('water', { level: 3 }); })
+      .then(function () { return a.battle('water', { level: 3, sureBind: true }); })
       .then(function (r) {
         if (r && r.captured) {
           a.setFlag('c1:brook');
@@ -274,7 +276,7 @@ window.H = window.H || {};
 
   // ---------------------------------------------------------------- The Elder's Second Cup
   ST.defineEvent({ id: 'c1_fenn', when: 'talk', map: 'house_a3', npc: ['Fenn', 'Lark'], run: function (a) {
-    var who = a.ctx.npc === 'Lark' ? ['girl', 'Lark'] : ['dad', 'Fenn'];
+    var who = a.ctx.npc === 'Lark' ? ['lark', 'Lark'] : ['dad', 'Fenn'];
     return a.say(who[0], who[1], 'The Elder never talks about the well.')
       .then(function () { return a.say(who[0], who[1], 'Maybe she will talk to you.'); })
       .then(function () { ST.start('elder'); a.setFlag('c1:fenn'); });

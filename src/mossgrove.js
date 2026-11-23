@@ -37,11 +37,9 @@ window.H = window.H || {};
   ];
   buildings.forEach(function (b) { var f = { school: [10, 6], house_a: [5, 4] }[b.type]; res(b.x - 1, b.y - 1, b.x + f[0], b.y + f[1]); });
   var npcs = [
-    { key: 'warden', x: 22, y: 13, dir: 0, lines: [['Warden Fern', 'Rootwood Hall teaches the patience of roots.'], ['Warden Fern', 'Come inside when you are ready.']] },
-    { key: 'shopkeeper', x: 14, y: 17, dir: 3, lines: [['Pell', 'Seeds, herbs and fair trades.'], ['Pell', 'I buy what the forest gives you.']] },
     // Granny Burr sits in the square by day and goes home at dusk
     { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wonders used to come every spring.']], sched: [{ from: 7, to: 18 }, { from: 18, to: 7, away: true }] },
-    { key: 'kid2', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'I am not a Wonder. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
+    { key: 'sorreljr', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'Madam Sorrel is my grandma. I am not a Wonder. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
     { key: 'fisher', x: 29, y: 6, dir: 3, fixed: true, lines: [['Fisher Lin', 'Mirror Pond keeps its fish deep.']] },
     { key: 'traveler', x: 32, y: 17, dir: 3, lines: [['Rowan', 'Rocks came down on the road to Whistling Pass.'], ['Rowan', 'They say it will be clear soon.']] }
   ];
@@ -106,7 +104,8 @@ window.H = window.H || {};
     props: hp,
     npcs: [
       { key: 'warden', x: 13, y: 8 + SH, dir: 0, lines: [['Warden Fern', 'Roots first, then leaves.'], ['Warden Fern', 'Rest in the guest bed if you need it.']] },
-      { key: 'girl', x: 5, y: 14 + SH, dir: 3, lines: [['Wren', 'You came too! I knew you would.'], ['Wren', 'Fern is strict, but kind.']] }
+      { key: 'apprentice', x: 13, y: 11 + SH, dir: 0, lines: [['Apprentice Bryn', 'I keep the aisle to the Heart Tree.'], ['Apprentice Bryn', 'Fern sees no one I have not tested.']] },
+      { key: 'wren', x: 5, y: 14 + SH, dir: 3, lines: [['Wren', 'You came too! I knew you would.'], ['Wren', 'Fern is strict, but kind.']] }
     ],
     doors: [{ x: DOOR, y: HH - 1, to: 'mossgrove', tx: 20, ty: 9, dir: 0 }, { x: DOOR - 1, y: HH - 1, to: 'mossgrove', tx: 19, ty: 9, dir: 0 }],
     spawn: { x: DOOR, y: HH - 2, dir: 1 }, door: DOOR
@@ -139,7 +138,7 @@ window.H = window.H || {};
     name: 'Root Maze', w: MW, h: MH, tileset: 'indoor', noRest: true,
     ground: mg.map(function (r) { return r.join(''); }), legend: { W: 'wall', V: 'void', S: 'floor_stone', F: 'floor_wood' },
     props: mp, buildings: [],
-    npcs: [{ key: 'kid2', x: 14, y: MT + 7, dir: 2, svc: 'leafmaze', lines: [['Ivo', 'This is the Root Maze. Every student of the Hall solves it.'], ['Ivo', 'Push the leaf piles onto the glowing moss.']] }],
+    npcs: [{ key: 'ivo', x: 14, y: MT + 7, dir: 2, svc: 'leafmaze', lines: [['Ivo', 'This is the Root Maze. Every student of the Hall solves it.'], ['Ivo', 'Push the leaf piles onto the glowing moss.']] }],
     doors: [{ x: 8, y: MH - 1, to: 'mossgrove', tx: 20, ty: 9, dir: 0 }, { x: 8, y: MT - 1, to: 'rootwood_hall', tx: DOOR, ty: HH - 2, dir: 1 }],
     spawn: { x: 8, y: MH - 2, dir: 1 }, door: 8
   };
@@ -164,10 +163,10 @@ window.H = window.H || {};
       props: [pr('window', 3, 1), pr('picture', 6, 1), pr('window', 10, 1), pr('fireplace', 6, 2), pr('stove', 1, 2), pr('cupboard', 2, 2), pr('armchair', 4, 3),
         pr('bed', 11, 2), pr('dresser', 12, 5), pr('table', 2, 6), pr('chair', 3, 6), pr('plant', 12, 8), pr('cat_bed', 1, 8), pr('herb_rack', 9, 1), pr('bookshelf', 9, 2)],
       npcs: [{ key: 'grandma', x: 5, y: 6, dir: 0, lines: [['Granny Burr', 'Tea is always warm here. Sit, if you like.'], ['Granny Burr', 'My husband was a Wonder. He wrote everything down.']], sched: [{ from: 18, to: 7 }, { from: 7, to: 18, away: true }] }] },
-    { name: 'moss_house2', title: 'Pell\'s House', b: buildings[2], w: 14, h: 10, door: 7, floor: 'F',
+    { name: 'moss_house2', title: 'Pell\'s Trading Post', b: buildings[2], w: 14, h: 10, door: 7, floor: 'F',
       props: [pr('window', 2, 1), pr('wall_map', 5, 1), pr('window', 10, 1), pr('shop_shelf', 1, 2), pr('barrel_in', 3, 2), pr('barrel_in', 4, 2), pr('desk', 8, 2), pr('chair', 8, 3), pr('bed', 11, 2),
-        pr('table', 9, 6), pr('chair', 10, 6), pr('chest', 1, 7), pr('potted_tree', 12, 8), pr('lantern_hang', 7, 1), pr('toybox', 12, 6)],
-      npcs: [{ key: 'kid2', x: 6, y: 6, dir: 0, lines: [['Pip Pell', 'Dad trades with half the forest.'], ['Pip Pell', 'He says the bridge men drink too much tea.']] }] }
+        pr('table', 9, 6), pr('chair', 10, 6), pr('chest', 1, 7), pr('potted_tree', 12, 8), pr('lantern_hang', 7, 1), pr('toybox', 12, 6), pr('shop_counter', 2, 4)],
+      npcs: [{ key: 'shopkeeper', x: 3, y: 3, dir: 0, lines: [['Pell', 'Seeds, herbs and fair trades.'], ['Pell', 'I buy what the forest gives you.']] }, { key: 'pip', x: 6, y: 6, dir: 0, lines: [['Pip Pell', 'Dad trades with half the forest.'], ['Pip Pell', 'He says the rock crew drinks too much tea.']] }] }
   ];
   houses.forEach(function (h) {
     var dx = h.b.x + 2, dy = h.b.y + 3;

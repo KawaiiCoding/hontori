@@ -39,7 +39,7 @@ window.H = window.H || {};
       pr('tavern_table', 9, 7), pr('stool', 11, 7), pr('stool', 8, 8),
       pr('tavern_table', 13, 7), pr('stool', 15, 8),
       pr('barrel_in', 16, 2), pr('barrel_in', 16, 3), pr('barrel_in', 1, 7),
-      pr('plant', 1, 10), pr('flower_vase', 16, 10), pr('floor_lamp', 6, 10)
+      pr('plant', 1, 10), pr('flower_vase', 16, 10), pr('floor_lamp', 6, 10), pr('bed', 16, 7)
     ],
     npcs: [
       { key: 'innkeeper', x: 5, y: 3, dir: 0, lines: L('Big Bo', 'Welcome in, the broth has simmered since dawn.', 'Lean on the counter if you want a bowl.') },
@@ -62,7 +62,7 @@ window.H = window.H || {};
     ],
     npcs: [
       { key: 'shopkeeper', x: 7, y: 3, dir: 0, lines: L('Nettle', 'Step up to the counter and pick what you need.', 'Ember Dust and Tide Pearls bring a fainted spirit back.') },
-      { key: 'girl', x: 4, y: 7, dir: 1, lines: L('Juniper', 'I am saving up for the blue backpack.', 'Nettle says it held a map that drew itself.') }
+      { key: 'juniper', x: 4, y: 7, dir: 1, lines: L('Juniper', 'I am saving up for the blue backpack.', 'Nettle says she has more than one. One whole gold each.') }
     ]
   });
 
@@ -83,7 +83,7 @@ window.H = window.H || {};
       pr('bookstack', 1, 11), pr('flower_vase', 18, 11), pr('plant', 1, 8), pr('bookstack', 18, 8)
     ],
     npcs: [
-      { key: 'elder', x: 8, y: 3, dir: 0, lines: L('Madam Sorrel', 'Eight elements, eight tempers, and all of them teachable.', 'Read the board, child, and mind the orb.'), svc: 'academy_lessons' },
+      { key: 'sorrel', x: 8, y: 3, dir: 0, lines: L('Madam Sorrel', 'Eight elements, eight tempers, and all of them teachable.', 'Read the board, child, and mind the orb.'), svc: 'academy_lessons' },
       { key: 'boy', x: 5, y: 7, dir: 1, lines: L('Cole', 'I made a spark today, a tiny one.', 'Do not tell Kip outside, he would be jealous.'), svc: 'academy_duel' },
       { key: 'girl', x: 15, y: 7, dir: 1, lines: L('Mira', 'My otter splashed the whole front row today.', 'Madam Sorrel only smiled and dried us off.'), svc: 'academy_duel' }
     ]
@@ -104,7 +104,7 @@ window.H = window.H || {};
       pr('school_desk', 1, 6), pr('bookstack', 1, 7), pr('bed', 12, 6), pr('flower_vase', 12, 9), pr('plant', 1, 9), pr('clock', 4, 2)
     ],
     npcs: [
-      { key: 'girl', x: 2, y: 8, dir: 1, lines: L('Wren', 'A letter came from the Academy with my name on it.', 'It glows when I hold it near the fire.') },
+      { key: 'wren', x: 2, y: 8, dir: 1, goneIf: 'c1:complete', lines: L('Wren', 'A leaf from Rootwood Hall drifted in through my window.', 'It glows when I hold it. I think it is calling me.') },
       { key: 'mom', x: 9, y: 5, dir: 0, lines: L('Hazel', 'Wren reads spellbooks under the blanket at night.', 'I never saw magic, but I see her smile.') }
     ]
   });
@@ -118,7 +118,7 @@ window.H = window.H || {};
       pr('bed', 12, 7), pr('chest', 12, 9), pr('barrel_in', 1, 9), pr('plant', 6, 9)
     ],
     npcs: [
-      { key: 'boy', x: 9, y: 8, dir: 1, lines: L('Tobin', 'A glowing puff slept in our woodpile last week.', 'Then it was gone, and it left wet pawprints.') },
+      { key: 'tobin', x: 9, y: 8, dir: 1, lines: L('Tobin', 'A glowing puff slept in our woodpile last week.', 'Then it was gone, and it left wet pawprints.') },
       { key: 'dad', x: 5, y: 3, dir: 0, lines: L('Corin', 'Tobin leaves a saucer of milk by the door each night.', 'Something drinks it, so I let him keep hoping.') }
     ]
   });
@@ -133,7 +133,7 @@ window.H = window.H || {};
     ],
     npcs: [
       { key: 'dad', x: 7, y: 4, dir: 0, lines: L('Fenn', 'Elder Wisteria once walked with a spirit of light.', 'She still sets a second cup of tea each morning.') },
-      { key: 'girl', x: 4, y: 8, dir: 1, lines: L('Lark', 'Grandpa says the Elder hums the old spells.', 'Ask her about the well, she goes very quiet.') }
+      { key: 'lark', x: 4, y: 8, dir: 1, lines: L('Lark', 'Grandpa says the Elder hums the old spells.', 'Ask her about the well, she goes very quiet.') }
     ]
   });
 

@@ -91,9 +91,9 @@ window.H = window.H || {};
     root = rootEl || document.body;
     if (getComputedStyle(root).position === 'static') root.style.position = 'relative';
     if (!document.getElementById('hui-font')) {
-      var pc = mk('link'); pc.rel = 'preconnect'; pc.href = 'https://fonts.gstatic.com'; pc.crossOrigin = ''; document.head.appendChild(pc);
-      var l = mk('link'); l.id = 'hui-font'; l.rel = 'stylesheet';
-      l.href = 'https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap';
+      /* the typeface ships with the game, so nothing is fetched from another site */
+      var l = mk('style'); l.id = 'hui-font';
+      l.textContent = '@font-face{font-family:"Nunito";font-style:normal;font-weight:600 900;font-display:swap;src:url(assets/fonts/nunito-latin.woff2) format("woff2")}';
       document.head.appendChild(l);
     }
     if (!document.getElementById('hui-style')) {
@@ -396,6 +396,8 @@ window.H = window.H || {};
 
   // ---- toast ----
   var toastQ = [], toastBusy = false;
+  /* how long a timed message stays: about 250 words a minute, plus a moment to notice it */
+  function readMs(text, max) { var w = String(text || '').trim().split(/\s+/).filter(Boolean).length; return Math.max(2500, Math.min(max || 10000, 1200 + w * 240)); }
   function toast(text) {
     if (!els.toast) return;
     toastQ.push(String(text));
@@ -411,7 +413,7 @@ window.H = window.H || {};
     setTimeout(function () {
       els.toast.classList.remove('on');
       setTimeout(nextToast, 300);
-    }, 2200);
+    }, readMs(t));
   }
 
   // ---- fade: out to black over ms/2, back in over ms/2 ----
@@ -621,7 +623,7 @@ window.H = window.H || {};
     g.addEventListener('click', close);
     var anyTap = function () { document.removeEventListener('pointerdown', anyTap, true); setTimeout(function () { close(); }, 0); };
     setTimeout(function () { document.addEventListener('pointerdown', anyTap, true); }, 350);
-    setTimeout(function () { document.removeEventListener('pointerdown', anyTap, true); close(); }, 7000);
+    setTimeout(function () { document.removeEventListener('pointerdown', anyTap, true); close(); }, Math.max(7000, readMs((o.title || '') + ' ' + (o.text || ''), 14000) + 2000));
     void ov.offsetWidth; ov.classList.add('on');
   }
   function blocked(text) { if (H.ui && H.ui.toast) H.ui.toast(text); }

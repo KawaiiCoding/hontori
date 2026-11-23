@@ -216,14 +216,14 @@
   function acts(parent) { return mk('div', 'hk-acts', parent || els.sheet); }
   function note(text, parent) { return mk('div', 'hk-note', parent || els.sheet, text); }
   function itemDesc(it) {
-    var USE = { ember_dust: 'Wakes a fainted fire hontori', tide_pearl: 'Wakes a fainted water hontori', herb: 'Restores a little mana in battle', spirit_snack: 'Wakes other fainted hontori, restores mana', wand: 'Draw spells to help your hontori', novice_cert: 'Proof you finished the Academy', charm: 'A lucky charm for your backpack', ramen: 'A warm bowl. Fills stamina.', grey_letter: 'Sealed with grey wax. Not yours to open.', ring_leaf: 'The ring of Rootwood Hall' };
+    var USE = { ember_dust: 'Dawn Star: wakes a fainted fire hontori', tide_pearl: 'Dawn Star: wakes a fainted water hontori', herb: 'Restores a little mana in battle', spirit_snack: 'Dawn Star: wakes any other fainted hontori', wand: 'Draw spells to help your hontori', novice_cert: 'Proof you finished the Academy', charm: 'Lucky: more forest finds, binding a little easier', blue_backpack: 'One more pocket for your things', ramen: 'A warm bowl. Fills stamina.', grey_letter: 'Sealed with grey wax. Not yours to open.', ring_leaf: 'The ring of Rootwood Hall' };
     var d = (H.pickups && H.pickups.uses[it.id]) || it.desc || USE[it.id];
     if (!d && H.items) { var f = H.items.list.filter(function (x) { return x.id === it.id; })[0]; d = f && f.desc; }
     return d ? String(d) : '';
   }
 
   // passive things work by themselves: they show a small tag instead of a button
-  var PASSIVE = { lantern: 'In use at night', compass: 'In use', mirror: 'In use', map: 'Map button', wand: 'Always with you', herb: 'Used in battle', bread: 'Used in battle', ember_dust: 'Used in battle', tide_pearl: 'Used in battle', spirit_snack: 'Used in battle', backpack: 'In use', cookbook: 'Use at a stove', slingshot: 'Use at fruit trees', ring_leaf: 'Earned', grey_letter: 'Keep it safe', novice_cert: 'Earned', charm: 'Keepsake', teddy: 'Rest', kite: 'Windy days' };
+  var PASSIVE = { lantern: 'In use at night', compass: 'In use', mirror: 'In use', map: 'Map button', wand: 'Always with you', herb: 'Used in battle', bread: 'Used in battle', ember_dust: 'Used in battle', tide_pearl: 'Used in battle', spirit_snack: 'Used in battle', backpack: 'In use', cookbook: 'Use at a stove', slingshot: 'Use at fruit trees', ring_leaf: 'Earned', grey_letter: 'Keep it safe', novice_cert: 'Earned', charm: 'Lucky', blue_backpack: 'In use', teddy: 'Rest', kite: 'Windy days' };
   // drop one: things from home go back to their spot, the rest stay behind
   function dropItem(it) {
     if (H.pickups && H.pickups.remove) return H.pickups.remove(it.id);
@@ -274,9 +274,14 @@
       var on = !!(PK && (st.flags || {})['c1:morning']);
       header('Backpack', 'backpack', null);   // the Backpack tab shows the pocket count
       if (MON) {
-        // purse: always all three coins, gold, silver and copper, with their counts
+        // purse: copper only at first; silver shows once you have held 10 copper, gold once you have held 100
         var cv = MON.get(), pr = mk('div', 'hm-purse', els.sheet); mk('span', 'pl', pr, 'Purse');
-        [['Gold', Math.floor(cv / 100), '#ffe07a', '#c8901a'], ['Silver', Math.floor((cv % 100) / 10), '#f2f4f8', '#8a92a6'], ['Copper', cv % 10, '#f0a070', '#9a4a22']].forEach(function (c) {
+        var pf = st.flags = st.flags || {}, pnew = false;
+        if (cv >= 10 && !pf.seenSilver) { pf.seenSilver = 1; pnew = true; }
+        if (cv >= 100 && !pf.seenGold) { pf.seenGold = 1; pnew = true; }
+        if (pnew) { try { g.save && g.save(); } catch (e) {} }
+        [['Gold', Math.floor(cv / 100), '#ffe07a', '#c8901a', pf.seenGold], ['Silver', Math.floor((cv % 100) / 10), '#f2f4f8', '#8a92a6', pf.seenSilver || pf.seenGold], ['Copper', cv % 10, '#f0a070', '#9a4a22', 1]].forEach(function (c) {
+          if (!c[4]) return;
           var w = mk('span', 'pc', pr); var d = mk('i', '', w); d.style.background = 'radial-gradient(circle at 35% 30%,#fff 0,' + c[2] + ' 35%,' + c[3] + ' 100%)';
           mk('b', '', w, String(c[1])); mk('small', '', w, c[0]);
         });
@@ -402,8 +407,9 @@
       kb(a, { icon: 'locate', label: tapm ? 'Controls: Tap' : 'Controls: Joystick', desc: tapm ? 'Tap to move, double tap to run' : 'Stick to move, A to use, B to run', kind: 'alt', onClick: function () { H.ui.setControls(tapm ? 'stick' : 'tap'); render(); } });
       var muted = H.audio && H.audio.muted;
       kb(a, { icon: muted ? 'bell_off' : 'bell', label: muted ? 'Sound off' : 'Sound on', desc: 'Tap to switch', kind: 'alt', onClick: function () { if (H.audio) { H.audio.setMuted(!H.audio.muted); render(); } } });
-      var armed = false, ng = kb(a, { icon: 'sprout', label: 'New game', desc: 'Erases this save', kind: 'warn' });
-      ng.addEventListener('click', function () { if (!armed) { armed = true; ng.querySelector('.t span').textContent = 'Tap again'; ng.querySelector('small').textContent = 'This erases your save'; } else g.reset && g.reset(); });
+      kb(a, { icon: 'book', label: 'Journey ' + (g.slot || 1), desc: 'Switch to another journey', kind: 'alt', onClick: function () { g.save && g.save(); location.href = location.pathname; } });
+      var armed = false, ng = kb(a, { icon: 'sprout', label: 'New game', desc: 'Erases journey ' + (g.slot || 1), kind: 'warn' });
+      ng.addEventListener('click', function () { if (!armed) { armed = true; ng.querySelector('.t span').textContent = 'Tap again'; ng.querySelector('small').textContent = 'This erases journey ' + (g.slot || 1); } else g.reset && g.reset(); });
     }
   }
 
@@ -506,7 +512,7 @@
     spells: ['Spell Loadout', 'Pick four spells to bring into battle.', 'book', '.hm-sheet'],
     moves: ['Moves', 'Pick four moves. New ones come as you grow.', 'claw', '.hm-sheet']
   };
-  function show(what) { open = what; render(); els.shade.classList.add('on'); els.sheet.classList.add('on'); var h = HELP[what]; if (h && H.ui && H.ui.helper) H.ui.helper(what, h[0], h[1], h[2], h[3]); }
+  function show(what) { if (!els.sheet) return; open = what; render(); if (!open) return; els.shade.classList.add('on'); els.sheet.classList.add('on'); var h = HELP[what]; if (h && H.ui && H.ui.helper) H.ui.helper(what, h[0], h[1], h[2], h[3]); }
   function hide() { open = null; els.shade.classList.remove('on'); els.sheet.classList.remove('on'); }
 
   H.menu = { init: init, refresh: refresh, show: show, hide: hide, isOpen: function () { return !!open; } };

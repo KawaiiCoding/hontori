@@ -72,8 +72,69 @@ window.H = window.H || {};
     return c;
   }
   function mk(g, ox, oy, oc) { if (oc !== false) outline(g, oc); return { c: toCanvas(g), ox: ox, oy: oy }; }
+  /* ---------- sprite sheets (H.sheets, group 'outdoor') ----------
+     Key scheme, module 'oplus' (cache key = the module's own cache key):
+       oplus:<ck>              one picture: mushroom_ring stone_wall_h hay_bale cart stepping_stone garden_bed
+                               statue pumpkin log_pile; lstr0 / lstr1 = lantern string unlit / lit
+       oplus:<ck>:<i>          frame i of an animated prop: flower_patch0..2 (3 variants x 4 sway frames),
+                               reeds (4 sway), lilypad (2 bob), market_stall0..1 (2 awnings x 3 flap),
+                               laundry_line (3 flap), windchime (3 swing), birdbath (2 shimmer)
+       oplus:fruit_tree:b<b>p<p>, oplus:cherry_tree:..., oplus:butterfly_bush:...
+                               wind frames, made by H._treeWind (props_outdoor.js): 15 bends x 6 phases = 90 each
+       oplus:fly<c>:<i>, oplus:bird:<r|l><i>, oplus:duck:<r|l><i>
+                               ambient critters: 5 butterfly colours x 2 wing frames, bird 4 frames, duck 2,
+                               each facing right (r) and left (l)
+     Chosen at draw time, never baked: the variant (from the position), the frame (from time, wind and the
+     position), lit or unlit lanterns. Each picture itself is a pure function of its key.
+     Stays painted every frame: critter shadows, ducklings, ripples, petals and fireflies (moving rects).
+  */
   var cache = {};
-  function sprite(key, fn) { return cache[key] || (cache[key] = fn()); }
+  /* SPR[ck]: { n: frame count (0 = one picture), ox, oy, fn: painter, key or keys[], paint or paints[] }.
+     ox, oy and n are the painter's own values, so a baked picture is placed without painting it;
+     they are checked against the painter whenever it runs. */
+  var SPR = {};
+  function made(key, s) {
+    var d = SPR[key];
+    if (!d || !s) return;
+    var one = d.n ? s[0] : s;
+    if (one && (one.ox !== d.ox || one.oy !== d.oy)) { d.ox = one.ox; d.oy = one.oy; warn(key); }
+    if (d.n && s.length !== d.n) { setN(d, key, s.length); warn(key); }
+    if (!(H.sheets && H.sheets.recording)) return;
+    if (!d.n) { if (s.c) H.sheets.rec('outdoor', d.key, s.c); return; }
+    for (var i = 0; i < s.length; i++) if (s[i] && s[i].c) H.sheets.rec('outdoor', d.keys[i], s[i].c);
+  }
+  function warn(key) { try { console.warn('outdoor_plus: anchor or frames of ' + key + ' changed; update SPR'); } catch (e) { /* no console */ } }
+  function sprite(key, fn) {
+    var s = cache[key];
+    if (s) return s;
+    s = cache[key] = fn();
+    made(key, s);
+    return s;
+  }
+  function setN(d, ck, n) {
+    d.n = n; d.keys = []; d.paints = [];
+    for (var i = 0; i < n; i++) { d.keys.push('oplus:' + ck + ':' + i); d.paints.push(framePaint(ck, i)); }
+  }
+  function framePaint(ck, i) { return function () { var fr = sprite(ck, SPR[ck].fn), s = fr && fr[i]; return s && s.c; }; }
+  function def(ck, n, ox, oy, fn) {
+    var d = SPR[ck] = { n: 0, ox: ox, oy: oy, fn: fn };
+    if (n) setN(d, ck, n);
+    else { d.key = 'oplus:' + ck; d.paint = function () { var s = sprite(ck, fn); return s && s.c; }; }
+    return d;
+  }
+  /* frame i of an animated prop (or its one picture when the prop has no frames) */
+  function blitF(ctx, ck, i, px, py) {
+    var d = SPR[ck];
+    if (!d) return;
+    if (H.sheets) {
+      var key = d.n ? d.keys[i] : d.key;
+      if (!key) return;
+      H.sheets.draw(ctx, key, Math.round(px + d.ox), Math.round(py + d.oy), d.n ? d.paints[i] : d.paint);
+      return;
+    }
+    var s = sprite(ck, d.fn);
+    blit(ctx, d.n ? s[i] : s, px, py);
+  }
   function blit(ctx, s, px, py) { if (!s || !s.c) return; ctx.drawImage(s.c, Math.round(px + s.ox), Math.round(py + s.oy)); }
   function isNight(env) { var h = env && env.time != null ? env.time : 12; return h >= 19 || h < 6; }
   function sway(env, px, py, n, amp) {
@@ -137,7 +198,7 @@ window.H = window.H || {};
     // fallen apples near roots
     rect(g, 16, 55, 2, 2, APPLE[2]); sp(g, 16, 55, APPLE[3]); rect(g, 37, 56, 2, 2, APPLE[1]);
     // the apples are part of the canopy, so they ride the wind with it
-    return H._treeWind.set({ w: 54, h: 60, ox: -19, oy: -44, base: g, can: can, canX: 4, canY: 0, rootY: 52, topY: 0, pow: 1.5,
+    return H._treeWind.set({ key: 'oplus:fruit_tree', w: 54, h: 60, ox: -19, oy: -44, base: g, can: can, canX: 4, canY: 0, rootY: 52, topY: 0, pow: 1.5,
       shim: [[DLEAF[5], DLEAF[4]]] });
   }
   function cherryTreeSet() {
@@ -160,7 +221,7 @@ window.H = window.H || {};
     for (var k = 0; k < 8; k++) { sp(g, 23 - k, 33 - k, CBARK[1]); sp(g, 30 + k, 32 - k, CBARK[1]); sp(g, 24 - k, 33 - k, CBARK[2]); }
     // fallen petals on ground
     [[14, 57], [19, 58], [33, 57], [38, 56], [27, 59], [10, 56]].forEach(function (p) { sp(g, p[0], p[1], CHER[4]); });
-    return H._treeWind.set({ w: 54, h: 60, ox: -19, oy: -44, base: g, can: can, canX: 4, canY: 0, rootY: 52, topY: 0, pow: 1.5,
+    return H._treeWind.set({ key: 'oplus:cherry_tree', w: 54, h: 60, ox: -19, oy: -44, base: g, can: can, canX: 4, canY: 0, rootY: 52, topY: 0, pow: 1.5,
       shim: [[CHER[6], CHER[5]]] });
   }
 
@@ -196,7 +257,7 @@ window.H = window.H || {};
         sp(g, x, y, pc); if (y > top + 1 && y < 13) sp(g, x + 1, y, (y % 2) ? '#7a3fb0' : '#a86ae0');
       }
     }
-    return H._treeWind.set({ w: 24, h: 26, ox: -4, oy: -10, base: null, can: g, rootY: 24, topY: 4, pow: 1.4,
+    return H._treeWind.set({ key: 'oplus:butterfly_bush', w: 24, h: 26, ox: -4, oy: -10, base: null, can: g, rootY: 24, topY: 4, pow: 1.4,
       shim: [['#7cb64e', '#53923e']] });
   }
   function mushroomRing() {
@@ -501,26 +562,28 @@ window.H = window.H || {};
   // ---------- registry ----------
   var base = H.propsOutdoor || { info: {}, draw: function () {} };
   var oldDraw = base.draw;
+  /* still: true = the picture never changes with time, wind, weather or hour (a light, like the statue's
+     gem glow, is a separate lighting pass); every other type animates or has a night picture */
   var INFO = {
     flower_patch: { fw: 1, fh: 1, solid: false, decor: true },
-    mushroom_ring: { fw: 1, fh: 1, solid: false, decor: true },
+    mushroom_ring: { fw: 1, fh: 1, solid: false, still: true, decor: true },
     fruit_tree: { fw: 1, fh: 1, solid: true },
     cherry_tree: { fw: 1, fh: 1, solid: true },
     lilypad: { fw: 1, fh: 1, solid: true, decor: true },
     reeds: { fw: 1, fh: 1, solid: true },
-    stone_wall_h: { fw: 1, fh: 1, solid: true },
-    hay_bale: { fw: 1, fh: 1, solid: true },
-    cart: { fw: 2, fh: 1, solid: true },
+    stone_wall_h: { fw: 1, fh: 1, solid: true, still: true },
+    hay_bale: { fw: 1, fh: 1, solid: true, still: true },
+    cart: { fw: 2, fh: 1, solid: true, still: true },
     market_stall: { fw: 2, fh: 1, solid: true },
     laundry_line: { fw: 3, fh: 1, solid: false, decor: true },
-    stepping_stone: { fw: 1, fh: 1, solid: false, decor: true },
+    stepping_stone: { fw: 1, fh: 1, solid: false, still: true, decor: true },
     windchime: { fw: 1, fh: 1, solid: true },
-    garden_bed: { fw: 2, fh: 1, solid: true },
+    garden_bed: { fw: 2, fh: 1, solid: true, still: true },
     birdbath: { fw: 1, fh: 1, solid: true },
-    statue: { fw: 1, fh: 1, solid: true, light: { dx: 8, dy: -6, r: 18, color: '#6ab8d8', flicker: false } },
+    statue: { fw: 1, fh: 1, solid: true, still: true, light: { dx: 8, dy: -6, r: 18, color: '#6ab8d8', flicker: false } },
     lantern_string: { fw: 3, fh: 1, solid: false, decor: true, light: { dx: 24, dy: -10, r: 40, color: '#ffb070', flicker: true } },
-    pumpkin: { fw: 1, fh: 1, solid: true },
-    log_pile: { fw: 2, fh: 1, solid: true },
+    pumpkin: { fw: 1, fh: 1, solid: true, still: true },
+    log_pile: { fw: 2, fh: 1, solid: true, still: true },
     butterfly_bush: { fw: 1, fh: 1, solid: true }
   };
   var STATIC = {
@@ -528,33 +591,50 @@ window.H = window.H || {};
     garden_bed: gardenBed, statue: statue, pumpkin: pumpkin, log_pile: logPile
   };
   for (var k in INFO) base.info[k] = INFO[k];
+  var STATIC_AT = { mushroom_ring: [0, 0], stone_wall_h: [0, -6], hay_bale: [-1, -2], cart: [-2, -8], stepping_stone: [0, 0],
+    garden_bed: [-1, -6], statue: [-2, -24], pumpkin: [0, 0], log_pile: [-1, -6] };
+  for (var sk in STATIC) def(sk, 0, STATIC_AT[sk][0], STATIC_AT[sk][1], STATIC[sk]);
+  def('lstr0', 0, -1, -18, function () { return lanternString(false); });
+  def('lstr1', 0, -1, -18, function () { return lanternString(true); });
+  def('flower_patch0', 4, -1, -3, function () { return flowerPatchFrames(0); });
+  def('flower_patch1', 4, -1, -3, function () { return flowerPatchFrames(1); });
+  def('flower_patch2', 4, -1, -3, function () { return flowerPatchFrames(2); });
+  def('reeds', 4, -1, -14, reedsFrames);
+  def('lilypad', 2, 0, 0, lilypadFrames);
+  def('market_stall0', 3, -2, -24, function () { return stallFrames(0); });
+  def('market_stall1', 3, -2, -24, function () { return stallFrames(1); });
+  def('laundry_line', 3, -1, -16, laundryFrames);
+  def('windchime', 3, -1, -20, chimeFrames);
+  def('birdbath', 2, -1, -10, birdbathFrames);
+  var FP_CK = ['flower_patch0', 'flower_patch1', 'flower_patch2'], MS_CK = ['market_stall0', 'market_stall1'];
+  var WINDS = { fruit_tree: fruitTreeSet, cherry_tree: cherryTreeSet, butterfly_bush: butterflyBushSet };
 
   base.draw = function (ctx, type, px, py, env) {
     env = env || {};
     if (!INFO[type]) return oldDraw.call(base, ctx, type, px, py, env);
-    var fr, v;
+    var d, v;
     switch (type) {
       case 'fruit_tree': return H._treeWind.draw(ctx, sprite(type, fruitTreeSet), px, py, env, 1);
       case 'cherry_tree': return H._treeWind.draw(ctx, sprite(type, cherryTreeSet), px, py, env, 1);
       case 'flower_patch':
         v = Math.floor(hash(px >> 4, py >> 4, 2) * 3);
-        fr = sprite(type + v, function () { return flowerPatchFrames(v); });
-        return blit(ctx, fr[sway(env, px + 13, py, fr.length, 1)], px, py);
+        d = SPR[FP_CK[v]];
+        return blitF(ctx, FP_CK[v], sway(env, px + 13, py, d.n, 1), px, py);
       case 'butterfly_bush': return H._treeWind.draw(ctx, sprite(type, butterflyBushSet), px, py, env, 0.5);
-      case 'reeds': fr = sprite(type, reedsFrames); return blit(ctx, fr[sway(env, px + 3, py, fr.length, 1)], px, py);
-      case 'lilypad': fr = sprite(type, lilypadFrames); return blit(ctx, fr[Math.floor((env.t || 0) * 0.8 + px * 0.03) & 1], px, py);
+      case 'reeds': return blitF(ctx, type, sway(env, px + 3, py, SPR.reeds.n, 1), px, py);
+      case 'lilypad': return blitF(ctx, type, Math.floor((env.t || 0) * 0.8 + px * 0.03) & 1, px, py);
       case 'market_stall':
-        v = (px >> 4) % 2;
-        fr = sprite(type + v, function () { return stallFrames(v); });
-        return blit(ctx, fr[sway(env, px, py, fr.length, 0.8)], px, py);
-      case 'laundry_line': fr = sprite(type, laundryFrames); return blit(ctx, fr[Math.abs(Math.floor((env.t || 0) * (0.8 + (env.wind || 0.2) * 1.4))) % 3], px, py);
-      case 'windchime': fr = sprite(type, chimeFrames); return blit(ctx, fr[sway(env, px, py, fr.length, 1.2)], px, py);
-      case 'birdbath': fr = sprite(type, birdbathFrames); return blit(ctx, fr[Math.floor((env.t || 0) * 1.5) & 1], px, py);
+        v = (px >> 4) % 2 ? 1 : 0;
+        d = SPR[MS_CK[v]];
+        return blitF(ctx, MS_CK[v], sway(env, px, py, d.n, 0.8), px, py);
+      case 'laundry_line': return blitF(ctx, type, Math.abs(Math.floor((env.t || 0) * (0.8 + (env.wind || 0.2) * 1.4))) % 3, px, py);
+      case 'windchime': return blitF(ctx, type, sway(env, px, py, SPR.windchime.n, 1.2), px, py);
+      case 'birdbath': return blitF(ctx, type, Math.floor((env.t || 0) * 1.5) & 1, px, py);
       case 'lantern_string':
         var n = isNight(env) || (env.time != null && env.time >= 18);
-        return blit(ctx, sprite('lstr' + (n ? 1 : 0), function () { return lanternString(n); }), px, py);
+        return blitF(ctx, n ? 'lstr1' : 'lstr0', 0, px, py);
     }
-    blit(ctx, sprite(type, STATIC[type]), px, py);
+    blitF(ctx, type, 0, px, py);
   };
   H.propsOutdoor = base;
 
@@ -595,7 +675,57 @@ window.H = window.H || {};
     var d1 = tinySprite(11, 8, ['.......oo..', '......oggo.', '......ogkyy', '.oo...oggo.', 'owwoooowdo.', 'owwwwwwwdo.', '.oddddddo..', '..oooooo...'], dp);
     var d2 = tinySprite(11, 8, ['.......oo..', '......oggo.', '......ogkyy', 'oo....oggo.', 'owwoooowdo.', '.owwwwwwdo.', '.oddddddo..', '..oooooo...'], dp);
     amb.duck.r = [d1, d2]; amb.duck.l = [flipCanvas(d1), flipCanvas(d2)];
+    if (H.sheets && H.sheets.recording) {
+      for (var a in AMBK) for (var b in AMBK[a]) for (var i = 0; i < AMBK[a][b].length; i++) {
+        var cv = amb[a][b] && amb[a][b][i];
+        if (cv) H.sheets.rec('outdoor', AMBK[a][b][i], cv);
+      }
+    }
     return amb;
+  }
+  /* critter sheet keys, parallel to amb: AMBK.fly[c][i], AMBK.bird.r[i], AMBK.bird.l[i], AMBK.duck.r/l[i] */
+  var AMB_FLY = 5, AMBK = { fly: {}, bird: { r: [], l: [] }, duck: { r: [], l: [] } };
+  (function () {
+    var c, i;
+    for (c = 0; c < AMB_FLY; c++) AMBK.fly[c] = ['oplus:fly' + c + ':0', 'oplus:fly' + c + ':1'];
+    for (i = 0; i < 4; i++) { AMBK.bird.r.push('oplus:bird:r' + i); AMBK.bird.l.push('oplus:bird:l' + i); }
+    for (i = 0; i < 2; i++) { AMBK.duck.r.push('oplus:duck:r' + i); AMBK.duck.l.push('oplus:duck:l' + i); }
+  })();
+  /* one critter picture: the one paint function reads the picture being drawn from these variables */
+  var ambA = 'fly', ambB = 0, ambI = 0;
+  function ambPaint() { var S = ambSprites(), set = S[ambA] && S[ambA][ambB]; return set ? set[ambI] : null; }
+  function ambDraw(ctx, a, b, i, x, y) {
+    if (H.sheets) {
+      var ks = AMBK[a][b], key = ks && ks[i];
+      if (!key) return;
+      ambA = a; ambB = b; ambI = i;
+      H.sheets.draw(ctx, key, x, y, ambPaint);
+      return;
+    }
+    var S = ambSprites();
+    ctx.drawImage(S[a][b][i], x, y);
+  }
+
+  if (H.sheets) {
+    try {
+      H.sheets.enumerate('outdoor', function () {
+        for (var ck in SPR) sprite(ck, SPR[ck].fn);
+        for (var w in WINDS) if (H._treeWind && H._treeWind.all) H._treeWind.all(sprite(w, WINDS[w]));
+        ambSprites();
+      });
+      /* once a sheet is in, drop painted copies that the sheet now answers (wind frames: props_outdoor) */
+      H.sheets.onLoad(function (group) {
+        if (group !== 'outdoor') return;
+        for (var ck in SPR) {
+          var d = SPR[ck];
+          if (!cache[ck]) continue;
+          var all = true;
+          if (d.n) { for (var i = 0; i < d.n; i++) if (!H.sheets.has(d.keys[i])) all = false; }
+          else all = H.sheets.has(d.key);
+          if (all) delete cache[ck];
+        }
+      });
+    } catch (e) { /* sheets are optional */ }
   }
 
   H.ambient = {
@@ -628,13 +758,12 @@ window.H = window.H || {};
       var seed = 12345;
       function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
       function pickOf(a) { return a[Math.floor(rnd() * a.length)]; }
-      var S = ambSprites();
 
       var flies = [], birds = [], ducks = [], ripples = [], petals = [], bugs = [];
       var i;
       for (i = 0; i < 16 && blooms.length; i++) {
         var hm = pickOf(blooms);
-        flies.push({ hx: hm[0] * T + 8, hy: hm[1] * T + 4, x: hm[0] * T + 8, y: hm[1] * T, vx: 0, vy: 0, c: i % S.fly.length, ph: rnd() * 10, tgt: 0 });
+        flies.push({ hx: hm[0] * T + 8, hy: hm[1] * T + 4, x: hm[0] * T + 8, y: hm[1] * T, vx: 0, vy: 0, c: i % AMB_FLY, ph: rnd() * 10, tgt: 0 });
       }
       for (i = 0; i < 10 && openGrass.length; i++) {
         var gs = pickOf(openGrass);
@@ -765,10 +894,10 @@ window.H = window.H || {};
           for (i = 0; i < ducks.length; i++) {
             var dk = ducks[i];
             if (!near(dk.x, dk.y, P, R)) continue;
-            var fr = (Math.floor(t * 2 + i) & 1), set = dk.dir > 0 ? S.duck.r : S.duck.l;
+            var fr = (Math.floor(t * 2 + i) & 1), side = dk.dir > 0 ? 'r' : 'l';
             var bob = Math.round(Math.sin(t * 2 + i) * 0.6);
             ctx.fillStyle = 'rgba(20,40,80,0.25)'; ctx.fillRect(Math.round(dk.x) - 5, Math.round(dk.y) + 3, 11, 2);
-            ctx.drawImage(set[fr], Math.round(dk.x) - 5, Math.round(dk.y) - 5 + bob);
+            ambDraw(ctx, 'duck', side, fr, Math.round(dk.x) - 5, Math.round(dk.y) - 5 + bob);
             for (var b = 1; b <= dk.baby; b++) {
               var tp = dk.trail[Math.max(0, dk.trail.length - 1 - b * 10)];
               if (!tp) continue;
@@ -783,15 +912,13 @@ window.H = window.H || {};
             if (!near(bd.x, bd.y, P, R)) continue;
             if (bd.st === 0 && this.wet) continue;
             ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(Math.round(bd.x) - 3, Math.round(bd.y), 6, 1);
-            var bs = (bd.dir > 0 ? S.bird.r : S.bird.l)[bd.frame | 0];
-            ctx.drawImage(bs, Math.round(bd.x) - 4, Math.round(bd.y - 7 - (bd.z || 0)));
+            ambDraw(ctx, 'bird', bd.dir > 0 ? 'r' : 'l', bd.frame | 0, Math.round(bd.x) - 4, Math.round(bd.y - 7 - (bd.z || 0)));
           }
           // butterflies (day, dry)
           if (day && !this.wet) for (i = 0; i < flies.length; i++) {
             var f = flies[i];
             if (!near(f.x, f.y, P, R)) continue;
-            s = S.fly[f.c][(Math.floor(t * 8 + i) & 1)];
-            ctx.drawImage(s, Math.round(f.x) - 3, Math.round(f.y) - 8);
+            ambDraw(ctx, 'fly', f.c, (Math.floor(t * 8 + i) & 1), Math.round(f.x) - 3, Math.round(f.y) - 8);
           }
           // petals
           for (i = 0; i < petals.length; i++) {

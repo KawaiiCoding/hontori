@@ -44,6 +44,36 @@
     return c;
   }
 
+  // ---- sprite sheet keys (group 'indoor', module 'wtop') ----------------------------
+  //   wtop:<mask * 4 + v>  wall top, 32x32 drawn into 16x16: mask = which of the 8 neighbours
+  //                        are room (n 1, s 2, w 4, e 8, nw 16, ne 32, sw 64, se 128), v = 0..3
+  //                        mottle variant from the tile position. Same number as the cache key.
+  // Painted at run time: the solid fill of a void tile with no room around it and the soft
+  // shadow a wall top casts to its right (plain fills, cheaper than pictures).
+  var SK = [], recd = [], pend = 0, km = 0, kv = 0;
+  /* the cached picture for key; a new one is painted from the mask and variant keyAt found */
+  function canvasOf(key) {
+    var c = cache[key];
+    if (c) return c;
+    c = cache[key] = paint(km, kv);
+    rec(key, c);
+    return c;
+  }
+  function rec(key, c) {
+    var S = H.sheets;
+    if (!S || !S.recording || !S.rec || recd[key]) return;
+    recd[key] = 1;
+    try { S.rec('indoor', SK[key] || (SK[key] = 'wtop:' + key), c); } catch (e) {}
+  }
+  function paintPend() { return canvasOf(pend); }
+  function keyAt(nb, tx, ty) {
+    var mask = (nb(0, -1) !== 'void' ? 1 : 0) | (nb(0, 1) !== 'void' ? 2 : 0) | (nb(-1, 0) !== 'void' ? 4 : 0) | (nb(1, 0) !== 'void' ? 8 : 0) |
+      (nb(-1, -1) !== 'void' ? 16 : 0) | (nb(1, -1) !== 'void' ? 32 : 0) | (nb(-1, 1) !== 'void' ? 64 : 0) | (nb(1, 1) !== 'void' ? 128 : 0);
+    if (!mask) return -1;
+    km = mask; kv = ((hash(tx, ty) * 4) | 0);
+    return mask * 4 + kv;
+  }
+
   H.tilesIndoor.draw = function (ctx, id, px, py, tx, ty, env, nb) {
     if (id !== 'void') {
       base.apply(this, arguments);
@@ -59,12 +89,33 @@
       }
       return;
     }
-    var open = function (dx, dy) { return nb(dx, dy) !== 'void'; };
-    var mask = (open(0, -1) ? 1 : 0) | (open(0, 1) ? 2 : 0) | (open(-1, 0) ? 4 : 0) | (open(1, 0) ? 8 : 0) |
-      (open(-1, -1) ? 16 : 0) | (open(1, -1) ? 32 : 0) | (open(-1, 1) ? 64 : 0) | (open(1, 1) ? 128 : 0);
-    if (!mask) { ctx.fillStyle = '#0b0807'; ctx.fillRect(px, py, 16, 16); return; }
-    var v = ((hash(tx, ty) * 4) | 0);
-    var key = mask * 4 + v;
-    ctx.drawImage(cache[key] || (cache[key] = paint(mask, v)), Math.round(px * 2) / 2, Math.round(py * 2) / 2, 16, 16);
+    var key = keyAt(nb, tx, ty);
+    if (key < 0) { ctx.fillStyle = '#0b0807'; ctx.fillRect(px, py, 16, 16); return; }
+    var x = Math.round(px * 2) / 2, y = Math.round(py * 2) / 2, S = H.sheets;
+    if (S && S.draw) { pend = key; try { S.draw(ctx, SK[key] || (SK[key] = 'wtop:' + key), x, y, paintPend, 16, 16); return; } catch (e) {} }
+    ctx.drawImage(canvasOf(key), x, y, 16, 16);
   };
+
+  /* sheet build: every wall top the indoor maps use */
+  function enumerate() {
+    var maps = H.maps || {}, seen = [], count = 0, pixels = 0;
+    for (var name in maps) {
+      var m = maps[name];
+      if (!m || m.tileset !== 'indoor' || !m.ground || !m.legend) continue;
+      var first = m.legend[Object.keys(m.legend)[0]];
+      var grid = m.ground.map(function (r) { return Array.from(r).map(function (ch) { return m.legend[ch] || first; }); });
+      var at = function (x, y) { return (grid[y] && grid[y][x]) || 'void'; };
+      for (var y = 0; y < grid.length; y++) for (var x = 0; x < grid[y].length; x++) {
+        if (grid[y][x] !== 'void') continue;
+        var key = keyAt(function (dx, dy) { return at(x + dx, y + dy); }, x, y);
+        if (key < 0 || seen[key]) continue;
+        seen[key] = 1;
+        var c = canvasOf(key);
+        rec(key, c);
+        count++; pixels += c.width * c.height;
+      }
+    }
+    return { count: count, pixels: pixels };
+  }
+  if (H.sheets && H.sheets.enumerate) try { H.sheets.enumerate('indoor', enumerate); } catch (e) {}
 })();

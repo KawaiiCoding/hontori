@@ -1,0 +1,18 @@
+{
+  "name": "Hontori",
+  "short_name": "Hontori",
+  "description": "A calm pixel adventure with spirit companions.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07081a",
+  "theme_color": "#07081a",
+  "categories": ["games"],
+  "icons": [
+    { "src": "../assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

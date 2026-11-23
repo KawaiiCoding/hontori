@@ -134,7 +134,7 @@ window.H = window.H || {};
     npcs: [
       { key: 'mom', x: 5, y: 3, dir: 0, lines: [
         ['Mom', 'Still up? The kettle keeps humming by itself tonight.'],
-        ['Mom', 'Bed soon, sweetheart. The village fair starts tomorrow.']
+        ['Mom', 'Bed soon, sweetheart. Tomorrow is a big day.']
       ] },
       { key: 'dad', x: 18, y: 8, dir: 2, lines: [
         ['Dad', 'That chimney has grumbled all week. Old houses talk.'],

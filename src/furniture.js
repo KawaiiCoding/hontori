@@ -6,7 +6,7 @@ window.H = window.H || {};
   function mk(w, h) {
     var c = document.createElement('canvas');
     c.width = w; c.height = h;
-    var g = c.getContext('2d');
+    var g = c.getContext('2d', { willReadFrequently: true });   /* 1x sources are read back once by up2(), never shown */
     g.imageSmoothingEnabled = false;
     return { c: c, g: g };
   }
@@ -73,7 +73,67 @@ window.H = window.H || {};
   function softShadow(g, x, y, w, h) {
     rr(g, x, y, w, h, Math.min(3, h >> 1), 'rgba(20,10,5,0.20)'); rr(g, x + 2, y + 1, w - 4, h - 2, 1, 'rgba(20,10,5,0.16)');
   }
-  H._hd = { up2: up2, blit: blit, mk2: mk2, rr: rr, vol: vol, softShadow: softShadow };
+  // ---- sprite sheets (src/sheets.js, optional) -----------------------------------
+  // Sprites(prefix, meta, get): one registry per module for its cached pictures.
+  //   get(k) paints picture k on first use and returns { c: canvas to draw, ox, oy, w, h }:
+  //     (ox, oy) offset of its top-left from the position the module draws at, (w, h) its size
+  //     on screen in logical pixels.
+  //   meta[k] = [ox, oy, w, h]: the same numbers known without painting, so a picture baked
+  //     into a loaded sheet is drawn without ever being painted. A key without meta is painted
+  //     once (to learn its size) and then drawn from the sheet.
+  //   draw(ctx, k, x, y) draws picture k for position (x, y). The sheet key is prefix + k,
+  //     built once per k. With no H.sheets it is exactly ctx.drawImage(c, x + ox, y + oy, w, h).
+  //   make(k) paints k (and records it while H.sheets.recording); bad lists meta that does not
+  //     match the painted picture (checked by make, so the build tool shows stale numbers).
+  // Shared by the indoor modules through H._hd.Sprites; recorded into sheet group 'indoor'.
+  function Sprites(prefix, meta, get) {
+    var self = this;
+    this.prefix = prefix; this.meta = meta || {}; this.get = get;
+    this.keys = {}; this.live = {}; this.cv = {}; this.recd = {}; this.bad = [];
+    this.pend = null;
+    /* one paint function per registry: paints the picture named in pend (set just before each draw) */
+    this.paint = function () { var k = self.pend; return self.cv[k] || (self.make(k) ? self.cv[k] : null); };
+  }
+  Sprites.prototype.key = function (k) { return this.keys[k] || (this.keys[k] = this.prefix + k); };
+  Sprites.prototype.make = function (k) {
+    var a = this.live[k];
+    if (a) return a;
+    var r = this.get(k);
+    if (!r || !r.c) return null;
+    a = this.live[k] = [r.ox || 0, r.oy || 0, r.w, r.h];
+    this.cv[k] = r.c;
+    var m = this.meta[k];
+    if (m && (m[0] !== a[0] || m[1] !== a[1] || m[2] !== a[2] || m[3] !== a[3])) this.bad.push(k + ' meta ' + m.join(',') + ' is ' + a.join(','));
+    this.rec(k);
+    return a;
+  };
+  Sprites.prototype.rec = function (k) {
+    var S = H.sheets;
+    if (!S || !S.recording || !S.rec || this.recd[k] || !this.cv[k]) return;
+    this.recd[k] = 1;
+    try { S.rec('indoor', this.key(k), this.cv[k]); } catch (e) {}
+  };
+  Sprites.prototype.draw = function (ctx, k, x, y) {
+    var S = H.sheets, sd = S && S.draw;
+    var a = this.live[k] || (sd && this.meta[k]) || this.make(k);
+    if (!a) return;
+    if (sd) {
+      this.pend = k;
+      try { S.draw(ctx, this.key(k), x + a[0], y + a[1], this.paint, a[2], a[3]); return; } catch (e) {}
+      if (!this.make(k)) return;
+      a = this.live[k];
+    }
+    ctx.drawImage(this.cv[k], x + a[0], y + a[1], a[2], a[3]);
+  };
+  /* enumerate helper: paints every key in list and returns how many pictures and pixels it holds */
+  Sprites.prototype.all = function (list) {
+    var n = 0, px = 0;
+    for (var i = 0; i < list.length; i++) { if (this.make(list[i])) { var c = this.cv[list[i]]; this.rec(list[i]); n++; px += c.width * c.height; } }
+    if (this.bad.length) try { console.warn('sheets: stale meta in ' + this.prefix + ' ' + this.bad.join('; ')); } catch (e) {}
+    return { count: n, pixels: px };
+  };
+
+  H._hd = { up2: up2, blit: blit, mk2: mk2, rr: rr, vol: vol, softShadow: softShadow, Sprites: Sprites };
 
   var OL = '#2a1a14';
   var WOOD = ['#8a5a34', '#b07a48', '#5e3a20'];
@@ -153,11 +213,11 @@ window.H = window.H || {};
     return { c: s.c, ox: 0, oy: -32 };
   };
 
-  var fireFrames = null, fireGlow = null;
+  var fireFrames = null, fireGlow = null, FIRE_N = 8;
   function buildFire() {
     var base = painters.fireplace_base();
     fireFrames = [];
-    var N = 8, f, x, y;
+    var N = FIRE_N, f, x, y;
     var LAY = [[1, '#b32e16'], [0.86, '#e8521c'], [0.64, '#ff8a26'], [0.42, '#ffc23c'], [0.2, '#fff3b0']];
     for (f = 0; f < N; f++) {
       var s = mk(32, 48), g = s.g;
@@ -389,11 +449,11 @@ window.H = window.H || {};
     P(g, 3, 29, OL, 10, 3); P(g, 4, 29, DWOOD[1], 8, 1);
     return s.c;
   };
-  var clockFrames = null;
+  var clockFrames = null, CLOCK_N = 4;
   function buildClock() {
     var base = painters.clock_base();
     clockFrames = [];
-    for (var f = 0; f < 4; f++) {
+    for (var f = 0; f < CLOCK_N; f++) {
       var s = mk(16, 34), g = s.g;
       g.drawImage(base, 0, 0);
       var off = [0, 1, 0, -1][f];
@@ -538,47 +598,106 @@ window.H = window.H || {};
     floor_lamp: { fw: 1, fh: 1, solid: true, light: { dx: 8, dy: -10, r: 46, color: '#ffd890', flicker: false } }
   };
 
+  /* still: the picture never changes at run time (no animation, hour or state), so a map
+     picture may bake it. Lights and their flicker are drawn by the lighting pass, not here. */
+  ['bed', 'table', 'chair', 'bookshelf', 'stove', 'cupboard', 'plant', 'chest', 'sofa', 'picture', 'floor_lamp']
+    .forEach(function (k) { if (info[k]) info[k].still = true; });
+
   var cache = {}, winCache = {};
   function isNight(h) { return h >= 19 || h < 6; }
+
+  // ---- sprite sheet keys (group 'indoor', module 'furn'; see Sprites above) ----------
+  //   furn:<type>            static piece: the 2x picture blit() shows (bed, table, chair, bookshelf,
+  //                          stove, cupboard, plant, chest, sofa, picture, floor_lamp)
+  //   furn:fireplace:<f>     hearth with flames, f = 0..7 (10 fps), drawn at (px, py - 32), 32x48
+  //   furn:fire_glow         warm floor light, 64x30, drawn 1:1 at (px - 16, py + 15) with 'lighter'
+  //                          and a flickering alpha (the alpha stays computed at run time)
+  //   furn:clock:<f>         clock with pendulum, f = 0..3 (2 fps), drawn at (px, py - 18), 16x34
+  //   furn:window:<mode><f>  window pane, mode day / dusk / night, f = 0..2 (1.5 fps), 16x16
+  //   furn:item:<id>         home item picture (H.items.draw), 16x16, drawn 1:1
+  // Painted at run time: the window's light on the wall below (three overlapping translucent
+  // rects, cheaper than a picture and not exactly reproducible by one).
+  var FK = [], CK = [], WK = { day: [], dusk: [], night: [] }, IK = {};
+  (function () {
+    for (var i = 0; i < FIRE_N; i++) FK.push('fireplace:' + i);
+    for (i = 0; i < CLOCK_N; i++) CK.push('clock:' + i);
+    for (var m in WK) for (i = 0; i < 3; i++) WK[m].push('window:' + m + i);
+  })();
+  /* [ox, oy, w, h] of every picture, so a baked one is drawn without painting it */
+  var META = {
+    fire_glow: [-16, 15, 64, 30], bed: [0, 0, 16, 34], table: [0, 0, 32, 32], chair: [0, -4, 16, 20],
+    bookshelf: [0, -16, 32, 32], stove: [0, -8, 16, 24], cupboard: [0, -16, 32, 32], plant: [0, -8, 16, 24],
+    chest: [0, -2, 16, 18], sofa: [0, -8, 32, 24], picture: [0, 0, 16, 16], floor_lamp: [0, -16, 16, 32]
+  };
+  (function () {
+    var i, m;
+    for (i = 0; i < FIRE_N; i++) META[FK[i]] = [0, -32, 32, 48];
+    for (i = 0; i < CLOCK_N; i++) META[CK[i]] = [0, -18, 16, 34];
+    for (m in WK) for (i = 0; i < 3; i++) META[WK[m][i]] = [0, 0, 16, 16];
+  })();
+  function hdRec(c, ox, oy) { var hc = up2(c); return { c: hc, ox: ox, oy: oy, w: hc.width / 2, h: hc.height / 2 }; }
+  /* paints one picture by its sheet key (without the 'furn:' prefix), on first use only */
+  function sget(k) {
+    k = String(k);
+    var i = k.indexOf(':'), base = i < 0 ? k : k.slice(0, i), arg = i < 0 ? '' : k.slice(i + 1), f = +arg;
+    if (base === 'fireplace') { if (!fireFrames) buildFire(); return fireFrames[f] ? hdRec(fireFrames[f], 0, -32) : null; }
+    if (base === 'fire_glow') { if (!fireFrames) buildFire(); return { c: fireGlow, ox: -16, oy: 15, w: fireGlow.width, h: fireGlow.height }; }
+    if (base === 'clock') { if (!clockFrames) buildClock(); return clockFrames[f] ? hdRec(clockFrames[f], 0, -18) : null; }
+    if (base === 'window') {
+      var mode = arg.slice(0, -1), wf = +arg.slice(-1);
+      if (!winCache[arg]) winCache[arg] = paintWindow(mode, wf);
+      return hdRec(winCache[arg], 0, 0);
+    }
+    if (base === 'item') { var ic = iconOf(arg); return ic ? { c: ic, ox: 0, oy: 0, w: ic.width, h: ic.height } : null; }
+    var p = painters[k];
+    if (!p) return null;
+    if (!cache[k]) cache[k] = p();
+    var a = cache[k];
+    return a && a.c ? hdRec(a.c, a.ox, a.oy) : null;
+  }
+  var SP = new Sprites('furn:', META, sget);
 
   function draw(ctx, type, px, py, env) {
     env = env || {};
     var t = env.t || 0;
     px = px | 0; py = py | 0;
     if (type === 'fireplace') {
-      if (!fireFrames) buildFire();
-      var ff = Math.floor(t * 10) % fireFrames.length;
+      var ff = Math.floor(t * 10) % FIRE_N;
       var oc = ctx.globalCompositeOperation, oa = ctx.globalAlpha;
       ctx.globalCompositeOperation = 'lighter';
       ctx.globalAlpha = oa * (0.62 + 0.14 * Math.sin(t * 9) + 0.08 * Math.sin(t * 23));
-      ctx.drawImage(fireGlow, px - 16, py + 15);
+      SP.draw(ctx, 'fire_glow', px, py);
       ctx.globalCompositeOperation = oc; ctx.globalAlpha = oa;
-      blit(ctx, fireFrames[ff], px, py - 32);
+      if (FK[ff]) SP.draw(ctx, FK[ff], px, py);
       return;
     }
     if (type === 'clock') {
-      if (!clockFrames) buildClock();
-      blit(ctx, clockFrames[Math.floor(t * 2) % 4], px, py - 18);
+      var cf = CK[Math.floor(t * 2) % CLOCK_N];
+      if (cf) SP.draw(ctx, cf, px, py);
       return;
     }
     if (type === 'window') {
       var h = env.time == null ? 12 : env.time;
       var mode = isNight(h) ? 'night' : (h >= 17 || h < 7) ? 'dusk' : 'day';
       var f = Math.floor(t * 1.5) % 3;
-      var key = mode + f;
-      if (!winCache[key]) winCache[key] = paintWindow(mode, f);
+      var key = WK[mode][f] || ('window:' + mode + f);
       if (mode !== 'dusk') { // light falling from the pane onto the wall below
         ctx.fillStyle = mode === 'night' ? 'rgba(150,185,255,0.10)' : 'rgba(255,244,200,0.12)';
         ctx.fillRect(px + 2, py + 16, 12, 7); ctx.fillRect(px + 1, py + 23, 14, 6); ctx.fillRect(px + 3, py + 16, 10, 13);
       }
-      blit(ctx, winCache[key], px, py);
+      SP.draw(ctx, key, px, py);
       return;
     }
-    var p = painters[type];
-    if (!p) return;
-    if (!cache[type]) cache[type] = p();
-    var a = cache[type];
-    blit(ctx, a.c, px + a.ox, py + a.oy);
+    if (!painters[type]) return;
+    SP.draw(ctx, type, px, py);
+  }
+
+  /* sheet build: every furniture picture this module can show, with every frame */
+  function enumerate() {
+    var keys = FK.concat(CK, WK.day, WK.dusk, WK.night, ['fire_glow']), k;
+    for (k in info) if (painters[k]) keys.push(k);
+    for (var i = 0; i < list.length; i++) if (icons[list[i].id]) keys.push(itemKey(list[i].id));
+    return SP.all(keys);
   }
 
   H.furniture = { info: info, draw: draw };
@@ -680,16 +799,23 @@ window.H = window.H || {};
   };
 
   var iconCache = {};
-  function drawItem(ctx, id, x, y) {
+  /* the cached 16x16 picture of item id (painted on first use) */
+  function iconOf(id) {
     if (!iconCache[id]) {
       var fn = icons[id];
-      if (!fn) return;
+      if (!fn) return null;
       var s = mk(16, 16);
       fn(s.g);
       iconCache[id] = s.c;
     }
-    ctx.drawImage(iconCache[id], x | 0, y | 0);
+    return iconCache[id];
   }
+  function itemKey(id) { if (!IK[id]) { IK[id] = 'item:' + id; META[IK[id]] = [0, 0, 16, 16]; } return IK[id]; }
+  function drawItem(ctx, id, x, y) {
+    if (!icons[id]) return;
+    SP.draw(ctx, IK[id] || itemKey(id), x | 0, y | 0);
+  }
+  if (H.sheets && H.sheets.enumerate) try { H.sheets.enumerate('indoor', enumerate); } catch (e) {}
 
   H.items = { list: list, draw: drawItem };
 })();

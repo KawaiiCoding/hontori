@@ -13,7 +13,7 @@ New rules are added here as they are given. When something in the code disagrees
 7. Before the adventure starts, the kid picks exactly 5 items from the house for the backpack.
 8. The world has areas for each element. Each area has towns and a School of Magic.
 9. There are three kinds of schools:
-   - Small local schools: each teaches ONE spell. No ring. (Emberbrook Academy is the first: it teaches the Binding Spiral, the Element Wheel and practice duels.)
+   - Small local schools: each teaches ONE spell. No ring. Emberbrook Academy, the first school, is the one exception: Madam Sorrel teaches the Mending Sigil (healing) first, then the Binding Spiral, the Element Wheel and practice duels. The wand itself gives no spell but the V.
    - The 8 great schools of the mighty elements: their trial (a fight) awards a ring.
    - The archmage's school (the final boss): the last ring.
    Spells are never learned all at once; they are collected one school at a time.
@@ -62,7 +62,7 @@ New rules are added here as they are given. When something in the code disagrees
 44. Teaching style: like classic handheld monster RPGs. Each mechanic is shown once, when it first matters, in one short line. Never over-explain, never leave anything unexplained.
 45. How the game grows: always build toward the end of the story, step by step and world by world (finish and polish one area and its chapter before the next), staying consistent with everything already made.
 46. Every hontori can be given its own name (the fox asks for one at the end of the intro); the name is used everywhere.
-47. Home items: after the first morning the 12 home things lie around the house; the bag holds 5 (6 with the Backpack) and things can be put back while at home. Leaving without the Map, Mom hands it over (no slot). Each has one use: Map opens the map button; Lantern lights the night and draws dark hontori; Compass points to the goal; Bread calms a wild foe once per battle (+15% binding); Cookbook cooks at a stove (party heals by half); Teddy lets you rest 8 hours outdoors; Slingshot knocks one apple per fruit tree per day (+5 health); Scarf stops strong wind slowing you; Kite on a windy day in open grass reveals a large area of the map; Mirror shows wild hontori hidden as shimmer (they cannot be met without it); Candle gives +1 mana over max after sleeping; Backpack gives one more slot.
+47. Home items: after the first morning the 10 home things lie around the house; the bag holds 5 (6 with the Backpack) and things can be put back while at home. Leaving without the Map, Mom hands it over (no slot). Each has one use: Map opens the map button; Lantern lights the night and draws dark hontori; Compass points to the goal; Bread calms a wild foe once per battle (+15% binding); Cookbook cooks at a stove (party heals by half); Teddy lets you rest 8 hours outdoors; Slingshot knocks one apple per fruit tree per day (+5 health); Kite on a windy day in open grass reveals a large area of the map; Mirror shows wild hontori hidden as shimmer (they cannot be met without it); Bean Bag (the backpack) gives one more slot. The kid already wears a scarf, and the lantern is the only carried light, so neither Scarf nor Candle is an item.
 48. First touch helper: the first time any button, icon or system is used, a small neat helper card explains it in one or two short lines (shown once, can be skipped). If something is not available yet, it is shown but blocked, with one line saying where it is learned; the full explanation is given there.
 49. The great schools do not all test the same way. Each ring trial is its own kind of challenge: a wand-magic trial, a boss fight, a fight with limits (no sleeping spell, no switching hontori), or a one-on-one duel between spell casters with no hontori. A fun mix, never eight copies of one fight.
 50. Kids with open eyes and a wand are called Wonders (wand, wanderer, wonder). Grown-ups use the word kindly; guards use it for who may pass.
@@ -79,3 +79,31 @@ New rules are added here as they are given. When something in the code disagrees
 61. Everything new respects the look of the world: same pixel style, palette, outline and scale as what is already there. Reuse the existing pieces (the wooden sign, the fences, the rocks) before drawing a new one, and a new piece must look like it always belonged.
 62. Roads stay open: lamps, rocks, signs and other solid things stand beside a road, never on it. Only a real story block (like a rockslide) may close a road, and it must be shown clearly.
 63. Every item is shown by a clear icon that looks like the thing itself (a fish looks like a fish, a pouch like a pouch). No borrowed or generic symbols for real objects.
+64. Sellers work inside their shops (Big Bo in The Steaming Bowl, Nettle in Packs and Potions, Pell in his Trading Post in Mossgrove). One person is in one place at a time.
+65. Hints pay off: when someone mentions a mystery (the humming well, a grey figure, a lost cry), it leads somewhere, now or later. The Emberbrook well holds Lumen, the Elder's light spirit, sealed under grey wax shaped like a closed eye. After the first ring, the V at night frees Lumen, who goes home to the Elder's second cup and teaches the Dawn Star.
+66. Duels grow: rivals bring two or three hontori and keep up with your level. Before each school boss stands one apprentice with a single hontori (Bryn in Rootwood Hall). A trainer pays the purse only on the first win; rematches are practice.
+67. Up to three journeys (save slots) live on one device, chosen on the title screen.
+68. Coins have a use: ramen (5 copper), a guest bed at The Steaming Bowl (1 silver), the Blue Backpack at Nettle's (1 gold, one more pocket), the Backpack Charm (more forest finds, binding a little easier). Every item that is sold or given does something real.
+69. A story capture never fails for good: the third binding spiral on a story hontori (the shy Brookit) always holds.
+70. People who move on leave their old place (Wren leaves home for Rootwood Hall, Rowan walks on to Mossgrove). Each named person has their own look.
+71. The V only works on those who wish to see. Mom and Dad always wished. It can never be forced on anyone.
+72. Grandma had a spirit friend once; one day it was gone.
+73. After the first ring a grey cloak tries to take the kid's hontori "for safekeeping" and is fought off in a duel. The cloak waits by the well until beaten; a lost duel can always be tried again.
+74. Sleep skips 8 hours (rule 41), except while Wet Pawprints waits for night: then the kid wakes at dusk.
+75. A Warden pays a ring purse of 5 silver with the ring.
+76. Before a new journey a short picture story sets the cause: people and spirits once shared one world, a law hid the spirits, and the kid is the one who can lift the veil.
+77. From its second evolution a hontori can carry the kid: Nettle sells the saddle for 1 gold. Riding works under open sky, is faster than walking, and wild hontori leave a rider alone.
+78. The full journey is bought once. The offer appears once, after the grey cloak duel, behind a grown-up check. No ads, no paid random rewards.
+79. Each ring is a Warden's vote: the eight Wardens together can change the old law. Eight rings are eight votes, and the journey itself writes the new law.
+80. In chapter 6 the Council seals the Wand Sanctum. The ring is won first, the player is warned and chooses which five hontori to carry, and the seal is broken in chapter 8.
+81. In chapter 5 the grey cloaks sell hontori trapped in lamp jars as "tame sparks". The kid frees them.
+82. The capital, in the middle of the world and seat of the Archmage, is Goldmere.
+83. Levels in the full journey end around 30, so the last evolution at 25 arrives before the dark school.
+84. The Whistling Pass climbs in stone terraces; Kitewick stands on wooden decks on stilts above a valley lake, linked by rope bridges. The east rope bridge to Gale Loft is broken until Orlen Vael pays to mend it.
+85. In chapter 3 Orlen Vael appears in person, kind and helpful: he pays to mend Kitewick's broken bridge and gives the kid the Archmage's Token, a gold disc with his closed grey eye. (Later it is revealed that the Token tells the grey cloaks where the kid is.)
+86. In the wind country, kites carry mail. Letters from Mom and Dad arrive by kite from chapter 3 on.
+87. Cole sends a warning kite: he saw grey cloaks carry a hontori away in a jar. Cole chases rings to prove to his father, a ring-smith, that sparks are real.
+88. The Gale Ring from Warden Zephra is the second Warden's vote (rule 79).
+89. Capsule machines (coins only, one free turn a day, no duplicates) give things you can see and use: hats your lead hontori wears, centred on its head; saddle blanket colours; wand inks for the sigil line; keepsakes for your room. Hontori never wear scarves.
+90. The grey letter in Emberbrook comes by a paper bird that glides past and drops the letter at the kid's feet. Paper birds are how the Council sends word.
+91. In Kitewick an old pine stands on a small islet south of the kite post; the stuck letter of The Lost Kite hangs in it.

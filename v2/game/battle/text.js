@@ -1,0 +1,101 @@
+/*
+ * text.js  (Hontori game layer)
+ * Job: every line the battle rules say, in English, by id (the old src/battle.js strings). A language file
+ * can replace TEXT later; the rules only ever call line(id, vars).
+ *
+ * Public API:
+ *   TEXT              id -> string with {placeholders}
+ *   line(id, vars)    the filled string ('' for an unknown id)
+ */
+
+export const TEXT = Object.freeze({
+  introWild: 'A jealous hontori blocks the way!',
+  introDuel: '{trainer} raises a wand for a practice duel.',
+  lesson: '{trainer}: try the {spell} ({how}).',
+  chooseNext: 'Choose who goes next.',
+  fainted: 'Yours fainted.',
+  moveName: '{move}!',
+  hitLine: '{move}.',
+  hitNotes: '{move}. {notes}',
+  missed: 'It missed.',
+  dodgedMe: 'Yours slips through the veil.',
+  dodgedFoe: 'It slips away.',
+  dozes: 'It dozes, then wakes.',
+  breath: '{name} catches its breath.',
+  glow: 'A warm glow. Attacks are stronger.',
+  mist: 'Mist rolls in. The foe aims worse.',
+  tail: 'A tailwind. Yours moves first.',
+  root: 'Roots sink deep.',
+  staticStun: 'Static locks it in place.',
+  staticMiss: 'It shakes off the static.',
+  harden: 'A stone shell forms.',
+  veil: 'It steps into the shadows.',
+  bless: 'A blessing. It feels clear.',
+  foeStunned: 'It cannot move!',
+  foeSleeps: 'It sleeps on.',
+  foeWakes: 'It wakes up.',
+  foeUnleash: 'It unleashes {move}!',
+  foeUses: 'It uses {move}.',
+  foeCharge: 'It gathers power.',
+  foeGuard: 'It braces itself.',
+  foeHeal: 'It restores itself.',
+  foeHex: 'It casts a hex.',
+  hexVeil: 'The hex passes through the veil.',
+  hexSleep: 'Yours falls asleep.',
+  hexResist: 'Yours resists the hex.',
+  spellName: '{spell}!',
+  mended: 'Mended.',
+  mendedAwake: 'Mended and awake.',
+  shield: 'An Aegis Ward shimmers.',
+  boost: 'The Rally Rune burns bright.',
+  stunHold: 'The Thunder Seal holds it.',
+  stunBreak: 'It breaks the seal.',
+  sleepHold: 'The Dream Veil settles. It sleeps.',
+  sleepBreak: 'It stays awake.',
+  revived: '{material} glows. It rises again.',
+  bound: 'Bound into your wand!',
+  broke: 'It broke free. {left} {tries}',
+  slipsAway: 'It slips away into the wild.',
+  repel: '{trainer}: Not this one. It already has a friend.',
+  go: '{name}, go!',
+  windSwap: 'The wind chooses! It carries {name} into the ring.',
+  calls: '{trainer} calls {name}.',
+  blocked: 'It blocks the way.',
+  escaped: 'You slip away.',
+  wellFought: '{trainer}: Well fought.',
+  loseDuel: 'A good try. Rest and try again.',
+  loseWild: 'Your hontori needs rest.',
+  herb: 'The herb restores a little mana.',
+  bread: 'It nibbles the bread and calms down.',
+  refuseFainted: 'It fainted.',
+  refuseFaintedStar: 'It fainted. Draw the Dawn Star.',
+  refuseRest: '{move} needs rest.',
+  refuseTired: 'Too tired. Catch your breath, switch, or step away.',
+  refuseStamina: 'Not enough stamina for {move}.',
+  refuseShape: 'Steady hands are needed. Try again.',
+  refuseOneSpell: 'One spell each turn.',
+  refuseMana: 'Not enough mana for the {spell}.',
+  refuseNeedMaterial: 'You need {material} for the Dawn Star.',
+  refuseNoNeed: 'Your hontori does not need it.',
+  refuseOnlyStar: 'It fainted. Only the Dawn Star can help.',
+  refuseDuelBind: 'A practice duel. No binding.',
+  refuseWeaken: 'Weaken it first.',
+  refuseWell: 'It is already well.',
+  refuseDuelEscape: 'No escape from a duel.',
+  hintFainted: 'It fainted.',
+  hintFaintedStar: 'It fainted. Draw the Dawn Star.',
+  hintAsleep: 'It is asleep. Cast a spell, then tap a move to wait.',
+  hintBind: 'It is weak. Draw a spiral to bind it.',
+  hintBindFirst: 'It is weak. Draw the spiral to bind it, and it can travel with you.',
+  hintLearnBind: 'It is weak. Learn the Binding Spiral at the Academy to catch it.',
+  hintCharge: 'It is charging. A ward would help next turn.',
+  hintUnleash: 'A big hit is coming. Draw the Aegis Ward.',
+  hintMove: 'Choose a move.',
+  hintEither: 'Draw a spell, or choose a move.'
+});
+
+export function line(id, vars) {
+  const s = TEXT[id];
+  if (!s) return '';
+  return s.replace(/\{(\w+)\}/g, (_, k) => (vars && vars[k] != null ? String(vars[k]) : ''));
+}

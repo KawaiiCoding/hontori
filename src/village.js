@@ -135,8 +135,6 @@ window.H = window.H || {};
   var npcs = [
     { key: 'elder', x: 33, y: 12, dir: 0, lines: [['Elder Wisteria', 'The Academy sees what others miss.'], ['Elder Wisteria', 'Soot on your nose is a lucky sign.']] },
     { key: 'baker', x: 25, y: 19, dir: 3, lines: [['Rosa', 'Fresh buns, still warm.'], ['Rosa', 'Something nibbles my crusts at night.']] },
-    { key: 'innkeeper', x: 22, y: 19, dir: 0, lines: [['Big Bo', 'Ramen is on all day.'], ['Big Bo', 'Wet pawprints keep stealing fish cakes.']] },
-    { key: 'shopkeeper', x: 45, y: 20, dir: 2, lines: [['Nettle', 'Potions and packs, fair prices.'], ['Nettle', 'Never travel without a spare boot.']] },
     // Old Oru sits on the bank and always faces the river, line in the water
     { key: 'fisher', x: 46, y: 9, dir: 3, fixed: true, lines: [['Old Oru', 'The river is quiet today.'], ['Old Oru', 'Something big stirs upstream.']] },
     { key: 'grandma', x: 11, y: 12, dir: 1, lines: [['Grandma Ula', 'I feed the ducks every morning.'], ['Grandma Ula', 'The pond sparkles back if you wait.']] },
@@ -145,10 +143,10 @@ window.H = window.H || {};
     { key: 'gatekeeper', x: 32, y: 10, dir: 2, lines: [['Gatekeeper', 'Only open eyes may enter the Academy.'], ['Gatekeeper', 'Walk up to the door when you are ready.']] },
     { key: 'guard', x: 32, y: 37, dir: 0, lines: [['Guard Bram', 'The south gate is open.'], ['Guard Bram', 'Take a friend into the meadows.']] },
     { key: 'gardener', x: 57, y: 13, dir: 2, lines: [['Ivy', 'These flowers hum at dusk.'], ['Ivy', 'Please step around the seedlings.']] },
-    { key: 'traveler', x: 56, y: 24, dir: 2, lines: [['Rowan', 'I walked a long way to see your fair.'], ['Rowan', 'Your village feels warm.']] },
+    { key: 'traveler', x: 56, y: 24, dir: 2, goneIf: 'c1:complete', lines: [['Rowan', 'I walk from town to town and trade news.'], ['Rowan', 'Your village feels warm. Mossgrove is next for me.']] },
     { key: 'kid2', x: 19, y: 36, dir: 0, lines: [['Kip', 'I am racing the snails today.'], ['Kip', 'The slow one always wins.']] },
-    { key: 'boy', x: 52, y: 28, dir: 3, lines: [['Tobin', 'Never walk the meadows alone.'], ['Tobin', 'A spark with ears zapped my kite.']] },
-    { key: 'girl', x: 34, y: 26, dir: 0, lines: [['Tansy', 'The well hums when it is quiet.'], ['Tansy', 'Grandma says that is just the wind.']] }
+    { key: 'milo', x: 52, y: 28, dir: 3, lines: [['Milo', 'Never walk the meadows alone.'], ['Milo', 'Something tugged my kite right out of the sky.']] },
+    { key: 'tansy', x: 34, y: 26, dir: 0, lines: [['Tansy', 'The well hums when it is quiet.'], ['Tansy', 'Grandma says that is just the wind.']] }
   ];
   npcs.forEach(function (n) { res(n.x - 1, n.y - 1, n.x + 1, n.y + 1); });
 

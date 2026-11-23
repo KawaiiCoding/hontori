@@ -374,28 +374,94 @@ window.H = window.H || {};
     flower_vase: { fw: 1, fh: 1, solid: true }
   };
   var builders = { ramen_pot: buildRamen, crystal_orb: buildOrb };
+  /* still: the picture never changes at run time. Not still: the animated ramen_pot and
+     crystal_orb, and element_banner (its element comes from H.bannerEl, which other code sets). */
+  (function () { for (var k in newInfo) if (!builders[k] && k !== 'element_banner') newInfo[k].still = true; })();
   var AO = { shop_counter: 1, shop_shelf: 1, tavern_counter: 1, potion_rack: 1, loom: 1, school_desk: 1 };
+
+  // ---- sprite sheet keys (group 'indoor', module 'iprops') -------------------------
+  //   iprops:<type>        static piece: the 2x picture HD.blit shows (shop_counter, stool, ...)
+  //   iprops:<type>:<f>    animated piece, frame f: ramen_pot 6 frames at 6 fps (steam and
+  //                        flame), crystal_orb 8 frames at 5 fps (drifting element colours)
+  //   iprops:b_<element>   element banner, one per element (the module's own cache key)
+  // Painted at run time: the contact shadow under counters and desks (one translucent rect).
+  var HDS = HD.Sprites;
+  var AN = { ramen_pot: [6, 6], crystal_orb: [8, 5] }, AK = {}, BK = {};
+  (function () {
+    for (var k in AN) { AK[k] = []; for (var f = 0; f < AN[k][0]; f++) AK[k].push(k + ':' + f); }
+    for (var i = 0; i < ELS.length; i++) BK[ELS[i]] = 'b_' + ELS[i];
+  })();
+  /* [ox, oy, w, h] of every picture, so a baked one is drawn without painting it */
+  var META = {
+    shop_counter: [0, -6, 48, 26], shop_shelf: [0, -18, 32, 34], potion_rack: [0, -12, 16, 28], barrel_in: [0, -6, 16, 22],
+    tavern_counter: [0, -6, 48, 26], stool: [0, -2, 16, 18], tavern_table: [0, -2, 32, 34], lantern_hang: [0, 0, 16, 16],
+    blackboard: [0, -10, 32, 24], school_desk: [0, -8, 16, 24], bookstack: [0, -6, 16, 22], notice_board: [0, -6, 32, 22],
+    loom: [0, -14, 16, 30], flower_vase: [0, -8, 16, 24]
+  };
+  (function () {
+    var FM = { ramen_pot: [0, -16, 16, 32], crystal_orb: [0, -14, 16, 30] }, k, f;
+    for (k in FM) for (f = 0; f < AK[k].length; f++) META[AK[k][f]] = FM[k];
+    for (k in BK) META[BK[k]] = [0, -2, 16, 16];
+  })();
+  function hdRec(c, ox, oy) { var hc = HD.up2(c); return { c: hc, ox: ox, oy: oy, w: hc.width / 2, h: hc.height / 2 }; }
+  /* paints one picture by its key (without the 'iprops:' prefix), on first use only */
+  function sget(k) {
+    k = String(k);
+    var i = k.indexOf(':'), a;
+    if (i >= 0) {
+      var type = k.slice(0, i), f = +k.slice(i + 1);
+      if (!builders[type]) return null;
+      if (!anim[type]) builders[type]();
+      var A = anim[type], c = A && A.frames && A.frames[f];
+      return c ? hdRec(c, A.ox, A.oy) : null;
+    }
+    if (k.slice(0, 2) === 'b_') { var el = k.slice(2); if (!EL[el]) return null; a = cache[k] || (cache[k] = bannerArt(el)); }
+    else { var p = painters[k]; if (!p) return null; a = cache[k] || (cache[k] = p()); }
+    return a && a.c ? hdRec(a.c, a.ox, a.oy) : null;
+  }
+  var SP = HDS ? new HDS('iprops:', META, sget) : null;
 
   function drawProps(ctx, type, px, py, env) {
     var t = (env && env.t) || 0;
     px = px | 0; py = py | 0;
     if (builders[type]) {
-      if (!anim[type]) builders[type]();
-      var A = anim[type], n = (A && A.frames && A.frames.length) || 0, fi = n ? ((Math.floor((+t || 0) * A.fps) % n) + n) % n : 0;
-      if (n && A.frames[fi]) HD.blit(ctx, A.frames[fi], px + A.ox, py + A.oy);
+      var an = SP && AN[type];
+      if (!anim[type] && !an) builders[type]();
+      var A = anim[type], n = A ? (A.frames && A.frames.length) || 0 : an[0], fps = A ? A.fps : an[1];
+      var fi = n ? ((Math.floor((+t || 0) * fps) % n) + n) % n : 0;
+      if (SP) { if (n) SP.draw(ctx, (AK[type] && AK[type][fi]) || (type + ':' + fi), px, py); }
+      else if (n && A.frames[fi]) HD.blit(ctx, A.frames[fi], px + A.ox, py + A.oy);
       return true;
     }
     var a;
     if (type === 'element_banner') {
       var tx = (px / 16) | 0, ty = (py / 16) | 0, el = H.bannerEl[tx + ',' + ty] || ELS[(tx + ty * 3) % 8];
+      if (SP && BK[el]) { SP.draw(ctx, BK[el], px, py); return true; }
       a = cache['b_' + el] || (cache['b_' + el] = bannerArt(el));
     } else {
       var p = painters[type]; if (!p) return false;
+      if (SP) { SP.draw(ctx, type, px, py); return true; }
       a = cache[type] || (cache[type] = p());
     }
     HD.blit(ctx, a.c, px + a.ox, py + a.oy);
     return true;
   }
+
+  /* sheet build: every piece, every frame, every banner element */
+  function enumerate() {
+    var keys = [], k, f;
+    for (k in newInfo) {
+      if (builders[k]) {
+        if (!anim[k]) builders[k]();
+        var A = anim[k], n = (A && A.frames && A.frames.length) || 0;
+        if (AN[k] && (AN[k][0] !== n || AN[k][1] !== A.fps)) try { console.warn('sheets: iprops frame table for ' + k + ' is ' + AN[k] + ', painted ' + n + ',' + A.fps); } catch (e) {}
+        for (f = 0; f < n; f++) keys.push((AK[k] && AK[k][f]) || (k + ':' + f));
+      } else if (painters[k]) keys.push(k);
+    }
+    for (var i = 0; i < ELS.length; i++) keys.push(BK[ELS[i]]);
+    return SP ? SP.all(keys) : { count: 0, pixels: 0 };
+  }
+  if (H.sheets && H.sheets.enumerate) try { H.sheets.enumerate('indoor', enumerate); } catch (e) {}
 
   if (H.furniture) {
     var info = H.furniture.info || (H.furniture.info = {});

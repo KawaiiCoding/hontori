@@ -39,7 +39,7 @@ window.H = window.H || {};
     wild_herb: ['Wild Herb', 'grass', 2, 'Smells fresh. Nettle buys these.']
   };
   // shop prices (copper); goods sold back give a little too
-  var PRICE = { herb: 3, ember_dust: 15, tide_pearl: 15, spirit_snack: 8, charm: 20, ramen: 5 };
+  var PRICE = { herb: 3, ember_dust: 15, tide_pearl: 15, spirit_snack: 8, charm: 20, ramen: 5, guest_bed: 10, blue_backpack: 100, saddle: 100 };
   function value(id) { return TRADE[id] ? TRADE[id][2] : PRICE[id] ? Math.max(1, Math.floor(PRICE[id] / 3)) : 0; }
   function pouch() { return (S().items || []).filter(function (i) { return TRADE[i.id]; }); }
   function pouchValue() { return pouch().reduce(function (t, i) { return t + value(i.id) * (i.n || 1); }, 0); }
@@ -72,7 +72,8 @@ window.H = window.H || {};
     s.forage[k] = day;
     // about one in three spots hides something each day
     var h = 0; for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) | 0;
-    if (((h ^ (day * 2654435761)) >>> 0) % 100 > 34) return null;
+    var luck = (S().items || []).some(function (i) { return i.id === 'charm'; }) ? 20 : 0;   // the Backpack Charm finds more
+    if (((h ^ (day * 2654435761)) >>> 0) % 100 > 34 + luck) return null;
     var id = list[((h >>> 3) + day) % list.length], T = TRADE[id];
     if (H.game && H.game.addItem) H.game.addItem(id, T ? T[0] : 'Herb', T ? T[1] : 'herb');
     sfx('pickup'); if (c.emit) c.emit('sparkle', c.x || 0, (c.y || 0) - 6, 8); save();
@@ -95,7 +96,9 @@ window.H = window.H || {};
   function afterBattle(r, info) {
     r = r || {}; info = info || {};
     var lvl = info.foeLevel || 1;
-    if (r.won && info.trainer) add(5 + 2 * lvl, 'purse for a good duel');
+    // a trainer pays the purse once; rematches are for practice
+    var fl = (H.game && H.game.state && (H.game.state.flags = H.game.state.flags || {})) || {}, pk = 'purse:' + (info.trainerName || 'duel');
+    if (r.won && info.trainer && !fl[pk]) { fl[pk] = true; add(5 + 2 * lvl, 'purse for a good duel'); }
     else if (!r.won && !r.fled && !r.captured && !info.trainer) lose(Math.min(20, Math.max(1, Math.round(get() * 0.1))), 'dropped while running home');
   }
 

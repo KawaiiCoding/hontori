@@ -20,7 +20,7 @@ window.H = window.H || {};
   var OTHER = {
     wand: ['Spirit Wand', 'wand'], novice_cert: ['Novice Certificate', 'scroll'], grey_letter: ['Sealed Letter', 'scroll'], ring_leaf: ['Leaf Ring', 'grass'],
     herb: ['Herb', 'grass'], ember_dust: ['Ember Dust', 'fire'], tide_pearl: ['Tide Pearl', 'water'], spirit_snack: ['Spirit Snack', 'heart'],
-    charm: ['Backpack Charm', 'star'], ramen: ['Ramen', 'energy']
+    charm: ['Backpack Charm', 'star'], ramen: ['Ramen', 'energy'], blue_backpack: ['Blue Backpack', 'backpack'], saddle: ['Saddle', 'paw']
   };
   // key things can never be dropped and never use a pocket
   var KEYS = { wand: 1, map: 1, novice_cert: 1, grey_letter: 1 };
@@ -69,7 +69,7 @@ window.H = window.H || {};
   function active() { return !!F()['c1:morning']; }
   function count() { return Object.keys(SPOT).filter(function (id) { return fills(id) && has(id); }).length; }
   function label() { return 'Pockets ' + count() + ' / ' + cap(); }
-  function cap() { return 5 + (has('backpack') ? 1 : 0); }
+  function cap() { return 5 + (has('backpack') ? 1 : 0) + (has('blue_backpack') ? 1 : 0); }
   function cur() { return H.game && H.game.currentMap ? H.game.currentMap() : null; }
   function api() { return H.story && H.story.api ? H.story.api({}) : null; }
   function toast(t) { H.ui && H.ui.toast(t); }
@@ -217,25 +217,28 @@ window.H = window.H || {};
   var busy = false, frame = 0, pill = null, compA = 0, compAng = 0, compX = 0, compY = 0;
   H.screenDraw = H.screenDraw || [];
   H.screenDraw.push(function (ctx, VW, VH, env, mapName, camX, camY, player) {
-    // compass: a small, soft arrow at the screen edge, only while the goal is off-screen; it fades in and out
-    var want = 0, ang = compAng, ax = compX, ay = compY;
+    // compass: one small arrow that sits beside the kid and points toward the goal in 8 steady directions.
+    // It only turns when the direction really changes, so it stays calm while you walk.
+    var want = 0;
     if (has('compass') && H.story && H.story.target) {
       var t = H.story.target();
       if (t && t.map === mapName) {
         var sx = t.x * T + 8 - camX, sy = t.y * T + 8 - camY, m = 12;
         if (sx < m || sy < m || sx > VW - m || sy > VH - m) {
-          var cx = player.x - camX, cy = player.y - 8 - camY; ang = Math.atan2(sy - cy, sx - cx);
-          var k = Math.min(Math.abs((VW / 2 - m) / (Math.cos(ang) || 1e-6)), Math.abs((VH / 2 - m) / (Math.sin(ang) || 1e-6)));
-          ax = VW / 2 + Math.cos(ang) * k; ay = VH / 2 + Math.sin(ang) * k; want = 1;
-          once('compass', 'The compass points the way');
+          var ptx = Math.floor(player.x / T), pty = Math.floor((player.y - 1) / T);
+          var raw = Math.atan2(t.y - pty, t.x - ptx), snap = Math.round(raw / (Math.PI / 4)) * (Math.PI / 4);
+          if (!compA || Math.abs(Math.atan2(Math.sin(snap - compAng), Math.cos(snap - compAng))) > 0.01) compX = snap;
+          want = 1; once('compass', 'The compass points the way');
         }
       }
     }
-    compA += (want - compA) * Math.min(1, 0.06); if (want) { compAng = ang; compX = ax; compY = ay; }
+    compA += (want - compA) * 0.06;
+    if (want) { var dA = Math.atan2(Math.sin(compX - compAng), Math.cos(compX - compAng)); compAng += dA * 0.12; }
     if (compA > 0.02) {
-      ctx.save(); ctx.globalAlpha = compA * 0.55; ctx.translate(Math.round(compX), Math.round(compY)); ctx.rotate(compAng); ctx.scale(0.7, 0.7);
+      var px = Math.round(player.x - camX + Math.cos(compAng) * 20), py = Math.round(player.y - 9 - camY + Math.sin(compAng) * 16);
+      ctx.save(); ctx.globalAlpha = compA * 0.7; ctx.translate(px, py); ctx.rotate(compAng); ctx.scale(0.8, 0.8);
       ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(-4, -4); ctx.lineTo(-2, 0); ctx.lineTo(-4, 4); ctx.closePath();
-      ctx.fillStyle = '#ffe2a0'; ctx.strokeStyle = 'rgba(40,24,6,.6)'; ctx.lineWidth = 1; ctx.stroke(); ctx.fill(); ctx.restore();
+      ctx.fillStyle = '#ffe2a0'; ctx.strokeStyle = 'rgba(40,24,6,.7)'; ctx.lineWidth = 1; ctx.stroke(); ctx.fill(); ctx.restore();
     }
     if (++frame % 20) return;
     // map button only once the kid has the map

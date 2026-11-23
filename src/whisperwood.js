@@ -95,8 +95,8 @@ window.H = window.H || {};
 
   var npcs = [
     { key: 'guard', x: 21, y: 4, dir: 2, lines: [['Ranger Alder', 'Whisperwood is calm. Keep to the path.'], ['Ranger Alder', 'Past these trees lie the elemental schools.']] },
-    { key: 'traveler', x: 36, y: 27, dir: 2, lines: [['Sela', 'I am walking to the far schools.'], ['Sela', 'Each one gives a ring, if you prove your bond.']] },
-    { key: 'fisher', x: 22, y: 17, dir: 2, lines: [['Old Pell', 'The stones hum when spirits cross.'], ['Pell', 'Eight elements, eight rings. Or so the songs go.']] }
+    { key: 'traveler', x: 36, y: 27, dir: 2, lines: [['Sela', 'I am walking to the far schools.'], ['Sela', 'There is a stone circle deep in this wood. I rested there a while.']] },
+    { key: 'fisher', x: 22, y: 17, dir: 2, lines: [['Old Tam', 'The stones hum when spirits cross.'], ['Old Tam', 'The fish bite best at dusk. Be patient with them.']] }
   ];
   npcs.forEach(function (n) { res(n.x - 1, n.y - 1, n.x + 1, n.y + 1); hard[n.y][n.x] = 1; });
 

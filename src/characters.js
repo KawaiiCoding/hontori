@@ -119,9 +119,83 @@ window.H = window.H || {};
       shoes: '#2a2030', staff: 1, moustache: 1, eye: '#3a2a1a', expr: 'smile', bg: '#c0b0e8' },
     warden: { name: 'Warden Fern', skin: '#e8b890', hair: '#3a5a2a', style: 'ponytail', ties: '#e0c060', robe: '#2f6a3a', trim: '#e0c060', pants: '#2a3a22',
       shoes: '#3a2a1a', staff: 1, eye: '#3a7a4a', expr: 'smile', bg: '#b8e0a0' },
+    greycloak: { name: 'Grey cloak', skin: '#d8b090', hair: '#4a4a52', style: 'hat', cap: '#6a6a74', robe: '#7a7a84', trim: '#b8b8c0', pants: '#3a3a42', shoes: '#2a2a30',
+      eye: '#3a3a4a', expr: 'smile', bg: '#c8c8d0' },
+    apprentice: { name: 'Apprentice', kid: 1, skin: '#e0ac82', hair: '#7a4a22', style: 'short', robe: '#4a8a3a', trim: '#d8e870', pants: '#2a3a22', shoes: '#3a2a1a',
+      freckles: 1, eye: '#3a6a3a', expr: 'smile', bg: '#c8e8b0' },
     gardener: { name: 'Gardener', skin: '#f0c8a0', hair: '#a83a2a', style: 'hat', cap: '#78a048', shirt: '#9ad0e0', pants: '#5a4a3a', shoes: '#4a3a2a',
       apron: '#7a5a3a', freckles: 1, eye: '#3a7a5a', expr: 'grin', bg: '#c0e8b0' }
   };
+  // one look per person: named people who shared a base sprite get their own hair, clothes and colours
+  function vary(base, key, o) { var d = {}, k; for (k in C[base]) d[k] = C[base][k]; for (k in o) d[k] = o[k]; C[key] = d; }
+  vary('girl', 'tansy', { name: 'Tansy', hair: '#7a3a22', style: 'ponytail', dress: '#e0a030', ties: '#f4ecec', eye: '#5a3a1a', bg: '#f4dca0' });
+  vary('girl', 'wren', { name: 'Wren', hair: '#2a2a3a', style: 'bun', dress: '#4a9a6a', ties: '#e0c060', skin: '#d9a27a', eye: '#3a5a3a', freckles: 1, bg: '#b8e0c0' });
+  vary('girl', 'lark', { name: 'Lark', hair: '#c8563a', style: 'short', dress: '#5a8ad8', ties: '#ffffff', eye: '#3a6a5a', bg: '#b8d0f0' });
+  vary('girl', 'juniper', { name: 'Juniper', hair: '#3a2a22', style: 'twintails', dress: '#8a5ab8', ties: '#f0d070', skin: '#c88a60', eye: '#4a2a1a', bg: '#d8c0e8' });
+  vary('boy', 'tobin', { name: 'Tobin', hair: '#c8a050', style: 'messy', shirt: '#4aa0a8', pants: '#5a4a6a', skin: '#f2c9a0', bandaid: 0, freckles: 1, eye: '#3a5a8a', bg: '#b0e0e0' });
+  vary('boy', 'milo', { name: 'Milo', hair: '#5a3a22', style: 'short', shirt: '#d84a3a', pants: '#3a4a6a', skin: '#e0ac82', bandaid: 0, eye: '#3a2a1a', bg: '#f0c0b0' });
+  vary('kid2', 'ivo', { name: 'Ivo', hair: '#4a6a2a', style: 'cap', cap: '#6a9a3a', shirt: '#8ac060', pants: '#4a3a2a', shoes: '#3a2a1a', skin: '#e0ac82', bg: '#c8e8a8' });
+  vary('kid2', 'sorreljr', { name: 'Sorrel Jr.', hair: '#b8b0c8', style: 'short', shirt: '#7a5a9a', pants: '#3a3050', shoes: '#2a2030', skin: '#ecc4a4', freckles: 0, glasses: 1, bg: '#d8c8e8' });
+  vary('kid2', 'pip', { name: 'Pip Pell', hair: '#a83a2a', style: 'messy', shirt: '#e06a8a', pants: '#5a4a3a', skin: '#f0c8a0', bg: '#f8c8d0' });
+  /* Key people: each has a design of their own (the keys stay the same so every caller keeps working).
+     Extra look fields: braid (style, blong = long), hood (style, with hood colour), clasp (closed-eye clasp),
+     crown (leaf crown), staff 'living' (leafy staff), goggles, inner (open jacket shirt), sailor (wide collar),
+     shawl, stole, pendant, sprout, glasses 'round', expr 'flat'. */
+  C.elder = { name: 'Elder Wisteria', skin: '#ecc4a4', hair: '#d8d8e6', style: 'braid', blong: 1, ties: '#a88ad8', robe: '#4e4270', trim: '#c8b0e8',
+    pants: '#3a3050', shoes: '#4a2a3a', shawl: '#a888d8', staff: 1, eye: '#6a5a8a', expr: 'closed', brow: '#f2f2f8', bg: '#d8c8f0' };
+  C.sorrel = { name: 'Madam Sorrel', skin: '#f0c8a8', hair: '#4a3436', style: 'bun', ties: '#e0c060', robe: '#3a5a9a', trim: '#e0c060', pants: '#2a3050',
+    shoes: '#3a2a2a', glasses: 'round', eye: '#4a6a9a', expr: 'smile', bg: '#b8c8e8' };
+  C.warden = { name: 'Warden Fern', skin: '#e8b890', hair: '#9a522a', style: 'ponytail', ties: '#e0c060', robe: '#2f6a3a', trim: '#e0c060', pants: '#2a3a22',
+    shoes: '#3a2a1a', crown: '#5aa040', staff: 'living', eye: '#3a7a4a', expr: 'smile', bg: '#b8e0a0' };
+  C.greycloak = { name: 'Grey cloak', skin: '#d8b090', hair: '#4a4a52', style: 'hood', hood: '#7e7e8c', robe: '#9494a2', trim: '#c4c4d0', pants: '#3a3a42',
+    shoes: '#2a2a30', clasp: '#d0d4de', eye: '#6a7480', expr: 'flat', bg: '#c8c8d0' };
+  C.apprentice = { name: 'Apprentice Bryn', kid: 1, skin: '#e0ac82', hair: '#a8582a', style: 'short', robe: '#5a7a3a', trim: '#e0d070', pants: '#2a3a22',
+    shoes: '#3a2a1a', sprout: '#6ab848', freckles: 1, eye: '#3a6a3a', expr: 'smile', bg: '#c8e8b0' };
+  C.boy = { name: 'Cole', kid: 1, skin: '#e8b890', hair: '#26283a', style: 'short', shirt: '#e8742a', inner: '#f4ecd8', pants: '#3a3a4a', shoes: '#5a3a2a',
+    goggles: '#8a5a32', eye: '#5a4a2a', expr: 'grin', raised: 1, bg: '#f4c8a0' };
+  C.girl = { name: 'Mira', kid: 1, skin: '#f4d0b0', hair: '#2a2a40', style: 'braid', ties: '#3aa0c8', dress: '#f4f0e6', pants: '#f4ecec', shoes: '#3a5a7a',
+    collar: '#3aa0c8', sailor: 1, eye: '#3a8ab8', expr: 'smile', bg: '#b8e0f0' };
+  C.orlen = { name: 'Orlen Vael', skin: '#f0c8a8', hair: '#f6f4ee', style: 'elder', beard: 1, brow: '#ffffff', robe: '#ece4d2', trim: '#f8f2e4', stole: '#d8a838',
+    pendant: '#f0c040', pants: '#c8b890', shoes: '#8a6a3a', eye: '#5a7aa8', expr: 'closed', bg: '#f4e4b0' };
+  /* townsfolk who shared a look get their own (key = the person's id) */
+  vary('mom', 'sumi', { name: 'Auntie Sumi', skin: '#e0ac82', hair: '#2a2a3a', style: 'bun', dress: '#c8604a', ties: '#f0d070', collar: '#f6efe0', eye: '#4a2a1a', bg: '#f0c0a8' });
+  vary('mom', 'hazel', { name: 'Hazel', skin: '#f6d0b0', hair: '#8a5a2a', style: 'ponytail', dress: '#6a8ac8', ties: '#f4ecec', collar: '#f4f0e0', eye: '#4a6a3a', bg: '#c0d0f0' });
+  vary('dad', 'rook', { name: 'Rook the Ferryman', skin: '#c88a60', hair: '#6a6a72', style: 'hat', cap: '#3a4a5a', shirt: '#3a6a7a', collar: '#e8e0c8',
+    stubble: 0, beard: 1, brow: '#8a8a92', eye: '#3a3a4a', bg: '#a8c8d8' });
+  vary('dad', 'corin', { name: 'Corin', skin: '#f2c9a0', hair: '#c8783a', style: 'messy', shirt: '#7a9a4a', collar: '#e8dcc0', pants: '#5a4a3a', stubble: 0,
+    freckles: 1, eye: '#3a6a4a', bg: '#d0e0a8' });
+  vary('dad', 'fenn', { name: 'Fenn', skin: '#8a5a3e', hair: '#1e1e2a', style: 'bandana', band: '#8a5aa0', shirt: '#e8e0c8', collar: null, apron: '#7a5a3a',
+    stubble: 0, moustache: 1, eye: '#3a2418', bg: '#d8c0e0' });
+  vary('guard', 'alder', { name: 'Ranger Alder', skin: '#e0ac82', hair: '#7a4a2a', cap: '#5a7a3a', shirt: '#4a6a3a', collar: '#c8a050', moustache: 0,
+    stubble: 1, eye: '#3a5a2a', bg: '#c0d8a8' });
+  vary('guard', 'ranger_moss', { name: 'Ranger Moss', skin: '#c88a60', hair: '#3a2a22', style: 'ponytail', ties: '#c83a3a', shirt: '#6a7a3a', collar: '#e0c060',
+    moustache: 0, eye: '#4a3a1a', bg: '#d0d8a0' });
+  vary('fisher', 'tam', { name: 'Tam', skin: '#e0ac82', hair: '#3a2a22', style: 'cap', cap: '#d8a030', beard: 0, brow: null, shirt: '#4a7a9a', apron: '#3a5a4a',
+    eye: '#3a2a1a', bg: '#b0d8e0' });
+  vary('fisher', 'lin', { name: 'Fisher Lin', skin: '#f0c8a0', hair: '#1e1e2a', style: 'ponytail', ties: '#e04a4a', beard: 0, brow: null, shirt: '#e06a4a',
+    apron: '#2a6a9a', eye: '#2a3a5a', bg: '#f0c8b8' });
+  vary('traveler', 'sela', { name: 'Sela', skin: '#c88a60', hair: '#c8a050', style: 'short', robe: '#7a4a3a', trim: '#e0c060', scarf: '#4a8ab8', eye: '#3a5a8a', bg: '#e0c8a8' });
+  vary('shopkeeper', 'pell', { name: 'Pell', skin: '#e0ac82', hair: '#5a3a22', style: 'short', glasses: 0, moustache: 1, shirt: '#7ab0d0', apron: '#a8603a',
+    eye: '#3a2a1a', bg: '#c0dcec' });
+  vary('grandma', 'burr', { name: 'Granny Burr', skin: '#d9a27a', hair: '#e8e4dc', style: 'bandana', band: '#6a9a4a', dress: '#5a7a5a', collar: '#f4ecd8',
+    glasses: 0, eye: '#4a3a2a', bg: '#c8e0c0' });
+  /* chapter 3: the Whistling Pass */
+  vary('dad', 'dunn', { name: 'Foreman Dunn', skin: '#c88a60', hair: '#3a2a22', style: 'hat', cap: '#d8a030', shirt: '#8a6a3a', collar: '#e8dcc0', stubble: 1, eye: '#3a2a1a', bg: '#e8d0a0' });
+  vary('traveler', 'kite_keeper', { name: 'Kite Keeper Aya', skin: '#f0c8a0', hair: '#e8e4dc', style: 'bun', robe: '#4a8ab8', trim: '#f0d070', scarf: '#e05a4a', eye: '#3a5a8a', bg: '#c0dcf0' });
+  vary('dad', 'hask', { name: 'Hask the Mender', skin: '#d9a27a', hair: '#6a4a2a', style: 'bandana', band: '#4a7a9a', shirt: '#a8783a', collar: '#e8e0c8', apron: '#6a4a2a', beard: 1, eye: '#3a2a1a', bg: '#d8c8a8' });
+  vary('girl', 'ola', { name: 'Ola', hair: '#e0b050', style: 'twintails', dress: '#d84a3a', ties: '#ffffff', eye: '#3a5a8a', bg: '#f4c8b8' });
+  vary('innkeeper', 'kw_innkeeper', { name: 'Innkeeper Maro', skin: '#e0ac82', hair: '#5a5a62', band: '#4a8ab8', shirt: '#f0e6d0', eye: '#3a2a1a', bg: '#c8d8e8' });
+  vary('shopkeeper', 'kw_shopkeeper', { name: 'Tilla', skin: '#c88a60', hair: '#2a2a3a', style: 'bun', shirt: '#6ab0a0', eye: '#3a2a1a', bg: '#c0e0d8' });
+  vary('mom', 'wila', { name: 'Postmistress Wila', skin: '#f2c9a0', hair: '#a8582a', style: 'ponytail', dress: '#3a6a9a', ties: '#f0d070', collar: '#f4f0e0', eye: '#3a5a3a', bg: '#b8d0f0' });
+  vary('mom', 'ama', { name: 'Ama', skin: '#d9a27a', hair: '#3a2a22', style: 'bun', dress: '#7a5ab8', ties: '#f4ecec', collar: '#f6efe0', eye: '#4a2a1a', bg: '#d8c0e8' });
+  vary('girl', 'rue', { name: 'Rue', hair: '#6a4a2a', style: 'short', dress: '#4aa0a8', ties: '#f0d070', skin: '#d9a27a', freckles: 1, eye: '#3a2a1a', bg: '#b0e0e0' });
+  vary('grandma', 'oda', { name: 'Ringer Oda', skin: '#f0c8a8', hair: '#e8e4dc', style: 'bandana', band: '#c8563a', dress: '#5a6a8a', collar: '#f4ecd8', eye: '#3a3a4a', bg: '#d0d0e8' });
+  vary('elder', 'brisk', { name: 'Old Brisk', skin: '#c88a60', hair: '#f4f0e8', eye: '#3a2a1a', bg: '#e8d8b8' });
+  vary('boy', 'nim', { name: 'Nim', hair: '#2a2a3a', style: 'messy', shirt: '#e0c040', pants: '#4a5a7a', skin: '#c88a60', goggles: null, eye: '#3a2a1a', bg: '#f0e0a0' });
+  vary('apprentice', 'lio', { name: 'Lio', skin: '#f2c9a0', hair: '#c8a050', robe: '#5a8ab8', trim: '#e8f0f8', sprout: null, eye: '#3a5a8a', bg: '#c8e0f0' });
+  vary('warden', 'zephra', { name: 'Warden Zephra', skin: '#e0ac82', hair: '#e8eef4', robe: '#7ab8d8', trim: '#f4f8fc', eye: '#3a6a9a', bg: '#d0e8f4' });
+  vary('apprentice', 'sef', { name: 'Sef', skin: '#f0c8a0', hair: '#3a2a22', style: 'ponytail', ties: '#e05a4a', robe: '#4a8ab8', trim: '#f0d070', sprout: null, eye: '#3a5a8a', bg: '#c0dcf0' });
+  vary('apprentice', 'tolle', { name: 'Apprentice Tolle', skin: '#c88a60', hair: '#2a2024', robe: '#9ac8e0', trim: '#f0f4f8', sprout: null, eye: '#2a3a5a', bg: '#d8ecf4' });
   var E = '#2a1c2e', GL = '#3a2e44', WH = '#fbf6f0', MO = '#a8443c';
 
   // ---------- sprite (authored at 2x: 56x56 real px, local centre x = 16, feet bottom at local y = 47) ----------
@@ -136,8 +210,29 @@ window.H = window.H || {};
       });
       return;
     }
-    var lng = st === 'bun' || st === 'twintails' || st === 'ponytail', shortS = st === 'short' || st === 'cap' || st === 'hat' || st === 'bandana';
-    var longH = lng ? bot : shortS ? fr + 4 : bot - 3, swept = st === 'bun' || st === 'ponytail', tl = shortS ? 2 : 4, per = A ? 6 : 7;
+    if (st === 'hood') {
+      /* deep hood: a capelet over the shoulders, an opening for the face, the brow in shadow */
+      var hc = d.hood, ocx = side ? hx + 4 : 16, ocy = ey + 2.5, orx = side ? 5 : hw / 2 - 2, ory = 6.5, hi, hj;
+      var inO = function (x, y) { var u = (x - ocx) / orx, v = (y - ocy) / ory; return u * u + v * v; };
+      g.part(hc, function (m) {
+        m.e(16 + (side ? 1 : 0), cy - 1, hw / 2 + 2.5, hh / 2 + 2.5);
+        m.r(hx - 1, cy, hw + 2, hh / 2 + 4);
+        if (up) { m.e(16, hy + hh + 4, 3, 3); }
+        else m.cut(function (x, y) { return inO(x, y) > 1; });
+      });
+      if (!up) {
+        var SH = sh(d.skin, 0.55), LN = sh(hc, 0.55), RM = sh(hc, 1.2);
+        for (hj = hy - 3; hj < hy + hh + 6; hj++) for (hi = hx - 3; hi < hx + hw + 3; hi++) {
+          var q0 = inO(hi + 0.5, hj + 0.5), c0 = g.get(hi, hj);
+          if (!c0) continue;
+          if (q0 <= 1 && hj < ey && c0 !== E && c0 !== WH && c0 !== '#ffffff') g.set(hi, hj, SH);
+          else if (q0 > 1 && q0 <= 1.45) g.set(hi, hj, hj < ocy ? LN : RM);
+        }
+      }
+      return;
+    }
+    var lng = st === 'bun' || st === 'twintails' || st === 'ponytail' || st === 'braid', shortS = st === 'short' || st === 'cap' || st === 'hat' || st === 'bandana';
+    var longH = lng ? bot : shortS ? fr + 4 : bot - 3, swept = st === 'bun' || st === 'ponytail' || st === 'braid', tl = shortS ? 2 : 4, per = A ? 6 : 7;
     function bang(x, y) {
       var j = y - fr; if (j < 0 || j >= tl) return false;
       if (swept) return j < (1 - (x - hx) / hw) * 5;
@@ -177,6 +272,17 @@ window.H = window.H || {};
     if (st === 'twintails') g.part(d.ties, function (m) { var y = Math.floor(cy) + 1 + lg; if (side) m.r(R - 4, y + 1, 5, 2); else { m.r(hx - 2, y, 5, 2); m.r(R - 2, y, 5, 2); } }, 1, true);
     if (st === 'ponytail') g.part(d.ties, function (m) { if (up) m.r(14, hy + hh - 4, 4, 2); else m.r(R, cy - 1, 3, 2); }, 1, true);
     if (st === 'bun' && !side) g.part(d.ties, function (m) { m.r(13, hy + 2, 6, 1); }, 1, true);
+    if (st === 'braid') {
+      /* one braid over the left shoulder (viewer's right from the front, viewer's left from behind) */
+      var bn = d.blong ? (A ? 8 : 5) : (A ? 5 : 4), bx0 = up ? hx + 3 : side ? R - 2 : R - 1, segs = [], bq;
+      for (bq = 0; bq < bn; bq++) segs.push([bx0 + (side ? 0 : dir === 0 ? -bq * 0.3 : bq * 0.3), cy + 3 + bq * 3 + lg]);
+      g.part(d.hair, function (m) { segs.forEach(function (s) { m.e(s[0], s[1], 2.5, 2.1); }); });
+      var BD = sh(d.hair, 0.72), BL = sh(d.hair, 1.35);
+      segs.forEach(function (s) { var x = Math.round(s[0]), y = Math.round(s[1]); g.set(x - 1, y + 1, BD); g.set(x, y + 1, BD); g.set(x - 1, y - 1, BL); });
+      var lsg = segs[segs.length - 1];
+      g.part(d.ties, function (m) { m.r(lsg[0] - 2, lsg[1] + 2, 4, 2); }, 1, true);
+      g.part(d.hair, function (m) { m.e(lsg[0], lsg[1] + 5, 1.8, 1.6); });
+    }
     if (st === 'bandana') {
       g.part(d.band, function (m) {
         m.e(16, cy - 1, hw / 2 + 1.3, hh / 2 + 1.3); m.clip(function (x, y) { return y < fr - 1; });
@@ -366,7 +472,9 @@ window.H = window.H || {};
   };
   var IDLE = { fisher: ['fish'], baker: ['knead'], grandma: ['knit'], farmer: ['hoe'], gardener: ['water'], guard: ['spear'],
     kid: ['hop', 'swing', 'kick'], kid2: ['kick', 'hop', 'swing'], girl: ['hop', 'swing', 'kick'], boy: ['kick', 'swing', 'hop'],
-    traveler: ['map'], elder: ['beard'], innkeeper: ['mug'], shopkeeper: ['coins'], mom: ['stretch', 'yawn', 'fold'], dad: ['fold', 'yawn', 'stretch'] };
+    traveler: ['map'], elder: ['beard'], innkeeper: ['mug'], shopkeeper: ['coins'], mom: ['stretch', 'yawn', 'fold'], dad: ['fold', 'yawn', 'stretch'],
+    orlen: ['beard'], tam: ['fish'], lin: ['fish'], alder: ['spear'], ranger_moss: ['spear'], sela: ['map'], pell: ['coins'], burr: ['knit'],
+    sumi: ['fold', 'stretch', 'yawn'], hazel: ['yawn', 'fold', 'stretch'], rook: ['yawn', 'fold', 'stretch'], corin: ['stretch', 'fold', 'yawn'], fenn: ['fold', 'stretch', 'yawn'] };
   function hsh(n) { var s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
 
   function sprite(d, dir, f, o) {
@@ -430,6 +538,19 @@ window.H = window.H || {};
       else { g.set(tx + 6, by + 6, F); g.set(tx + 7, by + 7, F); }
       if (d.collar && !up) g.part(d.collar, function (m) { if (side) m.r(tx, by + 1, 5, 2); else { m.r(12, by + 1, 8, 2); m.x(15, by + 2); m.x(16, by + 2); } }, 1, true);
       if (d.stubble && dir === 0) { g.set(16, by + 5, F); g.set(16, by + 8, F); }
+      if (d.inner && !up) {
+        g.part(d.inner, function (m) { if (side) m.r(tx, by + 1, 2, ly - by - 4); else m.r(14, by + 1, 4, ly - by - 4); }, 1, true);
+        if (!side) for (i = 0; i < 4; i++) { g.set(13, by + 1 + i, sh(body, 1.22)); g.set(18, by + 1 + i, sh(body, 1.22)); }
+      }
+      if (d.sailor) {
+        g.part(d.collar, function (m) {
+          if (up) m.r(10, by, 12, 6);
+          else if (side) { m.r(tx + tw - 5, by, 5, 5); m.r(tx, by, 5, 2); }
+          else { m.r(9, by, 14, 3); for (var q = 0; q < 3; q++) { m.r(12 + q, by + 3 + q, 2, 1); m.r(18 - q, by + 3 + q, 2, 1); } }
+        }, 1, true);
+        if (up) for (i = 10; i < 22; i++) g.set(i, by + 4, '#f4f4ee');
+        else if (!side) { for (i = 9; i < 23; i++) if (i < 14 || i > 17) g.set(i, by + 2, '#f4f4ee'); }
+      }
     }
     if (d.apron && !up) {
       g.part(d.apron, function (m) { if (side) { m.r(tx, by + 4, 4, ly - by - 2); if (o.as) m.r(tx + 4, ly - 4, 1, 3); } else { m.r(11, by + 4, 10, ly - by - 2); m.r(11, by + 1, 2, 3); m.r(19, by + 1, 2, 3); if (o.as) { m.r(21, ly - 4, 1, 3); m.x(11, ly - 1); } } });
@@ -462,8 +583,29 @@ window.H = window.H || {};
       });
       for (i = tx + 1; i < tx + tw - 1; i += 3) g.set(i, by + 2 + (i & 1), sh(d.scarf, 0.84));
     }
+    // stole, pendant and shawl
+    if (d.stole && !up) g.part(d.stole, function (m) { if (side) m.r(tx + 1, by, 3, 44 - by); else { m.r(11, by, 3, 44 - by); m.r(18, by, 3, 44 - by); } }, 1);
+    if (d.pendant && dir === 0) { g.part(d.pendant, function (m) { m.e(16, by + 10, 2.2, 2.2); }); g.set(15, by + 9, '#fff6d0'); }
+    if (d.shawl) {
+      g.part(d.shawl, function (m) {
+        m.r(tx - 2, by, tw + 4, 5); m.x(tx - 2, by); m.x(tx + tw + 1, by);
+        if (!side) for (var q = 0; q < 7; q++) m.r(16 - (7 - q), by + 5 + q, 2 * (7 - q), 1);
+        else m.r(tx + tw - 4, by + 4, 5, 7);
+      });
+      var FL = sh(d.shawl, 1.5);
+      [[tx, by + 2], [tx + 4, by + 1], [tx + 8, by + 3], [tx + 12, by + 1], [tx + 15, by + 2], [13, by + 6], [18, by + 6], [16, by + 9], [11, by + 4], [21, by + 4]].forEach(function (p) {
+        if (g.get(p[0], p[1]) === d.shawl) { g.set(p[0], p[1], FL); if (g.get(p[0] + 1, p[1]) === d.shawl) g.set(p[0] + 1, p[1], sh(d.shawl, 1.25)); }
+      });
+    }
     // staff
-    if (d.staff) {
+    if (d.staff === 'living') {
+      var lx = side ? 6 : up ? 2 : 28;
+      g.part('#7a5a32', function (m) { m.r(lx, by - 9, 2, 57 - by); });
+      [[0, -3], [1, 2], [0, 7], [1, 12]].forEach(function (p) { g.set(lx + p[0], by + p[1], '#5a9a3a'); });
+      g.part('#4f9a3a', function (m) { m.e(lx + 1, by - 10, 3.5, 2.6); m.e(lx - 2, by - 13, 2, 1.6); m.e(lx + 4, by - 13, 2, 1.6); m.e(lx + 1, by - 14, 1.6, 2); });
+      g.set(lx, by - 11, '#9ad870'); g.set(lx - 2, by - 14, '#9ad870'); g.set(lx + 4, by - 14, '#9ad870');
+      g.set(lx + 1, by - 16, '#f8d8e8'); g.set(lx + 1, by - 15, '#f0a8c8');
+    } else if (d.staff) {
       var fx = side ? 6 : up ? 2 : 28;
       g.part('#8a5a32', function (m) { m.r(fx, by - 8, 2, 56 - by); });
       g.part('#6ad0ff', function (m) { m.e(fx + 1, by - 10, 3, 3); });
@@ -501,6 +643,8 @@ window.H = window.H || {};
         for (i = 14; i <= 17; i++) g.set(i + gx, my - 1, E);
         g.set(14 + gx, my, E); g.set(15 + gx, my, '#b8404c'); g.set(16 + gx, my, '#b8404c'); g.set(17 + gx, my, E);
         g.set(15 + gx, my + 1, E); g.set(16 + gx, my + 1, E);
+      } else if (mouthOn && d.expr === 'flat') {
+        for (i = 14; i <= 17; i++) g.set(i + gx, my, sh(d.skin, 0.5));
       } else if (mouthOn) {
         g.set(13 + gx, my - 1, mc); g.set(18 + gx, my - 1, mc); for (i = 14; i <= 17; i++) g.set(i + gx, my, mc);
         if (grin) { g.set(15 + gx, my + 1, '#e0606c'); g.set(16 + gx, my + 1, '#e0606c'); }
@@ -512,12 +656,13 @@ window.H = window.H || {};
     } else if (side) {
       eye(hx + 3 + (gx > 0 ? 1 : 0), true);
       if (o.mo || spec.mo) { g.set(hx + 2, my - 1, E); g.set(hx + 3, my - 1, E); g.set(hx + 2, my, '#b8404c'); g.set(hx + 3, my, E); g.set(hx + 2, my + 1, E); }
+      else if (mouthOn && d.expr === 'flat') { g.set(hx + 2, my, sh(d.skin, 0.5)); g.set(hx + 3, my, sh(d.skin, 0.5)); }
       else if (mouthOn) { g.set(hx + 2, my, mc); g.set(hx + 3, my, mc); g.set(hx + 4, my - (grin ? 1 : 0), mc); }
       if (!A) for (i = 0; i < 3; i++) for (j = 0; j < 2; j++) g.set(hx + 8 + i, ey + 5 + j, BL);
     }
     if (d.stubble && !up) for (j = ey + 4; j <= ey + 9; j++) for (i = hx; i < hx + hw; i++) if (((i + j) & 1) && g.get(i, j) === d.skin && !(Math.abs(i - 15.5) < 3 && j < ey + 8)) g.set(i, j, sh(d.skin, 0.88));
     sHair(g, d, dir, { hx: hx, hw: hw, hy: hy, hh: hh, cy: cy, A: A, lag: lag, ey: ey });
-    if (side) { // ear: one clean oval with a soft rim, sitting where the face meets the hair
+    if (side && d.style !== 'hood') { // ear: one clean oval with a soft rim, sitting where the face meets the hair
       var EX = 19, EY = ey + 3.5, inE = function (x, y) { var u = (x + 0.5 - EX) / 1.8, v = (y + 0.5 - EY) / 2.4; return u * u + v * v <= 1; }, ER = sh(d.skin, 0.66);
       for (j = Math.floor(EY - 4); j <= EY + 4; j++) for (i = 15; i <= 23; i++) {
         if (inE(i, j)) g.set(i, j, j > EY + 0.5 ? sh(d.skin, 0.9) : d.skin);
@@ -532,9 +677,38 @@ window.H = window.H || {};
     }
     if (d.moustache && !up) g.part(d.hair, function (m) { if (dir === 0) { m.e(13.5 + gx, ey + 6, 2.7, 1.4); m.e(18.5 + gx, ey + 6, 2.7, 1.4); } else m.r(hx, ey + 5, 4, 2); }, 1, true);
     if (d.glasses && !up) {
-      var fr = function (x0, x1) { for (i = x0; i <= x1; i++) { g.set(i, ey - 1, GL); g.set(i, ey + 4, GL); } for (j = ey; j < ey + 4; j++) { g.set(x0, j, GL); g.set(x1, j, GL); } };
+      var rnd = d.glasses === 'round';
+      var fr = function (x0, x1) { for (i = x0 + (rnd ? 1 : 0); i <= x1 - (rnd ? 1 : 0); i++) { g.set(i, ey - 1, GL); g.set(i, ey + 4, GL); } for (j = ey; j < ey + 4; j++) { g.set(x0, j, GL); g.set(x1, j, GL); } };
       if (dir === 0) { fr(9 + gx, 13 + gx); fr(18 + gx, 22 + gx); for (i = 14; i <= 17; i++) g.set(i + gx, ey + 1, GL); }
       else { fr(hx + 2, hx + 6); for (i = hx + 7; i <= 18; i++) g.set(i, ey + 1, GL); }
+    }
+    if (d.goggles) {
+      var gy = hy + (A ? 6 : 8) - 3, gH = sh(d.goggles, 1.2);
+      g.part(d.goggles, function (m) { m.e(16, cy - 1, hw / 2 + 1.4, hh / 2 + 1.4); m.clip(function (x, y) { return y >= gy && y <= gy + 1; }); });
+      if (!up) (dir === 0 ? [hx + 6, hx + hw - 6] : [hx + 4]).forEach(function (cx) {
+        g.part('#55556a', function (m) { m.e(cx, gy + 1, 3.2, 2.8); });
+        g.part('#7ad0e8', function (m) { m.e(cx, gy + 1, 2, 1.7); }, 1, true);
+        g.set(cx - 1, gy, '#ffffff');
+      });
+      else for (i = 12; i < 20; i++) g.set(i, gy, gH);
+    }
+    if (d.crown) {
+      var cb = hy + 3, LV = side ? [9, 13, 17, 21] : [hx + 2, hx + 6, 16, hx + hw - 6, hx + hw - 2];
+      g.part(d.crown, function (m) {
+        m.e(16, cy - 1, hw / 2 + 1.6, hh / 2 + 1.6); m.clip(function (x, y) { return y >= cb && y <= cb + 1; });
+        LV.forEach(function (x) { m.e(x, cb - 1, 1.4, 2.1); });
+      });
+      LV.forEach(function (x) { g.set(x, cb - 2, sh(d.crown, 1.4)); });
+      if (dir === 0) { g.set(16, cb + 1, '#f0c840'); g.set(12, cb + 1, '#e06a7a'); g.set(20, cb + 1, '#e06a7a'); }
+    }
+    if (d.sprout) {
+      var spx0 = side ? 18 : 16, spy0 = hy + lag;
+      g.part(d.sprout, function (m) { m.r(spx0 - 1, spy0 - 4, 2, 5); m.e(spx0 - 3.5, spy0 - 5, 2.8, 1.5); m.e(spx0 + 3, spy0 - 6, 2.8, 1.5); });
+      g.set(spx0 - 4, spy0 - 6, sh(d.sprout, 1.4)); g.set(spx0 + 2, spy0 - 7, sh(d.sprout, 1.4));
+    }
+    if (d.clasp && dir === 0) {
+      g.part(d.clasp, function (m) { m.e(16, by + 2, 3.2, 2.4); });
+      [[14, by + 2], [15, by + 3], [16, by + 3], [17, by + 2], [15, by + 4], [16, by + 4]].forEach(function (p, k) { g.set(p[0], p[1], k < 4 ? E : sh(d.clasp, 0.55)); });
     }
     // idle action: props behind hands, posed arms, props in front
     if (spec.back) spec.back(g, P, LATE);
@@ -576,9 +750,22 @@ window.H = window.H || {};
     if (d.collar) g.part(d.collar, function (m) { m.e(24, 40, 8, 3); m.clip(function (x, y) { return y >= 39; }); });
     if (d.robe) g.part(d.trim, function (m) { for (var k = 0; k < 8; k++) { m.r(20 - k, 40 + k, 2, 1); m.r(26 + k, 40 + k, 2, 1); } }, 1, true);
     if (d.apron) g.part(d.apron, function (m) { m.r(16, 42, 16, 6); m.r(16, 39, 2, 3); m.r(30, 39, 2, 3); });
-    if (d.shirt && !d.collar && !d.apron && !d.scarf) g.part(sh(d.shirt, 0.85), function (m) { m.r(23, 42, 2, 6); }, 1, true);
+    if (d.stole) g.part(d.stole, function (m) { m.r(15, 40, 4, 9); m.r(29, 40, 4, 9); }, 1);
+    if (d.inner) { g.part(d.inner, function (m) { m.r(20.5, 40, 7, 9); }, 1, true); g.part(sh(d.shirt, 1.2), function (m) { for (var k = 0; k < 5; k++) { m.r(19.5 + k * 0.5, 40 + k, 1, 1); m.r(27.5 - k * 0.5, 40 + k, 1, 1); } }, 1, true); }
+    if (d.shirt && !d.collar && !d.apron && !d.scarf && !d.inner) g.part(sh(d.shirt, 0.85), function (m) { m.r(23, 42, 2, 6); }, 1, true);
     g.part(sh(s, 0.85), function (m) { m.r(19, 30, 10, 10); });
     if (d.dress) g.part(sh(s, 0.95), function (m) { m.e(24, 39.5, 5, 2.5); m.clip(function (x, y) { return y >= 39; }); }, 1, true);
+    if (d.sailor) {
+      g.part(d.collar, function (m) { m.e(24, 42, 15, 4.5); m.clip(function (x, y) { return y >= 40; }); });
+      g.part('#f4f4ee', function (m) { m.e(24, 42, 13.5, 3.2); m.cut(function (x, y) { var u = (x - 24) / 12.5, v = (y - 42) / 2.4; return u * u + v * v > 1 && y >= 40; }); }, 1, true);
+      g.part(d.collar, function (m) { m.e(24, 41.5, 12.5, 2.4); m.clip(function (x, y) { return y >= 40; }); }, 1, true);
+      g.part(sh(d.collar, 0.8), function (m) { m.e(24, 45.5, 2.2, 1.6); m.r(22, 46, 1.5, 2); m.r(24.5, 46, 1.5, 2); });
+    }
+    if (d.shawl) {
+      g.part(d.shawl, function (m) { m.e(24, 43, 21, 5); m.clip(function (x, y) { return y >= 40; }); for (var k = 0; k < 8; k++) m.r(24 - (8 - k), 46 + k * 0.5, 2 * (8 - k), 0.5); });
+      [[8, 43], [13, 41], [18, 42], [30, 42], [35, 41], [40, 43], [22, 46], [26, 46], [24, 48]].forEach(function (p) { g.part(sh(d.shawl, 1.45), function (m) { m.e(p[0], p[1], 1.2, 1); }, 1, true); });
+    }
+    if (d.style === 'hood') g.part(sh(s, 0.7), function (m) { m.r(19, 30, 10, 10); }, 1, true);
     if (d.scarf) {
       g.part(d.scarf, function (m) { m.e(24, 38, 12, 4); m.r(28, 40, 5, 8); });
       [39, 44].forEach(function (y) { for (var k = 29; k < 32; k++) g.set(k, y, sh(d.scarf, 1.35)); });
@@ -613,6 +800,9 @@ window.H = window.H || {};
       g.part(E, function (m) { m.e(24, my + 0.2, 3.8, 3.4); m.cut(function (x, y) { return y >= my; }); m.r(19.5, my - 0.5, 1, 1); m.r(27.5, my - 0.5, 1, 1); }, 1, true);
       g.part('#ffffff', function (m) { m.r(21.5, my + 0.5, 5, 1); }, 1, true);
       g.part('#e06070', function (m) { m.e(24, my + 2.9, 1.9, 1.1); m.cut(function (x, y) { return y < my + 3; }); }, 1, true);
+    } else if (d.expr === 'flat') {
+      g.part(sh(s, 0.45), function (m) { m.r(21.5, my, 5, 0.5); }, 1, true);
+      g.part(sh(s, 0.8), function (m) { m.r(23, my + 1.5, 2, 0.5); }, 1, true);
     } else if (d.expr !== 'closed') {
       g.part(E, function (m) { m.e(24, my - 0.6, 3.6, 2.2); m.cut(function (x, y) { var u = (x - 24) / 3.6, v = (y - my + 1.4) / 2.2; return u * u + v * v > 1; }); m.r(20, my - 0.5, 0.5, 0.5); m.r(27.5, my - 0.5, 0.5, 0.5); }, 1, true);
       g.part(sh(s, 0.8), function (m) { m.r(23, my + 2.5, 2, 0.5); }, 1, true);
@@ -635,6 +825,21 @@ window.H = window.H || {};
       [[17, 11], [18, 11], [16, 12], [19, 10]].forEach(function (p) { g.set(p[0], p[1], sh(s, 1.35)); });
       g.part(hc, function (m) { m.e(24, 36, 12, 10); m.clip(function (x, y) { return y >= 29; }); }, 2);
       g.part(hc, function (m) { m.e(20, 30, 4.5, 2); m.e(28, 30, 4.5, 2); });
+    } else if (st === 'hood') {
+      shine = false;
+      var hq = function (x, y) { var u = (x - 24) / 10.5, v = (y - 25) / 10; return u * u + v * v; }, SK = [s, sh(s, 1.26), sh(s, 0.84), sh(s, 0.66)];
+      g.part(d.hood, function (m) {
+        m.e(24, 20, 15.5, 16.5); m.e(24, 44, 19, 5);
+        for (var hy2 = 20; hy2 < 44; hy2 += 0.5) { var hw2 = 15.5 + (hy2 - 20) * 0.22; m.r(24 - hw2, hy2, hw2 * 2, 0.5); }
+        for (var pk = 0; pk < 6; pk++) m.r(24 - 1 - pk * 1.4, 1.5 + pk, 2 + pk * 2.8, 1);
+        m.cut(function (x, y) { return hq(x, y) > 1; }); }, 2);
+      for (j = 0; j < 48; j++) for (i = 0; i < 48; i++) {
+        var q1 = hq(i + 0.5, j + 0.5), c1 = g.get(i, j);
+        if (!c1) continue;
+        if (q1 <= 1 && j < 21 && SK.indexOf(c1) >= 0) g.set(i, j, sh(s, 0.55));
+        else if (q1 > 1 && q1 <= 1.3) g.set(i, j, j < 25 ? sh(d.hood, 0.5) : sh(d.hood, 1.2));
+      }
+      for (j = 22; j <= 36; j += 4) for (i = 9; i <= 39; i += 30) g.set(i + (j & 4 ? 1 : 0), j, sh(d.hood, 0.8));
     } else if (st === 'cap') {
       shine = false;
       g.part(hc, function (m) { m.e(12, 22, 3, 6); m.e(36, 22, 3, 6); bangs(m, 4, 3, 12, 36); });
@@ -653,11 +858,21 @@ window.H = window.H || {};
         else if (st === 'bun') { base(m, 28); bangs(m, 3, 5, 11, 30); m.e(24, 5, 7, 5); }
         else if (st === 'short') { base(m, 23); bangs(m, 4, 3); }
         else if (st === 'ponytail') { base(m, 26); bangs(m, 4, 4); }
+        else if (st === 'braid') { base(m, 27); bangs(m, 4, 4); }
         else if (st === 'twintails') { base(m, 25); bangs(m, 5, 4); }
         else if (st === 'bandana') { base(m, 26); bangs(m, 6, 2); }
       }, 2);
       if (st === 'bun') g.part(d.ties, function (m) { m.r(18, 9, 12, 2); });
       if (st === 'ponytail') g.part(d.ties, function (m) { m.e(39, 22, 2, 1.8); });
+      if (st === 'braid') {
+        var bN = d.blong ? 6 : 5, bS = [], bk;
+        for (bk = 0; bk < bN; bk++) bS.push([35.5 - bk * 0.4, 28 + bk * 3.3]);
+        g.part(hc, function (m) { bS.forEach(function (p) { m.e(p[0], p[1], 3, 2.3); }); }, 2);
+        bS.forEach(function (p) { g.part(sh(hc, 0.7), function (m) { m.r(p[0] - 2, p[1] + 1.2, 3.5, 0.5); }, 1, true); g.part(sh(hc, 1.35), function (m) { m.r(p[0] - 1.5, p[1] - 1.2, 1.5, 0.5); }, 1, true); });
+        var bE = bS[bS.length - 1];
+        g.part(d.ties, function (m) { m.r(bE[0] - 2.5, bE[1] + 2, 5, 1.5); }, 1);
+        g.part(hc, function (m) { m.e(bE[0], bE[1] + 4.6, 2, 1.4); }, 1);
+      }
       if (st === 'twintails') g.part(d.ties, function (m) { m.e(8, 24, 2.5, 2); m.e(40, 24, 2.5, 2); });
       if (st === 'bandana') {
         shine = false;
@@ -666,6 +881,30 @@ window.H = window.H || {};
       }
     }
     if (shine) [[15, 10], [16, 9], [17, 9], [18, 9], [19, 10], [28, 9], [29, 9], [30, 10]].forEach(function (p) { if (g.get(p[0], p[1])) g.set(p[0], p[1], sh(hc, 1.45)); });
+    if (d.goggles) {
+      g.part(d.goggles, function (m) { m.e(24, 19, 14.3, 13.8); m.clip(function (x, y) { return y >= 11.5 && y <= 13.5; }); }, 1);
+      [18, 30].forEach(function (cx) {
+        g.part('#55556a', function (m) { m.e(cx, 12.5, 3.8, 3.4); }, 1);
+        g.part('#7ad0e8', function (m) { m.e(cx, 12.5, 2.6, 2.2); }, 1, true);
+        g.part('#ffffff', function (m) { m.e(cx - 1, 11.6, 0.8, 0.7); }, 1, true);
+      });
+    }
+    if (d.crown) {
+      g.part(d.crown, function (m) {
+        m.e(24, 19, 14.6, 14.1); m.clip(function (x, y) { return y >= 10.5 && y <= 12.5; });
+        [[13, 9.5], [18, 8.5], [24, 8], [30, 8.5], [35, 9.5]].forEach(function (p) { m.e(p[0], p[1], 1.7, 2.6); });
+      }, 1);
+      [[13, 8], [18, 7], [24, 6.5], [30, 7], [35, 8]].forEach(function (p) { g.part(sh(d.crown, 1.4), function (m) { m.r(p[0] - 0.5, p[1], 1, 1); }, 1, true); });
+      g.part('#f0c840', function (m) { m.e(24, 11.6, 1.3, 1.1); }, 1, true);
+      g.part('#e06a7a', function (m) { m.e(16, 11.8, 1, 0.9); m.e(32, 11.8, 1, 0.9); }, 1, true);
+    }
+    if (d.sprout) g.part(d.sprout, function (m) { m.r(23.5, 1.5, 1, 4.5); m.e(20.5, 2.5, 3, 1.4); m.e(27.5, 1.5, 3, 1.4); }, 1);
+    if (d.clasp) {
+      g.part(d.clasp, function (m) { m.e(24, 39.5, 4, 3); }, 1);
+      g.part(E, function (m) { m.r(21.5, 39, 1, 0.5); m.r(22, 39.5, 1, 0.5); m.r(23, 40, 2, 0.5); m.r(25, 39.5, 1, 0.5); m.r(25.5, 39, 1, 0.5); }, 1, true);
+      g.part(sh(d.clasp, 0.55), function (m) { m.r(22.5, 40.5, 0.5, 1); m.r(24, 41, 0.5, 1); m.r(25.5, 40.5, 0.5, 1); }, 1, true);
+    }
+    if (d.pendant) { g.part(d.pendant, function (m) { m.e(24, 46, 2.4, 2.4); }, 1); g.part('#fff6d0', function (m) { m.r(23, 45, 1, 0.5); }, 1, true); }
     // brows (over bangs, anime style)
     var bc = d.brow || sh(hc, 0.6);
     [[14, -1], [29, 1]].forEach(function (b) {
@@ -675,7 +914,15 @@ window.H = window.H || {};
       }
     });
     if (d.moustache) g.part(hc, function (m) { m.e(20, 31, 4.2, 1.8); m.e(28, 31, 4.2, 1.8); });
-    if (d.glasses) {
+    if (d.glasses === 'round') {
+      [14, 29].forEach(function (x0) {
+        var ex = x0 + 2.5;
+        g.part(GL, function (m) { m.e(ex, ey + 3.3, 4.3, 4.3); m.cut(function (x, y) { var u = (x - ex) / 3.6, v = (y - ey - 3.3) / 3.6; return u * u + v * v > 1; }); }, 1, true);
+        g.set(x0 + 4, ey + 5, '#d8f0ff');
+      });
+      for (i = 21; i <= 26; i++) g.set(i, ey + 2, GL);
+      for (i = 8; i <= 10; i++) { g.set(i, ey + 2, GL); g.set(47 - i, ey + 2, GL); }
+    } else if (d.glasses) {
       [14, 29].forEach(function (x0) {
         for (var q = x0 - 1; q <= x0 + 5; q++) { g.set(q, ey - 1, GL); g.set(q, ey + 7, GL); }
         for (var yy = ey - 1; yy <= ey + 7; yy++) { g.set(x0 - 1, yy, GL); g.set(x0 + 5, yy, GL); }
@@ -690,14 +937,98 @@ window.H = window.H || {};
   }
 
   // ---------- API ----------
-  var SPR = {}, POR = {}, SEED = {};
+  // Sprite sheets (group 'people', see src/sheets.js). Every cached picture below is a pure function of its key,
+  // so it can be baked into a shipped sheet; which picture to show (walk frame, breath, blink, glance, idle action
+  // phase, talking mouth, scarf flutter) is still chosen at draw time from env.t and the seed.
+  //   'chars:<key>/<dir>/<frame>/<br>,<bl>,<sp>,<wl>,<lk>,<ws>,<hl>,<as>,<nd>,<mo>,<ac>,<ap>'
+  //       one 56x56 body sprite: key = character key in C (variants included), dir 0 down 1 up 2 left 3 right
+  //       (3 is painted mirrored into its own picture), frame 0 stand 1..3 walk, then the pose fields of frameCanvas:
+  //       br breath, bl blink, sp/wl scarf phase and wind level, lk glance, ws weight shift, hl hair lag, as apron
+  //       sway, nd nod, mo mouth open, ac action name ('' none, 'talk' or an IDLE action), ap action phase.
+  //       Drawn into a 28x28 logical box at (feet x - 14, feet y - 27.5 + hop).
+  //   'chars:portrait/<key>'   the 96x96 portrait canvas.
+  // The sheet key string is built once per distinct pose and stored (SKEY); per draw only a number is computed.
+  var SPR = new Map(), POR = {}, SEED = {}, SKEY = new Map();
   Object.keys(C).forEach(function (k, i) { var s = Math.sin((i + 1) * 91.7) * 43758.5453; SEED[k] = s - Math.floor(s); });
   var NSPR = 0;
-  function frameCanvas(key, dir, f, o) {
-    var k = key + dir + f + '|' + [o.br, o.bl, o.sp, o.wl, o.lk, o.ws, o.hl, o.as, o.nd, o.mo, o.ac, o.ap].join(',');
-    if (!SPR[k]) { if (++NSPR > 3000) { SPR = {}; NSPR = 1; } SPR[k] = sprite(C[key], dir, f, o); }
-    return SPR[k];
+  var CI = {}, ACI = { '': 0 };
+  Object.keys(C).forEach(function (k, i) { CI[k] = i; });
+  Object.keys(ACT).forEach(function (k, i) { ACI[k] = i + 1; });
+  // numeric cache id: every pose field is a small int (signed ones offset by 1), packed in radix 4
+  function poseId(key, dir, f, o) {
+    var n = ((CI[key] * 4 + dir) * 4 + f) * 64 + (ACI[o.ac] | 0);
+    n = n * 4 + o.br; n = n * 4 + o.bl; n = n * 4 + o.sp; n = n * 4 + o.wl; n = n * 4 + o.lk + 1; n = n * 4 + o.ws + 1;
+    n = n * 4 + o.hl + 1; n = n * 4 + o.as; n = n * 4 + o.nd; n = n * 4 + o.mo; n = n * 4 + o.ap;
+    return n;
   }
+  function frameCanvas(key, dir, f, o) {
+    var k = poseId(key, dir, f, o);
+    var cv = SPR.get(k);
+    if (!cv) {
+      if (++NSPR > 3000) { SPR.clear(); SKEY.clear(); NSPR = 1; }
+      cv = sprite(C[key], dir, f, o); SPR.set(k, cv);
+      if (H.sheets && H.sheets.recording) H.sheets.rec('people', sheetKey(k, key, dir, f, o), cv);
+    }
+    return cv;
+  }
+  function sheetKey(k, key, dir, f, o) {
+    var s = SKEY.get(k);
+    if (!s) { s = 'chars:' + key + '/' + dir + '/' + f + '/' + [o.br, o.bl, o.sp, o.wl, o.lk, o.ws, o.hl, o.as, o.nd, o.mo, o.ac, o.ap].join(','); SKEY.set(k, s); }
+    return s;
+  }
+  // the pose being drawn, read by paintCur (so the routed draw creates no closure)
+  var CUR = { key: 'kid', dir: 0, f: 0, o: null };
+  function paintCur() { return frameCanvas(CUR.key, CUR.dir, CUR.f, CUR.o); }
+  var PORK = {}, PCUR = 'kid';
+  function paintPortrait() {
+    var cv = portraitArt(C[PCUR] || C.kid);
+    if (H.sheets && H.sheets.recording) H.sheets.rec('people', PORK[PCUR], cv);
+    return cv;
+  }
+  // Every pose a draw can reach (frameCanvas fields exactly as draw below sets them), in levels, each adding to the last:
+  //   0 walk frames and standing with breath and blink (everything the player shows, and every person at rest)
+  //   1 people: glances, weight shifts and their own idle actions (IDLE)
+  //   2 talking poses (gesture, nod, open mouth)
+  //   3 windy outdoor poses (scarf blowing, apron sway), only seen in wind or rain
+  // A pose not baked is painted on first use and cached, as before.
+  var SHEET_LEVEL = 0;
+  function eachPose(key, level, fn) {
+    var d = C[key], scarf = !!d.scarf, wind = level >= 3, wls = scarf && wind ? [0, 1, 2] : [0], sps = scarf ? 4 : 1;
+    var acts = level >= 1 ? IDLE[key] || [] : [], fixed = d.staff || d.spear, f, wi, sp, ob, bl, lk, a, i, nd, mo, as;
+    var o = { br: 0, bl: 0, sp: 0, wl: 0, lk: 0, ws: 0, hl: 0, as: 0, nd: 0, mo: 0, ac: '', ap: 0 };
+    var cob = 0, cbl = 0, cas = 0;
+    function base() { o.br = cob; o.bl = cbl; o.hl = cob ? -1 : 0; o.as = cas; o.lk = o.ws = o.nd = o.mo = o.ap = 0; o.ac = ''; }
+    for (wi = 0; wi < wls.length; wi++) for (sp = 0; sp < sps; sp++) {
+      o.wl = wls[wi]; o.sp = sp; cob = cbl = cas = 0;
+      for (f = 1; f < 4; f++) { base(); fn(f, o); }
+      for (ob = 0; ob < 2; ob++) for (as = 0; as <= (d.apron && wind ? ob : 0); as++) for (bl = 0; bl < 2; bl++) {
+        cob = ob; cbl = bl; cas = as;
+        for (lk = level >= 1 ? -1 : 0; lk <= (level >= 1 ? 1 : 0); lk++) {
+          base(); o.lk = lk; fn(0, o);
+          if (level >= 1 && !fixed) { base(); o.lk = lk; o.ws = lk || 1; fn(0, o); }
+        }
+        if (level >= 2) for (a = 0; a < 3; a++) for (nd = 0; nd < 2; nd++) for (mo = 0; mo < 2; mo++) { base(); o.ac = 'talk'; o.ap = a; o.nd = nd; o.mo = mo; fn(0, o); }
+        for (i = 0; i < acts.length; i++) {
+          var A = ACT[acts[i]];
+          for (a = 0; a < 4; a++) for (lk = -1; lk <= 1; lk++) {
+            base(); o.ac = acts[i]; o.ap = a;
+            if (A.nd) o.nd = A.nd(a);
+            if (A.dy || (A.still && A.still(a))) o.br = 0;
+            o.lk = o.nd ? 0 : lk;
+            fn(0, o);
+          }
+        }
+      }
+    }
+  }
+  /* the build tool may pass a level (0..3); without one, SHEET_LEVEL */
+  if (H.sheets && H.sheets.enumerate) H.sheets.enumerate('people', function (level) {
+    var lv = level >= 0 && level <= 3 ? level | 0 : SHEET_LEVEL;
+    Object.keys(C).forEach(function (key) {
+      for (var dir = 0; dir < 4; dir++) eachPose(key, lv, function (f, o) { frameCanvas(key, dir, f, o); });
+      H.chars.portrait(key);
+    });
+  });
   H.chars = {
     data: C,
     keys: Object.keys(C),
@@ -745,10 +1076,24 @@ window.H = window.H || {};
         o.wl = wv < 0.35 ? 0 : wv < 0.65 ? 1 : 2;
         o.sp = Math.floor(t * (o.wl ? 9 : 3.5)) & 3;
       }
-      ctx.drawImage(frameCanvas(key, dir, f, o), Math.round(x) - 14, Math.round(y) - 27.5 + dy, 28, 28);
+      var dx = Math.round(x) - 14, dyy = Math.round(y) - 27.5 + dy;
+      if (H.sheets && H.sheets.draw) {
+        var pk = poseId(key, dir, f, o);
+        CUR.key = key; CUR.dir = dir; CUR.f = f; CUR.o = o;
+        try { H.sheets.draw(ctx, sheetKey(pk, key, dir, f, o), dx, dyy, paintCur, 28, 28); return; } catch (e) {}
+      }
+      ctx.drawImage(frameCanvas(key, dir, f, o), dx, dyy, 28, 28);
     },
     portrait: function (key) {
-      if (!POR[key]) POR[key] = portraitArt(C[key] || C.kid);
+      if (!POR[key]) {
+        if (H.sheets && H.sheets.draw) {
+          /* through the sheet: copy the baked portrait (or the freshly painted one) into its own 96x96 canvas */
+          var cv = document.createElement('canvas'); cv.width = cv.height = 96;
+          PCUR = key; if (!PORK[key]) PORK[key] = 'chars:portrait/' + key;
+          try { H.sheets.draw(cv.getContext('2d'), PORK[key], 0, 0, paintPortrait); POR[key] = cv; } catch (e) {}
+        }
+        if (!POR[key]) POR[key] = portraitArt(C[key] || C.kid);
+      }
       return POR[key];
     }
   };

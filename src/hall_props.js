@@ -32,6 +32,12 @@ window.H = window.H || {};
     stone_dais: { fw: 6, fh: 2, solid: false, decor: true }
   };
 
+  /* still: the picture never changes at run time. Not still: heart_tree (fireflies, leaves),
+     glowcaps (pulsing glow), sprout_pot (changes with the story flag c2:sprouts).
+     moss_runner is still but depends on its tile position. */
+  ['hall_wall', 'root_wall', 'rockslide', 'slide_sign', 'stone_pillar', 'leaf_window', 'hall_banner', 'moss_runner', 'stone_dais']
+    .forEach(function (k) { info[k].still = true; });
+
   // ---------- static art (cached, then upscaled 2x like all furniture)
   var art = {};
   art.heart_tree = function () {
@@ -163,7 +169,52 @@ window.H = window.H || {};
     return { c: s.c, ox: 0, oy: 0 };
   };
   var cache = {};
-  function blitArt(ctx, key, px, py) { var a = cache[key] || (cache[key] = art[key]()); HD.blit(ctx, a.c, px + a.ox, py + a.oy); }
+
+  // ---- sprite sheet keys (group 'indoor', module 'hall') ---------------------------
+  //   hall:<art key>        static piece: the 2x picture HD.blit shows. Art keys: heart_tree,
+  //                         hall_wall, root_wall, rockslide, slide_sign, stone_pillar, leaf_window,
+  //                         hall_banner, sprout_pot_dry, sprout_pot_wet, glowcaps, stone_dais
+  //   hall:moss<tx>_<ty>    moss runner at tile (tx, ty): 32x32 drawn at 16x16. It used to be
+  //                         painted from 64+ small fills every frame; with H.sheets loaded it is a
+  //                         cached picture (the enumerator bakes the ones the maps place).
+  // Painted at run time (they move every frame): the Heart Tree's fireflies and falling leaves,
+  // the glowcaps' pulsing glow, and the leaf window's soft light beam.
+  var HDS = HD.Sprites;
+  /* [ox, oy, w, h] of every picture, so a baked one is drawn without painting it */
+  var META = {
+    heart_tree: [-16, -128, 128, 176], hall_wall: [0, 0, 16, 32], root_wall: [0, -12, 16, 28], rockslide: [-4, -12, 40, 60],
+    slide_sign: [0, -10, 16, 26], stone_pillar: [0, -44, 16, 60], leaf_window: [0, -8, 32, 32], hall_banner: [0, -14, 16, 30],
+    glowcaps: [0, 0, 16, 16], sprout_pot_dry: [0, -8, 16, 24], sprout_pot_wet: [0, -8, 16, 24], stone_dais: [0, 0, 96, 32]
+  };
+  function sget(k) {
+    k = String(k);
+    if (k.slice(0, 4) === 'moss') return mossArt(k);
+    if (!art[k]) return null;
+    var a = cache[k] || (cache[k] = art[k]());
+    if (!a || !a.c) return null;
+    var hc = HD.up2(a.c);
+    return { c: hc, ox: a.ox, oy: a.oy, w: hc.width / 2, h: hc.height / 2 };
+  }
+  var SP = HDS ? new HDS('hall:', META, sget) : null;
+  function blitArt(ctx, key, px, py) {
+    if (SP) { SP.draw(ctx, key, px, py); return; }
+    var a = cache[key] || (cache[key] = art[key]()); HD.blit(ctx, a.c, px + a.ox, py + a.oy);
+  }
+  /* moss runner picture for tile (tx, ty): the same fills moss() makes, on a 2x canvas */
+  var MK = {};
+  function mossKey(tx, ty) {
+    var row = MK[ty] || (MK[ty] = []);
+    if (!row[tx]) { row[tx] = 'moss' + tx + '_' + ty; META[row[tx]] = [0, 0, 16, 16]; }
+    return row[tx];
+  }
+  function mossArt(k) {
+    var m = /^moss(-?\d+)_(-?\d+)$/.exec(k);
+    if (!m) return null;
+    var s = mk(32, 32), x0 = (+m[1]) * T, y0 = (+m[2]) * T;
+    s.g.setTransform(2, 0, 0, 2, -2 * x0, -2 * y0);
+    moss(s.g, x0, y0);
+    return { c: s.c, ox: 0, oy: 0, w: 16, h: 16 };
+  }
 
   function moss(ctx, px, py) {
     var tx = px / T | 0, ty = py / T | 0;
@@ -177,7 +228,10 @@ window.H = window.H || {};
   // ---------- draw (animated touches on top of the cached art)
   function draw(ctx, type, px, py, env) {
     var t = (env && env.t) || 0;
-    if (type === 'moss_runner') return moss(ctx, px, py), true;
+    if (type === 'moss_runner') {
+      if (SP && H.sheets && px === (px | 0) && py === (py | 0) && px >= 0 && py >= 0) { SP.draw(ctx, mossKey(px / T | 0, py / T | 0), px, py); return true; }
+      return moss(ctx, px, py), true;
+    }
     if (type === 'sprout_pot') { var f = (H.game && H.game.state && H.game.state.flags) || {}; blitArt(ctx, f['c2:sprouts'] ? 'sprout_pot_wet' : 'sprout_pot_dry', px, py); return true; }
     if (!art[type]) return false;
     blitArt(ctx, type, px, py);
@@ -194,6 +248,20 @@ window.H = window.H || {};
     if (type === 'glowcaps') { var o = (Math.sin(t * 2 + px) + 1) / 2; ctx.fillStyle = 'rgba(128,255,216,' + (0.15 + o * 0.2).toFixed(2) + ')'; ctx.fillRect(px + 2, py + 4, 12, 10); }
     return true;
   }
+  /* sheet build: every static piece, both sprout pots, and every moss runner the maps place */
+  function enumerate() {
+    var keys = Object.keys(art), maps = H.maps || {}, seen = {};
+    for (var name in maps) {
+      var pr = (maps[name] && maps[name].props) || [];
+      for (var i = 0; i < pr.length; i++) if (pr[i] && pr[i].type === 'moss_runner') {
+        var k = mossKey(pr[i].x | 0, pr[i].y | 0);
+        if (!seen[k]) { seen[k] = 1; keys.push(k); }
+      }
+    }
+    return SP ? SP.all(keys) : { count: 0, pixels: 0 };
+  }
+  if (H.sheets && H.sheets.enumerate) try { H.sheets.enumerate('indoor', enumerate); } catch (e) {}
+
   var fi = H.furniture.info; Object.keys(info).forEach(function (k) { fi[k] = info[k]; });
   var draw0 = H.furniture.draw;
   H.furniture.draw = function (ctx, type, px, py, env) { if (info[type] && draw(ctx, type, px, py, env)) return; return draw0.apply(this, arguments); };

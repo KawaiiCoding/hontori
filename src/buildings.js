@@ -346,6 +346,17 @@ window.H = window.H || {};
       } }
   };
 
+  /* ---------- sprite sheets (window.H.sheets, group 'outdoor') ----------
+     Key scheme, module 'bld' (cache key = the module's own cache key):
+       bld:<type>D, bld:<type>N   the whole building by day / by night (lit windows and door, from 18:30 to
+                                  6:00), drawn at half size (the canvas is 2x). Types: house_player house_a
+                                  tavern shop school. The tavern and the shop are cached without their sign board.
+       bld:<type>S<D|N><j>        tavern and shop sign board, by day / night, cut into its 4 strips j = 0..3
+                                  (each strip swings by its own offset), drawn at half size
+     Chosen at draw time: day or night, the sign swing. Stays painted every frame (continuous): the contact
+     shadow, the sign chains and the shadow under the board, and the chimney smoke.
+     Note: inside this module H is often a local height, so the sheet module is always window.H.sheets.
+  */
   var cache = {};
   // sign boards (logical px inside the building canvas): swing separately from the cached building
   var SIGN = { tavern: function (H) { return [43, H - 44 - 23, 42, 22]; }, shop: function (H) { return [29, H - 40 - 21, 38, 18]; } };
@@ -379,18 +390,70 @@ window.H = window.H || {};
     NOSIGN = false;
     return cv;
   }
+  function sheets() { return window.H && window.H.sheets; }
+  function recOn() { var S = sheets(); return !!(S && S.recording); }
   function get(type, night) {
     var k = type + (night ? 'N' : 'D');
-    return cache[k] || (cache[k] = build(type, night, !!SIGN[type]));
+    if (cache[k]) return cache[k];
+    cache[k] = build(type, night, !!SIGN[type]);
+    if (recOn()) sheets().rec('outdoor', 'bld:' + k, cache[k]);
+    return cache[k];
   }
+  var NSTRIP = 4;
+  /* the sign board cut into its NSTRIP strips (2x canvases), painted from a full building with the board */
   function getSign(type, night) {
     var k = type + (night ? 'SN' : 'SD');
     if (cache[k]) return cache[k];
     var Lt = L[type], H = Lt.fh * T + Lt.ext, r = SIGN[type](H), full = build(type, night, false);
-    var cv = document.createElement('canvas'); cv.width = r[2] * 2; cv.height = r[3] * 2;
-    cv.getContext('2d').drawImage(full, r[0] * 2, r[1] * 2, r[2] * 2, r[3] * 2, 0, 0, r[2] * 2, r[3] * 2);
-    return (cache[k] = cv);
+    var sh2 = r[3] * 2 / NSTRIP, strips = [];
+    for (var j = 0; j < NSTRIP; j++) {
+      var cv = document.createElement('canvas'); cv.width = r[2] * 2; cv.height = sh2;
+      cv.getContext('2d').drawImage(full, r[0] * 2, r[1] * 2 + j * sh2, r[2] * 2, sh2, 0, 0, r[2] * 2, sh2);
+      strips.push(cv);
+      if (recOn()) sheets().rec('outdoor', 'bld:' + k + j, cv);
+    }
+    return (cache[k] = strips);
   }
+  /* sheet keys and paint functions, built once: BK[type][night], SK[type][night][j] */
+  var BK = {}, BP = {}, SK = {}, SP = {};
+  function bPaint(type, night) { return function () { return get(type, night); }; }
+  function sPaint(type, night, j) { return function () { var s = getSign(type, night); return s && s[j]; }; }
+  Object.keys(L).forEach(function (type) {
+    BK[type] = ['bld:' + type + 'D', 'bld:' + type + 'N'];
+    BP[type] = [bPaint(type, false), bPaint(type, true)];
+    if (!SIGN[type]) return;
+    SK[type] = [[], []]; SP[type] = [[], []];
+    for (var n = 0; n < 2; n++) for (var j = 0; j < NSTRIP; j++) {
+      SK[type][n].push('bld:' + type + (n ? 'SN' : 'SD') + j);
+      SP[type][n].push(sPaint(type, !!n, j));
+    }
+  });
+  (function () {
+    var S = sheets();
+    if (!S) return;
+    try {
+      S.enumerate('outdoor', function () {
+        Object.keys(L).forEach(function (type) {
+          get(type, false); get(type, true);
+          if (SIGN[type]) { getSign(type, false); getSign(type, true); }
+        });
+      });
+      /* once a sheet is in, drop painted copies that the sheet now answers */
+      S.onLoad(function (group) {
+        if (group !== 'outdoor') return;
+        Object.keys(L).forEach(function (type) {
+          for (var n = 0; n < 2; n++) {
+            var k = type + (n ? 'N' : 'D');
+            if (cache[k] && S.has(BK[type][n])) delete cache[k];
+            if (!SIGN[type]) continue;
+            var ks = type + (n ? 'SN' : 'SD'), all = true;
+            for (var j = 0; j < NSTRIP; j++) if (!S.has(SK[type][n][j])) all = false;
+            if (cache[ks] && all) delete cache[ks];
+          }
+        });
+      });
+    } catch (e) { /* sheets are optional */ }
+  })();
 
   var info = {};
   Object.keys(L).forEach(function (k) {
@@ -399,7 +462,9 @@ window.H = window.H || {};
     lights.push({ dx: Math.floor(Lt.fw / 2) * T + 8, dy: Lt.fh * T - 12, r: 22, color: '#ffb060' });
     if (k === 'tavern') { lights.push({ dx: 59, dy: wy + 16 - Lt.ext, r: 18, color: '#ff7040' }); lights.push({ dx: 86, dy: wy + 16 - Lt.ext, r: 18, color: '#ff7040' }); }
     if (k === 'school') lights.push({ dx: 88, dy: 42 - Lt.ext, r: 26, color: '#ffd27a' });
-    info[k] = { fw: Lt.fw, fh: Lt.fh, solid: true, lights: lights };
+    /* still: false for every building: the windows light up at night (and the tavern and shop signs swing,
+       the player's chimney smokes), so none is a pure function of its type */
+    info[k] = { fw: Lt.fw, fh: Lt.fh, solid: true, still: false, lights: lights };
   });
 
   function isNight(env) { var h = env && env.time != null ? env.time : 12; return h >= 18.5 || h < 6; }
@@ -426,22 +491,28 @@ window.H = window.H || {};
 
   function draw(ctx, type, px, py, env) {
     var Lt = L[type]; if (!Lt) return;
-    var night = isNight(env), cv = get(type, night);
+    var night = isNight(env), S = sheets(), ni = night ? 1 : 0;
     var W = Lt.fw * T, H = Lt.fh * T + Lt.ext, x0 = Math.round(px), y0 = Math.round(py - Lt.ext);
     // contact shadow on the ground along the base
     ctx.fillStyle = 'rgba(10,20,10,0.28)'; ctx.fillRect(x0 + 1, y0 + H, W - 1, 1);
     ctx.fillStyle = 'rgba(10,20,10,0.13)'; ctx.fillRect(x0 + 2, y0 + H + 1, W - 1, 1); ctx.fillRect(x0 + W, y0 + H - 6, 1, 7);
-    ctx.drawImage(cv, x0, y0, W, H);
+    if (S) S.draw(ctx, BK[type][ni], x0, y0, BP[type][ni], W, H);
+    else ctx.drawImage(get(type, night), x0, y0, W, H);
     if (SIGN[type]) {
-      var r = SIGN[type](H), sg = getSign(type, night), t = env && env.t || 0, wind = env && env.wind != null ? env.wind : 0.2;
+      var r = SIGN[type](H), t = env && env.t || 0, wind = env && env.wind != null ? env.wind : 0.2;
       if (env && env.weather === 'wind') wind = Math.max(wind, 0.6);
-      var sw = Math.sin(t * 2.1 + px * 0.05) * (0.4 + wind * 1.6) + Math.sin(t * 0.7) * wind * 0.6, n = 4, sh = r[3] / n;
+      var sw = Math.sin(t * 2.1 + px * 0.05) * (0.4 + wind * 1.6) + Math.sin(t * 0.7) * wind * 0.6, n = NSTRIP, sh = r[3] / n;
       var sx = x0 + r[0], sy = y0 + r[1];
       // chains from the eave down to the board
       ctx.fillStyle = OUT;
       for (var k = 0; k < 10; k++) { var u = k / 10, ox = q(sw * 0.25 * u); ctx.fillRect(sx + 7 + ox, sy - 5 + k * 0.5, 0.5, 0.5); ctx.fillRect(sx + r[2] - 8 + ox, sy - 5 + k * 0.5, 0.5, 0.5); }
       ctx.fillStyle = 'rgba(20,10,10,0.3)'; ctx.fillRect(sx + 2 + q(sw), sy + r[3], r[2] - 2, 1);   // shadow under the board
-      for (var j = 0; j < n; j++) ctx.drawImage(sg, 0, j * sh * 2, r[2] * 2, sh * 2, sx + q(sw * (0.25 + 0.75 * j / (n - 1))), sy + j * sh, r[2], sh);
+      var sg = S ? null : getSign(type, night);
+      for (var j = 0; j < n; j++) {
+        var jx = sx + q(sw * (0.25 + 0.75 * j / (n - 1))), jy = sy + j * sh;
+        if (S) S.draw(ctx, SK[type][ni][j], jx, jy, SP[type][ni][j], r[2], sh);
+        else if (sg && sg[j]) ctx.drawImage(sg[j], jx, jy, r[2], sh);
+      }
     }
     if (type === 'house_player') smoke(ctx, x0 + 72, y0 + 3, env);
   }

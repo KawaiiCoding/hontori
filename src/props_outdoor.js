@@ -88,8 +88,46 @@ window.H = window.H || {};
   var ROOF = ['#3a1a1e', '#5c2629', '#843a34', '#ab5640', '#cf7c55'];
   var SOIL = ['#2a1a14', '#3d281c', '#553826'];
 
+  /* ---------------- SPRITE SHEETS (H.sheets, group 'outdoor') ----------------
+     Every picture this module caches can also come from a shipped sheet. Key scheme, module 'props':
+       props:<type>             one picture per static prop: fence_h fence_v mailbox rock sign well flowerbed
+                                bench barrel crate (cache key = type)
+       props:lamp_d, lamp_n     the lamp with daylit glass / glowing glass (night, or from 18:00)
+       <set key>:b<b>p<p>       wind frames of a plant (tree, pine, bush here as props:tree:b..p..; plants of
+                                other modules pass their own set key, for example oplus:fruit_tree). One frame
+                                per bend b in W_BMIN..W_BMAX (-4..10, device pixels) and flutter phase p in
+                                0..W_PH-1 (0..5): 15 x 6 = 90 frames per plant. Frames are device resolution
+                                (2x) and drawn at half size.
+     Chosen at draw time, never baked: which wind frame (from wind, weather, time and the plant's position, so
+     two trees sway out of phase), and day or night lamp. Each frame itself is a pure function of its key.
+     Keys and paint functions are built once (no strings or closures per draw). The painters stay the source
+     and the fallback: with no sheets.js or no baked index everything is painted exactly as before.
+  */
   var cache = {};
-  function sprite(key, fn) { return cache[key] || (cache[key] = fn()); }
+  var SKEY = {}, PAINT = {}, BUILD = {};
+  /* draw anchors of the static pictures, so a baked picture can be placed without painting it first;
+     checked against the painter whenever a picture is painted */
+  var ANCHOR = {
+    fence_h: { ox: 0, oy: -6 }, fence_v: { ox: 0, oy: -6 }, mailbox: { ox: 0, oy: -6 }, rock: { ox: -1, oy: 0 },
+    sign: { ox: 0, oy: -6 }, well: { ox: -1, oy: -18 }, flowerbed: { ox: 0, oy: -4 }, bench: { ox: 0, oy: -6 },
+    barrel: { ox: 0, oy: -4 }, crate: { ox: 0, oy: -4 }, lamp_d: { ox: 0, oy: -30 }, lamp_n: { ox: 0, oy: -30 }
+  };
+  function made(key, s) {
+    if (!s || !s.c) return;
+    var a = ANCHOR[key];
+    if (a && (a.ox !== s.ox || a.oy !== s.oy)) {
+      a.ox = s.ox; a.oy = s.oy;
+      try { console.warn('propsOutdoor: anchor of ' + key + ' changed; update ANCHOR'); } catch (e) { /* no console */ }
+    }
+    if (H.sheets && H.sheets.recording && SKEY[key]) H.sheets.rec('outdoor', SKEY[key], s.c);
+  }
+  function sprite(key, fn) {
+    var s = cache[key];
+    if (s) return s;
+    s = cache[key] = fn();
+    made(key, s);
+    return s;
+  }
   function mk(g, ox, oy, noOutline) { if (!noOutline) outline(g); return { c: toCanvas(g), ox: ox, oy: oy }; }
 
   // ---------------- WIND (trees and bushes) ----------------
@@ -140,7 +178,32 @@ window.H = window.H || {};
     };
     s.dist = edgeDist(s.can);
     (o.shim || []).forEach(function (q) { s.shim[col32(q[0])] = col32(q[1]); s.hasShim = true; });
+    /* optional o.key: sheet keys for every frame, index (b - W_BMIN) * W_PH + p, built once */
+    if (typeof o.key === 'string') {
+      s.key = o.key; s.keys = [];
+      for (var b = W_BMIN; b <= W_BMAX; b++) for (var p = 0; p < W_PH; p++) s.keys[(b - W_BMIN) * W_PH + p] = o.key + ':b' + b + 'p' + p;
+      SETS.push(s);
+    }
     return s;
+  }
+  var SETS = [];
+  function windGet(s, k, b, p) {
+    var c = s.frames[k];
+    if (!c) {
+      c = s.frames[k] = windFrame(s, b, p);
+      if (s.keys && H.sheets && H.sheets.recording) H.sheets.rec('outdoor', s.keys[k], c);
+    }
+    return c;
+  }
+  /* the one paint function of the routed path: the frame being drawn is passed in these variables */
+  var wS = null, wK = 0, wB = 0, wP = 0;
+  function windPaint() { return wS ? windGet(wS, wK, wB, wP) : null; }
+  /* every frame of a set (the build tool's enumerator) */
+  function windAll(s) {
+    if (!s || !s.frames) return 0;
+    var n = 0;
+    for (var b = W_BMIN; b <= W_BMAX; b++) for (var p = 0; p < W_PH; p++) { windGet(s, (b - W_BMIN) * W_PH + p, b, p); n++; }
+    return n;
   }
   function windFrame(s, b, p) {
     var W = (s.w + W_PL + W_PR) * WK, Hh = (s.h + W_PT) * WK;
@@ -208,10 +271,17 @@ window.H = window.H || {};
                Math.sin(t * (1.3 + w * 0.9) + h2 * 6.283) * (0.3 + w * 0.7);   /* calm, slow sways; wind makes them bigger, not frantic */
     var b = Math.round(lean * amp); b = b < W_BMIN ? W_BMIN : b > W_BMAX ? W_BMAX : b;
     var p = Math.floor(t * (1.4 + w * 3) + h2 * W_PH) % W_PH; if (p < 0) p += W_PH;
-    var k = (b - W_BMIN) * W_PH + p, c = s.frames[k] || (s.frames[k] = windFrame(s, b, p));
-    ctx.drawImage(c, Math.round(px + s.ox) - W_PL, Math.round(py + s.oy) - W_PT, c.width / WK, c.height / WK);
+    var k = (b - W_BMIN) * W_PH + p;
+    var dx = Math.round(px + s.ox) - W_PL, dy = Math.round(py + s.oy) - W_PT;
+    if (s.keys && H.sheets) {
+      wS = s; wK = k; wB = b; wP = p;
+      H.sheets.draw(ctx, s.keys[k], dx, dy, windPaint, s.w + W_PL + W_PR, s.h + W_PT);
+      return;
+    }
+    var c = windGet(s, k, b, p);
+    ctx.drawImage(c, dx, dy, c.width / WK, c.height / WK);
   }
-  H._treeWind = { set: windSet, draw: windDraw };
+  H._treeWind = { set: windSet, draw: windDraw, all: windAll };
 
   // ---------------- TREE ----------------
   function treeCanopy() {
@@ -246,7 +316,7 @@ window.H = window.H || {};
     sp(g, 22, 57, BARK[1]); sp(g, 34, 57, BARK[1]);
     for (var y = 32; y < 56; y += 3) sp(g, 27 + ((y * 7) % 3), y, BARK[0]);
     rect(g, 25, 30, 7, 5, BARK[0]);
-    return windSet({ w: 56, h: 62, ox: -20, oy: -46, base: g, can: treeCanopy(), canX: 4, canY: 0, rootY: 54, topY: 0, pow: 1.5,
+    return windSet({ key: 'props:tree', w: 56, h: 62, ox: -20, oy: -46, base: g, can: treeCanopy(), canX: 4, canY: 0, rootY: 54, topY: 0, pow: 1.5,
       shim: [[LEAF[6], LEAF[5]], [LEAF[5], LEAF[4]]] });
   }
 
@@ -273,7 +343,7 @@ window.H = window.H || {};
         if (r % 4 === 1) sp(g, 16 - Math.floor(w * 0.5), Y, PINE[5]);
       }
     }
-    return windSet({ w: 32, h: 54, ox: -8, oy: -38, base: base, can: g, rootY: 50, topY: 2, pow: 1.6, shim: [[PINE[5], PINE[4]]] });
+    return windSet({ key: 'props:pine', w: 32, h: 54, ox: -8, oy: -38, base: base, can: g, rootY: 50, topY: 2, pow: 1.6, shim: [[PINE[5], PINE[4]]] });
   }
 
   // ---------------- BUSH ----------------
@@ -289,7 +359,7 @@ window.H = window.H || {};
       sp(g, bx, by, RED[3]); sp(g, bx + 1, by, RED[2]); sp(g, bx, by + 1, RED[1]); sp(g, bx + 1, by + 1, RED[1]);
       sp(g, bx, by, '#f4a28a');
     }
-    return windSet({ w: 22, h: 20, ox: -3, oy: -4, base: null, can: g, rootY: 18, topY: 3, pow: 1.3, shim: [[BUSH[5], BUSH[4]]] });
+    return windSet({ key: 'props:bush', w: 22, h: 20, ox: -3, oy: -4, base: null, can: g, rootY: 18, topY: 3, pow: 1.3, shim: [[BUSH[5], BUSH[4]]] });
   }
 
   // ---------------- FENCES ----------------
@@ -555,23 +625,60 @@ window.H = window.H || {};
 
   function isNight(env) { var h = env && env.time != null ? env.time : 12; return h >= 19 || h < 6; }
   function blit(ctx, s, px, py) { ctx.drawImage(s.c, Math.round(px + s.ox), Math.round(py + s.oy)); }
+  BUILD.lamp_d = function () { return lamp(false); };
+  BUILD.lamp_n = function () { return lamp(true); };
+  for (var bk in builders) BUILD[bk] = builders[bk];
+  Object.keys(BUILD).forEach(function (k) {
+    SKEY[k] = 'props:' + k;
+    PAINT[k] = function () { var s = sprite(k, BUILD[k]); return s && s.c; };
+  });
+  /* a static picture by cache key: from the sheet when baked, else painted as before */
+  function blitK(ctx, ck, px, py) {
+    var s = cache[ck];
+    if (H.sheets) {
+      var a = s || ANCHOR[ck];
+      H.sheets.draw(ctx, SKEY[ck], Math.round(px + a.ox), Math.round(py + a.oy), PAINT[ck]);
+      return;
+    }
+    blit(ctx, s || sprite(ck, BUILD[ck]), px, py);
+  }
+  var WIND = { tree: treeSet, pine: pineSet, bush: bushSet };
+  if (H.sheets) {
+    try {
+      H.sheets.enumerate('outdoor', function () {
+        for (var k in BUILD) sprite(k, BUILD[k]);
+        for (var w in WIND) windAll(sprite(w, WIND[w]));
+      });
+      /* once a sheet is in, drop painted copies that the sheet now answers */
+      H.sheets.onLoad(function (group) {
+        if (group !== 'outdoor') return;
+        for (var k in SKEY) if (cache[k] && H.sheets.has(SKEY[k])) delete cache[k];
+        for (var i = 0; i < SETS.length; i++) {
+          var st = SETS[i];
+          for (var f in st.frames) if (H.sheets.has(st.keys[f])) delete st.frames[f];
+        }
+      });
+    } catch (e) { /* sheets are optional */ }
+  }
 
   H.propsOutdoor = {
+    /* still: true = the picture is a pure function of the type (never changes with time, wind, weather or
+       hour), so it may be baked into a static map layer. Every other type animates or has a night picture. */
     info: {
       tree: { fw: 1, fh: 1, solid: true },
       pine: { fw: 1, fh: 1, solid: true },
       bush: { fw: 1, fh: 1, solid: true },
-      fence_h: { fw: 1, fh: 1, solid: true },
-      fence_v: { fw: 1, fh: 1, solid: true },
+      fence_h: { fw: 1, fh: 1, solid: true, still: true },
+      fence_v: { fw: 1, fh: 1, solid: true, still: true },
       lamp: { fw: 1, fh: 1, solid: true, light: { dx: 8, dy: -22, r: 64, color: '#ffcf7a', flicker: true } },
-      mailbox: { fw: 1, fh: 1, solid: true },
-      rock: { fw: 1, fh: 1, solid: true },
-      sign: { fw: 1, fh: 1, solid: true },
-      well: { fw: 2, fh: 2, solid: true },
-      flowerbed: { fw: 2, fh: 1, solid: true },
-      bench: { fw: 2, fh: 1, solid: true },
-      barrel: { fw: 1, fh: 1, solid: true },
-      crate: { fw: 1, fh: 1, solid: true }
+      mailbox: { fw: 1, fh: 1, solid: true, still: true },
+      rock: { fw: 1, fh: 1, solid: true, still: true },
+      sign: { fw: 1, fh: 1, solid: true, still: true },
+      well: { fw: 2, fh: 2, solid: true, still: true },
+      flowerbed: { fw: 2, fh: 1, solid: true, still: true },
+      bench: { fw: 2, fh: 1, solid: true, still: true },
+      barrel: { fw: 1, fh: 1, solid: true, still: true },
+      crate: { fw: 1, fh: 1, solid: true, still: true }
     },
     draw: function (ctx, type, px, py, env) {
       env = env || {};
@@ -580,11 +687,11 @@ window.H = window.H || {};
       if (type === 'bush') return windDraw(ctx, sprite('bush', bushSet), px, py, env, 0.45);
       if (type === 'lamp') {
         var n = isNight(env) || (env.time != null && env.time >= 18);
-        return blit(ctx, sprite(n ? 'lamp_n' : 'lamp_d', function () { return lamp(n); }), px, py);
+        return blitK(ctx, n ? 'lamp_n' : 'lamp_d', px, py);
       }
       var b = builders[type];
       if (!b) return;
-      blit(ctx, sprite(type, b), px, py);
+      blitK(ctx, type, px, py);
     }
   };
 })();

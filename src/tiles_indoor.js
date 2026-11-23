@@ -257,43 +257,105 @@ window.H = window.H || {};
     }
   }
 
-  function build(id, tx, ty, nb) {
+  // ---- sprite sheet keys (group 'indoor', module 'tin') -----------------------------
+  // Every tile is a 32x32 picture drawn into a 16x16 cell. Key = 'tin:' + the tile cache key:
+  //   tin:void                      plain black (shown only when walltops.js is missing)
+  //   tin:w<tx&1><top><bottom>      wallpaper wall: column parity, crown molding, chair rail
+  //   tin:r<u><d><l><r><sh><tx&1>_<ty&1>  rug: which sides continue, wall shadow, medallion parity
+  //   tin:t<tx>_<ty>[s]             kitchen tile at tile (tx, ty), 's' with the wall shadow
+  //   tin:f<tx>_<ty>[s]             wood floor at tile (tx, ty) (any other floor id)
+  // Wood and kitchen tiles depend on their position, so the enumerator bakes the ones the
+  // indoor maps in H.maps use. Each picture is found through a numeric entry table, so a draw
+  // builds no string.
+  var KV = 0, KW = 1, KR = 2, KT = 3, KF = 4;
+  var ENT = {}, ENS = {};
+  function ent(code, kind, key, tx, ty, a, b, e, sh) {
+    var o = code === null ? ENS[key] : ENT[code];
+    if (o) return o;
+    o = { k: 'tin:' + key, key: key, kind: kind, tx: tx, ty: ty, top: a, bottom: b, e: e, sh: sh, r: 0 };
+    if (code === null) ENS[key] = o; else ENT[code] = o;
+    return o;
+  }
+  /* numeric code for position-keyed tiles (null when out of the table's range) */
+  function pcode(kind, tx, ty, sh) { return (tx >= 0 && ty >= 0 && tx < 8192) ? 1024 + ((ty * 8192 + tx) * 2 + (sh ? 1 : 0)) * 2 + (kind === KT ? 0 : 1) : null; }
+  function entry(id, tx, ty, nb) {
     var n = nb || function () { return id; };
-    var up = n(0, -1);
-    var key, c, g;
-    if (id === 'void') {
-      key = 'void';
-      if (!cache[key]) { c = mk(); g = c.getContext('2d'); P(g, '#000', 0, 0, S, S); cache[key] = c; }
-      return cache[key];
-    }
+    var up = n(0, -1), code;
+    if (id === 'void') return ent(0, KV, 'void', tx, ty);
     if (id === 'wall') {
       var top = !isWall(up);
       var bottom = !isWall(n(0, 1));
-      key = 'w' + (tx & 1) + (top ? 1 : 0) + (bottom ? 1 : 0);
-      if (!cache[key]) { c = mk(); g = c.getContext('2d'); drawWall(g, tx, ty, top, bottom); cache[key] = c; }
-      return cache[key];
+      code = 8 + (tx & 1) * 4 + (top ? 2 : 0) + (bottom ? 1 : 0);
+      return ENT[code] || ent(code, KW, 'w' + (tx & 1) + (top ? 1 : 0) + (bottom ? 1 : 0), tx, ty, top, bottom);
     }
     var sh = isWall(up) || up === 'void';
     if (id === 'rug') {
-      var e = { u: n(0, -1) === 'rug', d: n(0, 1) === 'rug', l: n(-1, 0) === 'rug', r: n(1, 0) === 'rug' };
-      key = 'r' + (e.u ? 1 : 0) + (e.d ? 1 : 0) + (e.l ? 1 : 0) + (e.r ? 1 : 0) + (sh ? 1 : 0) + (tx & 1) + '_' + (ty & 1);
-      if (!cache[key]) { c = mk(); g = c.getContext('2d'); drawRug(g, tx, ty, e, sh); cache[key] = c; }
-      return cache[key];
+      var u = n(0, -1) === 'rug', d = n(0, 1) === 'rug', l = n(-1, 0) === 'rug', r = n(1, 0) === 'rug';
+      code = 128 + (u ? 64 : 0) + (d ? 32 : 0) + (l ? 16 : 0) + (r ? 8 : 0) + (sh ? 4 : 0) + (tx & 1) * 2 + (ty & 1);
+      return ENT[code] || ent(code, KR, 'r' + (u ? 1 : 0) + (d ? 1 : 0) + (l ? 1 : 0) + (r ? 1 : 0) + (sh ? 1 : 0) + (tx & 1) + '_' + (ty & 1), tx, ty, 0, 0, { u: u, d: d, l: l, r: r }, sh);
     }
-    if (id === 'floor_tile') {
-      key = 't' + tx + '_' + ty + (sh ? 's' : '');
-      if (!cache[key]) { c = mk(); g = c.getContext('2d'); drawTile(g, tx, ty, sh); cache[key] = c; }
-      return cache[key];
-    }
-    key = 'f' + tx + '_' + ty + (sh ? 's' : '');
-    if (!cache[key]) { c = mk(); g = c.getContext('2d'); drawWood(g, tx, ty, sh); cache[key] = c; }
-    return cache[key];
+    var kind = id === 'floor_tile' ? KT : KF;
+    code = pcode(kind, tx, ty, sh);
+    return (code !== null && ENT[code]) || ent(code, kind, (kind === KT ? 't' : 'f') + tx + '_' + ty + (sh ? 's' : ''), tx, ty, 0, 0, null, sh);
   }
+  /* the cached picture of an entry, painted on first use (recorded while a sheet is baked) */
+  function canvasOf(o) {
+    var c = cache[o.key], g;
+    if (c) return c;
+    c = mk(); g = c.getContext('2d');
+    if (o.kind === KV) P(g, '#000', 0, 0, S, S);
+    else if (o.kind === KW) drawWall(g, o.tx, o.ty, o.top, o.bottom);
+    else if (o.kind === KR) drawRug(g, o.tx, o.ty, o.e, o.sh);
+    else if (o.kind === KT) drawTile(g, o.tx, o.ty, o.sh);
+    else drawWood(g, o.tx, o.ty, o.sh);
+    cache[o.key] = c;
+    rec(o, c);
+    return c;
+  }
+  function rec(o, c) {
+    var SH = H.sheets;
+    if (!SH || !SH.recording || !SH.rec || o.r) return;
+    o.r = 1;
+    try { SH.rec('indoor', o.k, c); } catch (e) {}
+  }
+  var pend = null;
+  function paintPend() { return pend ? canvasOf(pend) : null; }
+
+  /* sheet build: every tile picture the indoor maps use (ids a later module draws itself are
+     listed in H.tilesIndoor.solid and left to that module) */
+  var OWN = { void: 1, wall: 1, rug: 1, floor_tile: 1 };
+  function enumerate() {
+    var maps = H.maps || {}, solid = (H.tilesIndoor && H.tilesIndoor.solid) || {}, seen = {}, count = 0, pixels = 0;
+    for (var name in maps) {
+      var m = maps[name];
+      if (!m || m.tileset !== 'indoor' || !m.ground || !m.legend) continue;
+      var first = m.legend[Object.keys(m.legend)[0]];
+      var grid = m.ground.map(function (r) { return Array.from(r).map(function (ch) { return m.legend[ch] || first; }); });
+      for (var y = 0; y < grid.length; y++) for (var x = 0; x < grid[y].length; x++) {
+        var id = grid[y][x];
+        if (!OWN[id] && (id in solid)) continue;
+        var o = entry(id, x, y, nbOf(grid, x, y));
+        if (seen[o.k]) continue;
+        seen[o.k] = 1;
+        var c = canvasOf(o);
+        rec(o, c);
+        count++; pixels += c.width * c.height;
+      }
+    }
+    return { count: count, pixels: pixels };
+  }
+  function nbOf(grid, x, y) { return function (dx, dy) { return (grid[y + dy] && grid[y + dy][x + dx]) || 'void'; }; }
 
   H.tilesIndoor = {
     solid: { wall: true, void: true },
+    /* still[id]: the tile's picture is a pure function of its id, position and neighbours and never
+       changes at run time (modules that add tile ids add them here too) */
+    still: { wall: true, void: true, rug: true, floor_tile: true, floor_wood: true },
     draw: function (ctx, id, px, py, tx, ty, env, nb) {
-      ctx.drawImage(build(id, tx | 0, ty | 0, nb), Math.round(px * 2) / 2, Math.round(py * 2) / 2, T, T);
+      var o = entry(id, tx | 0, ty | 0, nb), x = Math.round(px * 2) / 2, y = Math.round(py * 2) / 2, SH = H.sheets;
+      if (SH && SH.draw) { pend = o; try { SH.draw(ctx, o.k, x, y, paintPend, T, T); return; } catch (e) {} }
+      ctx.drawImage(canvasOf(o), x, y, T, T);
     }
   };
+  if (H.sheets && H.sheets.enumerate) try { H.sheets.enumerate('indoor', enumerate); } catch (e) {}
 })();

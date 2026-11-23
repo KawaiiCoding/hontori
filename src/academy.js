@@ -6,7 +6,7 @@ window.H = window.H || {};
   var H = window.H;
   if (!H.interact) return;
 
-  var TEACH = ['elder', 'Madam Sorrel'];
+  var TEACH = ['sorrel', 'Madam Sorrel'];
   // Each school teaches ONE spell (World Rules). Emberbrook teaches the Binding Spiral;
   // the other spells come from other local schools later.
   var LESSONS = [
@@ -17,10 +17,10 @@ window.H = window.H || {};
   ];
   var FALLBACK = { shield: 'mend', boost: 'veil' };
   var STUDENTS = {
-    boy: { name: 'Cole', enemy: 'electric', level: 1, lesson: 'stun',
-      hello: 'Want a practice duel? My spark is getting bigger.', win: 'You got me. Good duel.', lose: 'Good try. Rest a moment and come back.' },
-    girl: { name: 'Mira', enemy: 'water', level: 2, lesson: 'sleep',
-      hello: 'A practice duel? My little otter is quick.', win: 'Well drawn. My otter needs a nap now.', lose: 'The water was kind to me this time.' }
+    boy: { name: 'Cole', enemy: 'electric', level: 1, lesson: 'stun', team: [['hamster', 0], ['electric', 1]],
+      hello: 'Want a practice duel? I have two sparks now.', win: 'You got me. Good duel.', lose: 'Good try. Rest a moment and come back.' },
+    girl: { name: 'Mira', enemy: 'water', level: 2, lesson: 'sleep', team: [['squirrel', 0], ['frog', 0], ['water', 1]],
+      hello: 'A practice duel? Three of mine, one of yours.', win: 'Well drawn. My otter needs a nap now.', lose: 'The water was kind to me this time.' }
   };
 
   function P(v) { return (v && typeof v.then === 'function') ? v : Promise.resolve(v); }
@@ -165,8 +165,11 @@ window.H = window.H || {};
         if (!H.battle || !H.battle.start) return say(c, key, S.name, 'Hm, the duel circle is closed today.');
         var spec = (H.spirits && H.spirits.list || []).filter(function (p) { return p.element === S.enemy; })[0];
         var enemy = spec ? spec.key : S.enemy;
+        // a small team that grows with you: never below the base level, never far below your lead
+        var lead = ((H.game && H.game.state && H.game.state.party) || [])[0], base = Math.max(S.level, ((lead && lead.level) || 1) - 1);
+        var team = (S.team || [[enemy, 0]]).map(function (t) { return { spirit: t[0], level: base + t[1] }; });
         return P(H.battle.start({ env: c.env, enemy: enemy,
-          trainer: { name: S.name, key: key, spirit: enemy, level: S.level, lesson: S.lesson, noCapture: true } }))
+          trainer: { name: S.name, key: key, spirit: enemy, level: S.level, team: team, lesson: S.lesson, noCapture: true } }))
           .then(function (r) {
             var party = (H.game && H.game.state && H.game.state.party) || [];
             party.forEach(function (p) { if (p && p.maxHp) p.hp = p.maxHp; if (p && H.progress && H.progress.staMax) p.sta = H.progress.staMax(p.level); }); // practice spirits rest quickly

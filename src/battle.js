@@ -52,7 +52,7 @@
     stun: { name: 'Thunder Seal', cost: 2, col: '#ffe27a', on: 'foe', desc: 'Foe may lose its turn', how: 'zigzag' },
     sleep: { name: 'Dream Veil', cost: 2, col: '#b9a8ff', on: 'foe', desc: 'Foe may fall asleep', how: 'wave' },
     bind: { name: 'Binding Spiral', cost: 2, col: '#ffd98a', on: 'foe', desc: 'Bind a weak foe', how: 'spiral' },
-    revive: { name: 'Phoenix Star', cost: 3, col: '#fff0d0', on: 'me', desc: 'Revive with a material', how: 'star' },
+    revive: { name: 'Dawn Star', cost: 3, col: '#fff0d0', on: 'me', desc: 'Revive with a material', how: 'star' },
     veil: { name: 'Velum Aperi', cost: 0, col: '#ffd98a', on: 'me', desc: 'Lift the veil', how: 'V', world: true },
     fish: { name: 'Fishing Sigil', cost: 1, col: '#7fd8ff', on: 'me', desc: 'Casts a line of light into water', how: 'hook', world: true }
   };
@@ -794,10 +794,13 @@
     var me = mkMe(lead);
     var fought = [act];
     var pool = H.spirits.list.map(function (s) { return s.key; }).filter(function (k) { return k !== me.key; });
+    // a trainer may bring a team: TR.team = [{ spirit, level, stage }], sent out one after another
+    var TEAM = TR && TR.team && TR.team.length ? TR.team : null, tIdx = 0;
+    if (TEAM) { TR.spirit = TEAM[0].spirit; TR.level = TEAM[0].level; if (TEAM[0].stage) TR.stage = TEAM[0].stage; }
     var fk = TR ? (TR.spirit || 'electric') : (opts.enemy || pool[Math.floor(Math.random() * pool.length)]), fs = specOf(fk);
     var flvl = TR ? (TR.level || 1) : (opts.level || Math.max(1, me.lvl + (Math.random() < 0.3 ? -1 : Math.random() < 0.6 ? 0 : 1)));
     var fmax = 15 + flvl * 3;
-    var foe = { key: fk, el: fs.element, el2: fs.element2 || null, hp: fmax, max: fmax, lvl: flvl, stage: opts.stage || TR && TR.stage, name: TR ? TR.name : ('Jealous ' + (fs.name || cap(fs.element))), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
+    var foe = { key: fk, el: fs.element, el2: fs.element2 || null, hp: fmax, max: fmax, lvl: flvl, stage: opts.stage || TR && TR.stage, name: TEAM ? (fs.name || TR.name) : TR ? TR.name : ('Jealous ' + (fs.name || cap(fs.element))), cd: {}, fx: { dx: 0, dy: 0, hit: 0, alpha: 1, lift: 0 } };
     // the wand remembers every hontori you meet
     if (!TR) { GS.seen = GS.seen || []; if (GS.seen.indexOf(fk) < 0) GS.seen.push(fk); }
     var MOV = movesOf(lead), FMOV = H.moves.MOVES[foe.el] || H.moves.MOVES.fire;
@@ -835,7 +838,9 @@
     var swBtn = mk('button', 'hb-btn hb-ic', bar, pxIc('swap', ICON.swap) + '<span class="tl">Switch</span>'), escBtn = mk('button', 'hb-btn hb-ic hb-esc', bar, pxIc('run', ICON.esc) + '<span class="tl">Escape</span><span class="m"><b></b><b></b><b></b></span>');
     swBtn.setAttribute('aria-label', 'Switch'); escBtn.setAttribute('aria-label', 'Escape');
     var strip = mk('div', 'hb-strip', el); strip.hidden = true;
-    if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Rival') + (TR.school ? ' - Ring Duel' : '')); }
+    if (TR) { var trEl = mk('div', 'hb-tr', el), pc = mk('canvas', '', trEl); pc.width = 96; pc.height = 96; try { pc.getContext('2d').drawImage(H.chars.portrait(TR.key || 'kid'), 0, 0); } catch (e) {} mk('span', '', trEl, (TR.name || 'Rival') + (TR.school ? ' - Ring Duel' : ''));
+      // how many of the trainer's hontori are still standing
+      if (TEAM) { var tpEl = mk('span', 'hb-tp', trEl); tpEl.style.cssText = 'margin-left:6px;letter-spacing:2px;color:#ffd98a'; var paintTeam = function () { tpEl.innerHTML = TEAM.map(function (_, i) { return '<b style="display:inline-block;width:7px;height:7px;border-radius:50%;margin:0 1px;vertical-align:middle;background:' + (i < tIdx ? 'rgba(255,255,255,.22)' : '#ffd98a') + '"></b>'; }).join(''); }; paintTeam(); } }
     // great schools: a themed frame, the trial's rule always visible, and a title card before the duel
     // duels have their own steady tune; the world music comes back after
     try { H.audio && H.audio.battle && H.audio.battle(TR ? 'duel' : 'wild'); } catch (e) {}   // battles have their own music
@@ -1021,6 +1026,8 @@
     function float(x, y, t, c, big) { floats.push({ x: x, y: y, t: t, c: c || '#fff', l: 1, big: big }); }
 
     var T = 0, lastMs = 0, live = true, drawing = false, ink = Ink(1);
+    /* tells the world loop it is covered, so it can idle */
+    H.battleLive = true;
     function drawFighter(f, p, opts2) {
       var x = Math.round(p.x + f.fx.dx), y = Math.round(p.y + f.fx.dy + f.fx.lift), senv = { t: T, time: env.time, weather: env.weather, wind: 0.3, indoor: biome === 'indoor' };
       var o = Object.assign({ scale: p.sc, stage: f.stage, sit: !!f.asleep || f.hp <= 0 }, opts2);
@@ -1044,6 +1051,8 @@
     }
     function frame(ms) {
       if (!live) return;
+      /* frame cap: 30 a second is enough for the arena; the full rate is kept only while a sigil is being drawn */
+      if (!drawing && lastMs && ms - lastMs < 31) { requestAnimationFrame(frame); return; }
       var dt = Math.min(0.05, lastMs ? (ms - lastMs) / 1000 : 0.016); lastMs = ms; T = ms / 1000;
       if (Math.round(el.clientWidth * dpr) !== cv.width || Math.round(el.clientHeight * dpr) !== cv.height) size();
       g.setTransform(dpr * L, 0, 0, dpr * L, 0, 0); g.imageSmoothingEnabled = false;
@@ -1122,23 +1131,50 @@
       var tot = 0, k; for (k in w) tot += w[k]; var r = Math.random() * tot;
       for (k in w) { r -= w[k]; if (r <= 0) return k; } return 'strike';
     }
-    // The owner sweeps the binding away with an open hand.
+    // The owner raises an open palm in front of their hontori: a pixel hand, a golden ward ring, and the sigil breaks apart.
+    var handUrl = null;
+    function handArt() {
+      if (handUrl) return handUrl;
+      var W0 = 15, H0 = 19, cell = {}, i, x, y;
+      function put(x, y, c) { cell[x + ',' + y] = c; }
+      [[2, 3], [5, 1], [8, 2], [11, 4]].forEach(function (f) { for (y = f[1]; y < 10; y++) { put(f[0], y, 'o'); put(f[0] + 1, y, y === f[1] ? 'o' : 's'); } });
+      for (y = 9; y < 16; y++) for (x = 2; x <= 12; x++) put(x, y, y >= 14 || x === 12 ? 's' : 'o');
+      [[0, 9], [1, 9], [0, 10], [1, 10], [1, 11], [1, 12], [1, 13]].forEach(function (q) { put(q[0] + 0, q[1], 'o'); });
+      put(5, 11, 'h'); put(6, 11, 'h'); put(5, 12, 'h');                        // a soft highlight on the palm
+      for (y = 16; y < 19; y++) for (x = 2; x <= 12; x++) put(x, y, y === 16 ? 't' : 'c');  // sleeve with a gold trim
+      var cv0 = document.createElement('canvas'), S0 = 5; cv0.width = (W0 + 2) * S0; cv0.height = (H0 + 1) * S0; var g0 = cv0.getContext('2d');
+      var C = { o: '#f2c9a0', s: '#d89e74', h: '#ffe4c8', c: '#5a4a9a', t: '#e0c060' };
+      for (y = -1; y <= H0; y++) for (x = -1; x <= W0; x++) {
+        var k = cell[x + ',' + y], px = (x + 1) * S0, py = y * S0;
+        if (k) { g0.fillStyle = C[k]; g0.fillRect(px, py, S0, S0); continue; }
+        if (cell[(x - 1) + ',' + y] || cell[(x + 1) + ',' + y] || cell[x + ',' + (y - 1)] || cell[x + ',' + (y + 1)]) { g0.fillStyle = '#3a2418'; g0.fillRect(px, py, S0, S0); }
+      }
+      return (handUrl = cv0.toDataURL());
+    }
     function repelHand() {
-      var hd = mk('div', '', el);
-      hd.style.cssText = 'position:absolute;right:-40%;top:30%;width:42%;pointer-events:none;transition:transform .45s cubic-bezier(.2,.9,.3,1),opacity .3s;z-index:6';
-      hd.innerHTML = '<svg viewBox="0 0 100 110" style="width:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))"><g fill="#f2c9a0" stroke="#5a3a24" stroke-width="3" stroke-linejoin="round">' +
-        '<rect x="18" y="22" width="13" height="44" rx="6.5"/><rect x="33" y="10" width="13" height="56" rx="6.5"/><rect x="48" y="8" width="13" height="58" rx="6.5"/><rect x="63" y="16" width="13" height="50" rx="6.5"/>' +
-        '<path d="M14 58 Q14 100 50 104 Q86 100 84 58 Z"/><rect x="78" y="48" width="12" height="34" rx="6" transform="rotate(-35 84 64)"/></g></svg>';
-      requestAnimationFrame(function () { hd.style.transform = 'translateX(-150%) rotate(-12deg)'; });
-      sfx('bump'); shakeT = Math.max(shakeT, 0.4);
-      for (var i = 0; i < 18; i++) parts.push({ x: POS.foe.x - 10 + Math.random() * 20, y: POS.foe.y - 10 + Math.random() * 20, vx: -1.5 - Math.random() * 2, vy: (Math.random() - .5) * 1.5, l: 1, d: 0.03, c: '#ffd98a', s: 1.5 });
-      say((TR && TR.name ? TR.name : 'Owner') + ': Hands off. This one is mine.');
-      setTimeout(function () { hd.style.opacity = '0'; }, 700); setTimeout(function () { hd.remove(); }, 1100);
+      var fx0 = POS.foe.x * L, fy0 = POS.foe.y * L, hw = Math.max(70, Math.min(120, el.clientWidth * 0.24));
+      // the ward ring
+      var ring = mk('div', '', el);
+      ring.style.cssText = 'position:absolute;left:' + (fx0 - hw * 0.8) + 'px;top:' + (fy0 - hw * 0.8) + 'px;width:' + hw * 1.6 + 'px;height:' + hw * 1.6 + 'px;border-radius:50%;border:3px solid #ffd98a;box-shadow:0 0 18px #ffd98a,inset 0 0 18px rgba(255,217,138,.6);pointer-events:none;z-index:6;transform:scale(.3);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1),opacity .35s';
+      // the hand rises from below, palm out
+      var hd = mk('img', '', el); hd.alt = ''; hd.src = handArt();
+      hd.style.cssText = 'position:absolute;left:' + (fx0 - hw / 2 - hw * 0.15) + 'px;top:' + (fy0 - hw * 0.6) + 'px;width:' + hw + 'px;image-rendering:pixelated;pointer-events:none;z-index:7;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35));transform:translateY(60%) scale(.7);opacity:0;transition:transform .35s cubic-bezier(.2,1.4,.4,1),opacity .2s';
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        ring.style.transform = 'scale(1)'; ring.style.opacity = '1';
+        hd.style.transform = 'translateY(0) scale(1)'; hd.style.opacity = '1';
+      }); });
+      setTimeout(function () { hd.style.transition = 'transform .12s'; hd.style.transform = 'translateX(-6%) scale(1.06)'; sfx('bump'); shakeT = Math.max(shakeT, 0.3);
+        for (var i = 0; i < 22; i++) { var an = Math.random() * Math.PI * 2; parts.push({ x: POS.foe.x + Math.cos(an) * 18, y: POS.foe.y + Math.sin(an) * 18, vx: Math.cos(an) * (1 + Math.random() * 2), vy: Math.sin(an) * (1 + Math.random() * 2), l: 1, d: 0.03, c: i % 3 ? '#ffd98a' : '#ffffff', s: 1.5 }); }
+      }, 380);
+      setTimeout(function () { hd.style.transition = 'transform .2s'; hd.style.transform = 'translateX(0) scale(1)'; }, 520);
+      say((TR && TR.name ? TR.name : 'Owner') + ': Not this one. It already has a friend.');
+      setTimeout(function () { hd.style.transition = 'opacity .35s, transform .35s'; hd.style.opacity = '0'; hd.style.transform = 'translateY(30%) scale(.9)'; ring.style.opacity = '0'; ring.style.transform = 'scale(1.3)'; }, 1300);
+      setTimeout(function () { hd.remove(); ring.remove(); }, 1750);
     }
     function canCast(k) {
       var S = SPELLS[k];
-      if (k === 'revive') return me.hp <= 0 ? (matFor() ? true : 'You need ' + matName(matKey()) + ' for the Phoenix Star.') : 'Your hontori does not need it.';
-      if (me.hp <= 0) return 'It fainted. Only the Phoenix Star can help.';
+      if (k === 'revive') return me.hp <= 0 ? (matFor() ? true : 'You need ' + matName(matKey()) + ' for the Dawn Star.') : 'Your hontori does not need it.';
+      if (me.hp <= 0) return 'It fainted. Only the Dawn Star can help.';
       if (k === 'bind') { if (TR || opts.noCapture) return 'A practice duel. No binding.'; if (foe.hp / foe.max > 0.35) return 'Weaken it first.'; }
       if (k === 'mend' && me.hp >= me.max && !me.asleep) return 'It is already well.';
       return S ? true : 'Unknown spell.';
@@ -1148,7 +1184,7 @@
     function matFor() { var id = matKey(); return (GS.items || []).filter(function (i) { return i.id === id && (i.n == null || i.n > 0); })[0]; }
     function hintLine() {
       // first-time teaching is done by the fox guide; no repeated tip lines here
-      if (me.hp <= 0) return can('revive') ? 'It fainted. Draw the Phoenix Star.' : 'It fainted.';
+      if (me.hp <= 0) return can('revive') ? 'It fainted. Draw the Dawn Star.' : 'It fainted.';
       if (me.asleep) return 'It is asleep. Cast a spell, then tap a move to wait.';
       if (!TR && can('bind') && foe.hp / foe.max <= 0.35 && mana >= 2 && !spellUsed) return (GS.flags && GS.flags.boundOnce) ? 'It is weak. Draw a spiral to bind it.' : 'It is weak. Draw the spiral to bind it, and it can travel with you.';
       if (!TR && known.indexOf('bind') < 0 && foe.hp / foe.max <= 0.35) return 'It is weak. Learn the Binding Spiral at the Academy to catch it.';
@@ -1261,7 +1297,7 @@
     async function useMove(i) {
       if (busy || done) return;
       var m = MOV[i];
-      if (me.hp <= 0) { say(canCast('revive') === true ? 'It fainted. Draw the Phoenix Star.' : 'It fainted.'); return; }
+      if (me.hp <= 0) { say(canCast('revive') === true ? 'It fainted. Draw the Dawn Star.' : 'It fainted.'); return; }
       if (me.cd[m.id] > 0) { say(m.name + ' needs rest.'); return; }
       if (me.sta < SCOST(m)) { HL('stamina', 'Stamina', 'Moves use stamina. Only a real rest fills it again: a bed, ramen, or the teddy outdoors.', 'heart', meCard); say(tiredAll() ? 'Too tired. Catch your breath, switch, or step away.' : 'Not enough stamina for ' + m.name + '.'); return; }
       runRound(quickFoe() ? [foeAct, function () { return meAct(m); }] : [function () { return meAct(m); }, foeAct]);
@@ -1339,11 +1375,13 @@
     async function bind(sc, gm) {
       var P = POS.foe, acc = sc ? sc.acc : 0.5;
       var chance = 0.05 + 0.45 * (1 - foe.hp / foe.max) + (foe.asleep ? 0.18 : 0) + (foe.stun ? 0.12 : 0) + 0.15 * acc - 0.07 * (foe.lvl - me.lvl) - (matrix(foe.el, me.el, me.el2) > 1 ? 0.08 : 0) + (matrix(me.el, foe.el, foe.el2) > 1 ? 0.05 : 0);
-      chance = Math.max(0.05, Math.min(0.85, chance * wandMul * (gm || 1) + (perks.captureBonus || 0) + calm));
+      var lucky = (GS.items || []).some(function (i) { return i.id === 'charm'; }) ? 0.05 : 0;  // the Backpack Charm brings a little luck
+      chance = Math.max(0.05, Math.min(0.85, chance * wandMul * (gm || 1) + (perks.captureBonus || 0) + calm + lucky));
       // a spiral of light wraps the foe, then three shakes
       fxs.push({ t: 0, ms: 2000, draw: function (g2, k) { var pts = []; for (var i = 0; i <= 40; i++) { var t = i / 40, a2 = t * 12 + k * 8, r = 22 * (1 - t * 0.8) * (1 - k * 0.3); pts.push([P.x + Math.cos(a2) * r, P.y + Math.sin(a2) * r * 0.8]); } inkStroke(g2, pts, 0.8, '#ffd98a', Math.sin(k * Math.PI)); } });
       for (var s = 0; s < 3; s++) { await wait(420); foe.fx.dx = s % 2 ? 3 : -3; foe.fx.alpha = 0.5; sfx('bump'); await wait(140); foe.fx.dx = 0; foe.fx.alpha = 1; }
-      if (Math.random() < chance) {
+      // story binds (the shy Brookit) never fail three times: the third spiral always holds
+      if (Math.random() < chance || (opts.sureBind && binds >= 2)) {
         // it becomes a streak of light that flies into the wand
         await new Promise(function (res) { fxs.push({ t: 0, ms: 600, step: function (k) { foe.fx.alpha = 1 - k; foe.fx.lift = -k * 6; }, draw: function (g2, k) { var x = P.x + (POS.me.x - 30 - P.x) * k, y = P.y + (Hh - P.y) * k * k; H.moves.blob(g2, x, y, 10, 'rgba(255,230,160,1)', 1 - k * 0.5); }, done: res }); });
         burst(POS.me.x - 30, uiTop, '#ffd98a', 30, 1.5);
@@ -1427,7 +1465,24 @@
     }
 
     // ---------------- endings
+    // the trainer's next hontori steps in
+    async function nextFoe() {
+      busy = true; renderUI(); say('');
+      for (var i = 0; i < 4; i++) { burst(POS.foe.x, POS.foe.y, '#fff2a8', 10, 1); await wait(100); }
+      foe.fx.alpha = 0; await wait(300);
+      tIdx++; var t = TEAM[tIdx], s2 = specOf(t.spirit);
+      foe.key = t.spirit; foe.el = s2.element; foe.el2 = s2.element2 || null; foe.lvl = t.level || foe.lvl; foe.stage = t.stage;
+      foe.max = 15 + foe.lvl * 3; foe.hp = foe.max; foe.cd = {}; foe.name = s2.name || foe.name;
+      ['mist', 'stun', 'asleep', 'charged', 'shield', 'guard', 'glow', 'boost', 'veil', 'harden', 'tail', 'root'].forEach(function (k) { foe[k] = 0; });
+      FMOV = H.moves.MOVES[foe.el] || H.moves.MOVES.fire; lastIntent = ''; intent = 'strike';
+      if (paintTeam) paintTeam();
+      say((TR.name || 'Rival') + ' calls ' + (s2.name || 'a hontori') + '.'); sfx('spell');
+      foe.fx.alpha = 1; burst(POS.foe.x, POS.foe.y, COL[foe.el] || '#ffffff', 14, 1);
+      renderUI(); await wait(1100);
+      beginTurn();
+    }
     async function win() {
+      if (TEAM && tIdx < TEAM.length - 1) return nextFoe();
       done = true; busy = true; renderUI(); sfx('wand'); say('');
       for (var i = 0; i < 6; i++) { burst(POS.foe.x, POS.foe.y, '#fff2a8', 12, 1); await wait(110); }
       foe.fx.alpha = 0.6; result.won = true;
@@ -1512,15 +1567,15 @@
 
     return new Promise(function (resolve) {
       function close() {
-        if (ended) return; ended = true; live = false; if (H.ui) H.ui.helperAvoid = null; try { H.audio && H.audio.battle && H.audio.battle(null); } catch (e) {} el.classList.remove('on'); window.removeEventListener('resize', size); setTimeout(function () { el.remove(); }, 350);
+        if (ended) return; ended = true; live = false; H.battleLive = false; if (H.ui) H.ui.helperAvoid = null; try { H.audio && H.audio.battle && H.audio.battle(null); } catch (e) {} el.classList.remove('on'); window.removeEventListener('resize', size); setTimeout(function () { el.remove(); }, 350);
         // report who fought so EXP is shared; progress marks itself handled
         var P = H.progress;
         if (P && typeof P.onBattleEnd === 'function' && !opts.noProgress) {
-          var info = { foeKey: result.foeKey, foeLevel: result.foeLevel, trainer: !!result.trainer };
+          var info = { foeKey: result.foeKey, foeLevel: result.foeLevel, trainer: !!result.trainer, trainerName: typeof result.trainer === 'string' ? result.trainer : null };
           Promise.resolve().then(function () { return P.onBattleEnd(result, info); }).catch(function (e) { console.warn(e); }).then(function () { resolve(result); });
         } else resolve(result);
       }
-      closeNow = close;
+      closeNow = close; el._repel = repelHand; // used by tests
       endBtn.addEventListener('click', close);
     });
   }

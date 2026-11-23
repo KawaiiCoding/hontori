@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Hontori</title>
+<meta name="theme-color" content="#07081a">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hontori">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<style>
+  html,body{margin:0;height:100%;background:#07080d;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+  /* mobile first: a phone fills the screen; on a wide desktop window the game sits in a centred phone-shaped frame */
+  #root{position:fixed;inset:0;margin:auto;width:100vw;height:100dvh;overflow:hidden}
+  @media (min-aspect-ratio: 3/4) and (pointer:fine){
+    #root{height:min(100dvh,920px);width:calc(min(100dvh,920px)*9/16);border-radius:18px;box-shadow:0 0 0 2px #23263a,0 20px 60px #000}
+  }
+  /* controls are always visible (web and phone); the dialog sits clear of them */
+  #root .hui-touch{display:block!important}
+  /* tap-to-move mode hides the joystick and the A and B buttons */
+  #root .hui.tapmode .hui-touch{display:none!important}
+  #root:not(.land) .hui.tapmode .hui-dlg{bottom:calc(env(safe-area-inset-bottom,0px) + 24px)!important}
+  #root:not(.land) .hui-dlg{left:8px!important;right:8px!important;width:auto!important;transform:none!important;bottom:calc(env(safe-area-inset-bottom,0px) + 206px)!important}
+  #root.land .hui-dlg{left:210px!important;right:210px!important;width:auto!important;transform:none!important;bottom:10px!important}
+  *{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+  #game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+  #help{position:fixed;bottom:4px;right:8px;color:#8890a8;font:11px system-ui;pointer-events:none;opacity:.7}
+  @media (pointer:coarse){#help{display:none}}
+</style><style id="hui-font">@font-face{font-family:"Nunito";font-style:normal;font-weight:600 900;font-display:swap;src:url(assets/fonts/nunito-latin.woff2) format("woff2")}</style>
+<link rel="preload" as="script" href="world.cb8f53ef8c.js">
+</head><body>
+<div id="root"><canvas id="game" width="384" height="216"></canvas></div>
+<script>!function(){var e=0;document.addEventListener("touchend",function(t){var n=Date.now();n-e<350&&t.preventDefault(),e=n},{passive:!1}),document.addEventListener("dblclick",function(e){e.preventDefault()},{passive:!1}),["gesturestart","gesturechange","gestureend"].forEach(function(e){document.addEventListener(e,function(e){e.preventDefault()},{passive:!1})}),document.addEventListener("touchmove",function(e){e.touches&&e.touches.length>1&&e.preventDefault()},{passive:!1})}();</script>
+<script src="app.5193c239fa.js"></script>
+<script>H.loader.start({world:["world.cb8f53ef8c.js"],late:["late.e368c61bef.js"],names:{"world.cb8f53ef8c.js":["fx","tiles_outdoor","tiles_indoor","props_outdoor","outdoor_plus","buildings","furniture","items","item_icons","money","fishing","characters","spirits","interior_plus","hall_props","walltops","maps","village","whisperwood","puzzles","mossgrove","encounters","interiors_props","interiors","story","ui","audio","interact","interiors_interact","closeup","quests","chapter1","chapter2","academy","progress","menu","moves","battle","prologue","engine"],"late.e368c61bef.js":["naming","spellbook","ride","unlock","mapview"]}});</script>
+<script>!function(){try{if(!("serviceWorker"in navigator)||!/^https?:$/.test(location.protocol))return;var t=location.search;if(/[?&]nosw=1/.test(t))return navigator.serviceWorker.getRegistrations().then(function(t){t.forEach(function(t){t.unregister()})}).catch(function(){}),void(window.caches&&caches.keys().then(function(t){t.forEach(function(t){/^hontori-/.test(t)&&caches.delete(t)})}).catch(function(){}));if(/[?&]debug=1/.test(t))return;var e=function(){navigator.serviceWorker.register("sw.js").catch(function(){})};"complete"===document.readyState?e():window.addEventListener("load",e)}catch(t){}}();</script>
+</body></html>

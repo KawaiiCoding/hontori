@@ -30,6 +30,21 @@ window.H = window.H || {};
     river_reed: function (g) { for (var y = 2; y < 15; y++) { P(g, 7, y, OL, 3, 1); P(g, 8, y, '#6a9a3a', 1, 1); } P(g, 6, 2, OL, 5, 5); P(g, 7, 3, '#7a4a28', 3, 3); P(g, 8, 3, '#a8703c', 1, 2); P(g, 10, 8, OL, 3, 2); P(g, 11, 8, '#8ac050', 1, 1); },
     acorn: function (g) { P(g, 4, 3, OL, 8, 4); P(g, 5, 4, '#8a5a30', 6, 2); P(g, 7, 2, OL, 2, 1); P(g, 4, 6, OL, 8, 7); P(g, 5, 7, '#c88a40', 6, 5); P(g, 6, 7, '#e8b060', 2, 3); P(g, 7, 12, OL, 2, 2); },
     wild_herb: function (g) { P(g, 7, 8, OL, 2, 7); P(g, 7, 9, '#4a8a34', 1, 5); [[3, 4], [9, 3], [5, 1]].forEach(function (l) { P(g, l[0], l[1], OL, 5, 5); P(g, l[0] + 1, l[1] + 1, '#5ab040', 3, 3); P(g, l[0] + 1, l[1] + 1, '#9ae070', 1, 1); }); },
+    blue_backpack: function (g) {
+      // a blue backpack with a flap, a front pocket and a strap loop on top
+      P(g, 6, 1, OL, 4, 1); P(g, 5, 2, OL, 1, 2); P(g, 10, 2, OL, 1, 2);
+      P(g, 3, 3, OL, 10, 12); P(g, 2, 5, OL, 1, 9); P(g, 13, 5, OL, 1, 9);
+      P(g, 4, 4, '#3a7ad8', 8, 10); P(g, 3, 6, '#3a7ad8', 10, 7); P(g, 4, 4, '#6aa8f0', 3, 3);
+      P(g, 4, 7, OL, 8, 1); P(g, 7, 7, '#e0c060', 2, 2);
+      P(g, 5, 10, OL, 6, 4); P(g, 6, 11, '#2a5aa8', 4, 2); P(g, 6, 11, '#4a8ae0', 4, 1);
+    },
+    saddle: function (g) {
+      // a leather saddle with a red blanket, a pommel and a stirrup
+      P(g, 2, 8, OL, 12, 5); P(g, 3, 9, '#b04a3a', 10, 3); P(g, 3, 11, '#e0c060', 10, 1);
+      P(g, 3, 4, OL, 10, 5); P(g, 2, 5, OL, 2, 3); P(g, 12, 3, OL, 2, 5);
+      P(g, 4, 5, '#8a5a30', 8, 3); P(g, 3, 6, '#8a5a30', 1, 1); P(g, 12, 4, '#8a5a30', 1, 3); P(g, 5, 5, '#b07a44', 5, 1);
+      P(g, 7, 12, OL, 1, 3); P(g, 5, 14, OL, 5, 2); P(g, 6, 14, '#c8c8d2', 3, 1);
+    },
     pouch: function (g) {
       // a leather drawstring pouch with a coin peeking out
       P(g, 5, 1, OL, 6, 3); P(g, 6, 2, '#c8925a', 4, 1); P(g, 4, 3, OL, 8, 1); P(g, 5, 4, OL, 6, 1);

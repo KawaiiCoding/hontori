@@ -36,6 +36,8 @@
   }
   addEventListener('orientationchange', () => setTimeout(resize, 250));
   const particles = H.fx && H.fx.createParticles ? H.fx.createParticles() : null;
+  /* riding: with a saddle and a hontori at its second evolution, the kid can ride outdoors */
+  let riding = false, rideHop = 0;
   const emit = (k, x, y, n) => particles && particles.emit(k, x, y, n);
   const sfx = (n) => { try { H.audio && H.audio.sfx(n); } catch (e) {} };
   try { H.audio && H.audio.init(); } catch (e) { console.warn(e); }
@@ -57,6 +59,7 @@
     mapName = name; map = H.maps[name];
     tileset = map.tileset === 'indoor' ? H.tilesIndoor : H.tilesOutdoor;
     env.indoor = map.tileset === 'indoor';
+    if (env.indoor) riding = false;
     // time and weather carry over between areas; a map's env only sets them when the game starts
     if (map.env && !envStarted) { env.time = map.env.time; env.weather = map.env.weather || 'clear'; }
     envStarted = true;
@@ -86,6 +89,7 @@
   function schedOf(n) { return (n.src && n.src.sched) || n.sched; }
   function slotOf(n) { const h = env.time; return (schedOf(n) || []).findIndex(s => s.from <= s.to ? h >= s.from && h < s.to : h >= s.from || h < s.to); }
   function applySched(force) {
+    { const fl = (H.game && H.game.state && H.game.state.flags) || {}; npcs.forEach(n => { if (n.goneIf && fl[n.goneIf]) n.away = true; }); }   /* someone who moved on in the story is no longer here */
     npcs.forEach(n => { const sc = schedOf(n); if (!sc || n.hold) return; /* hold: a scene moved this person, leave them be */ const i = slotOf(n); if (i < 0 || (i === n.slot && sc === n.sc0)) return;
       const s = sc[i], near = Math.abs(player.tx - n.x) + Math.abs(player.ty - n.y) < 7;
       if (!force && near && !n.away && !s.away) return;
@@ -328,6 +332,7 @@
   // The companion is alive: it hops along the kid's path, dashes to catch up, and plays around when the kid rests.
   function updateSpirit(dt) {
     const sp = spirit;
+    if (riding) { sp.x = sp.gx = player.x; sp.gy = player.y; sp.y = player.y - 10; sp.moving = false; sp.mode = 'follow'; trail.length = 0; return; }
     if (sp.gx == null) { sp.gx = sp.x; sp.gy = sp.y + 10; sp.h = 0; sp.ph = 0; sp.idle = 0; sp.mode = 'follow'; sp.timer = 1; sp.face = 1; sp.ang = 0; }
     if (sp.mode === 'drop') {
       sp.vh = (sp.vh || 0) - 420 * dt; sp.h += sp.vh * dt;
@@ -452,7 +457,7 @@
     }
     if (player.moving) {
       const run = keys.shift || (tapPath && tapRun) || ((H.ui && H.ui.input && (H.ui.input.run || H.ui.input.back)) ? true : false);
-      player.prog += dt / ((run ? 0.14 : 0.24) * (H.speedMul ? H.speedMul(env, mapName) : 1));
+      player.prog += dt / ((run ? 0.14 : 0.24) * (riding ? 0.62 : 1) * (H.speedMul ? H.speedMul(env, mapName) : 1));
       if (player.prog >= 1) {
         const left = player.prog - 1; player.moving = false; player.steps++; sfx('step');
         player.x = player.tx * T + 8; player.y = player.ty * T + 15;
@@ -507,19 +512,28 @@
     }
     const lights = [];
     const ents = [];
+    /* only what the camera can see is drawn, plus a margin so tall trees, roofs and lamp glow at the edge never pop in */
+    const CM = 6 * T, vx0 = camX - CM, vx1 = camX + VW + CM, vy0 = camY - CM, vy1 = camY + VH + CM;
+    const seen = (x, y, w, h) => x + w >= vx0 && x <= vx1 && y + h >= vy0 && y <= vy1;
     const pushLight = (l, ox, oy) => l && lights.push({ x: ox + (l.dx || 0), y: oy + (l.dy || 0), r: l.r || 40, color: l.color || '#ffcf7a', flicker: l.flicker ?? true });
-    (map.props || []).forEach(p => { const i = propInfo(p.type), px = p.x * T, py = p.y * T; pushLight(i.light, px, py);
+    (map.props || []).forEach(p => { const i = propInfo(p.type), px = p.x * T, py = p.y * T;
+      if (!seen(px, py, i.fw * T, i.fh * T)) return;
+      pushLight(i.light, px, py);
       if (i.decor) propDraw(p.type, px, py);
       else ents.push({ y: py + i.fh * T, d: () => { if (!env.indoor) H.fx.shadow(ctx, px + i.fw * 8, py + i.fh * T - 2, i.fw * 7, 3, env); propDraw(p.type, px, py); } }); });
     (map.buildings || []).forEach(b => { const i = H.buildings.info[b.type], px = b.x * T, py = b.y * T;
+      if (!seen(px, py, i.fw * T, i.fh * T)) return;
       (i.lights || []).forEach(l => pushLight(l, px, py));
       ents.push({ y: py + i.fh * T, d: () => { H.fx.shadow(ctx, px + i.fw * 8, py + i.fh * T - 1, i.fw * 8 + 4, 6, env); H.buildings.draw(ctx, b.type, px, py, env); } }); });
-    npcs.forEach(n => !n.away && ents.push({ y: n.py, d: () => { H.fx.shadow(ctx, n.px, n.py, 6, 2, env); H.chars.draw(ctx, n.key, Math.round(n.px), Math.round(n.py), n.dir || 0, n.frame || 0, env, { npc: true, seed: n.seed, idle: n.idle, talking: n.talking }); } }));
-    ents.push({ y: player.y, d: () => { H.fx.shadow(ctx, player.x, player.y, 6, 2, env); H.chars.draw(ctx, 'kid', Math.round(player.x), Math.round(player.y), player.dir, player.frame, env); } });
+    npcs.forEach(n => !n.away && seen(n.px - T, n.py - 2 * T, 2 * T, 2 * T) && ents.push({ y: n.py, d: () => { H.fx.shadow(ctx, n.px, n.py, 6, 2, env); H.chars.draw(ctx, n.key, Math.round(n.px), Math.round(n.py), n.dir || 0, n.frame || 0, env, { npc: true, seed: n.seed, idle: n.idle, talking: n.talking }); } }));
+    if (riding && spirit) ents.push({ y: player.y, d: drawRide });
+    else ents.push({ y: player.y, d: () => { H.fx.shadow(ctx, player.x, player.y, 6, 2, env); H.chars.draw(ctx, 'kid', Math.round(player.x), Math.round(player.y), player.dir, player.frame, env); } });
     if (spirit) { lights.push({ x: spirit.x, y: spirit.y, r: 28, color: '#b8642a', flicker: true, soft: true });
-      ents.push({ y: (spirit.gy ?? spirit.y + 10), d: () => { const gy = spirit.gy ?? spirit.y + 10, h = spirit.h || 0;
+      if (!riding) ents.push({ y: (spirit.gy ?? spirit.y + 10), d: () => { const gy = spirit.gy ?? spirit.y + 10, h = spirit.h || 0;
         H.fx.shadow(ctx, spirit.x, gy, Math.max(3, 5 - h * 0.25), 2, env);
-        H.spirits.draw(ctx, spirit.key, Math.round(spirit.x), Math.round(spirit.y), env, { scale: 0.75, dir: spirit.dir || 0, noShadow: true, moving: !!spirit.moving, sit: !!spirit.sit }); } }); }
+        const so = { scale: 0.75, dir: spirit.dir || 0, noShadow: true, moving: !!spirit.moving, sit: !!spirit.sit };
+        H.spirits.draw(ctx, spirit.key, Math.round(spirit.x), Math.round(spirit.y), env, so);
+        wearOn(spirit.key, Math.round(spirit.x), Math.round(spirit.y), so); } }); }
     if (trialSpirit) { trialSpirit.t += 0.016; const ts = trialSpirit;
       lights.push({ x: ts.x, y: ts.y, r: 70, color: '#ffe8b0', flicker: true });
       ents.push({ y: ts.y + 20, d: () => { H.fx.shadow(ctx, ts.x, ts.y + 18, 12, 4, env); H.spirits.draw(ctx, ts.key, Math.round(ts.x), Math.round(ts.y + Math.sin(env.t * 2) * 2), env, { stage: 5, dir: 0, alpha: Math.min(1, ts.t * 1.5) }); } }); }
@@ -542,14 +556,50 @@
     if (flash > 0) { ctx.fillStyle = `rgba(255,240,200,${flash * 0.6})`; ctx.fillRect(0, 0, VW, VH); }
   }
 
+  // ---------- riding
+  // things the lead hontori wears (capsule prizes) are drawn by their own module
+  function wearOn(key, x, y, o) { try { if (H.capsules && H.capsules.drawOn) H.capsules.drawOn(ctx, key, x, y, env, o); } catch (e) {} }
+  function leadOf() { return (H.game.state.party || [])[0] || null; }
+  function canRide() { const m = leadOf(); return !!(m && (m.stage || 1) >= 3 && (H.game.state.items || []).some(i => i.id === 'saddle')); }
+  function setRide(on) {
+    on = !!on;
+    if (on === riding) return riding;
+    if (on && (!canRide() || env.indoor || !spirit || (H.ui && H.ui.isOpen && H.ui.isOpen()))) return riding;
+    riding = on; rideHop = 1; sfx(on ? 'sparkle' : 'step'); emit('sparkle', player.x, player.y - 8, 10);
+    if (!on && spirit) { spirit.x = spirit.gx = player.x; spirit.gy = player.y; spirit.y = player.y - 10; }
+    return riding;
+  }
+  // the kid sits on the hontori: the hontori is drawn larger, then the saddle blanket, then the kid from the waist up
+  function drawRide() {
+    const m = leadOf(), px = Math.round(player.x), py = Math.round(player.y);
+    const bob = player.moving ? Math.round(Math.sin(env.t * 16)) : 0, hop = rideHop > 0 ? Math.round(Math.sin((1 - rideHop) * Math.PI) * 7) : 0;
+    if (rideHop > 0) rideHop = Math.max(0, rideHop - 0.06);
+    H.fx.shadow(ctx, px, py, 9, 3, env);
+    const so = { scale: 1.05, dir: player.dir, noShadow: true, moving: player.moving, stage: m ? Math.min(3, m.stage || 1) : 1 };
+    H.spirits.draw(ctx, spirit.key, px, py - 9, env, so);
+    wearOn(spirit.key, px, py - 9, so);
+    const seatY = py - 13 + bob - hop, side = player.dir >= 2;
+    let col = '#b04a3a'; try { col = (H.capsules && H.capsules.blanketColor && H.capsules.blanketColor()) || col; } catch (e) {}
+    ctx.fillStyle = '#2a1c2e'; ctx.fillRect(px - (side ? 5 : 6), seatY - 1, side ? 10 : 12, 5);
+    ctx.fillStyle = col; ctx.fillRect(px - (side ? 4 : 5), seatY, side ? 8 : 10, 3);
+    ctx.fillStyle = '#e0c060'; ctx.fillRect(px - (side ? 4 : 5), seatY + 2, side ? 8 : 10, 1);
+    ctx.save(); ctx.beginPath(); ctx.rect(px - 16, seatY - 34, 32, 36); ctx.clip();
+    H.chars.draw(ctx, 'kid', px, seatY + 8, player.dir, 0, env);
+    ctx.restore();
+  }
+
   // ---------- game state, saving (on this device)
-  const SAVE_KEY = 'hontori.save.v1';
+  // three journeys (save slots); journey 1 keeps the old key so older saves still load
+  const SLOT = (() => { try { const n = +localStorage.getItem('hontori.slot'); return n >= 1 && n <= 3 ? n : 1; } catch (e) { return 1; } })();
+  const SAVE_KEY = SLOT === 1 ? 'hontori.save.v1' : 'hontori.save.v1.s' + SLOT;
   const mkMember = (key) => H.progress ? H.progress.newMember(key) : ({ key, nick: null, level: 1, hp: 20, maxHp: 20 });
   H.game = {
     state: { items: [], party: [], intro: false },
     save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ map: mapName, tx: player.tx, ty: player.ty, dir: player.dir, time: env.time, weather: env.weather, state: H.game.state })); return true; } catch (e) { return false; } },
     read() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { return null; } },
     reset() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} location.href = location.pathname; },
+    ride(on) { return setRide(on === undefined ? !riding : on); }, riding() { return riding; }, canRide() { return canRide() && !env.indoor; },
+    slot: SLOT,
     partyChanged() { const lead = H.game.state.party[0]; if (lead) { if (!spirit) spirit = { key: lead.key, x: player.x + 12, y: player.y - 10 }; else if (spirit.key !== lead.key) { spirit.key = lead.key; emit('sparkle', spirit.x, spirit.y, 14); sfx('sparkle'); } } H.game.save(); },
     addHontori(key, level) { if (H.progress) return H.progress.place(H.progress.newMember(key, level)); const p = H.game.state.party; if (p.length >= 5) return false; p.push(mkMember(key)); H.game.partyChanged(); H.menu && H.menu.refresh(); return true; },
     addItem(id, name, icon) { const it = H.game.state.items.find(i => i.id === id); if (it) it.n = (it.n || 1) + 1; else H.game.state.items.push({ id, name, icon, n: 1 }); H.menu && H.menu.refresh(); },
@@ -580,8 +630,19 @@
   let last = performance.now();
   // one bad frame must never freeze the game: always schedule the next one
   let loopErr = 0;
+  /* frame governor: the world is drawn 30 times a second, far less while a full-screen panel or a battle covers it,
+     and not at all while the page is hidden. The next frame is always scheduled first, so nothing here can freeze the loop. */
+  let frameAt = 0;
+  function frameGap() {
+    if (document.hidden) return 1000;
+    if (H.battleLive) return 250;
+    if (H.menu && H.menu.isOpen && H.menu.isOpen()) return 120;
+    return 31;
+  }
   function loop(now) {
     requestAnimationFrame(loop);
+    if (now - frameAt < frameGap()) return;
+    frameAt = now;
     try { checkSize(); const dt = Math.min(0.05, (now - last) / 1000); last = now; if (!(env.wind >= 0)) env.wind = 0.1; update(dt); render(); }
     catch (e) { if (loopErr++ < 5) console.warn('frame error', e); }
   }
@@ -624,7 +685,7 @@
       H.game.addItem('wand', 'Spirit Wand', 'wand'); H.game.addItem('map', 'Map', 'map'); f['map:gift'] = true;
       if (H.story) { ['academy', 'pawprints', 'elder', 'woods'].forEach(q => { try { H.story.start(q, true); } catch (e) {} }); setTimeout(() => { try { H.story.start('leafring'); } catch (e) {} }, 300); }
     }
-    else (H.title ? H.title.ready : Promise.resolve()).then(() => setTimeout(runIntro, 500));
+    else (H.title ? H.title.ready : Promise.resolve()).then(() => (H.prologue && (H.title || Q.get('prologue')) ? H.prologue.play() : null)).then(() => setTimeout(runIntro, 500));   /* a new journey opens with the short picture story */
   }
   // test jump: ?debug=1&battle=frog starts a wild battle right away (to try weather and time in combat)
   if (DEBUG && Q.get('battle')) setTimeout(() => { started = true; startBattle(Q.get('battle'), { level: +(Q.get('lv') || 4) }); }, 1800);

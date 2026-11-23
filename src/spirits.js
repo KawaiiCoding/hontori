@@ -1,6 +1,7 @@
 window.H = window.H || {};
 // Spirits: authored in a 32x32 logical box, rasterised natively at any real scale k (renderScale * opts.scale), 4 directions + walk/sit poses,
 // so 1x, 1.5x (0.75 on the 2x canvas), 2x and the 3x portraits are all crisp. 16-frame idle with squash-and-stretch.
+// API: H.spirits = { list, draw(ctx, key, x, y, env, opts), portrait(key, stage), frames, stages, dual, habitats (where the third-wave kinds live) }
 (function () {
   var S = 32, NF = 16, cache = {}, pcache = {}, gcache = {};
   var list = [
@@ -30,6 +31,53 @@ window.H = window.H || {};
   list.forEach(function (s, i) { SEED[s.key] = hash(i * 3.7 + 1.3); });
 
   function mk(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+
+  /* ---------- sprite sheets (H.sheets, group 'hontori') ----------
+     The painters below stay the source of every picture and the fallback. A picture that is a pure
+     function of its key may also be shipped in a sheet; draw() then copies it from there.
+
+     KEYS (built once, kept next to the cached entry, never built per frame)
+       'spirits:<kind>|<k>|<blink>|<dir><mode>|<stage>|<f>'   one animation frame
+            kind   a key of H.spirits.list (the twelve two-element kinds have their own, recoloured, pictures)
+            k      raster scale: pixels per logical unit, a multiple of 0.25 (draw() uses
+                   max(0.5, round(renderScale * opts.scale * stageScale * 4) / 4); portraits use 3 and 2)
+            blink  0 | 1 (eyes closed; never 1 while moving)
+            dir    0 front | 1 back | 2 side, authored facing left
+            mode   idle | move | sit
+            stage  1..5
+            f      0..15, the frame of the 16-frame loop
+            The part before the last '|' is exactly the frame cache id used by frame().
+            Picture size: n x n with n = ceil((32 + 2 * margin) * k), margin 2 at stage 1 and 26 above.
+       'spirits:portrait|<kind>|<stage>'   the 96x96 portrait (backdrop and figure), copied whole
+
+     STAYS AT DRAW TIME (never baked): mirroring (dir 3 and opts.flip draw the left-facing picture under
+     scale(-1, 1)), opts.alpha, the hover offset, the ground shadow, the on-screen size (stage scale times
+     opts.scale) and the second-element particles of the dual kinds. Which frame, blink state and raster
+     scale are shown is chosen per draw; each of them is its own key.
+     STAYS PAINTED: the halo behind a hontori (glow(), one 64x64 canvas per kind, painted once). It is
+     very faint and always drawn through a pulsing alpha; an image file cannot hold such low alpha
+     values exactly, so a baked halo would not match the painted one. */
+  var MODEI = { idle: 0, move: 1, sit: 2 }, slots = {};
+  /* one slot per (kind, k, blink, dir, mode, stage): the 16 cached frames and their 16 sheet keys */
+  function slot(key, k, blink, dir, mode, st) {
+    var a = slots[key] || (slots[key] = []), b = a[k * 4] || (a[k * 4] = []), mi = MODEI[mode];
+    /* a mode outside the table (only a caller of frames() could pass one) keeps its own entry */
+    var i = mi === undefined ? dir + mode + '|' + st + '|' + (blink ? 1 : 0) : (((st - 1) * 3 + dir) * 3 + mi) * 2 + (blink ? 1 : 0), s = b[i];
+    if (!s) {
+      var id = key + '|' + k + '|' + (blink ? 1 : 0) + '|' + dir + mode + '|' + st;
+      s = b[i] = { arr: cache[id] || (cache[id] = []), keys: [] };
+      for (var f = 0; f < NF; f++) s.keys.push('spirits:' + id + '|' + f);
+    }
+    return s;
+  }
+  /* the pose asked for by the draw in progress: the paint functions handed to H.sheets.draw read it,
+     so no closure is made per draw */
+  var qKey = 'hontori', qK = 1, qBlink = false, qF = 0, qDir = 0, qMode = 'idle', qSt = 1;
+  function paintFrame() { return frame(qKey, qK, qBlink, qF, qDir, qMode, qSt); }
+  function paintNone() { return null; }
+  /* true while a portrait is being painted: the figure it is built from is part of the portrait, not a picture of its own */
+  var inPortrait = false;
+  function rasterK(sc) { return Math.max(0.5, Math.round((H.renderScale || 1) * sc * 4) / 4); }
   function hash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
 
   // Painter in logical coords. Zones (when warp is on): feet stay planted, the body stretches from its base,
@@ -1579,7 +1627,7 @@ window.H = window.H || {};
   // pose: dir 0 front | 1 back | 2 side (drawn facing left), mode 'idle' | 'move' | 'sit'
   function frame(key, k, blink, f, dir, mode, st) {
     dir = dir || 0; mode = mode || 'idle'; st = st > 1 && STG[key] ? Math.min(5, st | 0) : 1;
-    var id = key + '|' + k + '|' + (blink ? 1 : 0) + '|' + dir + mode + '|' + st, arr = cache[id] || (cache[id] = []);
+    var sl = slot(key, k, blink, dir, mode, st), arr = sl.arr;
     if (arr[f]) return arr[f];
     var M = st > 1 ? SM : M1, n = Math.ceil((S + 2 * M) * k), c = mk(n, n), fly = !!FLY[key], ph = f / NF * 6.2832;
     var sn = function (v) { return Math.round(v * k) / k; };
@@ -1615,6 +1663,7 @@ window.H = window.H || {};
     pc.warp = false; aura(pc, key, f);
     if (st > 1) STG[key](pc, f, st, 'fx');
     if (DUALK[key]) recolor(c, DUALK[key]);
+    if (!inPortrait && H.sheets && H.sheets.recording) H.sheets.rec('hontori', sl.keys[f], c);
     return (arr[f] = c);
   }
   function frames(key, dir, mode, stage) {
@@ -1643,7 +1692,7 @@ window.H = window.H || {};
     var t = (env && env.t) || 0, RS = H.renderScale || 1, sd = SEED[key];
     var sc0 = opts.scale || 1, a = opts.alpha == null ? 1 : opts.alpha;
     var st = Math.max(1, Math.min(5, opts.stage | 0 || 1)), sc = sc0 * SS[st - 1], B = S + 2 * (st > 1 ? SM : M1), yo = 12 * sc0 - 12 * sc;
-    var k = Math.max(0.5, Math.round(RS * sc * 4) / 4);
+    var k = rasterK(sc), SH = H.sheets;
     var dir = (opts.dir | 0) & 3, mode = opts.moving ? 'move' : opts.sit ? 'sit' : 'idle';
     var f = Math.floor((t + sd * 3) * (mode === 'move' ? 16 : 12)) % NF;
     var bt = (t + sd * 5) % (2.7 + sd * 2.1), blink = mode !== 'move' && (bt < 0.15 || (sd > 0.5 && bt > 0.32 && bt < 0.42));
@@ -1667,16 +1716,23 @@ window.H = window.H || {};
     ctx.globalAlpha = a;
     ctx.translate(x, Math.round(y + hov + yo));
     if (flip) ctx.scale(-1, 1);
-    ctx.drawImage(frame(key, k, blink, f, dir === 3 ? 2 : dir, mode, st), -B / 2 * sc, -B / 2 * sc, B * sc, B * sc);
-    if (DUALK[key]) aura2(ctx, key, t + sd * 4, sc);
+    /* the same picture, from a sheet when it is baked: same place, same size, inside the same alpha and mirror */
+    qKey = key; qK = k; qBlink = blink; qF = f; qDir = dir === 3 ? 2 : dir; qMode = mode; qSt = st;
+    if (SH) SH.draw(ctx, slot(key, k, blink, qDir, mode, STG[key] ? st : 1).keys[f], -B / 2 * sc, -B / 2 * sc, paintFrame, B * sc, B * sc);
+    else ctx.drawImage(frame(key, k, blink, f, qDir, mode, st), -B / 2 * sc, -B / 2 * sc, B * sc, B * sc);
+    if (EL2[key]) aura2(ctx, key, t + sd * 4, sc);
     ctx.restore();
   }
 
   function portrait(key, stage) {
     var st = Math.max(1, Math.min(5, stage | 0 || 1)), pk = key + '|' + st;
     if (pcache[pk]) return pcache[pk];
-    if (!DEF[key]) key = 'hontori';
-    var c = mk(96, 96), g = c.getContext('2d');
+    var known = !!DEF[key];
+    if (!known) key = 'hontori';
+    var c = mk(96, 96), g = c.getContext('2d'), sk = 'spirits:portrait|' + key + '|' + st;
+    /* a baked portrait is copied whole, one to one; anything else is painted as before */
+    if (H.sheets && H.sheets.draw(g, sk, 0, 0, paintNone) === true) return (pcache[pk] = c);
+    g.clearRect(0, 0, 96, 96);
     var col = AURA[key];
     // pixel-stepped radial backdrop
     for (var y = 0; y < 96; y += 2) for (var x = 0; x < 96; x += 2) {
@@ -1686,7 +1742,11 @@ window.H = window.H || {};
       g.fillStyle = 'rgba(' + col + ',' + a.toFixed(3) + ')';
       g.fillRect(x, y, 2, 2);
     }
-    if (st > 1) g.drawImage(frame(key, 2, false, 0, 0, 'idle', st), 0, 0, 96, 96); else g.drawImage(frame(key, 3, false, 0, 0, 'idle'), -M1 * 3, 4 - M1 * 3);
+    inPortrait = true;
+    try {
+      if (st > 1) g.drawImage(frame(key, 2, false, 0, 0, 'idle', st), 0, 0, 96, 96); else g.drawImage(frame(key, 3, false, 0, 0, 'idle'), -M1 * 3, 4 - M1 * 3);
+    } finally { inPortrait = false; }
+    if (known && H.sheets && H.sheets.recording) H.sheets.rec('hontori', sk, c);
     return (pcache[pk] = c);
   }
 
@@ -1706,13 +1766,513 @@ window.H = window.H || {};
     ['ripplezap', 'Ripplezap', 'hamster', 'electric', 'water', 205, 0.7, 1.05, ['Ripplezap', 'Tidecell', 'Surgepaw', 'Stormtide', 'Voltmaren'], 'A hamster that charges itself in the rain.'],
     ['duskmantle', 'Duskmantle', 'light', 'light', 'dark', 265, 0.4, 0.85, ['Duskmantle', 'Twiluma', 'Eclipsel', 'Penumbrae', 'Equinoxis'], 'Half dawn, half night. Rarely seen by anyone.']
   ];
-  var DUALK = {};
+  /* EL2: the second element of a kind (two-element kinds and the third wave), shown as a small aura */
+  var DUALK = {}, EL2 = {};
   DUAL.forEach(function (d) {
-    var key = d[0], base = d[2]; DUALK[key] = { base: base, el2: d[4], h: d[5], s: d[6], l: d[7] };
+    var key = d[0], base = d[2]; DUALK[key] = { base: base, el2: d[4], h: d[5], s: d[6], l: d[7] }; EL2[key] = d[4];
     list.push({ key: key, name: d[1], element: d[3], element2: d[4], dual: true });
     DEF[key] = DEF[base]; STG[key] = STG[base]; OUT[key] = OUT[base]; if (FLY[base]) FLY[key] = 1;
     BASEK[key] = BASEK[base]; SEED[key] = hash(list.length * 3.7 + 9.1); AURA[key] = AURA[ELK[d[3]]];
     stages[key] = d[8].map(function (n, i) { return { name: n, desc: i ? 'A grown ' + d[1] + '. ' + d[9] : d[9] }; });
+  });
+  /* ---------- third wave (chapter 3, the Whistling Pass): eight kinds with bodies of their own.
+     They come after the two-element kinds in the list, so every earlier seed stays the same.
+     A second element shows as the same small aura the two-element kinds have (EL2). */
+  var NP3 = {
+    kR: ['#ffc890', '#e08a4a', '#b8602e', '#86401e'], kS: ['#d8e4f8', '#98aad8', '#6a78b0', '#4a5486'], kC: ['#fffaf0', '#fff0d8', '#f0d4b0', '#d8b48c'], kB: ['#fff0a0', '#ffd060', '#e0a030'],
+    pW: ['#ffffff', '#f8fafe', '#e9eef7', '#d2dae8'], pS: ['#fff6c8', '#ecdc96', '#c8b468', '#a08c48'],
+    gF: ['#fffaf0', '#efe6d6', '#cdbfa6', '#a6957c'], gB: ['#d8a878', '#a87650', '#7e5436', '#5a3a22'], gH: ['#f4ecd4', '#d0bf94', '#a08e64', '#7a6a48'],
+    hF: ['#e4dccf', '#b4a796', '#8a7d6d', '#62584d'], hC: ['#fffaf0', '#f4ece0', '#dccfbc', '#c0b09a'], hS: ['#eceae2', '#bdb7a8', '#8f897a', '#686456'],
+    bF: ['#ffffff', '#f0f6fc', '#d2dfec', '#aec1d6'], bT: ['#e0f0ff', '#a8c4e8', '#7890c0', '#58689a'],
+    sB: ['#e0f6ff', '#86ccf2', '#4f9cd4', '#2f6eaa'], sC: ['#ffffff', '#f2fbff', '#d4eef9', '#b0d8ec'], sF: ['#ffffff', '#e6f6ff', '#b4dcf4', '#88bce0'],
+    vB: ['#b0a8d0', '#726aa0', '#50487c', '#363056'], vH: ['#fbf8ff', '#e4dcf4', '#bfb4dc', '#9a8ec0'], vY: ['#fffbe0', '#fff070', '#f0c840', '#c89a20'], vW: ['#d0c8ec', '#9288c0', '#6a6098', '#4a4272'], vE: ['#e8ffff', '#8ff2ff', '#3cc8e0'],
+    mW: ['#d8eec4', '#98c48e', '#6a9a6a', '#4a724e'], mF: ['#b0a294', '#827262', '#5c5044', '#40362c'], mH: ['#eceae2', '#bdb7a8', '#8f897a', '#686456']
+  };
+  var PINK = '#ffb0b8';
+  var DEF3 = {
+    kestrip: function (p, f) { /* Kestrip: a small kestrel chick with a slate cap and cheek stripes */
+      var R = NP3.kR, Sc = NP3.kS, C = NP3.kC, Bk = NP3.kB, fl = flyF(p);
+      function spots(cx, cy) { p.px(cx - 2, cy - 1, R[2]); p.px(cx + 1.5, cy - 1.5, R[2]); p.px(cx - 0.5, cy + 1, R[2]); p.px(cx + 2, cy + 1.5, R[2]); }
+      if (p.side) {
+        plume(p, 21, 22, 0.5, 5, 2.4, [R, R, [R[2], R[3]]], 0, 0.1);
+        p.px(24.5, 24.5, R[3]); p.px(22.5, 23.5, R[3]);
+        p.ell(20, 15 + fl * 0.5, 3, 5, [R[1], R[2], R[3]]);
+        p.ell(16, 18.5, 7.5, 8, R);
+        p.ell(12.5, 21.5, 4, 5, C);
+        spots(12.5, 22.5);
+        p.ell(13.5, 12.5, 6.5, 4.3, Sc);
+        eye1(p, 9.5, 13, true);
+        p.rect(10, 16.2, 1, 2.6, Sc[3]);
+        p.rect(5, 15, 3, 1.5, Bk[1]); p.px(5, 16.5, Bk[2]); p.px(7, 14.6, Bk[0]);
+        p.blush(11.5, 17.5, '#ff9ab0');
+        p.ell(19.5, 19 + fl, 4.5, 6, R);
+        p.rect(19.5, 23.5 + fl, 4, 1, R[3]); p.px(18.5, 17 + fl, R[3]); p.px(20.5, 19.5 + fl, R[3]);
+        p.rect(13, 26.5, 1.5, 1.5, Bk[2]); p.rect(16, 26.5, 1.5, 1.5, Bk[2]);
+        return;
+      }
+      p.ell(16, 26, 3.2, 2, R);
+      p.ell(6.5, 18 + fl, 3.2, 5.8, R); p.ell(25.5, 18 + fl, 3.2, 5.8, R);
+      p.rect(5, 22.5 + fl, 3, 1, R[3]); p.rect(24, 22.5 + fl, 3, 1, R[3]);
+      p.px(6, 17 + fl, R[3]); p.px(26, 17 + fl, R[3]);
+      p.ell(16, 18.5, 8, 8.5, R);
+      if (p.back) {
+        p.ell(16, 12, 7.5, 5, Sc);
+        p.rect(14, 24.5, 4, 0.8, R[3]); p.px(12, 18, R[3]); p.px(20, 18, R[3]); p.px(16, 20.5, R[3]);
+      } else {
+        p.ell(16, 21.5, 5.2, 4.8, C);
+        spots(16, 22.5);
+        p.ell(16, 11, 7.2, 3.6, Sc);
+        eyes2(p, 11.5, 18.5, 12.8, true);
+        p.rect(11.5, 16, 1, 2.5, Sc[3]); p.rect(19.5, 16, 1, 2.5, Sc[3]);
+        p.rect(15, 15.6, 2, 1.6, Bk[1]); p.px(15.5, 17.2, Bk[2]);
+        p.blush(8.5, 16, '#ff9ab0'); p.blush(21.5, 16, '#ff9ab0');
+      }
+      p.rect(12.5, 26.5, 2, 1, Bk[2]); p.rect(17.5, 26.5, 2, 1, Bk[2]);
+    },
+
+    pufflet: function (p, f) { /* Pufflet: a dandelion puff with a sleepy face and two leaf feet */
+      var W = NP3.pW, Sd = NP3.pS, Lf = NP.lily, fl = flyF(p), i, cx = 16, cy = 15 + Math.round(fl * 0.4 * 2) / 2;
+      p.rect(cx - 0.5, cy + 7, 1, 4.5, Lf[2]);
+      p.ell(cx - 2.6, cy + 11.4, 2.4, 1.1, Lf); p.ell(cx + 2.6, cy + 11.4, 2.4, 1.1, Lf);
+      for (i = 0; i < 12; i++) { var a = i / 12 * 6.2832 + Math.sin(p.ph + i) * 0.05; p.ell(cx + Math.cos(a) * 8.2, cy + Math.sin(a) * 7.6, 2.3, 2.3, W); }
+      p.ell(cx, cy, 8.4, 7.8, W);
+      if (p.back) {
+        [[-3, -3], [2, -4], [4, 1], [-1, 2], [-4, 3.5], [1, 5]].forEach(function (q) { p.px(cx + q[0], cy + q[1], Sd[2]); });
+        p.ell(cx, cy + 6.4, 1.6, 1, Sd);
+        return;
+      }
+      if (p.side) {
+        eye1(p, cx - 6, cy - 2, true);
+        p.rect(cx - 6.5, cy + 2, 2.5, 1, '#8a7a90'); p.px(cx - 4, cy + 1.5, '#8a7a90');
+        p.blush(cx - 4, cy + 0.6, '#ff9ab0');
+        p.px(cx + 2, cy - 3, Sd[2]); p.px(cx + 4, cy + 1, Sd[2]); p.px(cx, cy + 4, Sd[2]);
+        return;
+      }
+      eyes2(p, cx - 4.5, cx + 2.5, cy - 2, true);
+      smile(p, cx - 2.5, cy + 1.6, '#8a7a90');
+      p.blush(cx - 7, cy + 1, '#ff9ab0'); p.blush(cx + 5, cy + 1, '#ff9ab0');
+      p.px(cx - 1, cy - 5, Sd[2]); p.px(cx + 2, cy - 5.5, Sd[2]); p.px(cx + 0.5, cy + 5, Sd[2]);
+    },
+
+    cragnib: function (p, f) { /* Cragnib: a sure-footed mountain kid with a brown saddle and stub horns */
+      var F = NP3.gF, Br = NP3.gB, Hn = NP3.gH, b = hop(p), hv = '#4a3a30', sw = Math.sin(p.ph * 2) * 0.5;
+      function horn(x, y, m, len) { p.tri(x - 1, x + 1, y, x + m * 0.8, y - len, Hn[2], Hn[1]); }
+      if (p.side) {
+        legsSide(p, [[20, 1, 1], [12, 0, 1]], 23 + b, 28, 1.8, F[2], F[3], [hv, '#2e241e']);
+        p.ell(24.5, 16.5 + b + sw, 1.3, 2, F);
+        p.ell(17, 20 + b, 7.5, 4.6, F);
+        p.ell(18.5, 17.6 + b, 5, 2.2, Br);
+        p.ell(11.5, 16 + b, 3, 4, F);
+        horn(10.5, 9.5 + b, 1, 2.6);
+        p.ell(13, 11.8 + b, 2.4, 1.1, F); p.px(12.5, 11.8 + b, PINK);
+        p.ell(9, 12.5 + b, 4.6, 4, F);
+        p.ell(5.6, 14 + b, 2.2, 1.9, [F[0], F[1], F[2]]);
+        p.px(3.8, 13.5 + b, '#c08878');
+        p.ell(7.5, 17.4 + b, 0.9, 1.6, Hn);
+        p.px(9.5, 9.6 + b, Br[1]); p.px(10.5, 9.4 + b, Br[1]);
+        eye1(p, 7.5, 11 + b, true);
+        p.blush(8, 14.2 + b, '#ff9ab0');
+        legsSide(p, [[19, 0, 0], [11, 1, 0]], 23 + b, 28, 2, F[1], F[2], [hv, hv]);
+        return;
+      }
+      p.rect(9.5, 22.5 + b, 1.6, 4, F[3]); p.rect(20.9, 22.5 + b, 1.6, 4, F[3]);
+      feet2(p, 11.5, 18.5, 22.5, 2, 5.5, F[2], F[1]);
+      feet2(p, 11.5, 18.5, 26.5, 2, 1.5, hv);
+      p.ell(16, 20.5 + b, 7, 4.6, F);
+      if (p.back) { p.ell(16, 19.6 + b, 5.6, 2.6, Br); p.ell(16, 16.8 + b + sw, 1.5, 2, F); }
+      p.ell(9.6, 13 + b, 2.6, 1.2, F); p.ell(22.4, 13 + b, 2.6, 1.2, F);
+      if (!p.back) { p.px(9.5, 13 + b, PINK); p.px(22, 13 + b, PINK); }
+      horn(13.5, 9.2 + b, -1, 3); horn(18.5, 9.2 + b, 1, 3);
+      p.ell(16, 13 + b, 5.2, 4.6, F);
+      if (p.back) { p.ell(16, 11.5 + b, 2.6, 1.6, [Br[0], Br[1], Br[1]]); return; }
+      p.ell(16, 9.6 + b, 1.6, 1, [Br[0], Br[1], Br[1]], true);
+      eyes2(p, 12.5, 17.5, 11.8 + b, true);
+      p.ell(16, 16 + b, 2.8, 1.9, [F[0], F[0], F[1]]);
+      p.px(15.5, 15.4 + b, '#c08878'); p.px(16, 15.4 + b, '#c08878'); p.px(16, 17 + b, F[3]);
+      p.ell(16, 18.6 + b, 0.8, 1.1, [F[1], F[2], F[2]]);
+      p.blush(10.5, 15 + b, '#ff9ab0'); p.blush(19.5, 15 + b, '#ff9ab0');
+    },
+
+    pebblehop: function (p, f) { /* Screehop: a rock rabbit with pebble-speckled fur and a pebble for a tail */
+      var F = NP3.hF, C = NP3.hC, St = NP3.hS, b = hop(p);
+      function ear(x, y, inner) { p.ell(x, y, 1.9, 4.6, F); if (inner) p.ell(x, y + 0.8, 0.8, 3, [PINK, PINK], true); p.ell(x, y - 3.8, 1.5, 1.2, St); }
+      if (p.side) {
+        p.ell(20.5, 26.8, 3.4, 1.2, [F[2], F[2], F[3]]);
+        p.ell(17.2, 8.2 + b, 1.7, 4.4, [F[2], F[2], F[3]]); p.ell(17.2, 4.6 + b, 1.3, 1.1, [St[1], St[2], St[3]]);
+        p.ell(25, 21.5 + b, 2.3, 2.1, St);
+        p.ell(18, 21.5 + b, 6.6, 5, F);
+        p.ell(21, 22 + b, 4, 4, F);
+        p.ell(15, 23.5 + b, 3.4, 3, C);
+        ear(14.5, 7.5 + b, true);
+        p.ell(10.5, 15 + b, 5.2, 4.6, F);
+        p.ell(7.5, 17 + b, 2.4, 2, C);
+        p.px(5.2, 16 + b, '#e08890');
+        eye1(p, 8.5, 13.4 + b, true);
+        p.px(19, 18 + b, St[2]); p.px(22, 20 + b, St[3]); p.px(12.5, 11.8 + b, St[2]); p.px(16.5, 20 + b, St[2]);
+        p.rect(11.5, 25.5, 2, 2.5, F[1]);
+        p.ell(19.5, 27, 3.8, 1.2, [F[0], F[1], F[2]]);
+        p.blush(9, 17.5 + b, '#ff9ab0');
+        return;
+      }
+      p.ell(10.5, 27, 2.8, 1.2, [F[1], F[2], F[3]]); p.ell(21.5, 27, 2.8, 1.2, [F[1], F[2], F[3]]);
+      p.ell(16, 21.5 + b, 6.8, 5.4, F);
+      if (p.back) p.ell(16, 24.6 + b, 2.4, 2.2, St);
+      else {
+        p.ell(16, 22.5 + b, 4.4, 4, C);
+        p.rect(13, 25, 2, 2.5, F[1]); p.rect(17, 25, 2, 2.5, F[1]);
+      }
+      p.px(11, 19.5 + b, St[2]); p.px(21, 20.5 + b, St[3]);
+      ear(12.5, 7 + b, !p.back); ear(19.5, 7 + b, !p.back);
+      p.ell(16, 14 + b, 6.2, 5.2, F);
+      if (p.back) { p.px(14, 12 + b, St[2]); p.px(18.5, 13.5 + b, St[3]); p.ell(16, 10.6 + b, 1.2, 0.9, St); return; }
+      p.ell(16, 10.2 + b, 1.2, 0.9, St);
+      eyes2(p, 11.5, 18.5, 12.5 + b, true);
+      p.ell(13.6, 16.4 + b, 2.2, 1.7, C); p.ell(18.4, 16.4 + b, 2.2, 1.7, C);
+      p.rect(15.5, 15.4 + b, 1, 0.8, '#e08890');
+      p.rect(15.5, 17.2 + b, 1, 1, '#ffffff');
+      p.blush(9.5, 15.8 + b, '#ff9ab0'); p.blush(20.5, 15.8 + b, '#ff9ab0');
+    },
+
+    breezelet: function (p, f) { /* Breezelet: a white stoat that stands up to sniff the wind; its tail tip curls like a gust */
+      var F = NP3.bF, T = NP3.bT, b = hop(p), sw = Math.sin(p.ph) * 0.8;
+      function swirl(x, y, r) { p.ell(x, y, r, r, T); p.ell(x - r * 0.25, y - r * 0.2, r * 0.55, r * 0.55, [F[1], F[1], F[2]], true); p.px(x - r * 0.15, y - r * 0.1, T[2]); }
+      if (p.side) {
+        plume(p, 24, 23.5 + b, -0.9, 7, 1.5, [F, F, T], -1.5 + sw, 0.25);
+        swirl(27.2, 16.5 + b + sw * 0.4, 2.4);
+        legsSide(p, [[21, 1, 1], [12, 0, 1]], 24 + b, 28, 1.8, F[2], F[3]);
+        p.ell(17, 22.5 + b, 8, 3.6, F);
+        p.ell(18, 20.4 + b, 6.6, 1.5, [T[0], T[0], T[1]]);
+        p.ell(9.5, 18.5 + b, 3.4, 3.6, F);
+        p.ell(10.5, 11.8 + b, 1.6, 1.6, F); p.px(10.5, 11.8 + b, PINK);
+        p.ell(8, 15 + b, 4.4, 3.8, F);
+        p.px(3.8, 15 + b, '#ff8aa8');
+        eye1(p, 6, 13.6 + b, true);
+        p.px(9.5, 12.6 + b, T[1]); p.px(10.5, 13.2 + b, T[1]);
+        p.blush(7, 16.6 + b, '#ff9ab0');
+        legsSide(p, [[20, 0, 0], [11, 1, 0]], 24 + b, 28, 2, F[1], F[2]);
+        return;
+      }
+      plume(p, 20, 26 + b, -1.2, 8, 1.5, [F, F, T], 2 + sw, 0.25);
+      swirl(24.5, 17 + b + sw * 0.4, 2.4);
+      feet2(p, 12, 17.5, 26, 2.5, 2, F[2], F[1]);
+      p.ell(16, 21.5 + b, 5, 5.6, F);
+      if (p.back) p.ell(16, 20 + b, 3.4, 4.6, [T[0], T[0], T[1]]);
+      else { p.ell(16, 22.5 + b, 3.2, 3.8, [F[0], F[0], F[1]]); p.ell(14, 19 + b, 1.3, 1.1, [F[0], F[1], F[2]]); p.ell(18, 19 + b, 1.3, 1.1, [F[0], F[1], F[2]]); }
+      p.ell(11, 9.5 + b, 1.8, 1.8, F); p.ell(21, 9.5 + b, 1.8, 1.8, F);
+      if (!p.back) { p.px(11, 9.5 + b, PINK); p.px(20.5, 9.5 + b, PINK); }
+      p.ell(16, 12.5 + b, 5.6, 4.4, F);
+      p.ell(16, p.back ? 11.5 + b : 9.4 + b, 4.4, p.back ? 3 : 1.6, [T[0], T[0], T[1]]);
+      if (p.back) return;
+      eyes2(p, 12.5, 17.5, 11.2 + b, true);
+      p.rect(15.5, 14.2 + b, 1, 0.9, '#ff8aa8');
+      p.px(14.5, 15.4 + b, F[3]); p.px(17, 15.4 + b, F[3]); p.px(15.5, 15.8 + b, F[3]); p.px(16, 15.8 + b, F[3]);
+            p.blush(10, 13.8 + b, '#ff9ab0'); p.blush(20, 13.8 + b, '#ff9ab0');
+    },
+
+    skyfin: function (p, f) { /* Skyfin: a flying fish that glides on fins as wide as wings */
+      var Bd = NP3.sB, C = NP3.sC, Fn = NP3.sF, fl = flyF(p), i;
+      if (p.side) {
+        p.ell(20, 11 + fl * 0.6, 5, 2.4, [Fn[1], Fn[2], Fn[3]]);
+        plume(p, 22.5, 17, -0.6, 5.5, 1.9, [Bd, Bd, [Bd[2], Bd[3]]], 0, 0.45);
+        plume(p, 22.5, 17.5, 0.6, 5.5, 1.9, [Bd, Bd, [Bd[2], Bd[3]]], 0, 0.45);
+        p.tri(13, 19, 12.6, 17.5, 9, Bd[2], Bd[1]);
+        p.ell(15.5, 17, 8.5, 5.2, Bd);
+        p.ell(14, 19.6, 6, 2.4, C);
+        p.rect(11.5, 15, 0.8, 4, Bd[2]);
+        eye1(p, 8, 14.4, true);
+        p.rect(6.6, 18, 1.5, 0.8, Bd[3]);
+        p.blush(9.5, 17.2, '#ff9ab0');
+        p.ell(16, 22.4, 2, 1, Fn);
+        p.ell(18.5, 12 + fl, 6.2, 2.4, Fn);
+        for (i = 0; i < 4; i++) p.rect(15 + i * 2, 11.6 + fl, 0.6, 1.4, Fn[3]);
+        return;
+      }
+      [-1, 1].forEach(function (m) {
+        p.ell(16 + m * 9.5, 14.5 + fl, 5, 2.6, Fn);
+        p.ell(16 + m * 8, 18 + fl, 3.8, 1.9, [Fn[1], Fn[2], Fn[3]]);
+        for (i = 0; i < 3; i++) p.rect(16 + m * (7 + i * 2) - 0.3, 14 + fl, 0.6, 1.4, Fn[3]);
+      });
+            p.tri(14, 18, 11, 16, 6.5, Bd[2], Bd[1]);
+      p.ell(16, 17, 6.4, 6.8, Bd);
+      if (p.back) {
+        p.ell(16, 21, 1.5, 4.2, [Bd[1], Bd[2], Bd[3]]);
+        [[13, 15], [18, 14], [15.5, 18], [12.5, 20], [19, 20]].forEach(function (q) { p.px(q[0], q[1], Bd[0]); p.px(q[0] + 1, q[1] + 1, Bd[2]); });
+        return;
+      }
+      p.ell(16, 20, 4.4, 3.4, C);
+      eyes2(p, 11, 19, 13.6, true);
+      p.ell(16, 18.2, 1, 0.7, [Bd[3], Bd[3]], true);
+      p.blush(9.6, 17, '#ff9ab0'); p.blush(20.4, 17, '#ff9ab0');
+    },
+
+    voltmoth: function (p, f) { /* Voltmoth: a fuzzy night moth with zigzag wing bands and feathered antennae */
+      var Bd = NP3.vB, Y = NP3.vY, W = NP3.vW, E = NP3.vE, fl = flyF(p);
+      function zig(x, y, m) { for (var i = 0; i < 4; i++) p.rect(x + m * i * 1.2 - (m < 0 ? 1.4 : 0), y + (i % 2 ? 1 : 0), 1.4, 1, Y[2]); }
+      function spot(x, y) { p.ell(x, y, 1.5, 1.5, E, true); p.px(x - 0.5, y - 0.5, '#ffffff'); }
+      function ant(x, y, m) { for (var i = 0; i < 5; i++) { var ax = x + m * i * 0.8, ay = y - i; p.px(ax, ay, Y[3]); if (i) { p.px(ax - m, ay - 0.5, Y[1]); p.px(ax + m * 0.5, ay + 0.8, Y[1]); } } }
+      if (p.side) {
+        plume(p, 17, 15 + fl * 0.5, -0.95, 7, 2.6, [[W[1], W[2], W[3]]], 0, -0.45);
+        ant(9.5, 11, -1);
+        p.ell(19, 20.5, 6, 3.6, Bd);
+        p.rect(18, 18, 0.8, 5, Bd[3]); p.rect(21, 18.2, 0.8, 4.8, Bd[3]);
+        p.ell(13, 17, 3, 3, Y);
+        p.ell(10, 15, 4.2, 4, NP3.vH);
+        eye1(p, 7, 13.6, true);
+        p.blush(8.5, 16.6, '#ff9ab0');
+        plume(p, 15, 16 + fl, -1.2, 7, 2.8, [W, W], 0, -0.45);
+        zig(15, 11.5 + fl, 1); spot(17.5, 8.5 + fl);
+        p.rect(12, 23, 1, 2, Bd[3]); p.rect(14.5, 23, 1, 2, Bd[3]);
+        return;
+      }
+      /* forewings fan out from the shoulders and are widest at the tip, as a moth's are */
+      [-1, 1].forEach(function (m) { plume(p, 16 + m * 3.5, 15.5 + fl, m > 0 ? -0.5 : Math.PI + 0.5, 7, 2.8, [W, W], 0, -0.5); });
+      p.ell(9.5, 21 + fl * 0.6, 3.8, 3.6, W); p.ell(22.5, 21 + fl * 0.6, 3.8, 3.6, W);
+      zig(6, 12.6 + fl, 1); zig(26, 12.6 + fl, -1);
+      spot(8, 10.5 + fl); spot(24, 10.5 + fl);
+      p.px(9.5, 21 + fl * 0.6, Y[2]); p.px(22.5, 21 + fl * 0.6, Y[2]);
+      p.ell(16, 20.5, 4, 6, Bd);
+      p.rect(13, 21.5, 6, 0.8, Bd[3]); p.rect(13.5, 24, 5, 0.8, Bd[3]);
+      ant(13.5, 8.5, -1); ant(18.5, 8.5, 1);
+      p.ell(16, 16.4, 5.6, 2.3, Y);
+      p.ell(16, 12.4, 5, 4, p.back ? Bd : NP3.vH);
+      if (p.back) { p.ell(16, 11.5, 2.6, 1.5, [Bd[0], Bd[1], Bd[1]]); return; }
+      eyes2(p, 12.5, 17.5, 11.2, true);
+      p.px(15.5, 14.4, Bd[2]); p.px(16.5, 14.4, Bd[2]);
+      p.blush(10, 13.6, '#ff9ab0'); p.blush(20, 13.6, '#ff9ab0');
+      p.rect(14, 26, 1, 1.5, Bd[3]); p.rect(17, 26, 1, 1.5, Bd[3]);
+    },
+
+    mossram: function (p, f) { /* Mossram: a sturdy ram whose fleece is soft green moss, with curled stone horns */
+      var W = NP3.mW, Fc = NP3.mF, Hn = NP3.mH, b = hop(p) * 0.6, i;
+      function horn(x, y, m) { p.ell(x, y, 2.8, 3, Hn); p.ell(x + m * 0.3, y + 0.3, 1.3, 1.4, [Hn[2], Hn[2], Hn[3]]); p.px(x + m * 0.2, y + 0.2, Hn[3]); }
+      function fleece(cx, cy, rx, ry) {
+        for (i = 0; i < 12; i++) { var a = i / 12 * 6.2832; p.ell(cx + Math.cos(a) * (rx - 0.6), cy + Math.sin(a) * (ry - 0.6), 2.3, 2.1, W); }
+        p.ell(cx, cy, rx, ry, W);
+      }
+      function blooms(q) { q.forEach(function (o, j) { p.px(o[0], o[1], j % 2 ? '#fff0a0' : '#ffb0d0'); }); }
+      if (p.side) {
+        legsSide(p, [[22, 1, 1], [13, 0, 1]], 23 + b, 28, 2, Fc[2], Fc[3]);
+        p.ell(26.5, 17.5 + b, 1.6, 1.5, W);
+        fleece(18, 19.5 + b, 8.4, 5.6);
+        blooms([[16, 16 + b], [22, 18.5 + b], [19, 23 + b]]);
+        p.ell(13.5, 16.2 + b, 1.8, 0.9, Fc);
+        p.ell(8.5, 17 + b, 3.8, 4, Fc);
+        p.ell(5.6, 18.8 + b, 2, 1.6, [Fc[0], Fc[0], Fc[1]]);
+        p.ell(10, 13.6 + b, 3, 2, W);
+        horn(11.2, 16 + b, 1);
+        eye1(p, 6.5, 15.4 + b, true);
+        p.px(3.8, 18 + b, Fc[3]);
+        p.blush(7.5, 18.4 + b, '#e89aa0');
+        legsSide(p, [[21, 0, 0], [12, 1, 0]], 23 + b, 28, 2.2, Fc[1], Fc[2]);
+        return;
+      }
+      feet2(p, 10.5, 19.5, 24, 2.2, 4, Fc[2], Fc[1]);
+      fleece(16, 19.5 + b, 9, 6);
+      blooms([[10, 17 + b], [22, 21 + b], [13, 23.5 + b], [20, 16 + b]]);
+      if (p.back) {
+        p.ell(16, 23.5 + b, 1.6, 1.4, [W[0], W[1], W[2]]);
+        horn(10.5, 13 + b, -1); horn(21.5, 13 + b, 1);
+        p.ell(16, 13.5 + b, 4.6, 3.4, W);
+        return;
+      }
+      p.ell(10, 14.6 + b, 2.2, 1, Fc); p.ell(22, 14.6 + b, 2.2, 1, Fc);
+      horn(10.5, 13 + b, -1); horn(21.5, 13 + b, 1);
+      p.ell(16, 15.5 + b, 4.2, 4.6, Fc);
+      p.ell(16, 11.6 + b, 3.6, 2, W);
+      eyes2(p, 13, 17, 14 + b, true);
+      p.ell(16, 18.4 + b, 2.4, 1.6, [Fc[0], Fc[0], Fc[1]]);
+      p.px(15.5, 17.8 + b, Fc[3]); p.px(16.5, 17.8 + b, Fc[3]);
+      p.blush(11.5, 17.2 + b, '#e89aa0'); p.blush(18.5, 17.2 + b, '#e89aa0');
+    }
+  };
+  var STG3 = {
+    kestrip: gstg(function (p, f, s, L, d, b) {
+      var R = NP3.kR, Sc = NP3.kS, fl = flyF(p), sw = Math.sin(p.ph) * 0.8, i;
+      if (L === 'back') {
+        /* long flight feathers grow from each wing; from stage 4 the wings open wide */
+        var n = s >= 4 ? 3 : s >= 3 ? 2 : 1, ln = 3 + s * 1.3;
+        if (d === 2) for (i = 0; i < n; i++) plume(p, 21, 16 + fl * 0.5, -0.9 + i * 0.35, ln - i * 0.6, 2, [R, R, Sc], sw, 0.5);
+        else [-1, 1].forEach(function (m) { for (i = 0; i < n; i++) { var a = -0.95 + i * 0.4; plume(p, 16 + m * 8, 15 + fl, m > 0 ? a : Math.PI - a, ln - i * 0.6, 2, [R, R, Sc], m * sw, 0.5); } });
+        if (s >= 3) {
+          if (d === 2) for (i = -1; i <= 1; i++) plume(p, 23.5, 23.5, 0.45 + i * 0.3, 1 + s, 1.6, [R, [R[2], R[3]]], 0, 0.2);
+          else if (d === 1) for (i = -1; i <= 1; i++) plume(p, 16 + i * 1.6, 25.5, 1.57 + i * 0.45, s - 1, 1.6, [R, [R[2], R[3]]], 0, 0.2);
+        }
+        return;
+      }
+      if (s >= 2) {
+        var cx = d === 2 ? 15 : 16, tl = 1.5 + s * 0.7;
+        /* one swept-back crest on the slate cap */
+        if (d === 2) plume(p, 17, 9.5, -0.35, tl + 1, 1.6, [Sc, Sc], -0.8, 0.5);
+        else plume(p, cx, 8.4, -1.57, tl * 0.7, 1.6, [Sc, Sc], 0, 0.5);
+      }
+    }),
+    pufflet: gstg(function (p, f, s, L, d, b) {
+      var W = NP3.pW, Sd = NP3.pS, Lf = NP.lily, fl = flyF(p), cy = 15 + Math.round(fl * 0.4 * 2) / 2, i;
+      if (L === 'back') {
+        if (s >= 3) [-1, 1].forEach(function (m) { if (d === 2 && m < 0) return; plume(p, 16 + m * 6, cy + 6, m > 0 ? -0.5 : -2.64, 4 + s * 1.2, 1.8, [Lf, Lf], m * -1.2, 0.6); });
+        /* the seeds the puff will one day let go: thin stalks with a tuft, more each stage */
+        var n = s + 1;
+        for (i = 0; i < n; i++) {
+          var a = -1.57 + (i - (n - 1) / 2) * 0.55, x0 = 16 + Math.cos(a) * 8.6, y0 = cy + Math.sin(a) * 8.2 - 1.5;
+          p.rect(x0, y0 - 1, 0.6, 2.2, Sd[2]);
+          p.rect(x0 - 1.6, y0 - 2.4, 3.8, 0.8, W[0]); p.px(x0 - 2, y0 - 3, W[2]); p.px(x0 + 2, y0 - 3, W[2]); p.px(x0, y0 - 3.2, W[0]);
+        }
+        if (s >= 4) for (i = 0; i < 10; i++) { var b2 = i / 10 * 6.2832 + 0.3; p.ell(16 + Math.cos(b2) * 10.2, cy + Math.sin(b2) * 9.4, 1.6, 1.6, W); }
+        return;
+      }
+      if (s >= 5) {
+        var Pe = ['#fff6a0', '#ffd850', '#f0b030'];
+        for (i = -2; i <= 2; i++) p.ell(16 + i * 2, cy - 8 - (2 - Math.abs(i)) * 0.6, 1.4, 1.8, Pe);
+        p.ell(16, cy - 7.5, 2, 1, ['#ffe080', '#f0b030'], true);
+      }
+      if (s >= 3 && d === 0) { p.px(16, cy - 5, Sd[1]); p.px(15, cy - 5.5, Sd[1]); p.px(17, cy - 5.5, Sd[1]); }
+    }),
+    cragnib: gstg(function (p, f, s, L, d, b) {
+      var Hn = NP3.gH, St = NP3.hS, Am = EP.earth[0], i;
+      if (L === 'back') {
+        /* the horns lengthen and curl back; from stage 4 a ridge of stone runs along the back */
+        var hl = 2 + s * 1.1, bd = s >= 3 ? 2 : 0.6;
+        if (d === 2) plume(p, 10.5, 9.6 + b, -1.0, hl, 1.3, [Hn, Hn, [Hn[2], Hn[3]]], bd, 0.5);
+        else [-1, 1].forEach(function (m) { plume(p, 16 + m * 2.6, 10 + b, -1.57 + m * 0.6, hl, 1.3, [Hn, Hn, [Hn[2], Hn[3]]], m * bd, 0.5); });
+        if (s >= 4) {
+          if (d === 2) for (i = 0; i < 3; i++) p.tri(14.5 + i * 3.4, 16.3 + i * 3.4, 17 + b, 15.4 + i * 3.4, 13 + b - (i % 2) * 1.4, St[2], St[1]);
+          else for (i = -1; i <= 1; i++) p.tri(16 + i * 3.4 - 0.9, 16 + i * 3.4 + 0.9, 16.6 + b, 16 + i * 3.4, 12.6 + b - (i ? 0 : 1.4), St[2], St[1]);
+        }
+        return;
+      }
+      if (s >= 3) {
+        if (d === 2) p.ell(13.5, 19.2 + b, 2.4, 1.8, St);
+        else [-1, 1].forEach(function (m) { p.ell(16 + m * 5.2, 19.4 + b, 2.2, 1.7, St); });
+      }
+      if (s >= 5 && d !== 1) { var cx = d === 2 ? 9.5 : 16, cy = d === 2 ? 9.6 : 9.4; p.tri(cx - 1, cx + 1, cy + b, cx, cy - 2.6 + b, Am[2], Am[1]); }
+    }),
+    pebblehop: gstg(function (p, f, s, L, d, b) {
+      var St = NP3.hS, Am = EP.earth[0], i, n = s - 1;
+      if (L === 'back') {
+        /* stone plates gather on its back, and from stage 4 they push up into a ridge of shards */
+        if (s >= 4) {
+          if (d === 2) for (i = 0; i < 3; i++) p.tri(17 + i * 3.2, 18.8 + i * 3.2, 17.6 + b, 17.9 + i * 3.2, 13.6 + b - (i === 1 ? 1.4 : 0), St[2], St[1]);
+          else for (i = -1; i <= 1; i++) p.tri(16 + i * 3.6 - 0.9, 16 + i * 3.6 + 0.9, 17.6 + b, 16 + i * 3.6, 13.4 + b - (i ? 0 : 1.4), St[2], St[1]);
+        }
+        return;
+      }
+      if (d === 2) for (i = 0; i < n; i++) p.ell(17 + i * 2.4, 17.4 + b + (i % 2) * 0.6, 1.8, 1.3, St);
+      else if (d === 1) for (i = 0; i < n; i++) p.ell(16 + (i - (n - 1) / 2) * 3, 19 + b + (i % 2), 1.9, 1.4, St);
+      else { p.ell(10.2, 18.6 + b, 1.6, 1.2, St); if (s >= 3) p.ell(21.8, 18.6 + b, 1.6, 1.2, St); }
+      if (s >= 3) {
+        var tips = d === 2 ? [[14.5, 3.6]] : [[12.5, 3.2], [19.5, 3.2]];
+        tips.forEach(function (q) { p.tri(q[0] - 1, q[0] + 1, q[1] + b, q[0], q[1] - 1.6 - s * 0.4 + b, Am[2], Am[1]); });
+      }
+    }),
+    breezelet: gstg(function (p, f, s, L, d, b) {
+      var T = NP3.bT, F = NP3.bF, sw = Math.sin(p.ph) * 1.2, i;
+      if (L === 'back') {
+        /* ribbons of wind stream from its ruff, more each stage */
+        if (s >= 3) {
+          var n = s - 2;
+          /* the wind always blows them the same way: back along the body, or off to its right */
+          var rb = [[T[1], T[2], T[3]], T];
+          if (d === 2) for (i = 0; i < n; i++) plume(p, 11.5, 15.5 + b + i, -0.3 + i * 0.25, 6 + s, 1.1, rb, -1 - sw - i * 0.5, 0.3);
+          else for (i = 0; i < n; i++) plume(p, 20.5, 16 + b + i, 0.1 + i * 0.35, 4 + s, 1.1, rb, -1.2 - sw - i * 0.4, 0.3);
+        }
+        if (s >= 4) { var tx = d === 2 ? 27.2 : 24.5, ty = (d === 2 ? 16.5 : 17) + b + sw * 0.4, r = s - 0.8; p.ell(tx + 0.6, ty - 0.6, r, r, [T[1], T[2], T[3]]); p.ell(tx, ty, r - 1.2, r - 1.2, [T[0], T[1], T[2]]); }
+        return;
+      }
+      if (s >= 2) {
+        var ex = d === 2 ? [[10.5, 10.6]] : [[11, 8.2], [21, 8.2]];
+        ex.forEach(function (q, j) { plume(p, q[0], q[1] + b, -1.57 + (d === 2 ? 0.3 : j ? 0.25 : -0.25), 0.8 + s * 0.3, 0.8, [F, T], 0, 0.3); });
+      }
+      if (s >= 5 && d === 0) for (i = -1; i <= 1; i++) plume(p, 16 + i * 1.8, 8.5 + b, -1.57 + i * 0.4, 3 - Math.abs(i), 0.9, [T, [T[0], T[0]]], i * 0.6, 0.3);
+    }),
+    skyfin: gstg(function (p, f, s, L, d, b) {
+      var Fn = NP3.sF, Bd = NP3.sB, fl = flyF(p), sw = Math.sin(p.ph) * 1, i;
+      if (L === 'back') {
+        /* the wing fins widen each stage; from stage 3 long cloud streamers trail from the tail */
+        var ln = 4 + s * 1.5, ff = [Fn, Fn, [Fn[0], Fn[0]]];
+        if (d === 2) { plume(p, 15, 13.5 + fl, -0.55, ln, 2.4, ff, -1, 0.5); if (s >= 4) plume(p, 16, 14 + fl, -0.15, ln - 2, 2, ff, -0.6, 0.5); }
+        else [-1, 1].forEach(function (m) { plume(p, 16 + m * 6, 15 + fl, m > 0 ? -0.3 : -2.84, ln, 2.4, ff, m * -1, 0.5); if (s >= 4) plume(p, 16 + m * 5, 18 + fl, m > 0 ? 0.2 : 2.94, ln - 2, 2, ff, m * 0.6, 0.5); });
+        if (s >= 3) {
+          if (d === 2) for (i = -1; i <= 1; i += 2) plume(p, 26, 17 + i * 1.6, i * 0.35, 3 + s, 1.2, [Fn, [Fn[0], Fn[0]]], sw * i, 0.3);
+        }
+        return;
+      }
+      if (s >= 3 && d !== 1) { var cx = d === 2 ? 16 : 16; p.tri(cx - 1.5, cx + 1.5, d === 2 ? 12.6 : 11, cx + (d === 2 ? 1.5 : 0), (d === 2 ? 9 : 7) - s * 0.3, Bd[2], Fn[1]); }
+      if (s >= 4 && d === 0) { p.px(13, 22.4, Fn[3]); p.px(16, 23, Fn[3]); p.px(19, 22.4, Fn[3]); }
+    }),
+    voltmoth: gstg(function (p, f, s, L, d, b) {
+      var W = NP3.vW, Y = NP3.vY, E = NP3.vE, fl = flyF(p), sw = Math.sin(p.ph) * 0.8, i;
+      if (L === 'back') {
+        /* long tails grow from the hind wings; from stage 3 the forewings widen */
+        var tl = 1.5 + s * 0.8, tp = [W, W, [Y[1], Y[2], Y[3]]];
+        if (d === 2) plume(p, 21.5, 21 + fl * 0.6, 0.9, tl, 2, tp, sw, 0.6);
+        else [-1, 1].forEach(function (m) { plume(p, 16 + m * 10.5, 22.5 + fl * 0.6, 1.57 - m * 1.0, tl, 2, tp, m * sw, 0.6); });
+        if (s >= 3) {
+          var wl = 6 + s, wr = 2.6 + s * 0.25;
+          if (d === 2) plume(p, 17.5, 15 + fl * 0.5, -0.75, wl, wr, [[W[1], W[2], W[3]]], 0, -0.4);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 4, 15.5 + fl, m > 0 ? -0.3 : Math.PI + 0.3, wl, wr, [W, W], 0, -0.4); });
+        }
+        return;
+      }
+      if (s >= 3 && d !== 2) [-1, 1].forEach(function (m) { for (i = 0; i < 3; i++) p.rect(16 + m * (4 + i * 1.3) - (m < 0 ? 1.2 : 0), 16 + fl + (i % 2), 1.2, 0.8, E[2]); });
+      if (s >= 3 && d === 2) for (i = 0; i < 3; i++) p.rect(14 + i * 1.3, 14.5 + fl + (i % 2), 1.2, 0.8, E[2]);
+      if (s >= 4) { if (d === 2) p.ell(18.5, 13 + fl, 1, 1, E, true); else { p.ell(9.5, 15 + fl, 1, 1, E, true); p.ell(22.5, 15 + fl, 1, 1, E, true); } }
+    }),
+    mossram: gstg(function (p, f, s, L, d, b) {
+      var Hn = NP3.mH, Lf = NP.lily, Mu = ['#ffc0b0', '#f07060', '#c84a40'], i;
+      b *= 0.6;
+      if (L === 'back') {
+        /* the horns grow into wide curls */
+        if (s >= 2) {
+          var r = 2.6 + s * 0.6;
+          if (d === 2) p.ell(12, 15.6 + b, r, r + 0.3, Hn);
+          else [-1, 1].forEach(function (m) { p.ell(16 + m * (6 + s * 0.3), 13.6 + b, r, r + 0.3, Hn); p.ell(16 + m * (6 + s * 0.3), 14 + b, r * 0.45, r * 0.45, [Hn[2], Hn[2], Hn[3]]); });
+        }
+        if (s >= 4) {
+          var cx = d === 2 ? 19 : 16, top = (d === 2 ? 14 : 13.6) + b;
+          for (i = -2; i <= 2; i++) plume(p, cx + i * 2.4, top + Math.abs(i) * 0.8, -1.57 + i * 0.35, 3 + s * 0.7 - Math.abs(i) * 0.6, 1.2, [Lf, Lf], i * 0.5, 0.4);
+        }
+        return;
+      }
+      /* fern sprouts, then small mushrooms, then flowers grow in the moss */
+      var spots = d === 2 ? [[14, 14.4], [21, 14.8], [24, 18]] : [[9, 15.6], [23, 15.6], [12.5, 13.8], [19.5, 13.8]];
+      spots.forEach(function (q, j) {
+        if (j >= s) return;
+        if (s >= 3 && j % 2) { p.rect(q[0] - 0.3, q[1] - 1.2 + b, 0.8, 1.4, '#f4ecd0'); p.ell(q[0], q[1] - 1.6 + b, 1.4, 0.9, Mu); p.px(q[0] - 0.5, q[1] - 2 + b, '#ffffff'); }
+        else plume(p, q[0], q[1] + b, -1.57 + (q[0] < 16 ? -0.3 : 0.3), 1.5 + s * 0.5, 0.9, [Lf, Lf], 0, 0.3);
+      });
+    })
+  };
+  var EL3 = [
+    ['kestrip', 'wind', null, '#3a1c10', 1, [['Kestrip', 'A small kestrel chick with a slate cap and stripes on its cheeks. It hovers in one place to watch.'], ['Hoverwing', 'Its flight feathers have grown long enough to ride a gust.'], ['Updraftor', 'A crest and a barred tail fan. It climbs on rising air without one flap.'], ['Gyrfane', 'Wide wings open like sails over the cliff roads.'], ['Skytalon', 'A legendary hawk that keeps watch over the high passes.']]],
+    ['pufflet', 'wind', null, '#3a3c4a', 1, [['Pufflet', 'A dandelion puff with a sleepy face. It drifts wherever the wind is kind.'], ['Downwisp', 'Its first seeds stand up around its head, waiting for a breeze.'], ['Seedrift', 'Two leaf wings let it steer the wind a little.'], ['Parasoleil', 'A double halo of down; it floats for a whole day.'], ['Aerablume', 'A legendary puff crowned with a flower that never closes.']]],
+    ['cragnib', 'earth', null, '#2e2418', 0, [['Cragnib', 'A mountain kid with stub horns. It finds a foothold on any ledge.'], ['Ledgekid', 'Its horns have started to curl back.'], ['Cliffhorn', 'Stone plates grow on its shoulders where it leans on the rock.'], ['Bouldercurl', 'A ridge of stone runs along its back.'], ['Summitarch', 'A legendary goat with an amber peak upon its brow.']]],
+    ['pebblehop', 'earth', null, '#2a2420', 0, [['Screehop', 'A rock rabbit with pebble-speckled fur and a pebble for a tail.'], ['Gravelear', 'Smooth stones settle on its back as it grows.'], ['Shalebound', 'Amber shards tip its long ears.'], ['Cairnleap', 'Its back rises into a little ridge of stone.'], ['Monolapin', 'A legendary rabbit that carries a small mountain lightly.']]],
+    ['breezelet', 'wind', null, '#26304a', 0, [['Breezelet', 'A white stoat that stands up to sniff the wind. Its tail tip curls like a gust.'], ['Swirltail', 'Wind tufts rise from its ears.'], ['Gustermine', 'Ribbons of wind stream from its ruff.'], ['Galeruff', 'A second gust curls from its tail.'], ['Tempestoat', 'A legendary stoat that runs on the edge of every storm.']]],
+    ['skyfin', 'wind', 'water', '#163a5a', 1, [['Skyfin', 'A flying fish that glides on fins as wide as wings.'], ['Glidegill', 'Its wing fins stretch further each season.'], ['Cloudfin', 'Cloud streamers trail from its tail.'], ['Stratosail', 'Two pairs of wing fins; it can glide across a valley.'], ['Aeromaris', 'A legendary fish that swims through the sky as through the sea.']]],
+    ['voltmoth', 'wind', 'electric', '#221c3a', 1, [['Voltmoth', 'A fuzzy night moth with zigzag wing bands and feathered antennae.'], ['Staticwing', 'Long tails hang from its hind wings.'], ['Sparklace', 'Its forewings widen and blue sparks mark their edges.'], ['Stormveil', 'Bright eyespots glow on its wings at dusk.'], ['Aurorarc', 'A legendary moth whose wings carry the colours of a storm sky.']]],
+    ['mossram', 'earth', 'grass', '#20241a', 0, [['Mossram', 'A sturdy ram whose fleece is soft green moss, with curled stone horns.'], ['Lichenhorn', 'Its horns grow into wide curls and ferns sprout in its fleece.'], ['Fernfleece', 'Small mushrooms grow in the moss on its back.'], ['Bloomcurl', 'A crest of ferns rises along its fleece.'], ['Elderfleece', 'A legendary ram whose fleece is a whole mountain meadow.']]]
+  ];
+  /* where each of them likes to live: the same shape as the habitat tables of src/encounters.js and
+     content/shared/wild.js (feature weights, day and night factors, weather factors, rarity) */
+  var HAB3 = {
+    kestrip:   { f: { open: 2, rock: 1, bridge: 1.2, chime: 1.5, tree: 0.5 }, day: 1.3, night: 0.3, wx: { wind: 2.4, clear: 1.2, rain: 0.6 }, rare: 0.75 },
+    pufflet:   { f: { flowers: 2.4, open: 1.2, tallgrass: 1, garden: 0.8 }, day: 1.2, night: 0.4, wx: { wind: 2.8, clear: 1.2, rain: 0.4 }, rare: 0.8 },
+    cragnib:   { f: { rock: 2.8, wall: 1.2, path: 0.5, open: 0.6 }, day: 1.1, night: 0.7, wx: { wind: 1.2, rain: 0.8 }, rare: 0.7 },
+    pebblehop: { f: { rock: 2, tallgrass: 1.2, field: 1, sand: 0.8 }, day: 0.9, night: 1, wx: { fog: 1.2, rain: 0.7 }, rare: 0.85 },
+    breezelet: { f: { tallgrass: 1.6, open: 1.2, rock: 0.8, chime: 1.4, bridge: 0.8 }, day: 1, night: 0.8, wx: { wind: 2.2, fog: 1.2 }, rare: 0.6 },
+    skyfin:    { f: { water: 2.4, bridge: 2, reeds: 0.8, open: 0.6 }, day: 1, night: 0.6, wx: { wind: 2.4, rain: 1.6 }, rare: 0.4 },
+    voltmoth:  { f: { lamp: 3, chime: 1.2, flowers: 0.8, metal: 1 }, day: 0.15, night: 2.4, wx: { wind: 1.6, rain: 1.8, clear: 0.8 }, rare: 0.35 },
+    mossram:   { f: { tallgrass: 1.6, rock: 1.4, garden: 1, field: 1.2, tree: 0.6 }, day: 1, night: 0.7, wx: { rain: 1.4, fog: 1.1 }, rare: 0.45 }
+  };
+  EL3.forEach(function (d) {
+    var key = d[0], e = { key: key, name: d[5][0][0], element: d[1] };
+    if (d[2]) { e.element2 = d[2]; EL2[key] = d[2]; }
+    SEED[key] = hash(list.length * 3.7 + 1.3);
+    list.push(e);
+    DEF[key] = DEF3[key]; STG[key] = STG3[key]; OUT[key] = d[3]; if (d[4]) FLY[key] = 1;
+    BASEK[key] = ELK[d[1]]; AURA[key] = AURA[ELK[d[1]]];
+    STAGES[key] = d[5];
+    stages[key] = d[5].map(function (a) { return { name: a[0], desc: a[1] }; });
   });
   // recolour a finished frame: every body pixel takes the dual's hue, keeps its shading
   function recolor(c, D) {
@@ -1735,7 +2295,7 @@ window.H = window.H || {};
     electric: ['#fff070', 'spark'], grass: ['#8ee070', 'leaf'], dark: ['#a070ff', 'wisp'], light: ['#fff4c0', 'mote']
   };
   function aura2(ctx, key, t, sc) {
-    var D = DUALK[key]; if (!D) return; var F = FX2[D.el2]; ctx.fillStyle = F[0];
+    var e2 = EL2[key], F = e2 && FX2[e2]; if (!F) return; ctx.fillStyle = F[0];
     for (var i = 0; i < 6; i++) {
       var ph = (t * 0.6 + i / 6) % 1, ang = i * 1.05 + t * 0.8, rx = (9 + (i % 3) * 2) * sc, x, y;
       if (F[1] === 'ember' || F[1] === 'mote' || F[1] === 'wisp') { x = Math.cos(ang) * rx * 0.8; y = 6 * sc - ph * 22 * sc; }
@@ -1751,5 +2311,48 @@ window.H = window.H || {};
     ctx.globalAlpha = 1;
   }
 
-  H.spirits = { list: list, draw: draw, portrait: portrait, frames: frames, stages: stages, dual: DUALK };
+  /* Build tool: produce every picture (each one is recorded where it is created). Everything by default:
+     every kind, stage 1 to 5, the three authored directions, the three modes, both blink states and all
+     16 frames at the raster scale of a plain draw (opts.scale 1), and the portraits.
+     o narrows it: { kinds: [keys], stages: [1..5], dirs: [0, 1, 2], modes: ['idle', 'move', 'sit'],
+       scales: [opts.scale values the game draws with, default [1]], blink: false (open eyes only),
+       portraits: false }.
+     Returns { pictures, pixels } (untrimmed) for what the call covered. */
+  function enumerateAll(o) {
+    o = o || {};
+    var kinds = o.kinds || list.map(function (s) { return s.key; }), sts = o.stages || [1, 2, 3, 4, 5];
+    var dirs = o.dirs || [0, 1, 2], modes = o.modes || ['idle', 'move', 'sit'], scales = o.scales || [1];
+    var n = 0, px = 0;
+    function one(c) { if (c) { n++; px += c.width * c.height; } }
+    kinds.forEach(function (key) {
+      if (!DEF[key]) return;
+      sts.forEach(function (st) {
+        st = Math.max(1, Math.min(5, st | 0 || 1));
+        if (o.portraits !== false) one(portrait(key, st));
+        var seen = {};
+        scales.forEach(function (sc0) {
+          var k = rasterK(sc0 * SS[st - 1]);
+          if (seen[k]) return;
+          seen[k] = 1;
+          dirs.forEach(function (dir) { modes.forEach(function (mode) {
+            for (var bl = 0; bl < (mode === 'move' || o.blink === false ? 1 : 2); bl++)
+              for (var f = 0; f < NF; f++) one(frame(key, k, !!bl, f, dir, mode, st));
+          }); });
+        });
+      });
+    });
+    return { pictures: n, pixels: px };
+  }
+  try {
+    if (H.sheets && H.sheets.enumerate) H.sheets.enumerate('hontori', enumerateAll);
+    /* once a sheet has arrived, the painted copies of its pictures are not kept */
+    if (H.sheets && H.sheets.onLoad && H.sheets.has) H.sheets.onLoad(function (group) {
+      if (group !== 'hontori') return;
+      Object.keys(slots).forEach(function (key) { slots[key].forEach(function (b) { if (b) b.forEach(function (s) {
+        if (s) for (var f = 0; f < NF; f++) if (s.arr[f] && H.sheets.has(s.keys[f])) s.arr[f] = null;
+      }); }); });
+    });
+  } catch (e) { /* no sheets: everything stays painted */ }
+
+  H.spirits = { list: list, draw: draw, portrait: portrait, frames: frames, stages: stages, dual: DUALK, habitats: HAB3 };
 })();

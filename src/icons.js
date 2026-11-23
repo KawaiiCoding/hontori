@@ -458,6 +458,25 @@ window.H = window.H || {};
       g.rect(0, 7, 4, 1, U.white); g.rect(1, 10, 3, 1, U.white); g.rect(0, 13, 4, 1, U.white);
       g.sparkle(14, 1, false);
     },
+    // catch your breath: two soft lungs and the air they draw in
+    breath: function (g) {
+      var L = ['#4a1426', '#c0506a', '#f07a90', '#ffa8b8', '#ffe0e8'], T = U.cream, A = R.gust;
+      g.bmp([
+        '..###....###..',
+        '.####....####.',
+        '######..######',
+        '######..######',
+        '######..######',
+        '######..######',
+        '.#####..#####.',
+        '..###....###..'
+      ], 1, 7, { '#': [L] });
+      g.sphere(L, 5, 10, 6);
+      g.rect(7, 2, 2, 6, T); g.px(6, 7, T); g.px(9, 7, T); g.px(5, 8, T); g.px(10, 8, T);
+      g.bmp(['.##.', '#..#'], 1, 2, { '#': [A] });
+      g.bmp(['.##.', '#..#'], 11, 2, { '#': [A] });
+      g.dot(3, 9, '#ffe0e8'); g.dot(11, 9, '#ffe0e8');
+    },
     feather: function (g) {
       for (var i = 0; i < 9; i++) { var x = 4 + i, y = 12 - i; g.rect(x - 1, y - 2, 3, 3, U.white); }
       g.line(2, 14, 12, 4, U.metal);
