@@ -5,7 +5,7 @@
   cache name) and the complete list of files of that build.
 
   A release (FILES is filled in):
-    install    every file of the build is stored under the cache 'hontori-<version>'. If one file cannot
+    install    every file of the build is stored under the cache 'hontori2-<version>'. If one file cannot
                be fetched, the install fails and the version already on the device stays in charge.
     fetch      files come from that cache first; the network is only asked for something not in it.
     update     a new version is fetched in the background while the player keeps playing the one they
@@ -21,7 +21,7 @@
 'use strict';
 var VERSION = 'dev';
 var FILES = [];
-var CACHE = 'hontori-' + VERSION;
+var CACHE = 'hontori2-' + VERSION;
 var RELEASE = FILES.length > 0;
 
 function storeAll(cache) {
@@ -47,7 +47,7 @@ self.addEventListener('install', function (event) {
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.map(function (k) { return /^hontori-/.test(k) && k !== CACHE ? caches.delete(k) : null; }));
+    return Promise.all(keys.map(function (k) { return /^hontori2-/.test(k) && k !== CACHE ? caches.delete(k) : null; }));
   }).then(function () { return self.clients.claim(); }));
 });
 

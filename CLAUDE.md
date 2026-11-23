@@ -14,12 +14,25 @@ H. The look and feel is settled. The current game is the visual and tonal refere
 I. The story serves the player. It is simple and polished, gives a steady rhythm of rewards, introduces one thing at a time, and never leaves a stretch where a new player would put the game down. Every hint pays off.
 J. The engine is reusable. The core, world, UI kit and general systems (dialog, quests, inventory, saving, battles as a framework) must work for other games of the same kind, not only Hontori. Everything specific to Hontori (its hontori, elements, spells, story, art, names) lives in a separate game layer and in content data. Nothing in the engine may name a Hontori-specific thing.
 
+## Layout
+| Folder | Layer | Holds |
+|---|---|---|
+| `core/`, `world/`, `ui/`, `systems/` | Engine | The frame loop, input, saving, scenes; maps, entities and the world scene; the UI kit; dialog, quests, items, time, battles and capsules as frameworks. ES modules. Names nothing of Hontori (principle J). |
+| `game/` | Game layer | Everything that is Hontori: its rules, theme, panels, features, music, and the adapters to the painters (`HontoriArt.js`, `HontoriSound.js`, `legacyMaps.js`). `game/main.js` is the bootstrap. |
+| `content/` | Content | Chapters as pure data, one folder each (`shared`, `prologue`, `ch1`, ...), checked by `content/check.mjs`. |
+| `src/` | Art painters | Classic scripts on `window.H`: the painters (tiles, props, buildings, furniture, characters, spirits, icons, fx), the sprite-sheet reader, the audio synth and the classic map scripts. Loaded by `index.html` before the modules. |
+| `assets/` | Files | Sprite sheets (written by `tools/build_sheets.js`), the font, the app icons. |
+| `tools/` | Build | `build_sheets.js`, `build_release.js` (writes `dist/`, never committed). |
+| `docs/` | Notes | `ARCHITECTURE.md`, `INTERFACES.md` (the contracts) and the phase and chapter notes. |
+
+The page is `index.html` with `sw.js` and `manifest.webmanifest` at the root. Every path in it is relative: the game is served from a sub-folder.
+
 ## Structure
-1. One module, one job. Each file in `src/` owns one feature and exposes a small API on `window.H` (for example `H.money`, `H.capsules`, `H.unlock`). The API is listed in a comment at the top of the file.
-2. Modules talk through those APIs only. A module never reaches into another module's private state or DOM.
-3. Extend, do not edit: a new feature hooks in through an existing extension point (`H.interact`, `H.story.defineEvent`, `H.screenDraw`, `H.onSleep`, props pushed into `H.maps`) before it changes the engine.
-4. Every call into another module is guarded: the game must still run if that module is missing or throws.
-5. Saved state is additive. New fields get defaults in `H.progress.migrate`; old saves must always load.
+1. One module, one job. Each file owns one feature and exports a small API, listed in a comment at the top of the file. Layers depend downward only (`core`, then `world`, `ui` and `systems`, then `game`); the engine never imports from `game/` or `content/`.
+2. Modules talk through those APIs, the `Registry` and the `EventBus` only. A module never reaches into another module's private state or DOM. Only the three adapters in `game/` touch `window.H`; a painter in `src/` adds its own namespace to `window.H` and nothing else.
+3. Extend, do not edit: a new feature hooks in through an existing extension point (an `install(game)` function, a kind in `game.registry`, an event on `game.bus`, a story command or condition, a `SaveStore` section, a content folder) before it changes the engine. The contracts are in `docs/INTERFACES.md`.
+4. Every call into another module or a registered extension is guarded: the game must still run if that module is missing or throws.
+5. Saved state is additive. New fields get defaults in their `SaveStore` section (`game.save.define`); old saves must always load.
 
 ## Safety
 6. Nothing inside the render loop or a draw call may throw. The loop schedules its next frame first.
@@ -35,7 +48,7 @@ J. The engine is reusable. The core, world, UI kit and general systems (dialog, 
 14. Timers and listeners are removed when their panel closes.
 
 ## Before a change is done
-15. `node --check` on every changed file.
+15. `node --check` on every changed file; `node content/check.mjs` after a content change and `node systems/battle/check.mjs game/battle/check.mjs` after a battle change.
 16. Load the changed scene once in a browser and fix any page error. No play-through bot: correctness comes from the structure above.
 17. Look at a screenshot of anything visual.
 18. Update WORLD_RULES.md when the change adds or alters canon.
@@ -50,5 +63,5 @@ J. The engine is reusable. The core, world, UI kit and general systems (dialog, 
 23. Continue an agent that already has the context instead of starting a new one. Never let two agents read or rewrite the same files.
 24. Agent reports stay under about 400 words. Do not reread files already read.
 25. Features not needed for the current episode wait. User decisions are gathered and asked together.
-26. Timed text (toasts, guide cards, anything that disappears by itself) stays as long as it takes to read: about 250 words a minute plus a moment to notice it, never less than 2.5 seconds. Use `readMs` (v2/ui/readTime.js); never a fixed short duration.
+26. Timed text (toasts, guide cards, anything that disappears by itself) stays as long as it takes to read: about 250 words a minute plus a moment to notice it, never less than 2.5 seconds. Use `readMs` (ui/readTime.js); never a fixed short duration.
 27. Every visual effect has a visible cause. Sparkles, glows, flashes and particles appear only when the player can see what made them (a spell drawn, a spirit arriving, an item found) and never on their own or as decoration on ordinary actions. When unsure, leave the effect out.

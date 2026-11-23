@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Hontori">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<style id="hui-font">@font-face{font-family:"Nunito";font-style:normal;font-weight:600 900;font-display:swap;src:url(assets/fonts/nunito-latin.woff2) format("woff2")}</style>
 <style>
   html,body{margin:0;height:100%;background:#07080d;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
   /* mobile first: a phone fills the screen; on a wide desktop window the game sits in a centred phone-shaped frame */
@@ -17,21 +18,12 @@
   @media (min-aspect-ratio: 3/4) and (pointer:fine){
     #root{height:min(100dvh,920px);width:calc(min(100dvh,920px)*9/16);border-radius:18px;box-shadow:0 0 0 2px #23263a,0 20px 60px #000}
   }
-  /* controls are always visible (web and phone); the dialog sits clear of them */
-  #root .hui-touch{display:block!important}
-  /* tap-to-move mode hides the joystick and the A and B buttons */
-  #root .hui.tapmode .hui-touch{display:none!important}
-  #root:not(.land) .hui.tapmode .hui-dlg{bottom:calc(env(safe-area-inset-bottom,0px) + 24px)!important}
-  #root:not(.land) .hui-dlg{left:8px!important;right:8px!important;width:auto!important;transform:none!important;bottom:calc(env(safe-area-inset-bottom,0px) + 206px)!important}
-  #root.land .hui-dlg{left:210px!important;right:210px!important;width:auto!important;transform:none!important;bottom:10px!important}
   *{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
   #game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
-  #help{position:fixed;bottom:4px;right:8px;color:#8890a8;font:11px system-ui;pointer-events:none;opacity:.7}
-  @media (pointer:coarse){#help{display:none}}
 </style></head><body>
 <div id="root"><canvas id="game" width="384" height="216"></canvas></div>
 <script>
-  // No zoom on phones: iOS ignores user-scalable=no, so block double-tap and pinch gestures here.
+  /* No zoom on phones: iOS ignores user-scalable=no, so double-tap and pinch gestures are blocked here. */
   (function () {
     var last = 0;
     document.addEventListener('touchend', function (e) { var now = Date.now(); if (now - last < 350) e.preventDefault(); last = now; }, { passive: false });
@@ -40,13 +32,10 @@
     document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
   })();
 </script>
+<!-- The sprite sheets (assets/sheets/, written by tools/build_sheets.js): the painters copy from them when a picture is baked. -->
 <script src="src/sheets.js"></script>
+<!-- The art painters (classic scripts on window.H; game/HontoriArt.js is their only user). -->
 <script src="src/icons.js"></script>
-<!-- title step: the title screen is on the page before the world scripts below are read -->
-<script src="src/loader.js"></script>
-<script>if (/[?&](nointro|scene)=/.test(location.search)) window.H.noTitle = true;</script>
-<script src="src/title.js"></script>
-<!-- world step: everything the first playable frame needs, in load order, ending with the engine -->
 <script src="src/fx.js"></script>
 <script src="src/tiles_outdoor.js"></script>
 <script src="src/tiles_indoor.js"></script>
@@ -54,43 +43,26 @@
 <script src="src/outdoor_plus.js"></script>
 <script src="src/buildings.js"></script>
 <script src="src/furniture.js"></script>
-<script src="src/items.js"></script>
-<script src="src/item_icons.js"></script>
-<script src="src/money.js"></script>
-<script src="src/fishing.js"></script>
 <script src="src/characters.js"></script>
 <script src="src/spirits.js"></script>
 <script src="src/interior_plus.js"></script>
 <script src="src/hall_props.js"></script>
 <script src="src/walltops.js"></script>
+<!-- The classic map scripts (game/legacyMaps.js is their only user). -->
 <script src="src/maps.js"></script>
 <script src="src/village.js"></script>
 <script src="src/whisperwood.js"></script>
-<script src="src/puzzles.js"></script>
 <script src="src/mossgrove.js"></script>
-<script src="src/encounters.js"></script>
 <script src="src/interiors_props.js"></script>
 <script src="src/interiors.js"></script>
-<script src="src/story.js"></script>
-<script src="src/ui.js"></script>
+<!-- The music and sound effects (game/HontoriSound.js is their only user). -->
 <script src="src/audio.js"></script>
-<script src="src/interact.js"></script>
-<script src="src/interiors_interact.js"></script>
-<script src="src/closeup.js"></script>
-<script src="src/quests.js"></script>
-<script src="src/chapter1.js"></script>
-<script src="src/chapter2.js"></script>
-<script src="src/academy.js"></script>
-<script src="src/progress.js"></script>
-<script src="src/menu.js"></script>
-<script src="src/moves.js"></script>
-<script src="src/battle.js"></script>
-<script src="src/prologue.js"></script>
-<script src="src/engine.js"></script>
-<!-- late step: nothing needs these before the player has started; src/loader.js fetches them in the
-     background right after the first frame, in this order (tools/build_release.js reads this list) -->
-<script>
-  H.loader.start({ late: ['src/naming.js', 'src/spellbook.js', 'src/ride.js', 'src/unlock.js', 'src/mapview.js'] });
+<!-- The clear pixel icons of the items (game/HontoriArt.js itemIconUrl is their only user). -->
+<script src="src/item_icons.js"></script>
+<!-- game/main.js starts nothing when imported: the page boots it. -->
+<script type="module">
+  import { boot } from './game/main.js';
+  boot();
 </script>
 <script>
   /* Offline: the service worker keeps every file of the game on the device. It is used over http(s) only,
@@ -101,7 +73,7 @@
       var q = location.search;
       if (/[?&]nosw=1/.test(q)) {
         navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
-        if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { if (/^hontori-/.test(k)) caches.delete(k); }); }).catch(function () {});
+        if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { if (/^hontori2-/.test(k)) caches.delete(k); }); }).catch(function () {});
         return;
       }
       if (/[?&]debug=1/.test(q)) return;

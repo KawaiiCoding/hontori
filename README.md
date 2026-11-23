@@ -1,14 +1,11 @@
 # Hontori
 
-A top-down 2D tile RPG about a kid and the elemental spirits called hontori. Early visual preview (MVP).
+A top-down 2D tile RPG about a kid and the elemental spirits called hontori.
 
-Play: open `index.html` (works straight from GitHub Pages, no build step).
+Play: serve this folder with any static server (for example `python3 -m http.server 8123`) and open it. It also runs straight from GitHub Pages; there is no build step for development.
 
-- Keyboard: arrows/WASD move, Space talk/interact, Shift run, T time of day, R weather, H add a test hontori, 1 home, 2 village
-- Mobile: joystick on the left, A/B buttons on the right
-- Progress saves automatically on the device
-- `gallery.html` shows all hontori
-
-All art and music are generated in code (Canvas 2D and Web Audio), no asset files.
-
-:
+- `index.html` is the page; `game/main.js` starts the game. The layout is described in `CLAUDE.md` and `docs/ARCHITECTURE.md`.
+- `?scene=village&debug=1` starts on a map with the debug tools (see the header of `game/main.js`).
+- Progress saves automatically on the device. The game plays offline once loaded.
+- Release: `node tools/build_sheets.js` (when art changed), then `node tools/build_release.js` writes `dist/`. See `STORE_CHECKLIST.md`.
+- `gallery.html` shows all hontori.

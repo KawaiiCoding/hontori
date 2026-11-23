@@ -9,4 +9,7 @@ node_modules/
 BUSINESS.md
 STORY_OVERVIEW.excalidraw
 GAME_DESIGN.excalidraw
+
+# release builds (node tools/build_release.js)
+dist/
 dist2/
