@@ -24,7 +24,7 @@ export function registerSettings(game) {
     build,
   });
   game.registry.add('hud.button', 'settings', {
-    icon: icons.menu, label: game.theme.words.menu || 'Menu', order: 90, open: () => game.ui.openPanel('settings'),
+    icon: icons.menu, label: game.theme.words.menu || 'Menu', order: 1, open: () => game.ui.openPanel('settings'),
   });
 }
 

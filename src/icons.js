@@ -382,12 +382,17 @@ window.H = window.H || {};
       g.sparkle(14, 1, false);
     },
     cog: function (g) {
+      /* a clean silver gear: 8 square teeth, a lit rim, a dark hole in the middle */
+      var STEEL = ['#262a36', '#5e6a80', '#9aa6ba', '#cfd6e4', '#f6f8fc'];
       for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
         var dx = x + 0.5 - 8, dy = y + 0.5 - 8, r = Math.sqrt(dx * dx + dy * dy), a = Math.atan2(dy, dx);
-        if (r <= (Math.cos(a * 8) > 0 ? 6.4 : 4.8) && r > 1.6) g.px(x, y, U.metal);
+        var k = Math.abs(((a / (Math.PI / 4)) % 1 + 1) % 1 - 0.5);
+        var tooth = k > 0.27 && r <= 7.2, body = r <= 5.4;
+        if ((tooth || body) && r > 2.1) {
+          var lit = -(dx + dy) / r;
+          g.px(x, y, STEEL, r > 4.6 && r <= 5.4 ? 4 : lit > 0.45 ? 3 : lit < -0.45 ? 1 : 2);
+        }
       }
-      g.sphere(U.metal, 8, 8, 6.4);
-      g.disc(8, 8, 2.2, R.bowl); g.tone(7, 7, 4);
       g.sparkle(14, 1, false);
     },
     paw: function (g) {
