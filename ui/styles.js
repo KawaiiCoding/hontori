@@ -74,6 +74,8 @@ const CSS = `
 .ui-panel{border-radius:20px;background:linear-gradient(180deg,var(--panel-top),var(--panel-bottom));border:2px solid var(--panel-edge);
   box-shadow:0 10px 40px rgba(0,0,0,.6);color:var(--text)}
 .ui-head{display:flex;align-items:center;gap:10px;margin:0 0 12px;min-height:44px}
+/* the header (and its close button) stays in view while the sheet scrolls */
+.ui-sheet .ui-head{position:sticky;top:-16px;z-index:5;margin:-16px -16px 12px;padding:16px 16px 8px;background:var(--panel-top);border-radius:18px 18px 0 0}
 .ui-head img{width:28px;height:28px;flex:none}
 .ui-head h2{flex:1;min-width:0;margin:0;font-size:20px;font-weight:900;letter-spacing:.2px;line-height:1.15;color:var(--text)}
 .ui-head h2 small{display:block;font-size:12px;font-weight:700;opacity:.7;letter-spacing:0}
