@@ -291,6 +291,8 @@ export default {
   'ch1.ev.51': 'It tired and fled, but do not mind. The Academy teaches how to bind.',
   'ch1.ev.52': 'Open the party and choose Mend. It costs some mana, my friend.',
   'ch1.ev.53': 'Your mana is low. Eat herbs, or ramen at the tavern, and it will grow.',
+  'ch1.ev.rainfire.1': 'Rain on my flame, a shiver, a hiss. A bowl of warm ramen would mend all of this.',
+  'ch1.ev.rainfire.2': 'Fire is weaker in the rain. Let us find a roof and a hot bowl.',
   'ch1.ev.54': 'The stars are out, the lanterns low. Sleep in a bed, then on we go.',
   'ch1.ev.55': 'Evening',
 };

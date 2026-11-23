@@ -9,13 +9,14 @@
  * Public API:
  *   new WorldMapView(view)
  *        view: { places: [{ id, x, y, name, known, heard, icon, ring }], roads: [[idA, idB]], here,
- *                sea: { x, y, rx, ry } | null, mountains: [{ x, y }], palette, label }
+ *                sea: { x, y, rx, ry } | null, mountains: [{ x, y }], palette, label, onPick }
  *        x, y: shares of the picture (0 to 1); name: shown text or null (a quiet mark); icon: an
  *        image URL; ring: a gold ring around the mark; here: id of the place the player is in.
  *        palette: { grass, tallgrass, flowers, water, waterLight, sand, path, treeDark, treeLight,
  *                   snow, rock, rockDark, fog, markEdge, markKnown, markHeard, ring, you, youGlow,
  *                   labelBack, labelEdge, labelText }
  *        label: accessible name of the picture
+ *        onPick(place): optional; every known or heard place is then a tap target (.pick, 44 px)
  *   element          the view (append it where it belongs)
  *   mount(parent)    append and size it once it has a width (a ResizeObserver, dropped when removed)
  */
@@ -35,6 +36,7 @@ export class WorldMapView {
   #view;
   #canvas;
   #you;
+  #taps;
   #width = 0;
   #height = 0;
 
@@ -50,6 +52,7 @@ export class WorldMapView {
     this.#you.hidden = true;
     this.#you.style.setProperty('--you', view.palette.you);
     this.#you.style.setProperty('--you-glow', view.palette.youGlow);
+    this.#taps = element('div', 'taps', viewport);
   }
 
   mount(parent) {
@@ -215,10 +218,34 @@ export class WorldMapView {
       if (p.id === view.here) here = { x, y };
     }
     this.#labels(g, labels, W, H);
+    this.#tapTargets(W, H);
     this.#you.hidden = !here;
     if (here) {
       this.#you.style.left = `${here.x + 18}px`;
       this.#you.style.top = `${here.y - 10}px`;
+    }
+  }
+
+  /* one button over each mark the player can see, so a place can be tapped */
+  #tapTargets(W, H) {
+    const view = this.#view;
+    this.#taps.replaceChildren();
+    if (typeof view.onPick !== 'function') return;
+    for (const p of view.places) {
+      if (!p.known && !p.heard) continue;
+      const button = element('button', p.known ? 'pick' : 'pick heard', this.#taps);
+      button.type = 'button';
+      if (p.name) button.setAttribute('aria-label', p.name);
+      button.style.left = `${Math.round(p.x * W)}px`;
+      button.style.top = `${Math.round(p.y * H)}px`;
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        try {
+          view.onPick(p);
+        } catch (error) {
+          console.warn('WorldMap: picking a place failed', error);
+        }
+      });
     }
   }
 

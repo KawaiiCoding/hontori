@@ -43,6 +43,14 @@ export class HontoriSound {
     if (this.#audio) this.#audio.setMuted(on);
   }
 
+  setRainMuted(on) {
+    try {
+      if (this.#audio && this.#audio.setRainMuted) this.#audio.setRainMuted(on);
+    } catch (error) {
+      /* the rain only goes quiet */
+    }
+  }
+
   unlock() {
     if (this.#audio) this.#audio.unlock();
   }

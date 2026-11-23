@@ -7,7 +7,13 @@
  *
  * Public API:
  *   registerAreaMap(game, { explored, world, style, icon, label, hint, order, canOpen, refreshOn })
- *        registers panel "areamap" and HUD button "map".
+ *        registers panel "areamap" and HUD button "map". The panel definition also offers, for
+ *        panels that extend it (game/panels/worldmap.js):
+ *          explored(mapId) -> true when the player has seen any tile of that map
+ *          outdoor(mapId)  -> true when that map exists and is not indoor
+ *          mountMap(parent, mapId) -> the map's name, or null; shows that map's explored tiles in
+ *                          parent, read-only (the player is not moved; no dot unless it is the map
+ *                          the player is on)
  *        explored: an Explored (systems/time/Explored.js); world(): the live WorldScene or null;
  *        canOpen(quiet): optional, false keeps the map shut and its button dimmed; called with quiet
  *        true it only answers, without it (a tap) it explains why itself; refreshOn: the events after
@@ -26,6 +32,7 @@
 
 import { element, icon } from './dom.js';
 import { lookupText } from '../systems/time/links.js';
+import { TileMap } from '../world/TileMap.js';
 
 /* logical pixels per tile in the baked picture */
 const SCALE = 8;
@@ -37,6 +44,25 @@ const BASES_KEPT = 4;
 
 export function registerAreaMap(game, { explored, world, style, icon: iconName = 'map', label = 'Map', hint, order = 40, canOpen, refreshOn }) {
   const bases = new Map();
+  /* a read-only TileMap for a map id; the live one when the player is on it */
+  const tileMap = (mapId) => {
+    const scene = world();
+    if (scene && scene.map && scene.map.id === mapId) return scene.map;
+    try {
+      const description = game.registry.get('map', mapId);
+      return description ? new TileMap(description, game.art) : null;
+    } catch (error) {
+      console.warn(`AreaMap: map "${mapId}" cannot be read`, error);
+      return null;
+    }
+  };
+  const describe = (mapId) => {
+    try {
+      return game.registry.get('map', mapId) || null;
+    } catch (error) {
+      return null;
+    }
+  };
   game.registry.add('panel', 'areamap', {
     icon: iconName,
     /* read when the panel opens: the name of the map the player is on */
@@ -48,7 +74,28 @@ export function registerAreaMap(game, { explored, world, style, icon: iconName =
     build(panel) {
       const scene = world();
       if (!scene || !scene.map) return;
-      new AreaMapView(game, scene, explored, style, bases).mount(panel);
+      new AreaMapView(game, scene, explored, style, bases).mount((node) => panel.add(node));
+    },
+    explored(mapId) {
+      const description = describe(mapId);
+      if (!description || !Array.isArray(description.rows) || !description.rows.length) return false;
+      try {
+        const bits = explored.bits({ id: mapId, width: description.rows[0].length, height: description.rows.length });
+        return bits.some((bit) => bit);
+      } catch (error) {
+        return false;
+      }
+    },
+    outdoor(mapId) {
+      const description = describe(mapId);
+      return !!description && description.tileset !== 'indoor';
+    },
+    mountMap(parent, mapId) {
+      const scene = world();
+      const map = tileMap(mapId);
+      if (!scene || !map) return null;
+      new AreaMapView(game, scene, explored, style, bases, map).mount((node) => parent.appendChild(node));
+      return map.name;
     },
   });
   game.registry.add('hud.button', 'map', {
@@ -87,20 +134,24 @@ class AreaMapView {
   #oy = 0;
   #pointers = new Map();
   #pinch = null;
+  /* true when this is the map the player stands on: the dot, the people and walking reveal show */
+  #here = true;
 
-  constructor(game, scene, explored, style, bases) {
+  constructor(game, scene, explored, style, bases, map = scene.map) {
     this.#game = game;
     this.#scene = scene;
-    this.#map = scene.map;
+    this.#map = map;
+    this.#here = !!scene.map && map.id === scene.map.id;
     this.#explored = explored;
     this.#style = style;
     this.#bases = bases;
   }
 
-  mount(panel) {
+  /* add(node): puts the view where it belongs (a Panel's add, or a parent's appendChild) */
+  mount(add) {
     const map = this.#map;
     const style = this.#style;
-    this.#explored.reveal(map, this.#scene.player.tx, this.#scene.player.ty);
+    if (this.#here) this.#explored.reveal(map, this.#scene.player.tx, this.#scene.player.ty);
     this.#root = element('div', 'ui-amap');
     this.#viewport = element('div', 'vp', this.#root);
     this.#viewport.style.background = style.background;
@@ -118,7 +169,7 @@ class AreaMapView {
     this.#markers = this.#collectMarkers();
     this.#legend();
     this.#listen();
-    panel.add(this.#root);
+    add(this.#root);
     /* the sheet is laid out after build; size and draw once it has a width */
     const observer = new ResizeObserver(() => {
       if (!this.#root.isConnected) {
@@ -145,7 +196,8 @@ class AreaMapView {
   #legend() {
     const style = this.#style;
     const legend = element('div', 'lg', this.#root);
-    const entries = [...style.legend, [style.you, style.words.you]];
+    /* another map shows no live people and no player, so their legend entries stay out */
+    const entries = this.#here ? [...style.legend, [style.you, style.words.you]] : style.legend.filter(([colour]) => colour !== style.person);
     const seen = new Set();
     for (const marker of this.#markers) {
       const word = marker.legend || style.words.marker;
@@ -375,6 +427,10 @@ class AreaMapView {
   }
 
   #closer() {
+    if (!this.#here) {
+      this.#zoomAt(this.#zoom * 2, this.#width / 2, this.#height / 2);
+      return;
+    }
     const player = this.#scene.player;
     this.#zoom = Math.min(this.#closest(), this.#zoom * 2);
     this.#ox = this.#width / 2 - (player.tx + 0.5) * SCALE * this.#zoom;
@@ -464,7 +520,7 @@ class AreaMapView {
       g.drawImage(this.#fog, ox, oy, map.width * q, map.height * q);
       for (const marker of this.#markers) this.#drawMarker(g, ox + (marker.x + 0.5) * q, oy + (marker.y + 0.5) * q, q, marker.color || style.marker);
       this.#drawLabels(g, ox, oy, q);
-      this.#drawPlayer(g, ox, oy, q);
+      if (this.#here) this.#drawPlayer(g, ox, oy, q);
     } catch (error) {
       console.warn('AreaMap: drawing failed', error);
     }
@@ -474,6 +530,7 @@ class AreaMapView {
   #drawPeople(g, ox, oy, q) {
     const style = this.#style;
     const r = Math.max(2, q * 0.42);
+    if (!this.#here) return;
     for (const person of this.#scene.people || []) {
       if (person.away || !this.#explored.seen(this.#map, person.tx, person.ty)) continue;
       const x = ox + (person.tx + 0.5) * q;

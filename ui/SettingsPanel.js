@@ -62,6 +62,20 @@ function build(panel, { game, close, refresh }) {
       refresh();
     },
   });
+  /* the rain can be quieted on its own, when the sound provider allows it */
+  if (game.sound && game.sound.setRainMuted) {
+    const rainOff = game.settings.get('rainMuted');
+    panel.button(row, {
+      icon: rainOff ? icons.soundOff : icons.soundOn,
+      label: rainOff ? (words.rainOff || 'Rain sound off') : (words.rainOn || 'Rain sound on'),
+      desc: words.soundDesc || 'Tap to switch', kind: 'alt',
+      onPress: () => {
+        game.settings.set('rainMuted', !rainOff);
+        game.sound.setRainMuted(!rainOff);
+        refresh();
+      },
+    });
+  }
   panel.button(row, {
     icon: icons.slot, label: `${words.slot} ${game.save.slot}`, desc: words.switchSlot, kind: 'alt',
     onPress: () => {

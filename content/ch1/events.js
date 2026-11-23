@@ -182,6 +182,17 @@ export default [
     then: [{ flag: 'tip:mana' }, { say: 'ch1.ev.53', who: 'companion' }]
   },
   {
+    id: 'c1_tip_rain_fire',
+    /* a fire hontori in the rain, once: it shivers, and points to warm ramen and a roof */
+    on: { auto: true },
+    if: { all: ['c1:morning', { not: 'tip:rainfire' }, { weather: 'rain' }, { indoor: false }, { ext: 'lead', element: 'fire' }] },
+    then: [
+      { flag: 'tip:rainfire' },
+      { say: 'ch1.ev.rainfire.1', who: 'companion' },
+      { say: 'ch1.ev.rainfire.2', who: 'kid' }
+    ]
+  },
+  {
     id: 'c1_tip_night',
     on: { auto: true },
     if: {

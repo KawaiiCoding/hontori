@@ -100,6 +100,11 @@ export function installParty(game) {
     for (const field of ['stage', 'level']) {
       if (field in node && !compare(Number(lead[field]) || 1, node[field], (v) => ctx.value(v))) return false;
     }
+    /* element: the lead hontori has it as its first or second element */
+    if ('element' in node) {
+      const kind = kindOf(game, lead.key);
+      if (!kind || (kind.element !== node.element && kind.element2 !== node.element)) return false;
+    }
     return true;
   });
 

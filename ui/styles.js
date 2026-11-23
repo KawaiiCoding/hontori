@@ -409,6 +409,12 @@ button.ui-quest:active{transform:translateY(1px)}
 .ui-wmap .you{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--you);border:2px solid #fff;
   box-shadow:0 0 0 4px var(--you-glow);animation:ui-you 1.3s ease-in-out infinite}
 @keyframes ui-you{0%,100%{transform:scale(.9)}50%{transform:scale(1.08)}}
+.ui-wmap .pick{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;padding:0;border:0;border-radius:50%;background:transparent;
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .08s,background .08s}
+.ui-wmap .pick:active{transform:scale(.9);background:rgba(255,236,170,.32);box-shadow:0 0 0 2px rgba(255,236,170,.7)}
+.ui-wmap .pick.heard:active{background:rgba(255,255,255,.14);box-shadow:none}
+.ui-wmap .pick:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.ui-amap-back{width:100%;justify-content:center;margin:0 0 10px}
 
 /* ---------- the first-touch guide (ui/HelperCard.js) ---------- */
 .ui-guide{position:absolute;inset:0;z-index:40;pointer-events:none;opacity:0;transition:opacity .2s}

@@ -18,7 +18,7 @@ const WORDS = {
   stick: 'shared.ui.title.stick', stickDesc: 'shared.ui.title.stick.desc', tap: 'shared.ui.title.tap', tapDesc: 'shared.ui.title.tap.desc',
   menu: 'shared.ui.menu.title', save: 'shared.ui.menu.save', saveDesc: 'shared.ui.menu.save.desc', saved: 'shared.ui.menu.saved',
   menuStick: 'shared.ui.menu.stick', menuStickDesc: 'shared.ui.menu.stick.desc', menuTap: 'shared.ui.menu.tap',
-  menuTapDesc: 'shared.ui.menu.tap.desc', soundOn: 'shared.ui.menu.soundOn', soundOff: 'shared.ui.menu.soundOff',
+  menuTapDesc: 'shared.ui.menu.tap.desc', soundOn: 'shared.ui.menu.soundOn', soundOff: 'shared.ui.menu.soundOff', rainOn: 'shared.ui.menu.rainOn', rainOff: 'shared.ui.menu.rainOff',
   soundDesc: 'shared.ui.menu.sound.desc',
 };
 

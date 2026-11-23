@@ -880,6 +880,8 @@ export default {
   'shared.ui.map.tab.world': 'World',
   'shared.ui.map.world': 'The World',
   'shared.ui.map.closed': '{place}: {why}',
+  'shared.ui.map.unexplored': 'Not explored yet',
+  'shared.ui.map.back': 'Back to the world',
   'shared.world.emberbrook': 'Emberbrook',
   'shared.world.whisperwood': 'Whisperwood',
   'shared.world.mossgrove': 'Mossgrove',
@@ -926,6 +928,8 @@ export default {
   'shared.ui.menu.tap.desc': 'Tap to move, double tap to run',
   'shared.ui.menu.soundOn': 'Sound on',
   'shared.ui.menu.soundOff': 'Sound off',
+  'shared.ui.menu.rainOn': 'Rain sound on',
+  'shared.ui.menu.rainOff': 'Rain sound off',
   'shared.ui.menu.sound.desc': 'Tap to switch',
 
   /* the feature screens: drawing prompt, name entry, fishing, riding, Element Bloom, the offer */

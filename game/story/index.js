@@ -33,6 +33,7 @@ function registeredValue(story, key, ctx) {
 
 export function install(game) {
   registerContent(game);
+
   game.registry.add('story.speaker', LEAD, (speaker, ctx, story) => {
     const voice = speaker.voice;
     if (speaker.look === LEAD) {

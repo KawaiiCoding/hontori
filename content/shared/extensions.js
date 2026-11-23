@@ -19,7 +19,7 @@ export default {
   },
   condition: {
     spell: { args: ['has:spell'] },
-    lead: { args: ['stage?:compare', 'level?:compare'] },
+    lead: { args: ['stage?:compare', 'level?:compare', 'element?:element'] },
     ring: { args: ['has:element'] },
     mana: { args: ['lte?:number', 'lt?:number', 'gte?:number'] },
     full: { args: [] },

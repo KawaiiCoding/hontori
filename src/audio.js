@@ -10,6 +10,7 @@ window.H = window.H || {};
 
   var ctx = null, master = null, comp = null, musicBus = null, sfxBus = null, ambBus = null, revSend = null;
   var noiseBuf = null;
+  var rainOff = false;
   var inited = false, muted = false, timer = null;
   var wantKey = null, curMap = null, lastEnv = null;
   var player = null;
@@ -338,7 +339,7 @@ window.H = window.H || {};
     lastAmbSet = now;
     var indoor = !!env.indoor, rain = env.weather === 'rain', night = isNight(env);
     var wind = Math.max(0, Math.min(1, +env.wind || 0));
-    amb.rain.gain.setTargetAtTime(rain ? (indoor ? 0.07 : 0.2) : 0, now, 0.7);
+    amb.rain.gain.setTargetAtTime(rain && !rainOff ? (indoor ? 0.07 : 0.2) : 0, now, 0.7);
     amb.rainLp.frequency.setTargetAtTime(indoor ? 1100 : 7000, now, 0.5);
     amb.wind.gain.setTargetAtTime(indoor ? wind * 0.03 : wind * 0.3, now, 0.8);
     amb.fireOn = indoor;
@@ -591,6 +592,11 @@ window.H = window.H || {};
       midi = +midi;
       if (!isFinite(midi)) return;
       try { playVoice(sfxBus, ctx.currentTime + 0.005, midi, 0.5, 'piano', 0.3); } catch (e) {}
+    },
+    /* the player can turn the rain sound off on its own (Menu) */
+    setRainMuted: function (b) {
+      rainOff = !!b;
+      if (ctx && amb.rain) amb.rain.gain.setTargetAtTime(0, ctx.currentTime, 0.2);
     },
     setMuted: function (b) {
       muted = !!b;

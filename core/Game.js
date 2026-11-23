@@ -50,6 +50,7 @@ export class Game {
     this.bus = new EventBus();
     this.settings = new Settings(storage, `${config.id}.settings`);
     sound.setMuted(this.settings.get('muted'));
+    if (sound.setRainMuted) sound.setRainMuted(this.settings.get('rainMuted'));
     this.registry = new Registry();
     this.save = new SaveStore({ storage, bus: this.bus, key: `${config.id}.save.s` });
     this.scenes = new SceneStack(this);

@@ -11,7 +11,7 @@
  * Storage that is missing or refuses never throws; the choice then lasts for this visit.
  */
 
-const DEFAULTS = { controls: null, muted: false, slot: 1 };
+const DEFAULTS = { controls: null, muted: false, rainMuted: false, slot: 1 };
 
 export class Settings {
   #storage;
