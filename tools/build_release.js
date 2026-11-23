@@ -29,7 +29,8 @@ const crypto = require('crypto');
 const ROOT = path.resolve(__dirname, '..');
 
 const DIST = path.join(ROOT, 'dist');
-const MODULES = process.env.HONTORI_NODE_MODULES || '/Users/hm/Desktop/files/dev/game/node_modules';
+/* where terser, esbuild (and playwright for --icons) live: an explicit folder, else this project's own node_modules */
+const MODULES = process.env.HONTORI_NODE_MODULES || path.join(__dirname, '..', 'node_modules');
 const CHROME = process.env.HONTORI_CHROME || '/Users/hm/Library/Caches/ms-playwright/chromium_headless_shell-1255/chrome-headless-shell-mac-arm64/chrome-headless-shell';
 function arg(name, def) { const i = process.argv.indexOf('--' + name); return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : def; }
 const ASSET_DIRS = ['assets/sheets', 'assets/fonts', 'assets/icons'];

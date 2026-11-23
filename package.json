@@ -1,5 +1,12 @@
 {
   "name": "hontori",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "terser": "5.51.2"
+  },
+  "scripts": {
+    "build": "node tools/build_release.js"
+  }
 }
