@@ -167,7 +167,25 @@ export function createWear(art, rules, prizeOf) {
         let right = left;
         while (left > lo && tops[left - 1] <= reach) left--;
         while (right < hi && tops[right + 1] <= reach) right++;
-        result = { hx: middle != null ? middle : (left + right + 1) / 2, hy: best };
+        let cx = (left + right + 1) / 2;
+        if (middle != null) {
+          /* front and back: a little below the top of the head, take the solid run of pixels that holds the
+             column nearest the creature's centre; the head is that run, and the hat sits on its middle */
+          const row = Math.min(h - 1, Math.round(best + 4 * perUnit));
+          let c = Math.round(middle);
+          if (!solid(c, row)) {
+            for (let d = 1; d < w; d++) {
+              if (solid(c - d, row)) { c -= d; break; }
+              if (solid(c + d, row)) { c += d; break; }
+            }
+          }
+          let a = c;
+          let b = c;
+          while (solid(a - 1, row)) a--;
+          while (solid(b + 1, row)) b++;
+          cx = (a + b + 1) / 2;
+        }
+        result = { hx: cx, hy: best };
       }
     } catch (error) {
       result = null;
@@ -208,6 +226,7 @@ export function createWear(art, rules, prizeOf) {
       if (!m) return;
       /* the painter mirrors a picture facing right: the hat's place and the hat are mirrored with it */
       const side = rec.flip ? -1 : 1;
+      /* front and back: the hat sits exactly on the creature's own centre line, the x it was drawn at */
       const hx = rec.tx + side * (rec.dx + m.hx * toLocal);
       const hy = rec.ty + rec.dy + m.hy * (rec.dh / rec.sh);
       ctx.save();

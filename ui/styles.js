@@ -281,7 +281,17 @@ button.ui-quest:active{transform:translateY(1px)}
 .ui-pouch .pt{display:flex;flex-direction:column;gap:2px;min-width:0}
 .ui-pouch b{font-size:16px;font-weight:900;color:var(--pouch-title,#ffe2b0)}
 .ui-pouch span{font-size:12px;font-weight:700;color:var(--pouch-text,#f4dcc0);opacity:.9}
-.ui-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.ui-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin:0 0 12px}
+.ui-sellrow{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 12px;padding:10px 14px;border-radius:14px;border:2px solid rgba(255,217,138,.45);background:rgba(255,217,138,.08);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.ui-sellrow img{width:32px;height:32px;image-rendering:pixelated;flex:none}
+.ui-sellrow .w{display:flex;flex-direction:column;min-width:0;flex:1}
+.ui-sellrow b{font-size:15px;font-weight:900}
+.ui-sellrow small{font-size:12px;font-weight:700;opacity:.75}
+.ui-sellrow .worth{font-weight:900;color:#ffd98a;white-space:nowrap}
+.ui-sellrow.on{border-color:#ffd98a;box-shadow:0 0 0 2px rgba(255,217,138,.35)}
+.ui-sellrow.empty{opacity:.6}
+.ui-pick.shop{margin:0 0 14px}
+.ui-pick.shop .ui-btn{align-self:flex-start;width:auto;min-width:0;margin-top:8px;padding-inline:16px}
 .ui-slot{position:relative;aspect-ratio:1;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   border-radius:14px;border:2px solid color-mix(in srgb,var(--pouch-edge,#c8925a) 45%,transparent);
   background:radial-gradient(circle at 50% 40%,rgba(255,220,170,.12),rgba(40,28,20,.55));color:var(--text);font:inherit;cursor:pointer;padding:4px;touch-action:manipulation}

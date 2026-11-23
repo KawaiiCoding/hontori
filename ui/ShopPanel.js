@@ -47,14 +47,15 @@ function image(src) {
 
 /* the selected thing: what it is, what it costs, what it does, and the one button that trades */
 function showPick(art, card, pick, onTrade) {
-  card.className = 'ui-pick';
+  card.className = 'ui-pick shop';
   card.textContent = '';
   card.appendChild(image(pick.icon));
   const info = element('div', 'inf', card);
   element('b', '', info, pick.name);
   element('div', 'pr', info, pick.price);
   if (pick.desc) element('div', 'use', info, pick.desc);
-  const button = new Button(art, { label: pick.action, desc: pick.can ? null : pick.short, kind: pick.can ? 'gold' : 'alt', onPress: () => {
+  /* a small button with an icon: a coin to buy, the pouch to sell */
+  const button = new Button(art, { icon: pick.key === 'sell' ? 'backpack' : 'coin', label: pick.action, desc: pick.can ? null : pick.short, kind: pick.can ? 'gold' : 'alt', small: true, onPress: () => {
     if (pick.can) onTrade();
   } });
   button.element.disabled = !pick.can;
@@ -73,18 +74,16 @@ export function buildShop(panel, view, { art, line, state = {}, onLine, close })
 
   const labels = view.words || {};
   const grid = panel.add(element('div', 'ui-slots'));
-  const card = panel.add(element('div', 'ui-pick hint', null, labels.pick || ''));
+  const card = panel.add(element('div', 'ui-pick shop hint', null, labels.pick || ''));
   const picks = view.goods.map((good) => ({
     key: `good:${good.item}`, icon: good.icon, name: good.name, price: good.price, tag: good.price, desc: good.desc,
     can: good.can, short: good.short, action: labels.buy || view.buyLabel, trade: good.buy,
   }));
   const sell = view.sell;
-  if (sell) {
-    picks.push({
-      key: 'sell', icon: sell.icon, name: sell.name || sell.label, price: sell.worth || '', tag: sell.worth || '', desc: sell.desc,
-      can: !!sell.value, short: '', action: sell.label, trade: sell.run,
-    });
-  }
+  const sellPick = sell ? {
+    key: 'sell', icon: sell.icon, name: sell.name || sell.label, price: sell.worth || '', tag: sell.worth || '', desc: sell.desc,
+    can: !!sell.value, short: '', action: sell.label, trade: sell.run,
+  } : null;
   let chosen = null;
   for (const pick of picks) {
     const button = element('button', 'ui-slot', grid);
@@ -102,6 +101,27 @@ export function buildShop(panel, view, { art, line, state = {}, onLine, close })
     };
     button.addEventListener('click', select);
     if (state.chosen === pick.key) select();
+  }
+
+  /* selling is its own clear row under the goods: what the pouch is worth, then the same card and button */
+  if (sellPick) {
+    const sellRow = element('button', 'ui-sellrow' + (sellPick.can ? '' : ' empty'));
+    sellRow.type = 'button';
+    sellRow.appendChild(image(sellPick.icon));
+    const sellWords = element('span', 'w', sellRow);
+    element('b', '', sellWords, sellPick.action);
+    element('small', '', sellWords, sellPick.can ? sellPick.desc : sellPick.desc);
+    if (sellPick.can) element('span', 'worth', sellRow, sellPick.worth);
+    card.parentNode.insertBefore(sellRow, card);
+    const pickSell = () => {
+      if (chosen) chosen.classList.remove('on');
+      chosen = sellRow;
+      sellRow.classList.add('on');
+      state.chosen = 'sell';
+      showPick(art, card, sellPick, () => onLine(sellPick.trade()));
+    };
+    sellRow.addEventListener('click', pickSell);
+    if (state.chosen === 'sell') pickSell();
   }
 
   const row = panel.actions();
