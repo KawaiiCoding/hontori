@@ -101,13 +101,13 @@ export function createWear(art, rules, prizeOf) {
   let probeCtx = null;
 
   /* the top of the head where a hat rests (its middle and its height), in pixels of the source picture */
-  function measure(src, sx, sy, sw, sh, perUnit, side) {
+  function measure(src, sx, sy, sw, sh, perUnit, side, middle) {
     let ids = found.get(src);
     if (!ids) {
       ids = new Map();
       found.set(src, ids);
     }
-    const key = `${sx},${sy},${sw},${sh},${side ? 1 : 0}`;
+    const key = `${sx},${sy},${sw},${sh},${side ? 1 : 0},${middle == null ? '' : Math.round(middle)}`;
     if (ids.has(key)) return ids.get(key);
     let result = null;
     try {
@@ -139,8 +139,15 @@ export function createWear(art, rules, prizeOf) {
       while (first < w && tops[first] === Infinity) first++;
       while (last > first && tops[last] === Infinity) last--;
       const [from, to] = side ? HEAD_SIDE : HEAD_FRONT;
-      const lo = Math.floor(first + (last - first) * from);
-      const hi = Math.ceil(first + (last - first) * to);
+      let lo = Math.floor(first + (last - first) * from);
+      let hi = Math.ceil(first + (last - first) * to);
+      /* facing front or back the head sits on the creature's own middle: search only there, so a tail or a
+         wing on one side never pulls the hat off centre */
+      if (middle != null) {
+        const half = Math.max(2, Math.round(HEAD_SPAN * perUnit));
+        lo = Math.max(0, Math.round(middle) - half);
+        hi = Math.min(w - 1, Math.round(middle) + half);
+      }
       const span = Math.max(2, Math.round(HEAD_SPAN * perUnit));
       let best = Infinity;
       let hx = -1;
@@ -160,7 +167,7 @@ export function createWear(art, rules, prizeOf) {
         let right = left;
         while (left > lo && tops[left - 1] <= reach) left--;
         while (right < hi && tops[right + 1] <= reach) right++;
-        result = { hx: (left + right + 1) / 2, hy: best };
+        result = { hx: middle != null ? middle : (left + right + 1) / 2, hy: best };
       }
     } catch (error) {
       result = null;
@@ -195,7 +202,9 @@ export function createWear(art, rules, prizeOf) {
       const toLocal = rec.dw / rec.sw;
       const unit = rec.unit;
       const sideView = !!(pose && (pose.dir === 2 || pose.dir === 3));
-      const m = measure(rec.src, rec.sx, rec.sy, rec.sw, rec.sh, unit / toLocal, sideView);
+      /* the creature's own middle (where it stands) in source pixels, used for front and back views */
+      const middle = sideView ? null : (-rec.dx) / toLocal;
+      const m = measure(rec.src, rec.sx, rec.sy, rec.sw, rec.sh, unit / toLocal, sideView, middle);
       if (!m) return;
       /* the painter mirrors a picture facing right: the hat's place and the hat are mirrored with it */
       const side = rec.flip ? -1 : 1;
