@@ -40,6 +40,21 @@ export class Capsules {
     this.#read = read;
     this.#emit = emit;
     this.#random = random;
+    /* which prizes can be won right now (the game may hold some back, for example until they can be used) */
+    this.allow = () => true;
+  }
+
+  /* prizes of the series that are not owned and can be won now */
+  available(seriesId) {
+    return this.#prizes(seriesId).filter((p) => !this.owns(p.id) && this.#allowed(p)).length;
+  }
+
+  #allowed(prize) {
+    try {
+      return this.allow(prize) !== false;
+    } catch (error) {
+      return true;
+    }
   }
 
   #state() {
@@ -106,12 +121,15 @@ export class Capsules {
   }
 
   turn(seriesId, { free = false, day = 0 } = {}) {
-    const left = this.#prizes(seriesId).filter((p) => !this.owns(p.id));
+    const left = this.#prizes(seriesId).filter((p) => !this.owns(p.id) && this.#allowed(p));
     if (!left.length) return null;
     const state = this.#state();
     if (!this.freeToday(day, seriesId)) return null;
     state.freeDays[seriesId] = day;
-    const prize = this.#pick(left);
+    /* a series may name its first prize: the first turn of that machine always gives it */
+    const series = this.series(seriesId) || {};
+    const opening = series.first && !this.#prizes(seriesId).some((p) => this.owns(p.id)) ? left.find((p) => p.id === series.first) : null;
+    const prize = opening || this.#pick(left);
     state.owned.push(prize.id);
     state.turns = (Number(state.turns) || 0) + 1;
     const slot = prize.slot;

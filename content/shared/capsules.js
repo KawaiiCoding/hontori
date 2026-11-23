@@ -20,6 +20,7 @@ export default {
   series: {
     emberbrook: {
       name: 'shared.capsule.series.emberbrook',
+      first: 'cap_straw_hat',
       price: 10,
       prizes: [
         { id: 'cap_straw_hat', slot: 'hat', look: 'straw_hat', name: 'shared.capsule.cap_straw_hat', desc: 'shared.capsule.cap_straw_hat.desc' },

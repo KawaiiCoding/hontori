@@ -89,6 +89,16 @@ export function install(game) {
       }
     },
   });
+  /* a saddle blanket can only be won once the kid owns a saddle: until then it would have nothing to show on */
+  rules.allow = (prize) => prize.slot !== 'blanket' || hasSaddle();
+  function hasSaddle() {
+    try {
+      return !!(game.story && game.story.test && game.story.test({ has: 'saddle' }));
+    } catch (error) {
+      return false;
+    }
+  }
+
 
   /* the machines: a prop each, drawn from a cached picture with a soft contact shadow */
   for (const m of book.machines) {
