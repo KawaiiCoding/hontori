@@ -304,6 +304,7 @@ export function installScreens(game, roster, guide) {
       element('p', 'use', words, t(`shared.ui.spell.use.${spell.id}`));
       element('p', 'how', words, t(`shared.ui.spell.how.${spell.id}`));
       pips(words, spell.mastery, 5, t(`shared.ui.mastery.${Math.max(1, Math.min(5, spell.mastery))}`));
+      element('p', 'how', words, t('shared.ui.mastery.explain'));
       const row = s.panel.add(element('div', 'ui-row'));
       s.panel.button(row, {
         icon: 'book', kind: spell.on ? 'alt' : 'gold',

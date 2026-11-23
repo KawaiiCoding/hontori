@@ -850,6 +850,7 @@ export default {
   'shared.ui.spells.max': 'Four spells at most',
   'shared.ui.spells.keepOne': 'Keep at least one spell',
   'shared.ui.spells.note': 'Mastery grows each time you cast a spell. Neat drawings grow it faster. Higher mastery makes a spell cheaper and easier to draw.',
+  'shared.ui.mastery.explain': 'Mastery grows each time you draw it, faster when neat. Higher mastery forgives a shakier line, and Expert and Master cost 1 less mana.',
   'shared.ui.mastery.1': 'Novice',
   'shared.ui.mastery.2': 'Apprentice',
   'shared.ui.mastery.3': 'Adept',
