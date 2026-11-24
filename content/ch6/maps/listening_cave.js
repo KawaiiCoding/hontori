@@ -1,0 +1,85 @@
+/*
+ * ch6/maps/listening_cave.js
+ * Job: the dark tunnels under the quarry, natural rock throughout: the mouth, the crossing, the west drift up to a crystal hollow, the east drift to a pool, the boulder room that is Bedrock Hall's entrance test, and behind its gate the chamber of the old carvings.
+ */
+
+export default {
+  id: 'listening_cave',
+  name: 'ch6.map.listening_cave',
+  tileset: 'indoor',
+  rest: false,
+  dark: { level: 0.94, sight: 26, lantern: { item: 'lantern', sight: 76 } },
+  legend: { S: 'cave_floor', V: 'cave_rock', W: 'cave_wall', K: 'cave_carving', P: 'cave_pool', M: 'cave_stalagmite', C: 'cave_crystal' },
+  rows: [
+    'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVWWWWWWWWWWWVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVWWWWKWKWKWWWWWVVVVVVVVVVVVVV',
+    'VVVVVWWWWWVVVVWWWSSSSSSSSSSSWWVVVVVVVVVVVVVV',
+    'VVVWWWWWWWWWVVWWSSSSSSSSSSSSSMVVVVVVVVVVVVVV',
+    'VVVWWSSSSSWWVVSSCSSSSSSSSSSSCSVVVVVVVVVVVVVV',
+    'VVVSSSSSSSSSVVVVVSSSSSSSSSSSVVVVVVVVVVVVVVVV',
+    'VVVSSSSMVVVVVVVVVVVVVVSVVVVVVVVVVVVVVVVVVVVV',
+    'VVVSSSSSVVVVVVVVWVWWWWSWWWWWVVVVVVVVVVVVVVVV',
+    'VVVVSSSSVVVVVVVWWWWWWWSWWWWWWWVVVVVVVVVVVVVV',
+    'VVVVSSSSVVVVVVWWSWSSSSSSSSSSWWWWVVVVVVVVVVVV',
+    'VVVVVSSSVVVVWWWSSSSSSSSSSSSSSSWWVVVVVVVVVVVV',
+    'VVVVVSSSVVVVWWMSSSSSSSSSSSSSSSMSVVVVVVVVVVVV',
+    'VVVVWSSSVVVVSSSSSSSSSSSSSSSSSSSSVVVVVVVVVVVV',
+    'VVVVWSSSVVVVSSSSSSSSSSSSSSSSSSSSVVVVVWVVVVVV',
+    'VVVVSSSSWWVVVSSSSSSSSSSSSSSSSSSSVVVWWWWWVVVV',
+    'VVVWSSSSWWVVVVSSSSSSSSSSSSSSSSVVVVWWWSWWWVVV',
+    'VVVWMSSSSSVVVVVVVVSSSSSSSSSVSVVVVVWSSSPPWVVV',
+    'VVVSSSSSSSVVVVVVVVVVVSSSVVVVVVVVVVSSSPPPPWVV',
+    'VVVSSSSSSSVVVVVVVVVWWSSSWVVVVVVWWWSSSPPPPWVV',
+    'VVVSSSSSSSWWVVVVWVWWWSSSWWWVWWWWWWSSSSSSSSVV',
+    'VVVVSSMSSSWWWWWWWWWSSSSSMWWWWWWSSSSSSSSSSVVV',
+    'VVVVVSVVSSSSWWWWSWSSSSSSSSSWSSSSSSSSSMSSVVVV',
+    'VVVVVVVVVSSSSSSSSSSSSSSSSSSCSSSSSSSSSVVVVVVV',
+    'VVVVVVVVVVVSSMSSSSSSSSSSSSSSSVVVVVSSVVVVVVVV',
+    'VVVVVVVVVVVVSVVVVSSSSSSSSSSVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVSSSSSVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVSSSSSVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVSSSSVVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVSSSSVVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVSSSVVVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVSSSWWVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVWWSSSWWWWVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVWWSSSSSWWVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVSSSSSSSSSVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVSSSSSSSSSVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVSSSSSSSMVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVSSSSSSVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVVVSVVVVVVVVVVVVVVVVVVVVV',
+    'VVVVVVVVVVVVVVVVVVVVVVSVVVVVVVVVVVVVVVVVVVVV'
+  ],
+  props: [
+    { type: 'glowcaps', x: 17, y: 23 }, { type: 'glowcaps', x: 4, y: 20 }, { type: 'glowcaps', x: 5, y: 9 }, { type: 'glowcaps', x: 35, y: 21 },
+    { type: 'glowcaps', x: 20, y: 35 }
+  ],
+  doors: [
+    { x: 22, y: 39, to: 'old_quarry', tx: 21, ty: 1, dir: 0 }
+  ],
+  spawn: { x: 22, y: 38, dir: 1 },
+  labels: [
+    { x: 22, y: 13, name: 'ch6.map.listening_cave.label.1' }, { x: 22, y: 4, name: 'ch6.map.listening_cave.label.2' },
+    { x: 7, y: 7, name: 'ch6.map.listening_cave.label.3' }, { x: 37, y: 20, name: 'ch6.map.listening_cave.label.4' }
+  ],
+  lights: [
+    { x: 264, y: 86, r: 26, color: '#8ff0e8', flicker: false }, { x: 456, y: 86, r: 26, color: '#8ff0e8', flicker: false }, { x: 440, y: 374, r: 26, color: '#8ff0e8', flicker: false }
+  ],
+  spots: {
+    entry: [22, 35],
+    crossing: [22, 23],
+    dunn: [21, 19],
+    puzzleEntry: [22, 17],
+    boulders: [[17, 14], [22, 15], [27, 14]],
+    pads: [[21, 12], [22, 12], [23, 12]],
+    gate: [22, 9],
+    carvings: [[20, 3], [22, 3], [24, 3]],
+    woman: [22, 3],
+    warden: [25, 5],
+    treasure: [7, 6],
+    echo: [6, 19],
+    pool: [37, 20]
+  }
+};

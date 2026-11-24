@@ -1,7 +1,7 @@
 window.H = window.H || {};
 // Spirits: authored in a 32x32 logical box, rasterised natively at any real scale k (renderScale * opts.scale), 4 directions + walk/sit poses,
 // so 1x, 1.5x (0.75 on the 2x canvas), 2x and the 3x portraits are all crisp. 16-frame idle with squash-and-stretch.
-// API: H.spirits = { list, draw(ctx, key, x, y, env, opts), portrait(key, stage), frames, stages, dual, habitats (where the third-wave kinds live) }
+// API: H.spirits = { list, draw(ctx, key, x, y, env, opts), portrait(key, stage), frames, stages, dual, habitats (where the third-, fourth- and fifth-wave kinds live) }
 (function () {
   var S = 32, NF = 16, cache = {}, pcache = {}, gcache = {};
   var list = [
@@ -2274,6 +2274,1825 @@ window.H = window.H || {};
     STAGES[key] = d[5];
     stages[key] = d[5].map(function (a) { return { name: a[0], desc: a[1] }; });
   });
+  /* ---------- fourth wave (chapters 4 and 5: the coast and the copper city): sixteen kinds with bodies of their own.
+     They come after the third wave in the list, so every earlier seed stays the same. */
+  var CU = ['#ffd8a8', '#e09a58', '#b06a38', '#7e4626'];
+  var NP4 = {
+    spW: ['#ffffff', '#eef3f8', '#cdd8e4', '#a4b4c6'], spG: ['#dce6f0', '#b4c4d6', '#8ea2b8', '#6c8098'], spM: ['#ffffff', '#fffaf6', '#f0e4e0', '#d8c8c4'],
+    mwB: ['#c8d8e8', '#8ea6c0', '#667e9c', '#4a5e7c'], mwC: ['#ffffff', '#f4f6f0', '#dcdccc', '#b8b8a4'], mwK: ['#fff0a0', '#f0c040', '#c89020', '#986a18'],
+    bfB: ['#7ac0d0', '#3a7e9c', '#2a5a7c', '#1c3c5a'], bfC: ['#f0f8f0', '#d4ecdc', '#a8d0c0', '#80b0a0'], bfL: ['#fffbe0', '#ffe070', '#f0b030', '#b07818'], bfF: ['#bff0ff', '#8ad0e8', '#5aa8c8', '#3a80a8'],
+    tcS: ['#fff4e8', '#f4d8c0', '#d8b090', '#b08868'], tcB: ['#ffb890', '#f07850', '#c85438', '#943a28'],
+    crB: ['#fff0ec', '#ffd6cc', '#f4aea4', '#d88a84'], crC: ['#ffa08c', '#f2606a', '#c83e52', '#962a40'],
+    djB: ['#ffffff', '#e8f0ff', '#c4d4f4', '#9cb0dc'], djR: ['#f0e4ff', '#c8b4f0', '#a08cd8', '#7a68b4'],
+    ikB: ['#b8a8f0', '#7a64c8', '#56449e', '#3a2c74'], ikS: '#e4d8ff',
+    btB: ['#d8b090', '#a87a58', '#7e5840', '#5a3e2c'], btC: ['#fffaf0', '#f4e6d0', '#dcc8a8', '#bca888'], btK: ['#b8e070', '#6aa840', '#3e7a2e', '#285a20'], btS: ['#ffffff', '#f4eef8', '#d0c4e0', '#a898c0'],
+    smF: ['#e8e4f0', '#b8b0cc', '#8e86a8', '#6a6284'], smC: ['#ffffff', '#fbf8ff', '#e4dcef', '#c8bedc'], bulb: ['#ffffff', '#fff8c0', '#ffe070', '#e0b040'],
+    bbS: ['#a8f0e0', '#40b8a8', '#2a8480', '#1c5a5c'], bbF: ['#fff6d0', '#f4e0a0', '#d8bc70', '#b09048'],
+    wlB: ['#8ac8f0', '#3a78b8', '#2a5890', '#1c3a68'], wlY: ['#fffbe0', '#fff070', '#f0c840', '#c89a20'], wlC: ['#f0faff', '#d4ecfa', '#a8cce8', '#88acd0'],
+    cpF: ['#b4a4b4', '#7a6a7c', '#584a5c', '#3c3040'], cpC: ['#fff0ec', '#f0c8c0', '#d4a098', '#b07a74'], cpB: ['#dcd0dc', '#b0a2b2', '#8a7c8c'],
+    lwG: ['#ffffff', '#fffbe4', '#fff0b4', '#ecd48c'], lwBr: ['#fff0b0', '#e0b850', '#b08830', '#806020'],
+    soB: ['#a8b0c8', '#6a7090', '#4c5070', '#363a54'], soF: ['#ffffff', '#f6f6fa', '#dcdeea', '#b8bcd0'], soY: ['#fffbe0', '#fff070', '#f0c840', '#c89a20'],
+    rcF: ['#f4bc94', '#cc7c4c', '#9e5a36', '#703e26'], rcG: ['#d0ccc8', '#9a9692', '#72706c', '#52504c'], rcC: ['#fffaf2', '#f6e8d6', '#e0caae', '#c0a888'],
+    msB: ['#6e6488', '#463c60', '#30284a', '#201a34'], msS: ['#e8ffff', '#8ff2ff', '#3cc8e0', '#2a98b0'], msF: ['#e4dcf4', '#b8acd8', '#9284b8', '#6e6094']
+  };
+  /* a copper wire with spring rings wound round it, from (x0,y0) to (x1,y1) */
+  function coilT(p, x0, y0, x1, y1, n, r) {
+    var j, m = 12; for (j = 0; j <= m; j++) p.rect(x0 + (x1 - x0) * j / m - 0.4, y0 + (y1 - y0) * j / m - 0.4, 0.9, 0.9, CU[2]);
+    for (j = 0; j < n; j++) { var t = (j + 0.5) / n; p.ell(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, r, r * 0.38, CU); }
+  }
+  function bulbAt(p, x, y, r) { p.rect(x - r * 0.6, y + r * 0.7, r * 1.2, 1, CU[2]); p.ell(x, y, r, r * 1.1, NP4.bulb); p.px(x - 0.5, y, '#ff9a40'); p.px(x + 0.5, y - 0.5, '#ff9a40'); p.px(x - r * 0.5, y - r * 0.5, '#ffffff'); }
+  var DEF4 = {
+    seapup: function (p, f) { /* Seapup: a round seal pup with a spotted coat, big dark eyes and soft flippers */
+      var W = NP4.spW, G = NP4.spG, M = NP4.spM, b = hop(p), wg = Math.sin(p.ph * 2) * 0.5, N = '#3a3440';
+      function spot(x, y) { p.ell(x, y, 1, 0.7, [G[1], G[1]], true); }
+      if (p.side) {
+        p.ell(25.5, 26.5 + wg, 3, 1.3, G); p.ell(26.5, 24.8 + wg, 2.2, 1.1, G);
+        p.ell(17.5, 21.5 + b, 8.5, 5.6, W);
+        spot(20, 18.5 + b); spot(23, 21 + b); spot(16.5, 19 + b);
+        p.ell(10.5, 15.5 + b, 6, 5.4, W);
+        p.ell(6, 17.5 + b, 2.6, 1.9, M);
+        p.rect(3.6, 16.4 + b, 1.4, 1, N);
+        p.px(5.5, 19 + b, G[2]); p.px(7, 19.3 + b, G[2]);
+        eye1(p, 8, 13.5 + b, true);
+        p.blush(10, 17.5 + b, '#ff9ab0');
+        p.ell(13.5, 25.6 + b * 0.5, 3.4, 1.5, G);
+        return;
+      }
+      p.ell(11, 27, 3, 1.2, G); p.ell(21, 27, 3, 1.2, G);
+      /* one pear-shaped body: the head sinks into the shoulders, as a seal's does */
+      p.ell(16, 22 + b, 8, 5.6, W);
+      p.ell(16, 18.5 + b, 7.4, 4.6, W);
+      p.ell(7.8, 23.4 + b, 2, 3.2, G); p.ell(24.2, 23.4 + b, 2, 3.2, G);
+      if (p.back) {
+        p.ell(16, 14 + b, 7.2, 5.8, W);
+        spot(13, 20 + b); spot(19, 22.5 + b); spot(16, 17.5 + b); spot(12.5, 12 + b); spot(19.5, 13.5 + b);
+        return;
+      }
+      p.ell(16, 23.4 + b, 4.6, 3.4, M);
+      spot(10, 20.5 + b); spot(22, 21.5 + b);
+      p.ell(16, 14 + b, 7.2, 5.8, W);
+      spot(11, 10.6 + b);
+      eyes2(p, 11.5, 18.5, 12.2 + b, true);
+      p.ell(16, 17 + b, 3.2, 1.9, M);
+      p.rect(15.2, 15.7 + b, 1.6, 1, N);
+      p.px(13.2, 17.4 + b, G[2]); p.px(12.4, 18 + b, G[2]); p.px(18.8, 17.4 + b, G[2]); p.px(19.6, 18 + b, G[2]);
+      p.blush(9.2, 16 + b, '#ff9ab0'); p.blush(20.8, 16 + b, '#ff9ab0');
+    },
+
+    marshwick: function (p, f) { /* Marshwick: a reed heron chick on long legs, with a reed-green crest */
+      var B = NP4.mwB, C = NP4.mwC, K = NP4.mwK, Lf = NP.lily, LG = '#d09a40', b = hop(p) * 0.6, sw = Math.sin(p.ph) * 0.5;
+      if (p.side) {
+        legsSide(p, [[16.5, 1, 1]], 22, 28, 1, LG, '#a87830');
+        p.rect(14.5, 27.4, 3, 0.8, '#a87830');
+        plume(p, 23, 19.5 + b, 0.35, 3.5, 1.6, [B, B], 0, 0.4);
+        p.ell(18, 18.5 + b, 6.4, 5, B);
+        p.ell(15, 19.5 + b, 3, 3.6, C);
+        p.ell(12.5, 13 + b, 2.4, 3.6, C);
+        plume(p, 14.5, 7.5 + b, -0.35, 5, 1.3, [Lf, Lf], 0.8 + sw, 0.5);
+        p.ell(12, 9.6 + b, 4, 3.6, B);
+        p.ell(11, 11 + b, 2.6, 1.8, C);
+        p.rect(3.5, 10.6 + b, 5.5, 1.2, K[1]); p.rect(4, 11.8 + b, 5, 0.6, K[2]);
+        eye1(p, 10, 8.4 + b, true);
+        p.blush(11.5, 11.6 + b, '#ff9ab0');
+        p.ell(20, 17.6 + b, 4.4, 3.4, [B[1], B[2], B[3]]);
+        legsSide(p, [[18, 0, 0]], 22, 28, 1, LG, LG);
+        p.rect(16, 27.4, 3, 0.8, LG);
+        return;
+      }
+      feet2(p, 13.2, 17.8, 22.5, 1, 5.5, LG);
+      feet2(p, 12.2, 16.8, 27.3, 3, 0.8, LG);
+      p.ell(10.2, 18.5 + b, 2.6, 4.4, [B[1], B[2], B[3]]); p.ell(21.8, 18.5 + b, 2.6, 4.4, [B[1], B[2], B[3]]);
+      p.ell(16, 18 + b, 6, 5.5, B);
+      if (p.back) {
+        p.ell(16, 23 + b, 2.4, 1.6, [B[2], B[3]]);
+        plume(p, 16.5, 7 + b, -1.2, 5, 1.3, [Lf, Lf], 0.8 + sw, 0.5);
+        p.ell(16, 10.5 + b, 4.8, 4.4, B);
+        return;
+      }
+      p.ell(16, 19.4 + b, 3.4, 4, C);
+      plume(p, 16.5, 7 + b, -1.2, 5, 1.3, [Lf, Lf], 0.8 + sw, 0.5);
+      p.ell(16, 10.5 + b, 4.8, 4.4, B);
+      p.ell(16, 12.2 + b, 3.4, 2.4, C);
+      eyes2(p, 12.5, 17.5, 9.2 + b, true);
+      p.ell(16, 13.4 + b, 1.2, 1.6, K); p.px(15.5, 14.8 + b, K[3]);
+      p.blush(10.6, 12.4 + b, '#ff9ab0'); p.blush(19.4, 12.4 + b, '#ff9ab0');
+    },
+
+    bellfish: function (p, f) { /* Bellfish: a round night fish that carries a little glowing bell on a stalk */
+      var B = NP4.bfB, C = NP4.bfC, L = NP4.bfL, Fn = NP4.bfF, fl = flyF(p), cy = 17 + Math.round(fl * 0.5 * 2) / 2, sw = Math.sin(p.ph * 2) * 0.6;
+      function bell(x, y) {
+        p.ell(x, y, 2.3, 2.2, L); p.rect(x - 2.6, y + 1.4, 5.2, 1, L[2]); p.ell(x, y + 2.8, 0.7, 0.7, [L[3], L[3]], true); p.px(x - 1, y - 1, '#ffffff');
+      }
+      if (p.side) {
+        p.ell(26 + sw * 0.4, cy, 2.4, 4.2, Fn); p.ell(24.5, cy, 1.6, 2, [Fn[1], Fn[2]]);
+        p.rect(10, cy - 9, 0.9, 4, B[2]); p.rect(8.5, cy - 10, 2, 0.9, B[2]);
+        bell(7.5, cy - 11.5);
+        p.tri(15, 21, cy - 5.5, 19, cy - 9, B[2], B[1]);
+        p.ell(16, cy, 8.5, 6.5, B);
+        p.ell(14.5, cy + 3, 6, 2.6, C);
+        eye1(p, 9.5, cy - 2.8, true);
+        p.rect(7.6, cy + 1.6, 1.5, 0.6, B[3]);
+        p.blush(11, cy + 0.6, '#ff9ab0');
+        p.ell(17, cy + 1 + sw, 3, 1.6, Fn);
+        return;
+      }
+      p.ell(7.4, cy + 1 + sw, 2.4, 3, Fn); p.ell(24.6, cy + 1 - sw, 2.4, 3, Fn);
+      p.rect(15.6, cy - 14.5, 0.8, 8, B[2]); p.px(15.5, cy - 15, B[2]);
+      if (p.back) { bell(16, cy - 12); p.ell(16, cy, 8, 7.5, B); p.tri(14, 18, cy - 6, 16, cy - 9, B[2], B[1]); p.ell(16, cy + 7.6, 2.6, 1.4, Fn); return; }
+      p.ell(16, cy, 8, 7.5, B);
+      p.ell(16, cy + 3.4, 5, 3.4, C);
+      bell(16, cy - 12);
+      eyes2(p, 11.5, 18.5, cy - 2.6, true);
+      smile(p, 14, cy + 1.4, B[3]);
+      p.blush(9.6, cy + 0.6, '#ff9ab0'); p.blush(20.4, cy + 0.6, '#ff9ab0');
+    },
+
+    tidecrab: function (p, f) { /* Whelkit: a hermit crab that lives in a spiral whelk shell and waves one big claw */
+      var S = NP4.tcS, B = NP4.tcB, b = hop(p), cl = Math.sin(p.ph * 2) > 0.6 ? -0.5 : 0;
+      function whorl(cx, cy, r) {
+        p.ell(cx, cy, r, r * 0.92, S);
+        p.ell(cx + r * 0.08, cy - r * 0.06, r * 0.7, r * 0.64, [S[2], S[2]], true);
+        p.ell(cx + r * 0.12, cy - r * 0.1, r * 0.56, r * 0.5, [S[0], S[1], S[1]]);
+        p.ell(cx + r * 0.2, cy - r * 0.16, r * 0.3, r * 0.27, [S[2], S[2]], true);
+        p.ell(cx + r * 0.24, cy - r * 0.2, r * 0.16, r * 0.14, [S[1], S[1]], true);
+      }
+      if (p.side) {
+        legsSide(p, [[14, 1, 1], [10, 0, 1]], 23 + b, 28, 1.2, B[2], B[3]);
+        p.tri(23, 27, 10 + b, 27.5, 5 + b, S[2], S[1]);
+        whorl(19.5, 16 + b, 7.5);
+        p.ell(11.5, 22 + b, 5, 3.6, B);
+        p.rect(9.4, 15.5 + b, 1, 4, B[2]);
+        eye1(p, 8.5, 13.6 + b, true);
+        p.ell(6, 22.2 + b + cl, 3, 2.6, B); p.px(3.5, 21.2 + b + cl, B[3]); p.px(4, 21.6 + b + cl, B[3]);
+        p.rect(8.2, 23.8 + b, 1.2, 0.6, B[3]);
+        legsSide(p, [[15, 0, 0], [11, 1, 0]], 23 + b, 28, 1.2, B[2], B[3]);
+        return;
+      }
+      if (p.back) {
+        feet2(p, 10.5, 20, 24.5, 1.5, 3, B[2]);
+        p.ell(8.5, 23.5 + b, 2.2, 2, B); p.ell(23.5, 23 + b + cl, 3, 2.6, B);
+        p.tri(14.5, 17.5, 9 + b, 16, 3.5 + b, S[2], S[1]);
+        whorl(16, 17 + b, 8.5);
+        return;
+      }
+      p.tri(14.5, 17.5, 8 + b, 16, 3 + b, S[2], S[1]);
+      whorl(16, 14.5 + b, 8);
+      feet2(p, 11.5, 19, 24.5, 1.5, 3, B[2]);
+      p.ell(16, 22 + b, 5.5, 3.6, B);
+      p.rect(12.5, 16.5 + b, 1, 3.5, B[2]); p.rect(18.5, 16.5 + b, 1, 3.5, B[2]);
+      eyes2(p, 12, 18, 14.6 + b, true);
+      smile(p, 13.5, 21.4 + b, B[3]);
+      p.ell(9, 23.5 + b, 2.2, 2, B);
+      p.ell(23.5, 23 + b + cl, 3, 2.6, B); p.px(25.5, 21.6 + b + cl, B[3]); p.px(25, 22.2 + b + cl, B[3]);
+      p.blush(10.4, 20.4 + b, '#ff9ab0'); p.blush(19.6, 20.4 + b, '#ff9ab0');
+    },
+
+    coralet: function (p, f) { /* Coralet: a little coral sprite with branching coral on its head and a fish tail */
+      var B = NP4.crB, C = NP4.crC, fl = flyF(p), cy = 15 + Math.round(fl * 0.5 * 2) / 2, sw = Math.sin(p.ph * 2) * 0.6, PO = '#fffbe0';
+      function branch(x, y, m) {
+        plume(p, x, y, -1.57 + m * 0.35, 5, 0.9, [C, C], 0, 0.2);
+        plume(p, x + m * 1, y - 2.4, -1.57 + m * 1.1, 2.6, 0.7, [C, C], 0, 0.2);
+        plume(p, x + m * 0.2, y - 1.6, -1.57 - m * 0.7, 2, 0.7, [C, C], 0, 0.2);
+        p.px(x + m * 1.8, y - 5, PO); p.px(x + m * 3.4, y - 3.6, PO);
+      }
+      function tail(x, y, m) {
+        p.ell(x, y, 2.6, 2.8, B);
+        p.ell(x - 2 + m, y + 2.6 + sw * 0.5, 1.8, 1, [C[0], C[1], C[2]]); p.ell(x + 2 + m, y + 2.6 - sw * 0.5, 1.8, 1, [C[0], C[1], C[2]]);
+      }
+      if (p.side) {
+        tail(19, cy + 8.4, 1);
+        plume(p, 17, cy - 4.5, -1.15, 4.5, 1.1, [C, C], 0, 0.3); plume(p, 19, cy - 6.5, -0.5, 2.4, 0.8, [C, C], 0, 0.3);
+        p.px(21, cy - 7.5, PO); p.px(19, cy - 8.6, PO);
+        p.ell(15.5, cy + 1, 6.6, 7, B);
+        eye1(p, 10.5, cy - 0.6, true);
+        p.px(10.5, cy + 3, C[3]); p.px(11.5, cy + 3.4, C[3]);
+        p.blush(12.6, cy + 2.2, '#ff8a9a');
+        p.ell(16, cy + 4, 2.6, 1.6, [B[1], B[2], B[3]]);
+        p.px(18, cy - 2, PO); p.px(20, cy + 2, PO);
+        return;
+      }
+      tail(16, cy + 8.4, 0);
+      branch(12.5, cy - 4, -1); branch(19.5, cy - 4, 1);
+      p.ell(8.6, cy + 3, 2.4, 1.6, B); p.ell(23.4, cy + 3, 2.4, 1.6, B);
+      p.ell(16, cy + 1, 7, 7, B);
+      if (p.back) { p.px(13, cy - 1, PO); p.px(18.5, cy + 1, PO); p.px(15.5, cy + 4, PO); p.ell(16, cy - 2, 3, 1.6, [B[0], B[0]], true); return; }
+      eyes2(p, 12, 18, cy - 0.6, true);
+      smile(p, 14, cy + 2.8, C[3]);
+      p.blush(9.8, cy + 2.2, '#ff8a9a'); p.blush(20.2, cy + 2.2, '#ff8a9a');
+      p.px(15.5, cy - 4.5, PO);
+    },
+
+    driftjelly: function (p, f) { /* Driftjelly: a jellyfish with a soft round bell and ribbon arms that drift on the breeze */
+      var B = NP4.djB, R = NP4.djR, fl = flyF(p), cy = 12 + Math.round(fl * 0.6 * 2) / 2, i;
+      function ribbons(x0, ang, spread, n, len) {
+        for (i = 0; i < n; i++) { var o = i - (n - 1) / 2; plume(p, x0 + o * spread, cy + 5, ang + o * 0.1, len - Math.abs(o) * 1.2, 0.85, [R, R, [R[0], R[1]]], Math.sin(p.ph + i * 0.4) * 1.6, 0.4); }
+      }
+      if (p.side) {
+        if (p.stage > 1) ribbons(14, 1.25, 1, 1, 10); else ribbons(16, 1.25, 2.6, 3, 10);
+        p.ell(15.5, cy + 0.5, 7.5, 6.5, B);
+        for (i = -3; i <= 3; i++) p.ell(15.5 + i * 2, cy + 5.6 + (i % 2 ? 0.4 : 0), 1.3, 1.2, R);
+        p.ell(16.5, cy - 2.6, 3, 1.6, [B[0], B[0]], true);
+        eye1(p, 9.6, cy - 0.4, true);
+        p.blush(11.4, cy + 2, '#ff9ab0');
+        p.px(9, cy + 2.6, R[3]);
+        return;
+      }
+      /* grown forms add their own long outer ribbons; the inner ones stay few so the gaps between them stay open */
+      if (p.stage > 1) ribbons(16, 1.57, 6, 2, 11); else ribbons(16, 1.57, 3.2, 4, 11);
+      p.ell(16, cy + 0.5, 8, 6.5, B);
+      for (i = -3; i <= 3; i++) p.ell(16 + i * 2.2, cy + 5.6 + (i % 2 ? 0.4 : 0), 1.4, 1.2, R);
+      p.ell(16, cy - 2.6, 3.2, 1.6, [B[0], B[0]], true);
+      if (p.back) { p.ell(16, cy + 1, 4, 2.4, [B[2], B[2]], true); p.ell(16, cy + 1, 2.6, 1.4, [B[1], B[1]], true); return; }
+      eyes2(p, 12, 18, cy - 0.4, true);
+      smile(p, 14, cy + 2.4, R[3]);
+      p.blush(9.6, cy + 2, '#ff9ab0'); p.blush(20.4, cy + 2, '#ff9ab0');
+    },
+
+    inkling: function (p, f) { /* Inkpip: a little night squid with a pointed hood and curling arms */
+      var B = NP4.ikB, Sp = NP4.ikS, fl = flyF(p), cy = 14 + Math.round(fl * 0.6 * 2) / 2, i;
+      function arms(x0, ang, spread) {
+        for (i = 0; i < 5; i++) { var o = i - 2; plume(p, x0 + o * spread, cy + 5.5, ang + o * 0.3, 7.5 - Math.abs(o) * 0.8, 1.3, [B, B, [B[0], B[1]]], Math.sin(p.ph + i * 0.5) * 1.4 + o * 0.9, 0.55); }
+      }
+      if (p.side) {
+        arms(14, 1.15, 2.2);
+        p.ell(19.5, cy - 5, 2.4, 1.4, B);
+        p.tri(10, 21, cy - 1, 17.5, cy - 10.5, B[1], B[0]);
+        p.ell(15, cy + 2, 6, 5.5, B);
+        p.ell(11.5, cy + 2.2, 2.6, 3, [B[0], B[0], B[1]]);
+        eye1(p, 10, cy + 0.2, true);
+        p.px(9, cy + 3.6, B[3]);
+        p.blush(12, cy + 3, '#ff9ab0');
+        p.px(17, cy - 4, Sp); p.px(16, cy - 1, Sp);
+        return;
+      }
+      arms(16, 1.57, 2.4);
+      p.ell(10.6, cy - 5, 2.4, 1.4, B); p.ell(21.4, cy - 5, 2.4, 1.4, B);
+      p.tri(10, 22, cy - 1, 16, cy - 11, B[1], B[0]);
+      p.ell(16, cy + 2, 6.6, 5.5, B);
+      if (p.back) { p.px(14, cy - 4, Sp); p.px(17.5, cy - 6, Sp); p.px(16, cy, Sp); p.px(13, cy + 3, Sp); p.px(19, cy + 2, Sp); return; }
+      p.ell(16, cy + 2.2, 4.6, 3.4, [B[0], B[0], B[1]]);
+      eyes2(p, 12, 18, cy + 0.2, true);
+      p.rect(15.5, cy + 3.6, 1, 0.8, B[3]);
+      p.blush(9.6, cy + 3, '#ff9ab0'); p.blush(20.4, cy + 3, '#ff9ab0');
+      p.px(16, cy - 6, Sp); p.px(14.5, cy - 3.5, Sp); p.px(17.5, cy - 3.5, Sp);
+    },
+
+    brinetail: function (p, f) { /* Brinetail: a sea otter in a kelp scarf that keeps a favourite shell close */
+      var B = NP4.btB, C = NP4.btC, K = NP4.btK, Sh = NP4.btS, b = hop(p), sw = Math.sin(p.ph - 1) * 1.5, N = '#3a2420';
+      function shell(x, y) { p.ell(x, y, 2.4, 1.9, Sh); p.px(x - 1, y - 0.5, Sh[2]); p.px(x, y - 0.8, Sh[2]); p.px(x + 1, y - 0.5, Sh[2]); }
+      if (p.side) {
+        p.ell(26 + sw * 0.3, 25 + b + sw / 3, 5, 1.8, B);
+        legsSide(p, [[20, 1, 1], [13, 0, 1]], 24 + b, 28, 2.4, B[2], B[3]);
+        p.ell(17, 21 + b, 7, 5.6, B);
+        p.ell(13.5, 22 + b, 3.4, 4, C);
+        plume(p, 15, 17.8 + b, 0.7, 4.5, 1.1, [K, K], 1 + sw * 0.4, 0.4);
+        p.ell(13.5, 17.5 + b, 3.4, 1.4, K);
+        shell(10.5, 20.6 + b);
+        legsSide(p, [[21, 0, 0], [14, 1, 0]], 24 + b, 28, 2.6, B[2], B[3]);
+        p.ell(13.5, 8.8 + b, 1.4, 1.4, B);
+        p.ell(11, 13 + b, 5.6, 5, B);
+        p.ell(7.5, 14.6 + b, 3, 2.6, C);
+        p.rect(3.8, 13.4 + b, 1.6, 1.2, N);
+        eye1(p, 8, 10.8 + b, true);
+        p.px(5.5, 16.4 + b, B[2]); p.px(4.5, 16.8 + b, B[2]);
+        p.blush(9.6, 14.4 + b, '#ff9ab0');
+        return;
+      }
+      if (!p.back) p.ell(24 + sw * 0.3, 25.5 + b + sw / 2, 4.6, 1.8, B);
+      p.ell(16, 21 + b, 6.5, 6, B);
+      feet2(p, 11, 18, 26, 3, 2, B[3]);
+      if (p.back) {
+        p.ell(16, 17 + b, 6, 1.4, K);
+        plume(p, 15, 17.5 + b, 1.8, 4, 1, [K, K], sw * 0.5, 0.4); plume(p, 17, 17.5 + b, 1.35, 4, 1, [K, K], -sw * 0.5, 0.4);
+        p.ell(10, 8.5 + b, 1.4, 1.4, B); p.ell(22, 8.5 + b, 1.4, 1.4, B);
+        p.ell(16, 12 + b, 6.6, 5.4, B);
+        p.ell(16, 26 + b, 4, 2, B);
+        return;
+      }
+      p.ell(16, 22.4 + b, 4, 4.2, C);
+      shell(16, 21.6 + b);
+      p.ell(13, 20.8 + b, 1.5, 1.2, B[2]); p.ell(19, 20.8 + b, 1.5, 1.2, B[2]);
+      p.ell(16, 17.2 + b, 6, 1.4, K);
+      plume(p, 20, 17.6 + b, 1.2, 3.5, 1, [K, K], sw * 0.4, 0.4);
+      p.ell(10, 8.5 + b, 1.4, 1.4, B); p.ell(22, 8.5 + b, 1.4, 1.4, B);
+      p.ell(16, 12 + b, 6.6, 5.4, B);
+      p.ell(16, 13.6 + b, 5, 3.6, C);
+      eyes2(p, 12, 18, 10.6 + b, true);
+      p.rect(15, 13.4 + b, 2, 1.2, N); p.px(15.5, 14.6 + b, N);
+      p.px(12, 14.6 + b, B[2]); p.px(11, 15 + b, B[2]); p.px(20, 14.6 + b, B[2]); p.px(21, 15 + b, B[2]);
+      p.blush(9.4, 14 + b, '#ff9ab0'); p.blush(20.6, 14 + b, '#ff9ab0');
+    },
+
+    sparkmouse: function (p, f) { /* Whiskwatt: a harvest mouse with copper whiskers and a coiled wire tail that ends in a tiny bulb */
+      var F = NP4.smF, C = NP4.smC, b = hop(p), sw = Math.sin(p.ph) * 0.6, PK = '#f0b0bc', bg = p.stage >= 3 ? 0.6 : 0;
+      function ear(x, y) { p.ell(x, y, 3.2, 3.2, F); p.ell(x, y + 0.3, 2, 2, [PK, PK], true); p.px(x - 1, y - 3, CU[1]); p.px(x, y - 3.2, CU[1]); p.px(x + 1, y - 3, CU[1]); }
+      if (p.side) {
+        coilT(p, 23.5, 23 + b, 27 + sw, 14 + b, 6, 1.7); bulbAt(p, 27 + sw, 11.4 + b - bg, 1.7 + bg);
+        legsSide(p, [[20, 1, 1], [15, 0, 1]], 24 + b, 28, 1.6, F[2], F[3]);
+        p.ell(18, 21.5 + b, 6.6, 4.8, F);
+        p.ell(15, 22.5 + b, 3, 3, C);
+        ear(12.5, 9.5 + b);
+        p.ell(10.5, 15 + b, 5, 4.4, F);
+        p.ell(6.5, 16.5 + b, 2.4, 1.6, C);
+        p.px(4.3, 16 + b, '#e07a8a');
+        eye1(p, 8.5, 13.4 + b, true);
+        p.rect(3.6, 17.6 + b, 3, 0.6, CU[1]); p.rect(4, 18.6 + b, 2.6, 0.6, CU[2]);
+        p.blush(10, 16.8 + b, '#ff9ab0');
+        legsSide(p, [[21, 0, 0], [16, 1, 0]], 24 + b, 28, 1.6, F[1], F[2]);
+        return;
+      }
+      if (!p.back) { coilT(p, 21, 24 + b, 26 + sw, 17 + b, 5, 1.6); bulbAt(p, 26 + sw, 14.6 + b - bg, 1.7 + bg); }
+      p.ell(16, 21.5 + b, 6, 5.4, F);
+      feet2(p, 12, 17.5, 26, 2.5, 2, PK);
+      ear(10, 8.2 + b); ear(22, 8.2 + b);
+      p.ell(16, 13 + b, 6.4, 5.4, F);
+      if (p.back) { coilT(p, 16, 25 + b, 23 + sw, 16 + b, 6, 1.7); bulbAt(p, 23 + sw, 13.4 + b - bg, 1.7 + bg); return; }
+      p.ell(16, 22.5 + b, 3.6, 3.6, C);
+      p.ell(16, 15.6 + b, 2.6, 1.6, C);
+      p.px(15.5, 14.8 + b, '#e07a8a'); p.px(16, 14.8 + b, '#e07a8a');
+      eyes2(p, 12.5, 17.5, 11.6 + b, true);
+      p.rect(8.4, 15.4 + b, 3, 0.6, CU[1]); p.rect(8.8, 16.6 + b, 2.6, 0.6, CU[2]);
+      p.rect(20.6, 15.4 + b, 3, 0.6, CU[1]); p.rect(20.6, 16.6 + b, 2.6, 0.6, CU[2]);
+      p.blush(10, 14 + b, '#ff9ab0'); p.blush(20, 14 + b, '#ff9ab0');
+    },
+
+    boltbug: function (p, f) { /* Boltbug: a round beetle whose copper horn works like a little lightning rod */
+      var S = NP4.bbS, Fc = NP4.bbF, b = hop(p) * 0.5, LC = '#26303a';
+      function legs(xs, y) { xs.forEach(function (x, j) { var u = p.mode === 'move' && ((j + (p.gp > 3.14 ? 1 : 0)) % 2) ? -0.5 : 0; p.rect(x, y + u, 1, 2.6, LC); }); }
+      if (p.side) {
+        legs([13, 17, 21], 24.5);
+        p.ell(19, 19.5 + b, 7.5, 5.8, S);
+        p.ell(16.5, 16.5 + b, 2.2, 1.2, [S[0], S[0]], true);
+        p.rect(19, 14 + b, 7, 0.8, S[3]);
+        p.ell(11, 21.5 + b, 4, 3.6, Fc);
+        plume(p, 9.5, 18.5 + b, -1.9, 6.5, 1, [CU, CU], -1.2, 0.2);
+        p.ell(7.6, 11.6 + b, 1.4, 1.4, CU);
+        eye1(p, 8.4, 20 + b, true);
+        p.px(8, 23.4 + b, Fc[3]);
+        p.blush(10.4, 22.8 + b, '#ff9ab0');
+        legs([12, 16, 20], 25);
+        return;
+      }
+      legs([8.5, 22.5], 21); legs([10, 21], 23.5);
+      if (p.back) {
+        p.rect(15.5, 9 + b, 1, 4, CU[2]); p.ell(16, 8.5 + b, 1.5, 1.5, CU);
+        p.ell(16, 18.5 + b, 8.5, 7.5, S);
+        p.rect(15.6, 11.5 + b, 0.8, 14, S[3]);
+        p.ell(12.5, 15 + b, 1.6, 1, [S[0], S[0]], true); p.ell(19.5, 15 + b, 1.6, 1, [S[0], S[0]], true);
+        return;
+      }
+      p.ell(16, 17.5 + b, 8, 6.5, S);
+      p.ell(11.5, 14.5 + b, 1.8, 1.1, [S[0], S[0]], true);
+      p.rect(15.4, 10 + b, 1.2, 8, CU[2]); p.rect(15.4, 10 + b, 0.6, 8, CU[1]);
+      p.ell(16, 9.4 + b, 1.6, 1.6, CU);
+      p.ell(16, 22 + b, 5.4, 4.2, Fc);
+      eyes2(p, 12.5, 17.5, 20.4 + b, true);
+      p.rect(15.5, 24.4 + b, 1, 0.6, Fc[3]);
+      p.blush(10.8, 23.2 + b, '#ff9ab0'); p.blush(19.2, 23.2 + b, '#ff9ab0');
+    },
+
+    wireling: function (p, f) { /* Wireling: a small eel with bright stripes that hums with a soft current */
+      var B = NP4.wlB, Y = NP4.wlY, C = NP4.wlC, fl = flyF(p), sw = Math.sin(p.ph) * 0.6, i, n = 11;
+      function body(pt) {
+        for (i = n; i >= 1; i--) {
+          var t = i / n, q = pt(t), r = 3.3 * (1 - 0.62 * t);
+          p.ell(q[0], q[1], r, r, B);
+          if (i % 3 === 1) p.ell(q[0], q[1] - r * 0.35, r * 0.55, r * 0.3, [Y[0], Y[1], Y[2]], true);
+        }
+        var e = pt(1); p.ell(e[0], e[1], 1.6, 1.2, [Y[1], Y[2]]);
+      }
+      if (p.side) {
+        body(function (t) { return [9 + t * 19, 13 + fl + t * 9 + Math.sin(t * 6 + p.ph) * 2.6 * t]; });
+        p.ell(13, 9.8 + fl, 1.6, 1.2, Y);
+        p.ell(9.5, 13 + fl, 5, 4.6, B);
+        p.ell(8, 15 + fl, 2.8, 1.8, C);
+        eye1(p, 7, 11.4 + fl, true);
+        p.px(5.4, 15.2 + fl, B[3]);
+        p.blush(9, 14.6 + fl, '#ff9ab0');
+        return;
+      }
+      body(function (t) { return [16 + Math.sin(t * 4.6 + 0.6 + sw) * 7 * Math.min(1, t * 1.6), 13 + fl + t * 13]; });
+      p.ell(10.2, 10.4 + fl, 1.6, 2.6, Y); p.ell(21.8, 10.4 + fl, 1.6, 2.6, Y);
+      p.ell(16, 12 + fl, 5.6, 4.8, B);
+      if (p.back) { p.ell(16, 10.6 + fl, 2.6, 1, [Y[1], Y[2]], true); return; }
+      p.ell(16, 13.8 + fl, 3.6, 2.4, C);
+      eyes2(p, 12.5, 17.5, 10.4 + fl, true);
+      smile(p, 14, 13.6 + fl, B[3]);
+      p.blush(10.2, 13.6 + fl, '#ff9ab0'); p.blush(19.8, 13.6 + fl, '#ff9ab0');
+    },
+
+    copperpup: function (p, f) { /* Copperpup: a velvet mole with copper digging claws and a copper plate on its brow */
+      var F = NP4.cpF, C = NP4.cpC, Bl = NP4.cpB, b = hop(p), dg = p.mode === 'move' ? Math.round(Math.sin(p.gp) * 2) / 2 : 0;
+      function claw(x, y, m) { p.ell(x, y, 2.6, 2, CU); for (var j = -1; j <= 1; j++) p.px(x + j * 1.2, y + 1.8, CU[3]); }
+      if (p.side) {
+        legsSide(p, [[21, 1, 1]], 24 + b, 28, 2, F[2], F[3]);
+        p.px(26.5, 21 + b, F[2]);
+        p.ell(18, 21 + b, 8, 5.5, F);
+        p.ell(16, 23 + b, 4, 3, Bl);
+        p.ell(10.5, 16 + b, 5, 4.6, F);
+        p.ell(11, 11.8 + b, 2, 1, CU);
+        p.ell(5.8, 17.5 + b, 2.4, 1.6, C);
+        p.ell(4, 17.2 + b, 1, 0.9, ['#f08a9a', '#e07080']);
+        eye1(p, 8.5, 14.6 + b, false);
+        p.blush(9.6, 17.6 + b, '#ff9ab0');
+        claw(9.5 + dg, 24.6 + b, -1);
+        legsSide(p, [[22, 0, 0]], 24 + b, 28, 2, F[1], F[2]);
+        return;
+      }
+      p.ell(16, 21 + b, 7.5, 6, F);
+      feet2(p, 11.5, 18, 26, 2.5, 2, C[2]);
+      if (p.back) { p.ell(16, 13.5 + b, 6.6, 5.2, F); p.ell(16, 9.8 + b, 2.2, 1.2, CU); p.px(16, 27 + b, F[3]); claw(8.8, 23 + b - dg, -1); claw(23.2, 23 + b + dg, 1); return; }
+      p.ell(16, 22.5 + b, 4.5, 4, Bl);
+      claw(8.8, 23 + b - dg, -1); claw(23.2, 23 + b + dg, 1);
+      p.ell(16, 13.5 + b, 6.6, 5.2, F);
+      p.ell(16, 9.6 + b, 2.2, 1.2, CU); p.px(16, 9.4 + b, '#fff070');
+      p.ell(16, 16.4 + b, 2.6, 1.8, C);
+      p.ell(16, 15.8 + b, 1.2, 0.9, ['#f08a9a', '#e07080']);
+      eyes2(p, 12.5, 17.5, 12.6 + b, false);
+      p.blush(10.4, 15 + b, '#ff9ab0'); p.blush(19.6, 15 + b, '#ff9ab0');
+    },
+
+    lampwisp: function (p, f) { /* Lampwisp: a little glass globe with a warm glowing heart and a brass cap */
+      var G = NP4.lwG, Br = NP4.lwBr, fl = flyF(p), cy = 15 + Math.round(fl * 0.5 * 2) / 2, sw = Math.sin(p.ph * 1.5) * 1.6, HT = ['#ffd890', '#ff9a40'];
+      function heart(x, y) { p.ell(x - 0.8, y, 1, 1, HT, true); p.ell(x + 0.8, y, 1, 1, HT, true); p.tri(x - 1.6, x + 1.6, y + 0.4, x, y + 2.2, HT[1]); }
+      function cap(x) { p.rect(x - 3.5, cy - 8.8, 7, 2.2, Br[1]); p.rect(x - 3.5, cy - 7.6, 7, 0.6, Br[2]); p.ell(x, cy - 10, 1.4, 1, Br); p.px(x, cy - 10, Br[3]); }
+      if (p.side) {
+        plume(p, 17, cy + 5.5, 1.25, 6, 2.4, [G, G, [G[1], G[2]]], sw, 0.8);
+        p.ell(16, cy, 7.2, 7.4, G);
+        cap(16.5);
+        heart(17, cy + 3);
+        p.rect(18.5, cy - 4.6, 1, 2.4, '#ffffff');
+        eye1(p, 10.5, cy - 2, true);
+        p.px(10.5, cy + 1.6, Br[2]); p.px(11.5, cy + 2, Br[2]);
+        p.blush(12.6, cy + 0.8, '#ffb070');
+        p.ell(16, cy + 2, 1.8, 1.2, G);
+        return;
+      }
+      plume(p, 16, cy + 6, 1.57, 5.5, 2.4, [G, G, [G[1], G[2]]], sw, 0.8);
+      p.ell(8, cy + 1.5, 1.6, 1.2, G); p.ell(24, cy + 1.5, 1.6, 1.2, G);
+      p.ell(16, cy, 7.5, 7.5, G);
+      cap(16);
+      heart(16, cy + 4);
+      if (p.back) { p.rect(19.5, cy - 4.6, 1, 2.4, '#ffffff'); return; }
+      p.rect(11, cy - 4.8, 1, 2.4, '#ffffff');
+      eyes2(p, 12.5, 17.5, cy - 2.4, true);
+      p.px(15, cy + 0.8, Br[2]); p.px(16, cy + 1.2, Br[2]); p.px(17, cy + 0.8, Br[2]);
+      p.blush(10, cy + 0.6, '#ffb070'); p.blush(20, cy + 0.6, '#ffb070');
+    },
+
+    stormowl: function (p, f) { /* Stormowl: a slender slate owl with a heart-shaped pale face and lightning ear tufts */
+      var B = NP4.soB, Fc = NP4.soF, Y = NP4.soY, fl = flyF(p), BL = ['#e8eaf2', '#c8ccdc', '#a4a8c0', '#8488a4'];
+      /* a two-step lightning zigzag; it grows taller with each stage */
+      function tuft(x, m) { var g = (p.stage - 1) * 0.7; p.tri(x - 1.2, x + 1.2, 8 + fl * 0.3, x + m * 0.8, 5.5 + fl * 0.3 - g * 0.4, Y[2], Y[1]); p.tri(x + m * 0.2 - 1, x + m * 0.2 + 1, 6 + fl * 0.3 - g * 0.4, x + m * 1.8, 2.8 + fl * 0.3 - g, Y[2], Y[1]); }
+      if (p.side) {
+        plume(p, 21.5, 24, 0.9, 3.5, 1.7, [B, B], 0, 0.4);
+        p.ell(17, 19, 6, 7, B);
+        p.ell(14.5, 21, 3.2, 4.4, BL);
+        tuft(15, 1);
+        p.ell(13, 11.5, 5.4, 5.2, B);
+        p.ell(10.2, 12.2, 3.2, 4.2, Fc);
+        eye1(p, 8.8, 10.8, true);
+        p.px(7.4, 13.6, '#d0a050'); p.px(7.4, 14.4, '#b08038');
+        p.blush(10.6, 14.4, '#ff9ab0');
+        p.ell(19.5, 18.5 + fl, 4.4, 6, [B[1], B[2], B[3]]);
+        p.px(19, 16 + fl, B[0]); p.px(21, 19 + fl, B[0]); p.px(18.5, 21 + fl, B[0]);
+        p.rect(14.5, 26, 1.4, 1.6, Y[2]); p.rect(16.6, 26, 1.4, 1.6, Y[3]);
+        return;
+      }
+      p.ell(8.4, 18.5 + fl * 0.6, 3.2, 6, [B[1], B[2], B[3]]); p.ell(23.6, 18.5 + fl * 0.6, 3.2, 6, [B[1], B[2], B[3]]);
+      p.ell(16, 19.5, 6.5, 7, B);
+      p.rect(13, 26, 1.5, 1.6, Y[2]); p.rect(17.5, 26, 1.5, 1.6, Y[2]);
+      tuft(11, -1); tuft(21, 1);
+      p.ell(16, 11.6, 6.8, 5.6, B);
+      if (p.back) { p.px(14, 18, B[0]); p.px(18, 20, B[0]); p.px(15.5, 22.5, B[0]); p.ell(16, 24.5, 2.4, 2, [B[2], B[3]]); return; }
+      p.ell(16, 21.5, 4, 4.6, BL);
+      p.px(14.5, 20, BL[3]); p.px(17.5, 21.5, BL[3]); p.px(15, 23.5, BL[3]);
+      p.ell(13.5, 11.6, 3.3, 3.8, Fc); p.ell(18.5, 11.6, 3.3, 3.8, Fc);
+      p.tri(11.5, 20.5, 14, 16, 16.8, Fc[1]);
+      eyes2(p, 12.5, 17.5, 10.6, true);
+      p.px(15.5, 13.8, '#d0a050'); p.px(16, 13.8, '#d0a050'); p.px(15.5, 14.6, '#b08038');
+      p.blush(10.6, 14, '#ff9ab0'); p.blush(19.4, 14, '#ff9ab0');
+    },
+
+    rustcat: function (p, f) { /* Rustcat: a lean city stray with a rust coat, one notched ear and a wire-wrapped tail */
+      var F = NP4.rcF, G = NP4.rcG, C = NP4.rcC, b = hop(p), sw = Math.sin(p.ph) * 1.2, IN = '#f0a8a0';
+      function tailTip(x, y) { coilT(p, x - 0.6, y + 1.2, x + 0.6, y - 1.2, 3, 1.4); p.px(x + 1, y - 2.6, '#fff070'); }
+      if (p.side) {
+        plume(p, 24.5, 19.5 + b, -1.35, 7, 1.3, [F, F, G], 2.6 + sw, 0.2);
+        tailTip(27 + sw * 0.6, 12.6 + b);
+        legsSide(p, [[22, 1, 1], [14, 0, 1]], 23 + b, 28, 1.6, F[2], F[3], [C[2], C[3]]);
+        p.ell(18, 21 + b, 7, 4, F);
+        p.ell(20, 19.4 + b, 3, 1.8, G);
+        p.ell(13.5, 22.6 + b, 2.6, 2.2, C);
+        p.tri(10.5, 13.5, 11 + b, 12.6, 5.5 + b, F[2], IN);
+        p.ell(10, 14.5 + b, 4.8, 4.4, F);
+        p.ell(6.3, 16 + b, 2, 1.4, C);
+        p.px(4.5, 15.2 + b, '#d07080');
+        eye1(p, 8, 13 + b, true);
+        p.rect(3.8, 17 + b, 2.6, 0.5, G[0]);
+        p.blush(9.6, 16.4 + b, '#ff9ab0');
+        legsSide(p, [[21, 0, 0], [13, 1, 0]], 23 + b, 28, 1.8, F[1], F[2], [C[1], C[2]]);
+        return;
+      }
+      if (!p.back) { plume(p, 21.5, 24 + b, -1.15, 8, 1.4, [F, F, G], 2 + sw, 0.2); tailTip(26 + sw * 0.6, 14.4 + b); }
+      p.ell(16, 21.5 + b, 5.6, 5.2, F);
+      feet2(p, 12.5, 17.5, 26, 2.5, 2, C[1]);
+      p.tri(9.5, 13.5, 10.5 + b, 10, 4.5 + b, F[2], p.back ? F[2] : IN);
+      p.tri(18.5, 22.5, 10.5 + b, 22, 4.5 + b, F[2], p.back ? F[2] : IN);
+      p.px(21, 5.8 + b, F[3]); p.px(21.5, 6.6 + b, F[3]);
+      p.ell(16, 13.5 + b, 6.4, 5, F);
+      if (p.back) {
+        p.ell(14, 12 + b, 2.6, 2, G); p.rect(14.5, 18 + b, 3, 0.8, F[3]); p.rect(14, 21 + b, 4, 0.8, F[3]);
+        plume(p, 16, 25 + b, -1.25, 8, 1.4, [F, F, G], 2 + sw, 0.2); tailTip(20.5 + sw * 0.6, 15.6 + b);
+        return;
+      }
+      p.ell(16, 22.5 + b, 3, 3.4, C);
+      p.ell(19.2, 12 + b, 2.6, 2, G);
+      eyes2(p, 12.5, 17.5, 12 + b, true);
+      p.ell(16, 15.8 + b, 2.4, 1.4, C);
+      p.px(15.5, 15 + b, '#d07080'); p.px(16, 15 + b, '#d07080');
+      p.rect(8.6, 15.2 + b, 2.6, 0.5, G[0]); p.rect(20.8, 15.2 + b, 2.6, 0.5, G[0]);
+      p.blush(10.2, 14.6 + b, '#ff9ab0'); p.blush(19.8, 14.6 + b, '#ff9ab0');
+    },
+
+    mothspark: function (p, f) { /* Mothspark: a sooty caterpillar with a fluffy collar and spark-blue spots; it grows wings later */
+      var B = NP4.msB, S = NP4.msS, F = NP4.msF, b = hop(p) * 0.6, i;
+      function spot(x, y) { p.ell(x, y, 1.1, 1.1, S, true); }
+      function collar(cx, cy, rx) { for (i = 0; i < 9; i++) { var a = 0.2 + i / 8 * 2.74; p.ell(cx + Math.cos(a) * rx, cy + Math.sin(a) * 1.6, 1.7, 1.5, F); } }
+      function ant(x, y, m) { p.rect(x, y, 0.8, 2.6, B[3]); p.ell(x + 0.4 + m * 0.6, y - 0.4, 1, 1, S, true); }
+      if (p.side) {
+        for (i = 0; i < 4; i++) p.rect(12 + i * 3.6, 26.2, 1.4, 1.6, B[3]);
+        p.ell(23, 24 + b * 0.5, 3.4, 2.8, B); p.ell(19, 23 + b * 0.7, 4, 3.4, B); p.ell(14.5, 21.5 + b, 4.4, 4, B);
+        spot(23, 22.6); spot(19, 21); spot(15, 19.5 + b);
+        ant(10.5, 8 + b, -1);
+        collar(10, 18 + b, 4);
+        p.ell(9.5, 14.5 + b, 5, 4.6, B);
+        eye1(p, 6.8, 13.4 + b, true);
+        p.px(5.4, 17 + b, F[2]);
+        p.blush(8.6, 16.4 + b, '#ff9ab0');
+        return;
+      }
+      for (i = 0; i < 4; i++) p.rect(10.6 + i * 3.2, 26.4, 1.4, 1.4, B[3]);
+      p.ell(16, 22 + b, 7, 5.6, B);
+      p.rect(10, 21 + b, 12, 0.6, B[3]); p.rect(10.6, 24 + b, 10.8, 0.6, B[3]);
+      spot(11.5, 22.6 + b); spot(20.5, 22.6 + b);
+      ant(12.6, 6.4 + b, -1); ant(18.6, 6.4 + b, 1);
+      collar(16, 17.4 + b, 6.4);
+      p.ell(16, 12.8 + b, 6.2, 5.2, B);
+      if (p.back) { spot(16, 10.6 + b); spot(13, 22 + b); spot(19, 22 + b); return; }
+      p.ell(16, 14 + b, 4.2, 3, [F[1], F[1], F[2]]);
+      eyes2(p, 12.5, 17.5, 11.6 + b, true);
+      smile(p, 14, 14.6 + b, B[2]);
+      p.blush(10.2, 14.6 + b, '#ff9ab0'); p.blush(19.8, 14.6 + b, '#ff9ab0');
+    }
+  };
+  var STG4 = {
+    seapup: gstg(function (p, f, s, L, d, b) {
+      var Wt = EP.water[1], Fm = EP.water[0], Fp = [Wt, Wt, Fm], sw = Math.sin(p.ph) * 0.8, i;
+      if (L === 'back') {
+        /* a fin of sea water rises along its back, taller each stage */
+        if (s >= 3) {
+          var n = s - 1;
+          if (d === 2) for (i = 0; i < n; i++) plume(p, 15 + i * 2.6, 16.5 + b + i * 0.6, -1.2, 3 + s * 0.9 - i * 0.4, 1.4, Fp, -1 + sw * 0.3, 0.5);
+          else for (i = 0; i < n; i++) { var o = i - (n - 1) / 2; plume(p, 16 + o * 2.6, 9 + Math.abs(o) * 1.4 + b, -1.57 + o * 0.35, 3 + s * 0.9 - Math.abs(o) * 0.5, 1.4, Fp, 0.8 + sw * 0.3, 0.5); }
+        }
+        return;
+      }
+      /* a curl of sea foam on its head from stage 2, and a foam collar from stage 4 */
+      if (s >= 2) {
+        var cx = d === 2 ? 10.5 : 16, cyy = (d === 2 ? 10 : 8.4) + b, r = 1.1 + s * 0.3;
+        p.ell(cx, cyy, r, r, Fm); p.ell(cx + r * 0.3, cyy + r * 0.2, r * 0.5, r * 0.5, [Wt[0], Wt[1]], true);
+      }
+      if (s >= 4) {
+        if (d === 2) { for (i = 0; i < 3; i++) p.ell(13 + i * 1.8, 19.4 + b + i * 0.2, 1.3, 1.1, Fm); }
+        else for (i = -3; i <= 3; i++) p.ell(16 + i * 1.9, 19.6 + b + Math.abs(i) * 0.3, 1.3, 1.1, Fm);
+      }
+    }),
+    marshwick: gstg(function (p, f, s, L, d, b) {
+      var B = NP4.mwB, C = NP4.mwC, Lf = NP.lily, sw = Math.sin(p.ph) * 0.8, i;
+      b *= 0.6;
+      if (L === 'back') {
+        /* reed-green flight feathers from stage 3; long white plumes trail from its back from stage 4 */
+        if (s >= 3) {
+          var ln = 2 + s * 1.2;
+          if (d === 2) for (i = 0; i < 2; i++) plume(p, 22, 16 + b + i * 1.5, -0.2 + i * 0.35, ln - i, 1.6, [B, B, Lf], sw * 0.5, 0.5);
+          else [-1, 1].forEach(function (m) { for (i = 0; i < 2; i++) plume(p, 16 + m * 7.5, 15 + b + i * 1.6, m > 0 ? 1.0 + i * 0.3 : Math.PI - 1.0 - i * 0.3, ln - i, 1.6, [B, B, Lf], m * sw * 0.5, 0.5); });
+        }
+        if (s >= 4) {
+          if (d === 2) for (i = 0; i < 2; i++) plume(p, 22, 20 + b, 0.5 + i * 0.3, 3 + s, 1, [C, C], 1.4 + sw, 0.3);
+          else if (d === 1) for (i = -1; i <= 1; i += 2) plume(p, 16 + i * 3, 21 + b, 1.57 + i * 0.35, 2 + s, 1, [C, C], i * (1 + sw), 0.3);
+        }
+        return;
+      }
+      /* the crest grows: one more reed blade each stage */
+      if (s >= 2) {
+        var n = Math.min(3, s - 1), hx = d === 2 ? 14 : 16.5, hy = 7.4 + b;
+        for (i = 0; i < n; i++) plume(p, hx + (d === 2 ? 0.5 : -0.6) * i, hy + i * 0.6, (d === 2 ? -0.1 : -1.0) + i * 0.3, 3 + s * 0.6 - i * 0.6, 0.9, [Lf, Lf], 0.8 + sw * 0.5, 0.5);
+      }
+      if (s >= 5 && d !== 1) { var cx = d === 2 ? 12.5 : 16, cy2 = (d === 2 ? 6.4 : 6.2) + b; p.ell(cx, cy2, 1.2, 1.2, ['#fff0f6', '#ffc0d8', '#ff90b8']); p.px(cx, cy2, '#ffe070'); }
+    }),
+    bellfish: gstg(function (p, f, s, L, d, b) {
+      var Fn = NP4.bfF, L2 = NP4.bfL, fl = flyF(p), cy = 17 + Math.round(fl * 0.5 * 2) / 2, sw = Math.sin(p.ph * 2) * 1, i;
+      if (L === 'back') {
+        /* long trailing fins from stage 2; from stage 4 a pair of wide fins open like a gown */
+        var ln = 2 + s * 1.3;
+        if (d === 2) { plume(p, 25, cy - 1, -0.3, ln, 1.4, [Fn, Fn], sw, 0.5); plume(p, 25, cy + 1, 0.3, ln, 1.4, [Fn, Fn], -sw, 0.5); }
+        else [-1, 1].forEach(function (m) { plume(p, 16 + m * 2.6, cy + 6, 1.57 - m * 0.4, 1 + s, 2, [Fn, Fn, [Fn[0], Fn[1]]], m * sw, 0.3); });
+        if (s >= 4) {
+          if (d === 2) plume(p, 17, cy - 5, -0.9, 4 + s, 2, [Fn, Fn, [Fn[0], Fn[0]]], -1, 0.6);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 7, cy - 1, m > 0 ? -0.4 : Math.PI + 0.4, 3 + s, 2.2, [Fn, Fn, [Fn[0], Fn[0]]], m * -0.8, 0.6); });
+        }
+        return;
+      }
+      /* little lamps light up along its sides, one more each stage from 3 */
+      if (s >= 3) {
+        var n = s - 2;
+        for (i = 0; i < n; i++) {
+          if (d === 2) p.ell(13 + i * 3, cy + 3.8, 0.7, 0.7, [L2[0], L2[1]], true);
+          else if (d === 0) { p.ell(10.4 - i * 0.2, cy + 2 + i * 2, 0.7, 0.7, [L2[0], L2[1]], true); p.ell(21.6 + i * 0.2, cy + 2 + i * 2, 0.7, 0.7, [L2[0], L2[1]], true); }
+        }
+      }
+    }),
+    tidecrab: gstg(function (p, f, s, L, d, b) {
+      var S = NP4.tcS, St = NP3.hS, Bn = ['#f4f0e8', '#d4d0c8', '#a8a49c'], i;
+      if (L === 'back') {
+        /* the shell grows spikes from stage 3, and a second whorl rises on top from stage 4 */
+        var cx = d === 2 ? 19.5 : 16, cy = (d === 2 ? 16 : d === 1 ? 17 : 14.5) + b, r = d === 1 ? 8.5 : d === 2 ? 7.5 : 8;
+        if (s >= 4) {
+          var tx = d === 2 ? cx + 3 : cx, ty = cy - r + 0.5;
+          p.ell(tx, ty - 1.5, 3.4, 3, S); p.tri(tx - 1.6, tx + 1.6, ty - 3.5, tx + (d === 2 ? 2 : 0), ty - 5.5 - s * 0.6, S[2], S[1]);
+        }
+        if (s >= 3) for (i = 0; i < 5; i++) {
+          var a = Math.PI + 0.3 + i * 0.55; if (d === 2) a = -2.2 + i * 0.65;
+          var x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * 0.92;
+          plume(p, x, y, a, 1 + s * 0.5, 1.1, [S, [S[2], S[3]]], 0, 0.5);
+        }
+        return;
+      }
+      /* barnacles and small stones settle on the shell */
+      var spots = d === 2 ? [[16, 11], [22.5, 19], [14.5, 18]] : d === 1 ? [[11, 13], [21, 15], [16, 22]] : [[10.5, 11], [21.5, 12], [12.5, 18.5]];
+      spots.forEach(function (q, j) {
+        if (j >= s - 1) return;
+        if (j % 2) p.ell(q[0], q[1] + b, 1.4, 1.1, St);
+        else { p.ell(q[0], q[1] + b, 1.3, 1.1, Bn); p.px(q[0], q[1] - 0.5 + b, Bn[2]); }
+      });
+    }),
+    coralet: gstg(function (p, f, s, L, d, b) {
+      var C = NP4.crC, B = NP4.crB, fl = flyF(p), cy = 15 + Math.round(fl * 0.5 * 2) / 2, PO = '#fffbe0', i;
+      if (L === 'back') {
+        /* the coral crown branches wider each stage; from stage 4 sea-fan fins open at its sides */
+        var n = s - 1;
+        for (i = 0; i < n; i++) {
+          var o = i - (n - 1) / 2, x0 = d === 2 ? 16 + o * 1.8 : 16 + o * 2.4, a = -1.57 + o * 0.5 + (d === 2 ? 0.4 : 0), ln = 3 + s * 0.8 - Math.abs(o) * 0.6;
+          plume(p, x0, cy - 5, a, ln, 0.8, [C, C], 0, 0.2);
+          var tx = x0 + Math.cos(a) * ln * 0.6, ty = cy - 5 + Math.sin(a) * ln * 0.6;
+          plume(p, tx, ty, a + (o >= 0 ? 0.8 : -0.8), 1.5 + s * 0.3, 0.6, [C, C], 0, 0.2);
+        }
+        if (s >= 4) {
+          var fan = [['#fff4f0', '#ffd0c4', '#f4a8a0']];
+          if (d === 2) plume(p, 19, cy + 1, -0.2, 3 + s, 2.6, fan, 0, 0.3);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 6, cy + 1, m > 0 ? -0.35 : Math.PI + 0.35, 3 + s, 2.6, fan, 0, 0.3); });
+        }
+        return;
+      }
+      /* small lights wake in the polyps from stage 3 */
+      if (s >= 3) {
+        var pts = d === 2 ? [[18, cy - 2], [20, cy + 2], [15, cy + 5]] : [[11, cy - 2], [21, cy - 2], [10.5, cy + 4.5], [21.5, cy + 4.5]];
+        pts.forEach(function (q, j) { if (j < s - 1) { p.ell(q[0], q[1], 0.8, 0.8, ['#ffffff', PO], true); } });
+      }
+    }),
+    driftjelly: gstg(function (p, f, s, L, d, b) {
+      var R = NP4.djR, B = NP4.djB, Wd = EP.wind[0], fl = flyF(p), cy = 12 + Math.round(fl * 0.6 * 2) / 2, i;
+      if (L === 'back') {
+        /* more and longer ribbons each stage; a cloud crest from stage 3 */
+        var ln = 7 + s * 1.6, RP = [[R[1], R[2], R[3]], R, [R[0], R[1]]];
+        if (d === 2) plume(p, 19.5, cy + 5, 1.0, ln, 0.85, RP, Math.sin(p.ph + 0.8) * 1.6, 0.4);
+        else [-1, 1].forEach(function (m) { plume(p, 16 + m * 6.6, cy + 4.6, 1.57 - m * 0.3, ln, 0.85, RP, Math.sin(p.ph + 0.8) * 1.6, 0.4); });
+        if (s >= 3) {
+          var cx = d === 2 ? 17 : 16;
+          for (i = -1; i <= 1; i++) p.ell(cx + i * 2.8, cy - 5.6 - (i ? 0 : 0.8) - s * 0.2, 2.2 + (i ? 0 : 0.4), 1.7, Wd);
+        }
+        if (s >= 4) {
+          if (d === 2) plume(p, 20, cy + 1, 0.4, 2 + s, 1.8, [B, B, R], 0, 0.6);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 7, cy + 2, m > 0 ? 0.55 : Math.PI - 0.55, 2 + s, 1.8, [B, B, R], m * 1, 0.6); });
+        }
+        return;
+      }
+      if (s >= 2 && d !== 1) { var gx = d === 2 ? 16.5 : 16; p.ell(gx, cy - 3.6, 1, 0.8, ['#ffffff', '#ffffff'], true); }
+    }),
+    inkling: gstg(function (p, f, s, L, d, b) {
+      var B = NP4.ikB, Sp = NP4.ikS, D = EP.dark[0], fl = flyF(p), cy = 14 + Math.round(fl * 0.6 * 2) / 2, sw = Math.sin(p.ph) * 1.4, i;
+      if (L === 'back') {
+        /* two long reaching arms from stage 2; the hood fins widen into a night cape from stage 4 */
+        var ln = 4 + s * 1.6;
+        if (d === 2) { plume(p, 15, cy + 6, 1.0, ln, 1.2, [B, B, [B[0], B[1]]], sw + 1, 0.45); }
+        else [-1, 1].forEach(function (m) { plume(p, 16 + m * 4, cy + 5.5, 1.57 - m * 0.55, ln, 1.2, [B, B, [B[0], B[1]]], m * (sw + 1), 0.45); });
+        if (s >= 4) {
+          var cp = [[B[1], B[2], B[3]], [B[2], B[3]]];
+          if (d === 2) plume(p, 19, cy - 4, 0.5, 2 + s, 2.2, cp, 1, 0.5);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 5, cy - 4, m > 0 ? 0.45 : Math.PI - 0.45, 2 + s, 2.2, cp, m * 1, 0.5); });
+        }
+        return;
+      }
+      /* night spots glow on the hood from stage 3 */
+      if (s >= 3) {
+        var pts = d === 2 ? [[16, cy - 6], [18, cy - 2.5], [14, cy - 1]] : [[16, cy - 8], [13.2, cy - 4.5], [18.8, cy - 4.5]];
+        pts.forEach(function (q, j) { if (j < s - 2) p.ell(q[0], q[1], 0.9, 0.9, [D[0], D[1]], true); });
+      }
+    }),
+    brinetail: gstg(function (p, f, s, L, d, b) {
+      var K = NP4.btK, Wt = EP.water[1], Fm = EP.water[0], B = NP4.btB, sw = Math.sin(p.ph - 1) * 1.5, i;
+      if (L === 'back') {
+        /* the kelp scarf grows long ends; from stage 4 its tail widens into a paddle with a wave crest */
+        if (s >= 2) {
+          var ln = 2 + s * 1.5;
+          if (d === 2) plume(p, 15.5, 17.5 + b, 0.5, ln, 1, [K, K], 1.5 + sw * 0.6, 0.4);
+          else plume(p, 19, 17.5 + b, 0.3, ln, 1, [K, K], 1.5 + sw * 0.6, 0.4);
+        }
+        if (s >= 4) {
+          if (d === 2) plume(p, 25, 24.5 + b, -0.2, 4 + s * 0.6, 2, [B, Wt, Fm], sw, 0.3);
+          else if (d === 0) plume(p, 23, 25 + b, -0.25, 4 + s * 0.6, 2, [B, Wt, Fm], sw, 0.3);
+        }
+        return;
+      }
+      /* a little wave curls on its head from stage 3 */
+      if (s >= 3) {
+        /* one wave that curls forward over its brow, a little taller each stage */
+        var cx = d === 2 ? 13 : 17.5, cy = (d === 2 ? 8.4 : 7.6) + b, m = d === 1 ? 1 : -1;
+        plume(p, cx, cy, -1.57 - m * 0.5, 2.5 + s * 0.6, 1.4, [Wt, Wt, Fm], m * (1.5 + s * 0.3), 0.55);
+      }
+    }),
+    sparkmouse: gstg(function (p, f, s, L, d, b) {
+      var F = NP4.smF, sw = Math.sin(p.ph) * 0.6, i;
+      if (L === 'back') {
+        return;
+      }
+      /* the bulb glows brighter: copper bands on the ears from stage 2 */
+      if (s >= 2 && d !== 1) {
+        if (d === 2) p.ell(12.5, 6.6 + b, 1.2, 0.6, CU);
+        else { p.ell(7.6, 6.6 + b, 0.7, 1.2, CU); p.ell(24.4, 6.6 + b, 0.7, 1.2, CU); }
+      }
+      /* a thin copper feeler rises between its ears from stage 4, tipped with a spark */
+      if (s >= 4) {
+        var fx = d === 2 ? 11 : 16, fy = (d === 2 ? 10.6 : 8.4) + b, h = 1.6 + (s - 3) * 1.2;
+        p.rect(fx - 0.35, fy - h, 0.8, h, CU[2]); p.ell(fx, fy - h - 0.6, 1, 1, NP4.bulb, true);
+      }
+    }),
+    boltbug: gstg(function (p, f, s, L, d, b) {
+      var S = NP4.bbS, Y = NP4.wlY, Wg = ['#e8ffff', '#bff4ff', '#8fd8f0'], i;
+      b *= 0.5;
+      if (L === 'back') {
+        /* thin wings peek from under the shell from stage 4 */
+        if (s >= 4) {
+          if (d === 2) plume(p, 22, 16 + b, -0.4, 4 + s, 2.2, [Wg, Wg], 0, 0.5);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 6, 16 + b, m > 0 ? -0.5 : Math.PI + 0.5, 4 + s, 2.2, [Wg, Wg], 0, 0.5); });
+        }
+        /* side horns on the shell from stage 3 */
+        if (s >= 3 && d !== 2) [-1, 1].forEach(function (m) { plume(p, 16 + m * 5, 12.5 + b, -1.57 + m * 0.6, 1.5 + s * 0.5, 0.9, [CU, CU], 0, 0.3); });
+        return;
+      }
+      /* the copper horn grows taller each stage, and a yellow zigzag marks the shell from stage 3 */
+      if (s >= 2) {
+        var h = s - 1;
+        if (d === 2) { p.ell(7.6 - h * 0.4, 11.6 + b - h * 1.2, 1.4, 1.4, CU); plume(p, 7.6, 11.6 + b, -1.9, h * 1.2, 0.8, [CU, CU], 0, 0); }
+        else if (d === 0) { p.rect(15.4, 9.4 - h * 1.3 + b, 1.2, h * 1.3, CU[2]); p.ell(16, 9.4 - h * 1.3 + b, 1.6, 1.6, CU); }
+        else { p.rect(15.5, 8.5 - h * 1.3 + b, 1, h * 1.3, CU[2]); p.ell(16, 8.5 - h * 1.3 + b, 1.5, 1.5, CU); }
+      }
+      if (s >= 3) {
+        var zx = d === 2 ? 17 : d === 1 ? 10 : 9.6, zy = (d === 2 ? 19 : 17) + b;
+        for (i = 0; i < 4; i++) p.rect(zx + i * 1.2, zy + (i % 2 ? 1 : 0), 1.2, 0.9, Y[2]);
+        if (d !== 2) for (i = 0; i < 4; i++) p.rect(32 - zx - 1.2 - i * 1.2, zy + (i % 2 ? 1 : 0), 1.2, 0.9, Y[2]);
+      }
+    }),
+    wireling: gstg(function (p, f, s, L, d, b) {
+      var Y = NP4.wlY, B = NP4.wlB, fl = flyF(p), sw = Math.sin(p.ph) * 1, i;
+      if (L === 'back') {
+        /* a fin ridge grows from its head, longer each stage */
+        var n = s;
+        for (i = 0; i < n; i++) {
+          if (d === 2) plume(p, 12 + i * 1.8, 9.5 + fl + i * 0.5, -1.4 + i * 0.25, 1.5 + s * 0.5 - i * 0.2, 0.9, [B, Y], 0.6, 0.4);
+          else { var o = i - (n - 1) / 2; plume(p, 16 + o * 1.8, 8 + fl + Math.abs(o) * 0.6, -1.57 + o * 0.35, 1.5 + s * 0.5 - Math.abs(o) * 0.4, 0.9, [B, Y], 0, 0.4); }
+        }
+        return;
+      }
+      /* long whisker barbels from stage 3 */
+      if (s >= 3 && d !== 1) {
+        var ln = 2 + s * 0.8;
+        if (d === 2) plume(p, 6.5, 15 + fl, 2.0, ln, 0.6, [Y, Y], sw, 0);
+        else [-1, 1].forEach(function (m) { plume(p, 16 + m * 3, 14.6 + fl, 1.57 + m * 0.6, ln, 0.6, [Y, Y], m * sw, 0); });
+      }
+    }),
+    copperpup: gstg(function (p, f, s, L, d, b) {
+      var St = NP3.hS, Am = EP.earth[0], i;
+      if (L === 'back') {
+        /* copper rods rise along its back from stage 3, each with a small stone on top */
+        if (s >= 3) {
+          /* spaced well apart, so each rod keeps its own outline */
+          var rods = d === 2 ? (s >= 5 ? [[15.5, -1.45], [20, -1.25], [24.5, -1.05]] : [[17, -1.4], [22, -1.15]])
+            : (s >= 5 ? [[-8.6, -1.95], [0, -1.57], [8.6, -1.19]] : [[-8.6, -1.95], [8.6, -1.19]]);
+          rods.forEach(function (r, j) {
+            var x = d === 2 ? r[0] : 16 + r[0], y = (d === 2 ? 16.4 : r[0] ? 18.5 : 10) + b, a = r[1], ln = 3 + s * 0.8;
+            plume(p, x, y, a, ln, 0.7, [CU, CU], 0, 0);
+            p.ell(x + Math.cos(a) * ln, y + Math.sin(a) * ln, 1.1, 1.1, j % 2 ? St : Am);
+          });
+        }
+        return;
+      }
+      /* copper plates on the shoulders from stage 2 */
+      if (s >= 2) {
+        if (d === 2) p.ell(14, 18.2 + b, 2.4, 1.4, CU);
+        else [-1, 1].forEach(function (m) { p.ell(16 + m * 5.4, 17.6 + b, 2.2, 1.3, CU); });
+      }
+    }),
+    lampwisp: gstg(function (p, f, s, L, d, b) {
+      var Br = NP4.lwBr, G = NP4.lwG, fl = flyF(p), cy = 15 + Math.round(fl * 0.5 * 2) / 2, i;
+      if (L === 'back') {
+        /* from stage 4 little brass wings carry it */
+        if (s >= 4) {
+          var wl = 2 + s;
+          if (d === 2) plume(p, 22, cy - 4, -0.5, wl, 1.8, [Br, Br, G], 0, 0.6);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 8, cy - 4, m > 0 ? -0.5 : Math.PI + 0.5, wl, 1.8, [Br, Br, G], 0, 0.6); });
+        }
+        return;
+      }
+      /* the brass cap grows a finial, taller each stage; a brass ring holds the base of the globe from stage 3 */
+      var cx = d === 2 ? 16.5 : 16;
+      if (s >= 2) p.tri(cx - 0.8, cx + 0.8, cy - 10.6, cx, cy - 12 - s * 0.5, Br[2], Br[1]);
+      if (s >= 5 && d !== 2) [-1, 1].forEach(function (m) { p.tri(cx + m * 3 - 0.6, cx + m * 3 + 0.6, cy - 8.8, cx + m * 3.4, cy - 11, Br[2], Br[1]); });
+      if (s >= 3) { p.ell(cx, cy + 6.4, 3.6, 1.2, Br); p.px(cx - 2, cy + 6.2, Br[0]); }
+    }),
+    stormowl: gstg(function (p, f, s, L, d, b) {
+      var B = NP4.soB, Y = NP4.soY, Cl = EP.wind[0], fl = flyF(p), i;
+      if (L === 'back') {
+        /* from stage 4 the wings open wide with bright lightning tips */
+        if (s >= 4) {
+          var wl = 6 + s * 1.4, ed = [B, B, B, [Y[0], Y[1], Y[2]]];
+          if (d === 2) plume(p, 19, 16 + fl, -0.7, wl, 3.2, ed, -1, 0.65);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 6.5, 16 + fl, m > 0 ? -0.45 : Math.PI + 0.45, wl, 3.2, ed, m * -1, 0.65); });
+        }
+        return;
+      }
+      /* a ruff of cloud round its neck from stage 3 (its ear tufts grow in the body painter) */
+      if (s >= 3) {
+        if (d === 2) for (i = 0; i < 3; i++) p.ell(13 + i * 2.2, 17.2 + i * 0.5, 2, 1.6, Cl);
+        else if (d === 1) for (i = -2; i <= 2; i++) p.ell(16 + i * 2.8, 16.8 + Math.abs(i) * 0.3, 2.2, 1.7, Cl);
+        else for (i = -2; i <= 2; i++) p.ell(16 + i * 2.8, 18 + Math.abs(i) * -0.4, 2.2, 1.7, Cl);
+      }
+    }),
+    rustcat: gstg(function (p, f, s, L, d, b) {
+      var F = NP4.rcF, G = NP4.rcG, Y = NP4.wlY, sw = Math.sin(p.ph) * 1.2, i;
+      if (L === 'back') {
+        /* a grey ruff of fur from stage 3, and a second tail from stage 4 */
+        if (s >= 4) {
+          if (d === 2) plume(p, 24, 21 + b, -0.9, 7, 1.2, [F, F, G], 2 - sw, 0.2);
+          else if (d === 0) plume(p, 11, 24 + b, -1.95, 7, 1.2, [F, F, G], -2 + sw, 0.2);
+        }
+        if (s >= 3) {
+          if (d === 2) for (i = 0; i < 3; i++) p.ell(13.5 + i * 1.2, 17 + b + i * 1.4, 2, 1.8, G);
+          else for (i = -2; i <= 2; i++) p.ell(16 + i * 2.6, 17.6 + b + Math.abs(i) * 0.4, 2, 1.8, G);
+        }
+        return;
+      }
+      /* spark-yellow tabby stripes, more each stage */
+      var n = s - 1;
+      for (i = 0; i < n; i++) {
+        if (d === 2) p.rect(17 + i * 2.2, 18 + b, 0.9, 2.2, Y[2]);
+        else if (d === 1) p.rect(14 + i * 1.6 - (n - 1) * 0.4, 18 + b + i * 1.3, 1.4, 0.8, Y[2]);
+        else { p.rect(10.6, 19 + b + i * 1.4, 1.2, 0.8, Y[2]); p.rect(20.2, 19 + b + i * 1.4, 1.2, 0.8, Y[2]); }
+      }
+    }),
+    mothspark: gstg(function (p, f, s, L, d, b) {
+      var B = NP4.msB, S = NP4.msS, F = NP4.msF, MW = ['#a89cc8', '#7a6eaa', '#584e88', '#3e3666'], sw = Math.sin(p.ph * 2) * 0.15, i;
+      b *= 0.6;
+      if (L === 'back') {
+        /* a soft cloak of static silk at stage 2; wings from stage 3, wider each stage */
+        if (s === 2) {
+          if (d === 2) p.ell(18, 21 + b, 6, 4.6, F);
+          else p.ell(16, 21 + b, 8.4, 6.4, F);
+        }
+        if (s >= 3) {
+          /* moth wings fan out from the shoulders and are widest at the tip */
+          var wl = 4 + s * 1.4, W = [MW, MW];
+          if (d === 2) plume(p, 15.5, 16 + b, -0.95 + sw, wl, 2.2, W, 0, -0.7);
+          else [-1, 1].forEach(function (m) {
+            plume(p, 16 + m * 4.5, 16 + b, m > 0 ? -0.55 - sw : Math.PI + 0.55 + sw, wl, 2.2, W, 0, -0.7);
+            plume(p, 16 + m * 4.5, 21 + b, m > 0 ? 0.5 : Math.PI - 0.5, wl * 0.6, 1.4, W, 0, -0.3);
+          });
+        }
+        return;
+      }
+      /* spark-blue eye rings on the wings */
+      if (s >= 3) {
+        var wl2 = 4 + s * 1.4;
+        if (d === 2) { var ex = 15.5 + Math.cos(-0.95) * wl2 * 0.75, ey = 16 + b + Math.sin(-0.95) * wl2 * 0.75; p.ell(ex, ey, 1.4, 1.4, [S[1], S[2]], true); p.ell(ex, ey, 0.6, 0.6, [B[3], B[3]], true); }
+        else [-1, 1].forEach(function (m) { var a = m > 0 ? -0.55 : Math.PI + 0.55, x = 16 + m * 4.5 + Math.cos(a) * wl2 * 0.75, y = 16 + b + Math.sin(a) * wl2 * 0.75; p.ell(x, y, 1.4, 1.4, [S[1], S[2]], true); p.ell(x, y, 0.6, 0.6, [B[3], B[3]], true); });
+      }
+    })
+  };
+  var EL4 = [
+    ['seapup', 'water', null, '#2a3448', 0, [['Seapup', 'A round seal pup with a spotted coat. It naps on warm sand between the tides.'], ['Foamflip', 'A curl of sea foam sits on its head and never quite dries.'], ['Swellback', 'A fin of sea water rises along its back when it swims.'], ['Breakerhide', 'A collar of foam rings its neck like a breaking wave.'], ['Tidemantle', 'A legendary seal that sleeps on the open sea and wakes with the tide.']]],
+    ['marshwick', 'water', null, '#26303e', 0, [['Marshwick', 'A heron chick on long legs, with a crest of reed. It stands still for hours in the shallows.'], ['Reedstilt', 'Its crest grows a second blade of reed.'], ['Wadecrest', 'Reed-green flight feathers grow on its wings.'], ['Fenplume', 'Long white plumes trail from its back as it wades.'], ['Marshherald', 'A legendary heron that a lotus flower follows wherever it walks.']]],
+    ['bellfish', 'water', null, '#142a3c', 1, [['Bellfish', 'A round night fish that carries a little glowing bell on a stalk. It rings softly when it is happy.'], ['Chimefin', 'Long fins trail behind it like ribbons.'], ['Tollgill', 'Small lamps light up along its sides.'], ['Deepchime', 'Wide fins open around it like a gown.'], ['Abyssbell', 'A legendary fish whose bell can be heard under the deepest sea.']]],
+    ['tidecrab', 'water', 'earth', '#3a2018', 0, [['Whelkit', 'A hermit crab that lives in a spiral whelk shell and waves its one big claw.'], ['Conchgrip', 'Barnacles and small stones settle on its shell.'], ['Spiralhold', 'Its shell grows spikes along the rim.'], ['Tidespire', 'A second whorl rises on its shell like a little tower.'], ['Shorekeep', 'A legendary crab whose shell is a small tide-pool castle.']]],
+    ['coralet', 'water', 'light', '#4a2028', 1, [['Coralet', 'A little sprite with branching coral on its head. It drifts in warm, shallow water.'], ['Reefling', 'Its coral crown branches wider.'], ['Branchglow', 'Small lights wake in the polyps of its coral.'], ['Atollume', 'Sea-fan fins open at its sides.'], ['Reefcrown', 'A legendary sprite whose coral crown is a whole shining reef.']]],
+    ['driftjelly', 'water', 'wind', '#2c2a50', 1, [['Driftjelly', 'A jellyfish with a soft round bell. Its ribbon arms drift wherever the breeze goes.'], ['Floatfrill', 'More ribbons grow under its bell.'], ['Gustveil', 'A small cloud crest rides on top of its bell.'], ['Billowcrown', 'Wide frills open at its sides and catch the wind.'], ['Aerolumen', 'A legendary jellyfish that floats between the sea and the sky.']]],
+    ['inkling', 'water', 'dark', '#1c1440', 1, [['Inkpip', 'A little night squid with a pointed hood. It hides in its own puff of ink.'], ['Murkcurl', 'Two long arms reach out to feel the dark water.'], ['Duskink', 'Small night lights glow on its hood.'], ['Shadecape', 'Its hood fins widen into a night cape.'], ['Abyssmantle', 'A legendary squid that swims through the night as through the sea.']]],
+    ['brinetail', 'water', null, '#2e1e14', 0, [['Brinetail', 'A sea otter in a kelp scarf. It keeps a favourite shell close to its chest.'], ['Kelpwrap', 'The ends of its kelp scarf grow long.'], ['Surfwhisk', 'A small wave curls on its head.'], ['Tidepaddle', 'Its tail widens into a paddle with a wave on its edge.'], ['Marimantle', 'A legendary otter that the sea itself carries home.']]],
+    ['sparkmouse', 'electric', null, '#2e2a40', 0, [['Whiskwatt', 'A harvest mouse with copper whiskers and a coiled wire tail that ends in a tiny bulb.'], ['Coilwhisk', 'Copper bands shine on its round ears.'], ['Brightcoil', 'The bulb on its tail grows big and bright.'], ['Arcwhisker', 'A thin copper feeler rises between its ears, tipped with a spark.'], ['Dynamarch', 'A legendary mouse that keeps a whole street lit at night.']]],
+    ['boltbug', 'electric', null, '#14302e', 0, [['Boltbug', 'A round beetle whose copper horn works like a little lightning rod.'], ['Rodhorn', 'Its copper horn grows taller.'], ['Arcshell', 'A yellow zigzag marks its shell and two small horns rise beside it.'], ['Thunderscarab', 'Thin wings peek from under its shell.'], ['Fulminarch', 'A legendary beetle that calls the storm down onto its own horn.']]],
+    ['wireling', 'electric', 'water', '#14243e', 1, [['Wireling', 'A small eel with bright stripes. It hums with a soft current.'], ['Coileel', 'A fin ridge grows on its head.'], ['Currentail', 'Long whisker barbels feel for sparks in the water.'], ['Surgefin', 'Its fin ridge grows tall and bright.'], ['Tempestcoil', 'A legendary eel that carries a storm through the rivers.']]],
+    ['copperpup', 'electric', 'earth', '#2a1e2c', 0, [['Copperpup', 'A velvet mole with copper digging claws and a copper plate on its brow.'], ['Burrowire', 'Copper plates grow on its shoulders.'], ['Lodeclaw', 'Copper rods rise along its back, each with a small stone on top.'], ['Ironvein', 'More rods grow; it can feel a spark through solid rock.'], ['Magnetarch', 'A legendary mole that keeps the copper veins of the earth alive.']]],
+    ['lampwisp', 'electric', 'light', '#4a3820', 1, [['Lampwisp', 'A little glass globe with a warm glowing heart and a brass cap.'], ['Glowbulb', 'A small brass finial grows on its cap.'], ['Arclamp', 'A brass ring forms around the base of its globe.'], ['Beaconglass', 'Little brass wings carry its lantern.'], ['Lumarch', 'A legendary lamp that never goes out.']]],
+    ['stormowl', 'electric', 'wind', '#22243a', 1, [['Stormowl', 'A slender slate owl with a heart-shaped pale face and lightning ear tufts.'], ['Thunderhoot', 'Its ear tufts grow taller.'], ['Galestrix', 'A ruff of cloud forms around its neck.'], ['Cloudwarden', 'Its wings open wide, edged with lightning.'], ['Tempestrix', 'A legendary owl that watches over every storm.']]],
+    ['rustcat', 'electric', null, '#3a2014', 0, [['Rustcat', 'A lean city stray with a rust coat, one notched ear and a wire-wrapped tail.'], ['Alleywatt', 'Spark-yellow stripes show in its coat.'], ['Tinprowl', 'A grey ruff of fur grows around its neck.'], ['Coppermane', 'A second tail grows; it walks the roof wires at night.'], ['Ferrolynx', 'A legendary cat that knows every street of the city.']]],
+    ['mothspark', 'electric', 'dark', '#18122a', 0, [['Mothspark', 'A sooty caterpillar with a fluffy collar and spark-blue spots.'], ['Staticloak', 'It wraps itself in a soft cloak of static silk.'], ['Duskwing', 'Dark wings unfold, marked with spark-blue rings.'], ['Gloamspark', 'Its wings grow wide enough to hide the moon.'], ['Eclipsara', 'A legendary moth that flies only on the darkest night.']]]
+  ];
+  var HAB4 = {
+    seapup:     { f: { water: 2.4, sand: 2, rock: 0.8 }, day: 1.1, night: 0.7, wx: { rain: 1.4, fog: 1.2 }, rare: 0.85 },
+    marshwick:  { f: { reeds: 3, water: 1.4, lilypad: 1, tallgrass: 0.6 }, day: 1.2, night: 0.5, wx: { rain: 1.6, fog: 1.4 }, rare: 0.75 },
+    bellfish:   { f: { water: 3, bridge: 1.2, lamp: 0.6 }, day: 0.1, night: 2.6, wx: { fog: 1.4, clear: 1 }, rare: 0.5 },
+    tidecrab:   { f: { sand: 3, rock: 1.6, water: 0.8 }, day: 1, night: 1, wx: { rain: 1.2 }, rare: 0.7 },
+    coralet:    { f: { water: 2.4, sand: 1, rock: 0.8, flowers: 0.4 }, day: 1.3, night: 0.5, wx: { clear: 1.4, rain: 0.8 }, rare: 0.4 },
+    driftjelly: { f: { water: 2.6, bridge: 1, open: 0.6 }, day: 0.9, night: 1, wx: { wind: 2.4, rain: 1.4 }, rare: 0.45 },
+    inkling:    { f: { water: 2.4, shade: 1.2, rock: 0.8, bridge: 0.6 }, day: 0.1, night: 2.6, wx: { fog: 1.8, rain: 1.2 }, rare: 0.4 },
+    brinetail:  { f: { water: 2.2, reeds: 1.4, sand: 1, bridge: 0.8 }, day: 1.2, night: 0.6, wx: { rain: 1.3, clear: 1.1 }, rare: 0.7 },
+    sparkmouse: { f: { lamp: 1.6, metal: 1.6, field: 1.2, tallgrass: 1, wall: 0.6 }, day: 0.8, night: 1.2, wx: { rain: 1.8 }, rare: 0.85 },
+    boltbug:    { f: { tallgrass: 1.6, metal: 1.4, field: 1.2, tree: 0.8 }, day: 1, night: 0.8, wx: { rain: 2, wind: 1.2 }, rare: 0.75 },
+    wireling:   { f: { water: 2.4, metal: 1.2, reeds: 0.8 }, day: 0.8, night: 1.2, wx: { rain: 2.6 }, rare: 0.45 },
+    copperpup:  { f: { field: 2, rock: 1.4, path: 1, metal: 0.8 }, day: 0.7, night: 1.2, wx: { rain: 1.4 }, rare: 0.6 },
+    lampwisp:   { f: { lamp: 3.2, metal: 0.8, statue: 0.6 }, day: 0.2, night: 2.4, wx: { fog: 1.6, rain: 1.4 }, rare: 0.35 },
+    stormowl:   { f: { field: 1.6, tree: 1, open: 1.4, metal: 1 }, day: 0.4, night: 1.8, wx: { rain: 2, wind: 2 }, rare: 0.35 },
+    rustcat:    { f: { wall: 1.8, path: 1.4, metal: 1.2, lamp: 1, statue: 0.6 }, day: 0.9, night: 1.3, wx: { clear: 1.1, rain: 0.8 }, rare: 0.8 },
+    mothspark:  { f: { lamp: 2.4, shade: 1.4, tallgrass: 1, field: 0.8 }, day: 0.1, night: 2.6, wx: { rain: 1.6, fog: 1.4 }, rare: 0.4 }
+  };
+  EL4.forEach(function (d) {
+    var key = d[0], e = { key: key, name: d[5][0][0], element: d[1] };
+    if (d[2]) { e.element2 = d[2]; EL2[key] = d[2]; }
+    SEED[key] = hash(list.length * 3.7 + 1.3);
+    list.push(e);
+    DEF[key] = DEF4[key]; STG[key] = STG4[key]; OUT[key] = d[3]; if (d[4]) FLY[key] = 1;
+    BASEK[key] = ELK[d[1]]; AURA[key] = AURA[ELK[d[1]]];
+    STAGES[key] = d[5];
+    stages[key] = d[5].map(function (a) { return { name: a[0], desc: a[1] }; });
+    HAB3[key] = HAB4[key];
+  });
+  GLOW.lampwisp = 0.34; GLOW.bellfish = 0.28;
+  /* ---------- fifth wave (chapters 6 and 7: the stone mountains and the fire country): sixteen kinds with bodies of their own.
+     They come after the fourth wave in the list, so every earlier seed stays the same. */
+  var NP5 = {
+    cbF: ['#c8b4a8', '#8e7468', '#6a5248', '#4a362e'], cbW: ['#b49cb4', '#7a627c', '#5a4660', '#3e2e44'], cbC: ['#f4e8dc', '#e0ccb8', '#c0a890', '#a08870'],
+    gdS: ['#dcd8d0', '#aca8a0', '#807c76', '#5e5a56'], gdC: ['#ffffff', '#f2e4ff', '#cdb0f2', '#a080d4'],
+    bkF: ['#ecd0ac', '#bc9470', '#90704e', '#684e34'], bkC: ['#fffaf0', '#f6e8d4', '#e0c8a8', '#c0a888'], bkP: ['#ffe0d8', '#f4b8a8', '#d89484', '#b07060'],
+    shB: ['#c8d0d8', '#929ca8', '#6c7684', '#4e5664'], shH: ['#fff6e0', '#ecd8b0', '#c8ae84', '#9e8662'], shM: ['#e8ecf0', '#c8ced6', '#a4acb8', '#848c9a'],
+    mmB: ['#c4b49c', '#94846c', '#6c5e4c', '#4c4236'], mmF: ['#f4ecdc', '#dccfb8', '#b8aa90', '#948670'], mmL: ['#e8f4c8', '#c0d898', '#94b070', '#70884e'],
+    pqB: ['#e4caa8', '#b48e6a', '#8a6a4c', '#624a34'], pqC: ['#fff6e8', '#f2dec4', '#d6be9c', '#b49c7c'],
+    qsB: ['#fff0e4', '#f0d2c0', '#d0ac98', '#a88674'], qsS: ['#ffffff', '#ffe2ec', '#f4b6cc', '#d68eac'],
+    rtB: ['#cdb48c', '#9a7c52', '#72583a', '#523e28'], rtC: ['#e4f6ee', '#b4dcd2', '#84bcb0', '#60988c'],
+    ckF: ['#9a949e', '#6a6470', '#4c4854', '#36323c'], ckC: ['#f0eaec', '#d4ccd2', '#b0a8b0', '#8c848e'],
+    amB: ['#ffffff', '#f4f0ec', '#dad2ca', '#b8aea4'], amW: ['#f2e6dc', '#d4bfae', '#ae9684', '#8a7262'],
+    mpR: ['#8e8698', '#655c70', '#483f52', '#322b3a'], mpL: ['#fff0a0', '#ffb040', '#f06a20', '#c04018'],
+    efR: ['#ffb8a0', '#f06a4a', '#c84a34', '#963222'], efC: ['#fff2dc', '#ffdcb0', '#f0b880', '#d09058'],
+    sdB: ['#a8a8b8', '#747284', '#565466', '#3c3a4a'], sdC: ['#e8e6ee', '#c8c6d2', '#a4a2b2', '#848294'],
+    ffF: ['#ffe6b4', '#f2be72', '#d2964a', '#aa7032'], ffC: ['#fffaf0', '#fff0dc', '#f0d8b8', '#d8bc98'],
+    ktS: ['#f4ac8c', '#cc6a4c', '#9e4c38', '#723628'], ktB: ['#d0c4a8', '#a09478', '#786c56', '#585040'],
+    sfG: ['#fffbe0', '#ffe27a', '#f8bc48', '#d89030'], sfF: ['#ffffff', '#fffaf0', '#fff0d0', '#f4dcac']
+  };
+  var EMB = ['#fff0b0', '#ffb040', '#f07020', '#b84818'], SMK = ['#f0eeee', '#d0cccc', '#aaa4a4'], INR = '#f4a8b0';
+  /* a crystal point from (x, y) up to height h, leaning by m */
+  function shard(p, x, y, w, h, m, C) { p.tri(x - w, x + w, y, x + m, y - h, C[2], C[1]); p.px(x + m * 0.5 - 0.5, y - h * 0.6, C[0]); }
+  /* a spiral shell: nested rings that drift towards the centre */
+  function spiral(p, cx, cy, r, S) {
+    p.ell(cx, cy, r, r * 0.94, S);
+    p.ell(cx + r * 0.1, cy - r * 0.06, r * 0.7, r * 0.64, [S[2], S[2]], true);
+    p.ell(cx + r * 0.14, cy - r * 0.1, r * 0.56, r * 0.5, [S[0], S[1], S[1]]);
+    p.ell(cx + r * 0.22, cy - r * 0.16, r * 0.3, r * 0.27, [S[2], S[2]], true);
+    p.ell(cx + r * 0.26, cy - r * 0.2, r * 0.16, r * 0.14, [S[1], S[1]], true);
+  }
+  /* a little flame: tip up, three tones */
+  function flame(p, x, y, h, r, sw) { plume(p, x, y, -1.57, h, r, [EMB, [EMB[0], EMB[1], EMB[1]], [EMB[0], EMB[0], EMB[0]]], sw || 0, 0.7); }
+  var DEF5 = {
+    cavebat: function (p, f) { /* Echopip: a round cave bat with huge ears, a soft brown coat and dusky wings */
+      var F = NP5.cbF, W = NP5.cbW, C = NP5.cbC, fl = flyF(p), cy = 16 + Math.round(fl * 0.5 * 2) / 2, fp = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2));
+      function wing(x, m) {
+        var y = cy + 1 - fp * 1.2;
+        p.ell(x, y, 4.4, 3.2, W);
+        for (var i = 0; i < 3; i++) p.tri(x - 3.8 + i * 2.6, x - 1.6 + i * 2.6, y + 2, x - 2.7 + i * 2.6, y + 3.8, W[1]);
+        p.px(x + m * 3.8, y - 2.6, W[3]);
+      }
+      if (p.side) {
+        p.ell(21, cy - 2 - fp * 1.5, 4.2, 3, [W[1], W[2], W[3]]);
+        p.tri(15, 19, cy - 4, 17.5, cy - 11, F[2], F[3]);
+        p.ell(16.5, cy + 2, 5.6, 5.4, F);
+        p.ell(14, cy + 3.4, 2.8, 3.2, C);
+        p.tri(11, 15, cy - 4, 12.5, cy - 12, F[1], INR);
+        p.ell(11.5, cy - 1, 5, 4.6, F);
+        p.ell(7.6, cy + 0.2, 2, 1.5, C);
+        p.px(5.8, cy - 0.4, '#5a3a3a');
+        eye1(p, 8.8, cy - 2.8, true);
+        p.px(7.8, cy + 1.6, '#ffffff');
+        p.blush(10, cy + 1.2, '#ff9ab0');
+        wing(20, 1);
+        p.rect(15, cy + 7, 1, 1.4, F[3]); p.rect(17.4, cy + 7, 1, 1.4, F[3]);
+        return;
+      }
+      wing(6.8, -1); wing(25.2, 1);
+      p.tri(8.5, 13.5, cy - 3, 9.5, cy - 12, F[2], p.back ? F[2] : INR);
+      p.tri(18.5, 23.5, cy - 3, 22.5, cy - 12, F[2], p.back ? F[2] : INR);
+      p.ell(16, cy + 1, 7.4, 7, F);
+      p.rect(13.5, cy + 7.6, 1.2, 1.4, F[3]); p.rect(17.3, cy + 7.6, 1.2, 1.4, F[3]);
+      if (p.back) { p.ell(16, cy - 4.6, 2.4, 1.2, [F[0], F[0]], true); return; }
+      p.ell(16, cy + 4, 4.2, 3.4, C);
+      eyes2(p, 11.8, 18.2, cy - 2.6, true);
+      p.ell(16, cy + 0.8, 1.6, 1, C); p.rect(15.4, cy + 0.3, 1.2, 0.7, '#5a3a3a');
+      p.rect(14.6, cy + 2, 2.8, 0.5, F[3]); p.px(14.6, cy + 2.4, '#ffffff'); p.px(16.9, cy + 2.4, '#ffffff');
+      p.blush(9.8, cy + 1, '#ff9ab0'); p.blush(20.2, cy + 1, '#ff9ab0');
+    },
+
+    geodeling: function (p, f) { /* Druselet: a round stone that is hollow and full of crystals; it sparkles where its shell is cracked */
+      var S = NP5.gdS, C = NP5.gdC, b = hop(p);
+      function crystals(cx, cy) { shard(p, cx - 3, cy + 1, 1.3, 3.4, -0.6, C); shard(p, cx + 3, cy + 1, 1.3, 3.4, 0.6, C); shard(p, cx, cy + 1, 1.7, 5.6, 0, C); }
+      function flecks(x, y) { p.px(x, y, S[3]); p.px(x + 5, y + 3, S[3]); p.px(x + 2, y + 5, S[0]); p.px(x - 2, y + 4, S[2]); }
+      if (p.side) {
+        legsSide(p, [[13, 1, 1], [19, 0, 1]], 24 + b, 28, 2.2, S[2], S[3]);
+        crystals(17, 11 + b);
+        p.ell(16.5, 18.5 + b, 7.8, 7.2, S);
+        p.ell(17, 12.4 + b, 4.4, 1.4, [C[2], C[3]], true);
+        flecks(18, 16 + b);
+        eye1(p, 10, 16 + b, true);
+        p.px(9.5, 20 + b, S[3]); p.px(10.5, 20.4 + b, S[3]);
+        p.blush(12.4, 19 + b, '#ff9ab0');
+        legsSide(p, [[12, 0, 0], [18, 1, 0]], 24 + b, 28, 2.4, S[1], S[2]);
+        return;
+      }
+      feet2(p, 11, 18, 25, 3, 2.4, S[2], S[1]);
+      crystals(16, 10.5 + b);
+      p.ell(16, 18 + b, 8.2, 7.6, S);
+      p.ell(16, 11.8 + b, 5, 1.6, [C[2], C[3]], true);
+      if (p.back) { flecks(12, 15 + b); flecks(18, 18 + b); return; }
+      flecks(19.5, 20 + b);
+      eyes2(p, 12.2, 17.8, 16.4 + b, true);
+      smile(p, 14, 20.2 + b, S[3]);
+      p.blush(10, 19.4 + b, '#ff9ab0'); p.blush(20, 19.4 + b, '#ff9ab0');
+    },
+
+    burrowkit: function (p, f) { /* Tunnelpaw: a round dusty kitten with big pink digging paws and a smudge of earth on its nose */
+      var F = NP5.bkF, C = NP5.bkC, P2 = NP5.bkP, b = hop(p), sw = Math.sin(p.ph) * 1.2, pr = 1 + (p.stage - 1) * 0.12;
+      function paw(x, y) { p.ell(x, y, 2.6 * pr, 1.8 * pr, P2); p.px(x - 1.4 * pr, y - 1.2 * pr, '#ffffff'); p.px(x, y - 1.5 * pr, '#ffffff'); p.px(x + 1.4 * pr, y - 1.2 * pr, '#ffffff'); }
+      if (p.side) {
+        plume(p, 22, 22 + b, -0.9, 6, 1.8, [F, F], 1 + sw, 0.4);
+        legsSide(p, [[19.5, 1, 1]], 23 + b, 28, 2, F[2], F[3]);
+        p.ell(17, 21.5 + b, 6.4, 4.6, F);
+        p.ell(14.5, 23 + b, 3, 2.4, C);
+        legsSide(p, [[20.5, 0, 0]], 23 + b, 28, 2.2, F[1], F[2]);
+        p.tri(11, 14.5, 10.5 + b, 13.2, 5.5 + b, F[2], INR);
+        p.ell(10.5, 14.5 + b, 5.6, 4.8, F);
+        p.ell(6.6, 16.2 + b, 2.2, 1.6, C);
+        p.px(4.6, 15.4 + b, '#e07888'); p.px(5.6, 14.6 + b, F[3]);
+        eye1(p, 8.2, 12.8 + b, true);
+        p.blush(10, 16.6 + b, '#ff9ab0');
+        paw(10.5 - lift(p, 0) * 0.5, 26.6 - lift(p, 0));
+        return;
+      }
+      if (!p.back) plume(p, 21.5, 24 + b, -0.9, 6, 1.8, [F, F], 1.5 + sw, 0.4);
+      p.ell(16, 22 + b, 6.6, 5, F);
+      p.tri(9, 13, 10.5 + b, 10, 5 + b, F[2], p.back ? F[2] : INR);
+      p.tri(19, 23, 10.5 + b, 22, 5 + b, F[2], p.back ? F[2] : INR);
+      p.ell(16, 13.6 + b, 7, 5.4, F);
+      if (p.back) { plume(p, 16, 25 + b, -1.3, 6, 1.8, [F, F], 1.5 + sw, 0.4); p.ell(16, 11.5 + b, 3, 1.4, [F[2], F[2]], true); paw(11.5, 26.4 - lift(p, 0)); paw(20.5, 26.4 - lift(p, 1)); return; }
+      p.ell(16, 23 + b, 3.6, 3.2, C);
+      eyes2(p, 12.4, 17.6, 12.2 + b, true);
+      p.ell(16, 15.8 + b, 2.6, 1.5, C);
+      p.rect(15.4, 15 + b, 1.2, 0.8, '#e07888'); p.px(17.2, 14.4 + b, F[3]); p.px(17.8, 15 + b, F[3]);
+      p.rect(8.6, 15.4 + b, 2.6, 0.5, C[2]); p.rect(20.8, 15.4 + b, 2.6, 0.5, C[2]);
+      p.blush(10.2, 14.6 + b, '#ff9ab0'); p.blush(19.8, 14.6 + b, '#ff9ab0');
+      paw(11.5, 26.4 - lift(p, 0)); paw(20.5, 26.4 - lift(p, 1));
+    },
+
+    slatehorn: function (p, f) { /* Flintcalf: a sturdy rhino calf of slate grey with one stubby horn on its nose */
+      var B = NP5.shB, H = NP5.shH, M = NP5.shM, b = hop(p) * 0.6;
+      if (p.side) {
+        legsSide(p, [[12, 1, 1], [21, 0, 1]], 23 + b, 28, 2.6, B[2], B[3]);
+        p.ell(18, 20 + b, 8, 5.4, B);
+        p.ell(17, 23 + b, 5, 1.8, M);
+        p.px(26, 18.6 + b, B[3]); p.px(26.6, 19.6 + b, B[3]);
+        legsSide(p, [[13.5, 0, 0], [22.5, 1, 0]], 23 + b, 28, 2.8, B[1], B[2]);
+        p.tri(11, 14, 13.5 + b, 13, 10 + b, B[2], INR);
+        p.ell(9.5, 17.5 + b, 5.4, 4.4, B);
+        p.ell(6, 19.4 + b, 2.6, 2.2, M);
+        p.tri(3.6, 7, 17.2 + b, 4.2, 11.5 + b, H[2], H[1]);
+        p.px(3.8, 19.6 + b, B[3]);
+        eye1(p, 8.4, 15.4 + b, false);
+        p.blush(9.6, 19 + b, '#ff9ab0');
+        return;
+      }
+      feet2(p, 9.5, 19.5, 24.5, 3, 3.5, B[2], B[1]);
+      p.ell(16, 20.5 + b, 8.6, 5.6, B);
+      p.tri(7.5, 11, 11.5 + b, 8.5, 7.5 + b, B[2], p.back ? B[2] : INR);
+      p.tri(21, 24.5, 11.5 + b, 23.5, 7.5 + b, B[2], p.back ? B[2] : INR);
+      p.ell(16, 14.6 + b, 7, 5.4, B);
+      if (p.back) { p.ell(16, 20 + b, 4, 2, [B[2], B[2]], true); p.rect(15.5, 25 + b, 1, 2, B[3]); return; }
+      p.ell(16, 18.4 + b, 4.4, 2.8, M);
+      p.tri(14.6, 17.4, 17 + b, 16, 10.5 + b, H[2], H[1]);
+      eyes2(p, 11, 19.6, 13 + b, false);
+      p.px(14.4, 19 + b, B[3]); p.px(17.4, 19 + b, B[3]);
+      p.blush(9.8, 16.4 + b, '#ff9ab0'); p.blush(20.6, 16.4 + b, '#ff9ab0');
+    },
+
+    mossmite: function (p, f) { /* Mossmite: a pill bug with a dome of stone plates and soft moss growing on top */
+      var B = NP5.mmB, Fc = NP5.mmF, M = NP.tM, b = hop(p) * 0.5, wv = Math.sin(p.ph * 2) * 0.5, i;
+      function moss(x, y) { p.ell(x, y, 2, 1.3, M); }
+      function ant(x, y, m) { p.rect(x, y, 0.7, 2.6, B[3]); p.ell(x + 0.35 + m * 0.6, y - 0.3, 0.9, 0.9, [Fc[1], Fc[2]], true); }
+      if (p.side) {
+        for (i = 0; i < 5; i++) p.rect(9 + i * 3.4 + ((f + i) % 2) * 0.4, 26, 1.2, 2, B[3]);
+        p.ell(17, 21.5 + b, 10, 6, B);
+        for (i = 0; i < 4; i++) p.rect(12 + i * 3.4, 16.4 + b + Math.abs(i - 1.5) * 0.6, 0.6, 9, B[3]);
+        moss(13, 15.8 + b); moss(17, 15.4 + b); moss(21, 16.2 + b);
+        ant(5, 18 + b + wv, -1);
+        p.ell(6.5, 23 + b, 3, 2.8, Fc);
+        eye1(p, 4.6, 21.6 + b, true);
+        p.blush(6.6, 24.4 + b, '#ff9ab0');
+        return;
+      }
+      for (i = 0; i < 4; i++) p.rect(9.6 + i * 4, 26.2, 1.2, 1.8, B[3]);
+      p.ell(16, 19.5 + b, 9, 7, B);
+      p.rect(8, 18 + b, 16, 0.6, B[3]); p.rect(8.6, 21.6 + b, 14.8, 0.6, B[3]);
+      moss(12, 13.6 + b); moss(16, 12.8 + b); moss(20, 13.6 + b);
+      if (p.back) { moss(14, 16 + b); moss(19, 17 + b); return; }
+      ant(12.6, 18 + b + wv, -1); ant(18.6, 18 + b - wv, 1);
+      p.ell(16, 23.4 + b, 5, 3.6, Fc);
+      eyes2(p, 12.8, 17.2, 21.8 + b, true);
+      smile(p, 14, 24.8 + b, Fc[3]);
+      p.blush(11.2, 24.6 + b, '#ff9ab0'); p.blush(18.8, 24.6 + b, '#ff9ab0');
+    },
+
+    pebblequail: function (p, f) { /* Gritquail: a round quail chick with a speckled coat and a pebble on the tip of its topknot */
+      var B = NP5.pqB, C = NP5.pqC, Pb = NP3.hS, b = hop(p), sw = Math.sin(p.ph * 2) * 0.4, LG = '#c89058';
+      function speck(x, y) { p.px(x, y, B[3]); p.px(x + 2.4, y + 1.6, B[3]); p.px(x + 0.8, y + 3, B[3]); }
+      function knot(x, y, m) { plume(p, x, y, -1.57 + m * 0.5, 3.4, 0.8, [[B[3], B[3]]], m * 1.6 + sw, 0); p.ell(x + m * 2.6 + sw, y - 3.6, 1.3, 1.2, Pb); }
+      if (p.side) {
+        legsSide(p, [[17, 1, 1]], 24, 28, 0.9, LG, '#a87038');
+        plume(p, 22.5, 18 + b, -0.35, 4, 1.6, [B, B], 0, 0.5);
+        p.ell(17, 20 + b, 7.4, 6, B);
+        p.ell(14.5, 22 + b, 3.6, 3.6, C);
+        speck(18, 17.4 + b);
+        p.ell(19, 19.6 + b, 4, 3, [B[1], B[2], B[3]]);
+        knot(11, 8.4 + b, -1);
+        p.ell(11, 12.4 + b, 4.6, 4.2, B);
+        p.rect(8, 13.8 + b, 4, 0.6, '#3a2c24');
+        p.ell(10.4, 15 + b, 2.4, 1.2, C);
+        p.tri(5.4, 7.4, 13.4 + b, 4.8, 12.6 + b, '#4a3a30');
+        eye1(p, 8.4, 11 + b, true);
+        p.blush(10.8, 14.6 + b, '#ff9ab0');
+        legsSide(p, [[15, 0, 0]], 24, 28, 0.9, LG, LG);
+        return;
+      }
+      feet2(p, 13, 18, 24.5, 1, 3.5, LG);
+      p.ell(9.4, 19.5 + b, 2.4, 3.8, [B[1], B[2], B[3]]); p.ell(22.6, 19.5 + b, 2.4, 3.8, [B[1], B[2], B[3]]);
+      p.ell(16, 19.5 + b, 7, 6.2, B);
+      knot(16, 7.4 + b, -0.6);
+      p.ell(16, 12 + b, 5.2, 4.6, B);
+      if (p.back) { speck(13, 17 + b); speck(17, 19 + b); p.ell(16, 25 + b, 2.4, 1.4, [B[2], B[3]]); return; }
+      p.ell(16, 21 + b, 4.4, 4.2, C);
+      speck(12.4, 19 + b); speck(17.8, 19.6 + b);
+      p.rect(11, 13.2 + b, 2.4, 0.6, '#3a2c24'); p.rect(18.6, 13.2 + b, 2.4, 0.6, '#3a2c24');
+      p.ell(16, 15.4 + b, 3, 1.4, C);
+      eyes2(p, 12.4, 17.6, 10.6 + b, true);
+      p.tri(15.2, 16.8, 13.4 + b, 16, 15 + b, '#4a3a30');
+      p.blush(10.6, 14.6 + b, '#ff9ab0'); p.blush(19.4, 14.6 + b, '#ff9ab0');
+    },
+
+    quartzsnail: function (p, f) { /* Glintsnail: a soft peach snail that carries a spiral shell of rose quartz */
+      var B = NP5.qsB, S = NP5.qsS, wv = Math.sin(p.ph * 2) * 0.5, cr = p.mode === 'move' ? Math.sin(p.gp) * 0.6 : 0;
+      function stalk(x, y, m) { p.rect(x, y, 0.9, 3.4, B[3]); p.ell(x + 0.45 + m * 0.4, y - 0.4 + wv * m, 1.1, 1.1, [B[2], B[3]], true); }
+      if (p.side) {
+        p.ell(16 + cr, 25.6, 10.6, 2.4, B);
+        spiral(p, 19 + cr * 0.5, 17.2, 6.8, S);
+        p.px(16, 13, '#ffffff'); p.px(22, 15, '#ffffff');
+        /* one stalk shows from the side, leaning away from the shell */
+        stalk(5.6 + cr, 15.4, -1);
+        p.ell(7.6 + cr, 21.6, 3.6, 3.8, B);
+        eye1(p, 5.6 + cr, 20.2, true);
+        p.blush(7.8 + cr, 23, '#ff9ab0');
+        return;
+      }
+      p.ell(16, 25.8, 8.4, 2.4, B);
+      if (p.back) { spiral(p, 16, 16.4, 7.6, S); p.px(13, 12, '#ffffff'); p.px(19, 14, '#ffffff'); return; }
+      spiral(p, 17.4, 15, 7.2, S);
+      p.px(13.4, 10.6, '#ffffff'); p.px(20, 12.4, '#ffffff');
+      stalk(11.6, 15.2, -1); stalk(19.6, 15.2, 1);
+      p.ell(16, 21.6, 5, 4.2, B);
+      eyes2(p, 12.8, 17.2, 19.8, true);
+      smile(p, 14, 22.8, B[3]);
+      p.blush(11, 22.4, '#ff9ab0'); p.blush(19, 22.4, '#ff9ab0');
+    },
+
+    rumbletoad: function (p, f) { /* Rumbletoad: a wide stone-brown toad with a round throat sac that hums like a drum */
+      var B = NP5.rtB, C = NP5.rtC, St = NP3.hS, b = hop(p) * 0.6, pf = (Math.sin(p.ph * 2) > 0.5 ? 0.6 : 0) + (p.stage - 1) * 0.35;
+      function wart(x, y) { p.ell(x, y, 0.9, 0.8, [B[0], B[1]], true); }
+      if (p.side) {
+        p.ell(22.5, 25 + b * 0.5, 4.4, 2.8, B);
+        p.ell(17, 21.5 + b, 8, 5.4, B);
+        wart(18, 18 + b); wart(21.5, 19.5 + b); wart(15, 17.4 + b);
+        p.ell(9.5, 19 + b, 5.4, 4.4, B);
+        p.ell(10.5, 14.6 + b, 2.6, 2.4, B);
+        p.ell(8.6, 23 + b, 2.8 + pf, 1.8 + pf * 0.5, C);
+        p.rect(4.8, 20.2 + b, 5.6, 0.6, B[3]);
+        eye1(p, 9.4, 13.4 + b, true);
+        p.blush(11.6, 18.6 + b, '#ff9ab0');
+        p.rect(11.5, 24 + b, 1.6, 4, B[2]); p.rect(10.6, 27.2, 3, 0.8, B[2]);
+        return;
+      }
+      p.ell(7.6, 25.4, 3.6, 2.4, B); p.ell(24.4, 25.4, 3.6, 2.4, B);
+      p.ell(16, 21.4 + b, 9, 6, B);
+      p.ell(10.8, 11.6 + b, 2.8, 2.6, B); p.ell(21.2, 11.6 + b, 2.8, 2.6, B);
+      p.ell(16, 15.8 + b, 8.4, 5, B);
+      if (p.back) { wart(12, 17 + b); wart(19, 18.5 + b); wart(15.5, 21.5 + b); wart(21, 22 + b); wart(11, 22.5 + b); return; }
+      p.ell(16, 22.6 + b, 5.6, 3.6, C);
+      p.ell(16, 19.6 + b, 3.6 + pf, 2.2 + pf * 0.5, C);
+      eyes2(p, 9.8, 20.2, 10.4 + b, true);
+      p.rect(10.6, 17.2 + b, 10.8, 0.6, B[3]); p.px(10, 16.6 + b, B[3]); p.px(21.6, 16.6 + b, B[3]);
+      wart(8.6, 19.4 + b); wart(23.4, 19.4 + b); wart(13, 14 + b); wart(19.2, 14.4 + b);
+      p.ell(11, 26.6, 2.2, 1.3, B); p.ell(21, 26.6, 2.2, 1.3, B);
+      p.blush(9.2, 15.4 + b, '#ff9ab0'); p.blush(20.8, 15.4 + b, '#ff9ab0');
+    },
+
+    cinderkit: function (p, f) { /* Kindlet: a round charcoal kitten with warm ember ears and a little flame at the tip of its tail */
+      var F = NP5.ckF, C = NP5.ckC, b = hop(p), sw = Math.sin(p.ph) * 1.2, EI = '#ffa860';
+      if (p.side) {
+        plume(p, 22.5, 22 + b, -1.2, 6, 1.5, [F, F], 1.8 + sw, 0.3);
+        flame(p, 25.4 + sw * 0.5, 14.6 + b, 3, 1.2, sw * 0.3);
+        legsSide(p, [[20, 1, 1], [14, 0, 1]], 23 + b, 28, 1.8, F[2], F[3], [C[2], C[3]]);
+        p.ell(17.5, 21.6 + b, 6, 4.2, F);
+        p.ell(14.5, 23 + b, 2.6, 2.2, C);
+        p.tri(11, 14.5, 10.5 + b, 13, 4.6 + b, F[2], EI);
+        p.ell(10.5, 14.2 + b, 5.4, 4.8, F);
+        p.ell(6.8, 16 + b, 2.2, 1.5, C);
+        p.px(4.8, 15.2 + b, '#f08890');
+        eye1(p, 8, 12.6 + b, true);
+        p.blush(10, 16.4 + b, '#ff9ab0');
+        legsSide(p, [[21, 0, 0], [13, 1, 0]], 23 + b, 28, 2, F[1], F[2], [C[1], C[2]]);
+        return;
+      }
+      if (!p.back) { plume(p, 21, 24 + b, -1.05, 6.5, 1.5, [F, F], 1.6 + sw, 0.3); flame(p, 25 + sw * 0.5, 16.4 + b, 3, 1.2, sw * 0.3); }
+      p.ell(16, 22 + b, 5.6, 5, F);
+      feet2(p, 12.5, 17.5, 26, 2.5, 2, C[1]);
+      p.tri(9, 13.5, 10.5 + b, 9.6, 4 + b, F[2], p.back ? F[2] : EI);
+      p.tri(18.5, 23, 10.5 + b, 22.4, 4 + b, F[2], p.back ? F[2] : EI);
+      p.ell(16, 13.6 + b, 7, 5.4, F);
+      if (p.back) { plume(p, 16, 25 + b, -1.3, 6.5, 1.5, [F, F], 1.6 + sw, 0.3); flame(p, 19.4 + sw * 0.5, 17.4 + b, 3, 1.2, sw * 0.3); p.px(15.5, 9.6 + b, EMB[1]); return; }
+      p.ell(16, 22.6 + b, 3, 3.2, C);
+      p.px(15.5, 9.4 + b, EMB[1]); p.px(16.5, 9.4 + b, EMB[2]);
+      eyes2(p, 12.4, 17.6, 12 + b, true);
+      p.ell(16, 15.8 + b, 2.4, 1.4, C);
+      p.rect(15.5, 15.1 + b, 1, 0.7, '#f08890');
+      p.blush(10.2, 14.6 + b, '#ff9ab0'); p.blush(19.8, 14.6 + b, '#ff9ab0');
+    },
+
+    ashmoth: function (p, f) { /* Ashmoth: a fluffy ash-white moth with round wings fringed in ember orange */
+      var B = NP5.amB, W = NP5.amW, fl = flyF(p), cy = 16 + Math.round(fl * 0.5 * 2) / 2, fp = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)) * 0.8;
+      function wing(x, y, rx, ry) { p.ell(x, y, rx + 0.6, ry + 0.6, [EMB[2], EMB[1]], true); p.ell(x, y, rx, ry, [W[1], W[1]], true); p.ell(x - 0.4, y - 0.4, rx * 0.6, ry * 0.55, [W[0], W[0]], true); }
+      function ant(x, m) { plume(p, x, cy - 7, -1.57 + m * 0.6, 4.4, 0.6, [[B[3], B[3]]], m * 0.8, 0); p.px(x + m * 1.6, cy - 9.6, B[3]); p.px(x + m * 2.8, cy - 10, B[3]); }
+      if (p.side) {
+        wing(19.5, cy - 3 - fp, 5, 5.4);
+        wing(19, cy + 4 + fp * 0.5, 3.4, 3);
+        ant(13.5, -1);
+        p.ell(16, cy + 1.5, 3.6, 6, B);
+        p.ell(13.6, cy - 4.4, 3.8, 3.6, B);
+        p.ell(14.6, cy - 1.6, 2.4, 1.4, [B[0], B[0]], true);
+        eye1(p, 11, cy - 5.6, true);
+        p.blush(13, cy - 3.2, '#ff9ab0');
+        return;
+      }
+      wing(9, cy - 3 - fp, 5.4 - Math.abs(fp) * 0.6, 4.8); wing(23, cy - 3 - fp, 5.4 - Math.abs(fp) * 0.6, 4.8);
+      wing(10, cy + 4 + fp * 0.5, 3.6, 3.2); wing(22, cy + 4 + fp * 0.5, 3.6, 3.2);
+      ant(14.6, -1); ant(17.4, 1);
+      p.ell(16, cy + 2, 3.6, 6.2, B);
+      p.ell(16, cy - 4, 4.6, 3.8, B);
+      if (p.back) { p.rect(13.4, cy + 2, 5.2, 0.6, B[2]); p.rect(13.8, cy + 4.6, 4.4, 0.6, B[2]); return; }
+      p.ell(16, cy - 0.4, 3.4, 1.6, [B[0], B[0]], true);
+      eyes2(p, 13, 17.2, cy - 5.6, true);
+      p.blush(12.4, cy - 2.4, '#ff9ab0'); p.blush(19.6, cy - 2.4, '#ff9ab0');
+    },
+
+    magmapup: function (p, f) { /* Scorchpup: a basalt puppy with floppy ears and warm lava glowing in the cracks of its coat */
+      var R = NP5.mpR, L = NP5.mpL, b = hop(p), wg = Math.sin(p.ph * 3) * 1.2, MZ = ['#b4acbc', '#968ea0', '#786f84', '#5a5266'];
+      function crack(x, y) { p.rect(x, y, 1.6, 0.6, L[2]); p.rect(x + 1.2, y + 0.5, 1.4, 0.6, L[1]); p.px(x + 2.4, y + 1, L[2]); }
+      if (p.side) {
+        plume(p, 23.5, 20 + b, -0.8, 4, 1.4, [R, R], wg, 0.4);
+        legsSide(p, [[20.5, 1, 1], [13.5, 0, 1]], 23 + b, 28, 2, R[2], R[3]);
+        p.ell(17.5, 21.4 + b, 6.6, 4.4, R);
+        crack(17, 19.4 + b); crack(20.5, 22 + b);
+        legsSide(p, [[21.5, 0, 0], [12.5, 1, 0]], 23 + b, 28, 2.2, R[1], R[2]);
+        p.ell(10.5, 14.6 + b, 5.6, 4.8, R);
+        p.ell(6.4, 16.6 + b, 2.8, 1.9, MZ);
+        p.rect(3.8, 15.6 + b, 1.6, 1.2, '#1a1218');
+        p.ell(13, 15 + b, 2, 3.6, [R[2], R[3]]);
+        eye1(p, 8, 12.6 + b, true);
+        p.blush(9.6, 17 + b, '#ff9ab0');
+        return;
+      }
+      if (!p.back) plume(p, 21, 23 + b, -0.8 + wg * 0.2, 4, 1.4, [R, R], wg, 0.4);
+      p.ell(16, 21.6 + b, 6.2, 5, R);
+      feet2(p, 11.8, 17.8, 25.4, 2.6, 2.4, R[2], R[1]);
+      p.ell(16, 13.6 + b, 6.8, 5.4, R);
+      p.ell(9.4, 15.6 + b, 1.8, 3.6, [R[2], R[3]]); p.ell(22.6, 15.6 + b, 1.8, 3.6, [R[2], R[3]]);
+      if (p.back) { plume(p, 16, 24 + b, -1.5 + wg * 0.2, 4, 1.4, [R, R], wg, 0.4); crack(13, 20 + b); crack(16.5, 22.6 + b); crack(14, 12 + b); return; }
+      crack(11.4, 21.4 + b); crack(17.4, 23 + b); crack(17, 10.2 + b);
+      p.ell(16, 16.4 + b, 3.2, 2.2, MZ);
+      p.rect(15.2, 15.2 + b, 1.6, 1.1, '#1a1218');
+      p.px(15.5, 17.6 + b, '#ff8a9a');
+      eyes2(p, 12.4, 17.6, 11.8 + b, true);
+      p.blush(10.6, 15 + b, '#ff9ab0'); p.blush(19.4, 15 + b, '#ff9ab0');
+    },
+
+    emberfinch: function (p, f) { /* Emberfinch: a round red finch with a gold beak and a little flame for a crest */
+      var R = NP5.efR, C = NP5.efC, fl = flyF(p), cy = 17 + Math.round(fl * 0.5 * 2) / 2, fp = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)), BK = ['#fff0a0', '#f0c040', '#c89020'], ch = 3.4 + (p.stage - 1) * 0.8;
+      if (p.side) {
+        plume(p, 21.5, cy + 2, 0.3, 4.4, 1.6, [R, [R[1], R[2], R[3]]], 0, 0.4);
+        p.ell(16.5, cy, 6.6, 6.2, R);
+        p.ell(13.8, cy + 2.4, 3.6, 3.4, C);
+        flame(p, 15.6, cy - 5.4, ch, 1.5, Math.sin(p.ph * 2) * 0.4);
+        p.tri(8, 10.6, cy - 0.2, 7.2, cy + 0.6, BK[1], BK[0]);
+        eye1(p, 11, cy - 2.6, true);
+        p.blush(12.6, cy + 0.6, '#ff9ab0');
+        p.ell(18.5, cy + 0.6 - fp, 4, 3.2, [R[1], R[2], R[3]]);
+        p.rect(15, cy + 6, 0.9, 2, '#8a5030'); p.rect(17.2, cy + 6, 0.9, 2, '#8a5030');
+        return;
+      }
+      p.ell(9, cy + 0.4 - fp, 2.6, 3.8, [R[1], R[2], R[3]]); p.ell(23, cy + 0.4 - fp, 2.6, 3.8, [R[1], R[2], R[3]]);
+      p.ell(16, cy, 6.8, 6.4, R);
+      p.rect(14, cy + 6, 0.9, 2, '#8a5030'); p.rect(17.1, cy + 6, 0.9, 2, '#8a5030');
+      flame(p, 16, cy - 5.4, ch, 1.5, Math.sin(p.ph * 2) * 0.4);
+      if (p.back) { plume(p, 16, cy + 4, 1.57, 3.6, 1.6, [R, [R[1], R[2], R[3]]], 0, 0.4); return; }
+      p.ell(16, cy + 2.6, 4.2, 3.6, C);
+      eyes2(p, 12.2, 17.8, cy - 2.8, true);
+      p.tri(14.8, 17.2, cy - 0.2, 16, cy + 1.6, BK[1], BK[0]);
+      p.blush(10.6, cy + 0.6, '#ff9ab0'); p.blush(21.4, cy + 0.6, '#ff9ab0');
+    },
+
+    soothound: function (p, f) { /* Sootpaw: a slim smoke-grey hound pup with pale socks and a warm ember spot on its chest */
+      var B = NP5.sdB, C = NP5.sdC, b = hop(p), sw = Math.sin(p.ph) * 1;
+      if (p.side) {
+        plume(p, 24, 20 + b, -0.6, 7, 1.1, [B, B, C], 1.6 + sw, 0.3);
+        legsSide(p, [[21.5, 1, 1], [13.5, 0, 1]], 22.5 + b, 28, 1.5, B[2], B[3], [C[2], C[3]]);
+        p.ell(18, 20.6 + b, 7, 3.8, B);
+        p.ell(13.4, 21.6 + b, 2.6, 2.4, C);
+        p.px(12.6, 21.4 + b, EMB[1]); p.px(13.4, 21 + b, EMB[0]);
+        legsSide(p, [[22.5, 0, 0], [12.5, 1, 0]], 22.5 + b, 28, 1.7, B[1], B[2], [C[1], C[2]]);
+        p.tri(11.5, 14.5, 10 + b, 14, 3.5 + b, B[2], INR);
+        p.ell(10.5, 13.6 + b, 4.6, 4.2, B);
+        p.ell(6, 15.6 + b, 2.8, 1.6, C);
+        p.rect(3.2, 14.8 + b, 1.4, 1.1, '#1a1420');
+        eye1(p, 8.2, 12 + b, true);
+        p.blush(10, 15.8 + b, '#ff9ab0');
+        return;
+      }
+      if (!p.back) plume(p, 21, 23.5 + b, -1.1, 7, 1.1, [B, B, C], 1.8 + sw, 0.3);
+      p.ell(16, 21.4 + b, 5, 5, B);
+      feet2(p, 12.8, 17.4, 25.4, 1.8, 2.6, C[1], C[0]);
+      p.tri(9.5, 13, 10 + b, 9.8, 3.4 + b, B[2], p.back ? B[2] : INR);
+      p.tri(19, 22.5, 10 + b, 22.2, 3.4 + b, B[2], p.back ? B[2] : INR);
+      p.ell(16, 13.4 + b, 6, 4.8, B);
+      if (p.back) { plume(p, 16, 24.5 + b, -1.35, 7, 1.1, [B, B, C], 1.8 + sw, 0.3); p.ell(16, 11 + b, 2.4, 1.4, [B[2], B[2]], true); return; }
+      p.ell(16, 21 + b, 2.6, 3.2, C);
+      p.ell(16, 20.4 + b, 0.9, 0.9, [EMB[0], EMB[1]], true);
+      p.ell(16, 16 + b, 2.6, 1.8, C);
+      p.rect(15.3, 15 + b, 1.4, 1, '#1a1420');
+      eyes2(p, 12.6, 17.4, 11.8 + b, true);
+      p.blush(10.6, 14.6 + b, '#ff9ab0'); p.blush(19.4, 14.6 + b, '#ff9ab0');
+    },
+
+    flarefox: function (p, f) { /* Fennflare: a sand-gold fennec with huge ears and a cream tail tip that warms in the sun */
+      var F = NP5.ffF, C = NP5.ffC, b = hop(p), sw = Math.sin(p.ph) * 1.2, TP = p.stage >= 2 ? EMB : C;
+      function tail(x, y, a, m) { plume(p, x, y, a, 7, 2.4, [F, F, [TP[0], TP[1], TP[1]]], m * (1.2 + sw), 0.35); }
+      if (p.side) {
+        tail(23.5, 21 + b, -0.7, 1);
+        p.tri(12.5, 16, 10 + b, 16.5, 1.5 + b, F[2], F[3]);
+        legsSide(p, [[20.5, 1, 1], [13.5, 0, 1]], 23 + b, 28, 1.6, F[2], F[3]);
+        p.ell(17.5, 21.4 + b, 6, 4, F);
+        p.ell(14.5, 22.6 + b, 3, 2.4, C);
+        legsSide(p, [[21.5, 0, 0], [12.5, 1, 0]], 23 + b, 28, 1.8, F[1], F[2]);
+        p.ell(10.5, 14.4 + b, 5, 4.4, F);
+        p.ell(7, 16.4 + b, 2.8, 1.7, C);
+        p.rect(3.8, 15.6 + b, 1.4, 1, '#3a2418');
+        p.tri(9.5, 14, 11 + b, 12.5, 1.2 + b, F[1], INR);
+        eye1(p, 8, 12.8 + b, true);
+        p.blush(10.4, 16.4 + b, '#ff9ab0');
+        return;
+      }
+      if (!p.back) tail(21, 24 + b, -1.0, 1);
+      p.ell(16, 21.6 + b, 5.4, 5, F);
+      feet2(p, 12.6, 17.6, 25.6, 2.2, 2.4, F[2], F[1]);
+      p.tri(5, 11, 12 + b, 5.4, 1.4 + b, F[2], p.back ? F[2] : INR);
+      p.tri(21, 27, 12 + b, 26.6, 1.4 + b, F[2], p.back ? F[2] : INR);
+      p.ell(16, 13.8 + b, 6.4, 5, F);
+      if (p.back) { tail(16, 25 + b, -1.3, 1); return; }
+      p.ell(16, 22.4 + b, 3, 3.2, C);
+      p.ell(16, 15.6 + b, 4.4, 2.8, C);
+      p.rect(15.3, 15 + b, 1.4, 1, '#3a2418');
+      eyes2(p, 12.2, 17.8, 12 + b, true);
+      p.blush(10.2, 15.4 + b, '#ff9ab0'); p.blush(21.8, 15.4 + b, '#ff9ab0');
+    },
+
+    kilnturtle: function (p, f) { /* Kilnshell: a stony turtle that carries a dome of brick with a little chimney on top */
+      var S = NP5.ktS, B = NP5.ktB, b = hop(p) * 0.5, MO = '#f0dcc4', fw = Math.sin(p.ph * 2) > 0 ? EMB[1] : EMB[0];
+      function bricks(cx, cy, rx, ry) {
+        for (var r = -1; r <= 1; r++) {
+          var y = cy + r * ry * 0.45; p.rect(cx - rx * 0.86 * (1 - Math.abs(r) * 0.25), y, rx * 1.72 * (1 - Math.abs(r) * 0.25), 0.5, MO);
+          for (var c = -2; c <= 2; c++) { var x = cx + c * rx * 0.36 + (r % 2 ? rx * 0.18 : 0); if (Math.abs(x - cx) < rx * 0.8 * (1 - Math.abs(r) * 0.3)) p.rect(x, y - ry * 0.4, 0.5, ry * 0.4, MO); }
+        }
+      }
+      function chimney(x, y) { p.rect(x - 1.5, y, 3, 4.4, S[2]); p.rect(x - 2, y - 0.6, 4, 1, S[3]); p.rect(x - 1.5, y + 1.6, 3, 0.4, MO); }
+      if (p.side) {
+        legsSide(p, [[11, 1, 1], [22, 0, 1]], 23 + b, 27.5, 2.6, B[2], B[3]);
+        p.ell(25.5, 22.6 + b, 2, 1.2, B);
+        chimney(20, 7.6 + b);
+        p.ell(17.5, 17.6 + b, 8.4, 6.4, S);
+        bricks(17.5, 17.6 + b, 8.4, 6.4);
+        p.rect(9.5, 22.4 + b, 16, 1.4, S[3]);
+        p.ell(21, 21 + b, 1.8, 1.6, [fw, EMB[2]], true); p.rect(19.2, 21 + b, 3.6, 1.4, EMB[2]);
+        p.ell(7.6, 19.6 + b, 3.8, 3.4, B);
+        p.ell(5.2, 21 + b, 1.6, 1, [B[0], B[1]], true);
+        eye1(p, 5.6, 18 + b, true);
+        p.blush(7.8, 21 + b, '#ff9ab0');
+        legsSide(p, [[12.5, 0, 0], [23.5, 1, 0]], 23 + b, 27.5, 2.8, B[1], B[2]);
+        return;
+      }
+      feet2(p, 8.5, 20.5, 23.5, 3, 4, B[2], B[1]);
+      chimney(19.5, 6.4 + b);
+      p.ell(16, 16.6 + b, 9, 6.8, S);
+      bricks(16, 16.6 + b, 9, 6.8);
+      p.rect(7.4, 22 + b, 17.2, 1.4, S[3]);
+      if (p.back) { p.ell(16, 23.8 + b, 2, 1.2, B); return; }
+      p.ell(16, 21.4 + b, 4.6, 4, B);
+      eyes2(p, 12.8, 17.2, 19.6 + b, true);
+      smile(p, 14, 22.6 + b, B[3]);
+      p.blush(11.2, 22.4 + b, '#ff9ab0'); p.blush(18.8, 22.4 + b, '#ff9ab0');
+    },
+
+    sunflare: function (p, f) { /* Sunnip: a round golden chick with a little crown of rays */
+      var G = NP5.sfG, Fc = NP5.sfF, fl = flyF(p), cy = 17 + Math.round(fl * 0.5 * 2) / 2, fp = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)), rl = 2 + (p.stage - 1) * 0.7, i;
+      function rays(cx, cyy, a0, a1, n) { for (i = 0; i < n; i++) { var a = a0 + (a1 - a0) * i / (n - 1); p.tri(cx + Math.cos(a) * 5 - 1, cx + Math.cos(a) * 5 + 1, cyy + Math.sin(a) * 4.6, cx + Math.cos(a) * (5 + rl), cyy + Math.sin(a) * (4.6 + rl), EMB[1], EMB[0]); } }
+      if (p.side) {
+        rays(15, cy - 3, -2.8, -0.9, 4);
+        plume(p, 21.5, cy + 2.4, 0.4, 3.6, 1.4, [G, G], 0, 0.4);
+        p.ell(16, cy, 6.6, 6.4, G);
+        p.ell(12.8, cy + 0.4, 3.2, 3.4, Fc);
+        p.tri(7.6, 9.6, cy - 0.2, 6.8, cy + 0.4, '#f08a30', '#ffb050');
+        eye1(p, 10.4, cy - 2.6, true);
+        p.blush(12.4, cy + 1.2, '#ff9ab0');
+        p.ell(18, cy + 1 - fp, 3.6, 3, [G[1], G[2], G[3]]);
+        p.rect(14.6, cy + 6, 0.9, 2, '#d08030'); p.rect(16.8, cy + 6, 0.9, 2, '#d08030');
+        return;
+      }
+      rays(16, cy - 2, -2.75, -0.39, 5);
+      p.ell(9.4, cy + 1 - fp, 2.4, 3.2, [G[1], G[2], G[3]]); p.ell(22.6, cy + 1 - fp, 2.4, 3.2, [G[1], G[2], G[3]]);
+      p.ell(16, cy, 6.8, 6.6, G);
+      p.rect(14, cy + 6.2, 0.9, 2, '#d08030'); p.rect(17.1, cy + 6.2, 0.9, 2, '#d08030');
+      if (p.back) { p.ell(16, cy + 5, 2.4, 1.4, [G[2], G[3]]); return; }
+      p.ell(16, cy + 1, 4.6, 4.4, Fc);
+      eyes2(p, 12.4, 17.6, cy - 2, true);
+      p.tri(15, 17, cy + 1, 16, cy + 2.4, '#f08a30', '#ffb050');
+      p.blush(10.6, cy + 1.4, '#ff9ab0'); p.blush(21.4, cy + 1.4, '#ff9ab0');
+    }
+  };
+  var STG5 = {
+    cavebat: gstg(function (p, f, s, L, d, b) {
+      var F = NP5.cbF, W = NP5.cbW, Cr = NP5.gdC, fl = flyF(p), cy = 16 + Math.round(fl * 0.5 * 2) / 2, fp = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)), i;
+      if (L === 'back') {
+        /* from stage 4 the wings open wide like a cloak */
+        if (s >= 4) {
+          var wl = 5 + s * 1.3, ed = [W, W, [W[1], W[2], W[3]]];
+          if (d === 2) plume(p, 19, cy - 2, -0.8 - fp * 0.2, wl, 3.4, ed, -1, 0.6);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 7, cy - 1, (m > 0 ? -0.35 : Math.PI + 0.35) - m * fp * 0.2, wl, 3.4, ed, m * -1, 0.6); });
+        }
+        return;
+      }
+      /* a fluffy collar from stage 2, crystal claws on the wing tips from stage 3, a crescent on the brow at stage 5 */
+      if (s >= 2) {
+        if (d === 2) for (i = 0; i < 3; i++) p.ell(12.5 + i * 1.8, cy + 2.6 + i * 0.3, 1.6, 1.3, NP5.cbC);
+        else if (d === 0) for (i = -2; i <= 2; i++) p.ell(16 + i * 2.2, cy + 3.6 + Math.abs(i) * -0.4, 1.6, 1.3, NP5.cbC);
+      }
+      if (s >= 3) {
+        var y = cy - 1.6 - fp * 1.2;
+        if (d === 2) shard(p, 23.6, y, 0.8, 2.2, 0.6, Cr);
+        else { shard(p, 2.6, y, 0.8, 2.2, -0.6, Cr); shard(p, 29.4, y, 0.8, 2.2, 0.6, Cr); }
+      }
+      if (s >= 5 && d !== 1) { var cx = d === 2 ? 11.5 : 16, yy = cy - 5.6; p.ell(cx, yy, 1.6, 1.4, [Cr[0], Cr[1]], true); p.ell(cx + 0.7, yy - 0.5, 1.2, 1.1, [F[1], F[1]], true); }
+    }),
+    geodeling: gstg(function (p, f, s, L, d, b) {
+      var C = NP5.gdC, cx = d === 2 ? 17 : 16, top = (d === 2 ? 11.5 : 11) + b;
+      if (L === 'back') {
+        /* more crystals from stage 2, one tall glowing crystal from stage 3 */
+        if (s >= 2) { shard(p, cx - 5.2, top + 2.4, 1.1, 2.6, -1.2, C); shard(p, cx + 5.2, top + 2.4, 1.1, 2.6, 1.2, C); }
+        if (s >= 3) shard(p, cx + 0.4, top + 0.5, 2, 6 + s * 1.2, 0.3, C);
+        return;
+      }
+      /* crystal clusters on its shoulders from stage 4, a crystal heart on the chest at stage 5 */
+      if (s >= 4) {
+        if (d === 2) { shard(p, 20.5, 16 + b, 1.1, 3, 1, C); shard(p, 22.4, 17.4 + b, 0.9, 2.2, 1.4, C); }
+        else { [-1, 1].forEach(function (m) { shard(p, 16 + m * 7, 15 + b, 1.1, 3, m * 1.2, C); shard(p, 16 + m * 8.4, 16.6 + b, 0.9, 2.2, m * 1.6, C); }); }
+      }
+      if (s >= 5 && d === 0) { p.ell(15.2, 22.8 + b, 1, 1, [C[1], C[2]], true); p.ell(16.8, 22.8 + b, 1, 1, [C[1], C[2]], true); p.tri(14.3, 17.7, 23 + b, 16, 25 + b, C[2], C[1]); }
+    }),
+    burrowkit: gstg(function (p, f, s, L, d, b) {
+      var St = NP3.hS, Am = EP.earth[0], i;
+      if (L === 'back') {
+        /* a ridge of stone plates down its back from stage 4 */
+        if (s >= 4) {
+          if (d === 2) for (i = 0; i < 4; i++) p.tri(14 + i * 2.6, 16.4 + i * 2.6, 18 + b + i * 0.4, 15 + i * 2.6, 14.6 + b + i * 0.4 - (s - 4), St[2], St[1]);
+          else if (d === 1) for (i = 0; i < 4; i++) p.ell(16, 11 + b + i * 3.4, 1.6, 1.3, St);
+        }
+        return;
+      }
+      /* the paws grow in the body painter; an amber stone shines on its brow from stage 3 */
+      if (s >= 3 && d !== 1) { var x = d === 2 ? 9.2 : 16, y = (d === 2 ? 10.6 : 9.6) + b; p.ell(x, y, 1.3, 1.1, Am); p.px(x - 0.5, y - 0.6, '#ffffff'); }
+    }),
+    slatehorn: gstg(function (p, f, s, L, d, b) {
+      var B = NP5.shB, H = NP5.shH, St = NP3.hS, i;
+      b *= 0.6;
+      if (L === 'back') {
+        /* plates of slate on its back from stage 3, a spine ridge from stage 4 */
+        if (s >= 3) {
+          if (d === 2) for (i = 0; i < 3; i++) p.ell(15 + i * 3.6, 15.4 + b, 2, 1.6, St);
+          else for (i = -1; i <= 1; i++) p.ell(16 + i * 4.4, 16 + b + Math.abs(i) * 0.6, 2.2, 1.6, St);
+        }
+        if (s >= 4) {
+          if (d === 2) for (i = 0; i < 4; i++) p.tri(13 + i * 3, 15.4 + i * 3, 15 + b, 14 + i * 3, 12 + b - (s - 4), St[2], St[1]);
+          else for (i = -1; i <= 1; i++) p.tri(14.8 + i * 4.4, 17.2 + i * 4.4, 15 + b, 16 + i * 4.4, 11.6 + b - (s - 4), St[2], St[1]);
+        }
+        return;
+      }
+      /* a second, smaller horn from stage 2; the main horn grows long from stage 4 */
+      if (d === 2) {
+        if (s >= 4) p.tri(3.4, 7, 17.2 + b, 2.4, 9.5 + b - (s - 4), H[2], H[1]);
+        if (s >= 2) p.tri(6.8, 9, 14.6 + b, 7.6, 11.4 + b, H[2], H[1]);
+      } else if (d === 0) {
+        if (s >= 4) p.tri(14.4, 17.6, 17 + b, 16, 8.4 + b - (s - 4), H[2], H[1]);
+        if (s >= 2) p.tri(15, 17, 12.6 + b, 16, 9.6 + b, H[2], H[1]);
+      }
+    }),
+    mossmite: gstg(function (p, f, s, L, d, b) {
+      var Li = NP5.mmL, M = NP.tM, sw = Math.sin(p.ph) * 0.5, i;
+      b *= 0.5;
+      if (L === 'back') return;
+      /* pale lichen from stage 2, ferns from stage 3, flowers among them from stage 4 */
+      var spots = d === 2 ? [[11, 18], [15.5, 19.5], [20, 18.4], [23.5, 20.6]] : [[10.6, 16.4], [14.4, 17.4], [18, 16.6], [21.6, 17.6]];
+      if (s >= 2) spots.forEach(function (q) { p.ell(q[0], q[1] + b, 1.1, 0.8, [Li[1], Li[2]], true); });
+      var tops = d === 2 ? [[13, 15], [17, 14.6], [21, 15.4]] : [[12, 12.8], [16, 12], [20, 12.8]];
+      if (s >= 3) tops.forEach(function (q, j) { if (j === 1 || s >= 4) plume(p, q[0], q[1] + b, -1.57 + (j - 1) * 0.4, 2 + s * 0.6, 0.8, [M, M], sw + (j - 1) * 0.6, 0.3); });
+      if (s >= 4) tops.forEach(function (q, j) { if (j !== 1) { var x = q[0] + (j - 1) * 1.6, y = q[1] - 1.4 - s * 0.3 + b; p.ell(x, y, 1.1, 1.1, ['#fff0f6', '#ffc0d8', '#ff90b8']); p.px(x - 0.5, y - 0.5, '#ffe070'); } });
+    }),
+    pebblequail: gstg(function (p, f, s, L, d, b) {
+      var B = NP5.pqB, St = NP3.hS, Pb = NP3.hS, Tp = [B[0], B[1], B[2]], sw = Math.sin(p.ph * 2) * 0.4, i;
+      if (L === 'back') {
+        /* a fan of long tail feathers from stage 4 */
+        if (s >= 4) {
+          if (d === 2) for (i = 0; i < 3; i++) plume(p, 22, 18 + b, -0.7 + i * 0.35, 4 + s, 1.3, [B, B, Tp], 0.5, 0.4);
+          else if (d === 1) for (i = -2; i <= 2; i++) plume(p, 16, 22 + b, 1.57 + i * 0.3, 3 + s, 1.3, [B, B, Tp], 0, 0.4);
+          else for (i = -1; i <= 1; i += 2) plume(p, 16 + i * 5, 21 + b, -1.57 + i * 0.9, 2 + s, 1.2, [B, B, Tp], i * 0.5, 0.4);
+        }
+        return;
+      }
+      /* a second pebble on the topknot from stage 2; stone scales on the wings from stage 3 */
+      if (s >= 2) { var x = (d === 2 ? 9.6 : 14.6) + sw, y = (d === 2 ? 5.4 : 4.4) + b; p.ell(x, y, 1, 0.9, Pb); }
+      if (s >= 3) {
+        if (d === 2) for (i = 0; i < 3; i++) p.ell(17.4 + i * 1.6, 19 + b + (i % 2) * 1.2, 0.9, 0.8, [St[1], St[2]], true);
+        else [-1, 1].forEach(function (m) { for (i = 0; i < 2; i++) p.ell(16 + m * 6.6, 18 + b + i * 2, 0.9, 0.8, [St[1], St[2]], true); });
+      }
+    }),
+    quartzsnail: gstg(function (p, f, s, L, d, b) {
+      var S = NP5.qsS, cr = p.mode === 'move' ? Math.sin(p.gp) * 0.6 : 0, cx = d === 2 ? 19 + cr * 0.5 : d === 1 ? 16 : 17.4, cy = d === 2 ? 17.2 : d === 1 ? 16.4 : 15, r = d === 2 ? 6.8 : d === 1 ? 7.6 : 7.2, i;
+      if (L === 'back') {
+        /* a tall crystal rises from the top of the shell from stage 3 */
+        if (s >= 3) shard(p, cx + 0.6, cy - r + 1.6, 1.8, 4 + s * 1.2, 0.4, S);
+        return;
+      }
+      /* small crystal points on the rim from stage 2, more of them over the whole shell from stage 4 */
+      if (s >= 2) for (i = 0; i < 3; i++) { var a = -2.6 + i * 0.9; shard(p, cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.94 + 0.8, 0.8, 1.6 + s * 0.3, Math.cos(a), S); }
+      if (s >= 4) for (i = 0; i < 3; i++) { var a2 = -0.3 + i * 0.6; shard(p, cx + Math.cos(a2) * r * 0.9, cy + Math.sin(a2) * r * 0.9 + 0.8, 0.8, 1.4 + s * 0.2, Math.cos(a2), S); }
+    }),
+    rumbletoad: gstg(function (p, f, s, L, d, b) {
+      var St = NP3.hS, i;
+      b *= 0.6;
+      if (L === 'back') return;
+      /* its throat sac grows in the body painter; river stones on its back from stage 3, a stone crest over its eyes from stage 4 */
+      if (s >= 3) {
+        var pts = d === 2 ? [[17, 17.2], [20.5, 18.4], [23, 21], [14.4, 16.8]] : d === 1 ? [[12, 17], [19, 18.5], [15.5, 21.5], [21, 22], [11, 22.5]] : [[8.4, 19.2], [23.6, 19.2], [12.6, 13.8], [19.4, 13.8]];
+        pts.forEach(function (q) { p.ell(q[0], q[1] + b, 1.4, 1.1, St); });
+      }
+      if (s >= 4 && d !== 1) {
+        if (d === 2) for (i = 0; i < 2; i++) p.tri(8.8 + i * 1.8, 10.6 + i * 1.8, 12.8 + b, 9.6 + i * 1.8, 11 + b - (s - 4) * 0.6, St[2], St[1]);
+        else [10.8, 21.2].forEach(function (x) { for (i = -1; i <= 1; i++) p.tri(x + i * 1.4 - 0.9, x + i * 1.4 + 0.9, 9.6 + b, x + i * 1.4, 8 + b - (s - 4) * 0.6 - (i ? 0 : 0.7), St[2], St[1]); });
+      }
+    }),
+    cinderkit: gstg(function (p, f, s, L, d, b) {
+      var sw = Math.sin(p.ph * 2) * 0.5, i;
+      if (L === 'back') {
+        /* a soft mane of flame round its neck from stage 4 */
+        if (s >= 4) {
+          if (d === 2) for (i = 0; i < 3; i++) flame(p, 13.5 + i * 1.6, 18.6 + b + i * 0.6, 2 + s * 0.6, 1.3, sw);
+          else for (i = -2; i <= 2; i++) flame(p, 16 + i * 2.6, 18.4 + b + Math.abs(i) * 0.4, 2 + s * 0.6 - Math.abs(i) * 0.4, 1.3, sw * (i % 2 ? -1 : 1));
+        }
+        return;
+      }
+      /* glowing whiskers from stage 2, ember ear tips and paws from stage 3 */
+      if (s >= 2 && d === 0) { p.rect(8.4, 15.2 + b, 2.8, 0.5, EMB[1]); p.rect(8.6, 16.4 + b, 2.6, 0.5, EMB[1]); p.rect(20.8, 15.2 + b, 2.8, 0.5, EMB[1]); p.rect(20.8, 16.4 + b, 2.6, 0.5, EMB[1]); }
+      if (s >= 2 && d === 2) { p.rect(3, 16.6 + b, 3, 0.5, EMB[1]); p.rect(3.2, 17.6 + b, 2.6, 0.5, EMB[1]); }
+      if (s >= 3) {
+        if (d === 2) flame(p, 13, 4.8 + b, 1.6 + s * 0.4, 0.9, sw);
+        else { flame(p, 9.6, 4.4 + b, 1.6 + s * 0.4, 0.9, sw); flame(p, 22.4, 4.4 + b, 1.6 + s * 0.4, 0.9, -sw); }
+        if (d === 0) { p.rect(12.6, 27, 2.2, 0.6, EMB[1]); p.rect(17.6, 27, 2.2, 0.6, EMB[1]); }
+      }
+    }),
+    ashmoth: gstg(function (p, f, s, L, d, b) {
+      var W = NP5.amW, fl = flyF(p), cy = 16 + Math.round(fl * 0.5 * 2) / 2, fp = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)) * 0.8;
+      if (L === 'back') {
+        /* smoke tails on the hind wings from stage 2; wide ember-edged wings from stage 4 */
+        if (s >= 2) {
+          if (d === 2) plume(p, 21, cy + 5, 0.7, 3 + s, 1.1, [W, SMK], 1.4, 0.5);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 9, cy + 5, 1.57 - m * 1.0, 3 + s, 1.1, [W, SMK], m * 1.4, 0.5); });
+        }
+        if (s >= 4) {
+          var ed = [W, W, [EMB[1], EMB[2], EMB[2]]];
+          if (d === 2) plume(p, 19, cy - 4 - fp, -0.9, 6 + s, 3.6, ed, -1, 0.55);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 9, cy - 4 - fp, m > 0 ? -0.5 : Math.PI + 0.5, 4 + s, 3.6, ed, m * -1, 0.55); });
+        }
+        return;
+      }
+      /* ember eyespots on the wings from stage 3 */
+      if (s >= 3) {
+        var eye = function (x, y) { p.ell(x, y, 1.5, 1.5, [EMB[1], EMB[2]], true); p.ell(x, y, 0.6, 0.6, [EMB[0], EMB[0]], true); };
+        if (d === 2) eye(20.5, cy - 3.4 - fp); else if (d === 0) { eye(8.4, cy - 3.4 - fp); eye(23.6, cy - 3.4 - fp); }
+      }
+    }),
+    magmapup: gstg(function (p, f, s, L, d, b) {
+      var R = NP5.mpR, L2 = NP5.mpL, i;
+      if (L === 'back') {
+        /* a ridge of warm lava rocks along its back from stage 3 */
+        if (s >= 3) {
+          var rock = function (x, y, h) { p.tri(x - 1.4, x + 1.4, y, x, y - h, R[2], R[1]); p.px(x - 0.5, y - h * 0.5, L2[1]); };
+          if (d === 2) for (i = 0; i < 4; i++) rock(14 + i * 2.6, 18.4 + b, 2 + s * 0.5 - Math.abs(i - 1.5) * 0.5);
+          else if (d === 1) for (i = 0; i < 3; i++) p.ell(16, 12 + b + i * 3.6, 1.6, 1.3, R);
+          else for (i = -1; i <= 1; i++) rock(16 + i * 3, 17 + b, 2 + s * 0.4);
+        }
+        return;
+      }
+      /* the lava cracks spread from stage 2; lava drops hang from its ears from stage 4 */
+      if (s >= 2) {
+        if (d === 2) { p.rect(13.4, 25.6, 1.6, 0.6, L2[1]); p.rect(20.8, 25.6, 1.6, 0.6, L2[1]); }
+        else if (d === 0) { p.rect(12.2, 26.4, 2, 0.6, L2[1]); p.rect(18.2, 26.4, 2, 0.6, L2[1]); }
+      }
+      if (s >= 4) {
+        var drop = function (x, y) { p.ell(x, y, 1.1, 1.3, [L2[0], L2[1], L2[2]]); };
+        if (d === 2) drop(13, 19 + b); else { drop(9, 18.6 + b); drop(23, 18.6 + b); }
+      }
+    }),
+    emberfinch: gstg(function (p, f, s, L, d, b) {
+      var R = NP5.efR, fl = flyF(p), cy = 17 + Math.round(fl * 0.5 * 2) / 2, fp = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)), i;
+      if (L === 'back') {
+        /* ember tail feathers from stage 3; wide flame-tipped wings from stage 4 (the crest grows in the body painter) */
+        if (s >= 3) {
+          var tp = [R, R, [EMB[0], EMB[1], EMB[1]]];
+          if (d === 2) for (i = 0; i < 2; i++) plume(p, 21, cy + 2, 0.2 + i * 0.4, 3 + s * 1.2, 1.3, tp, 0.6, 0.4);
+          else for (i = -1; i <= 1; i++) plume(p, 16, cy + 5, 1.57 + i * 0.35, 2 + s, 1.3, tp, 0, 0.4);
+        }
+        if (s >= 4) {
+          var ed = [R, R, [EMB[0], EMB[1], EMB[2]]];
+          if (d === 2) plume(p, 18, cy - 1 - fp, -0.8, 4 + s, 2.8, ed, -1, 0.6);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 6, cy - 1 - fp, m > 0 ? -0.4 : Math.PI + 0.4, 3 + s, 2.8, ed, m * -1, 0.6); });
+        }
+      }
+    }),
+    soothound: gstg(function (p, f, s, L, d, b) {
+      var B = NP5.sdB, C = NP5.sdC, sw = Math.sin(p.ph) * 0.6, i;
+      if (L === 'back') {
+        /* a long tail that trails smoke from stage 4 */
+        if (s >= 4) {
+          if (d === 2) plume(p, 27.4, 14 + b, -1.3, 2 + s * 0.8, 1.2, [SMK, SMK], 1.6 + sw, 0.4);
+          else if (d === 0) plume(p, 25.4, 15.4 + b, -1.4, 2 + s * 0.8, 1.2, [SMK, SMK], 1.6 + sw, 0.4);
+        }
+        /* embers in the fur along its neck from stage 3 */
+        if (s >= 3) {
+          if (d === 2) for (i = 0; i < 3; i++) p.tri(12.5 + i * 1.8, 14.5 + i * 1.8, 17.6 + b, 13.8 + i * 1.8, 14.4 + b, B[2], EMB[2]);
+          else for (i = -2; i <= 2; i++) p.tri(15 + i * 2.4, 17 + i * 2.4, 18 + b, 16 + i * 2.4, 15.4 + b - (i ? 0 : 0.6), B[2], EMB[2]);
+        }
+        return;
+      }
+      /* wisps of smoke curl from the tips of its ears from stage 2 */
+      if (s >= 2) {
+        var wl = 1.6 + s * 0.4;
+        if (d === 2) plume(p, 14, 3.6 + b, -0.6, wl, 1, [SMK], 1.2 + sw, 0.4);
+        else { plume(p, 9.8, 3.4 + b, -2.4, wl, 1, [SMK], -1.2 + sw, 0.4); plume(p, 22.2, 3.4 + b, -0.7, wl, 1, [SMK], 1.2 + sw, 0.4); }
+      }
+    }),
+    flarefox: gstg(function (p, f, s, L, d, b) {
+      var C = NP5.ffC, sw = Math.sin(p.ph * 2) * 0.5, i;
+      if (L === 'back') {
+        /* a ruff of warm fur round its neck from stage 4 */
+        if (s >= 4) {
+          if (d === 2) for (i = 0; i < 3; i++) p.ell(13 + i * 1.6, 18.4 + b + i * 0.4, 1.8, 1.6, C);
+          else for (i = -2; i <= 2; i++) p.ell(16 + i * 2.4, 18.6 + b + Math.abs(i) * -0.3, 1.9, 1.6, C);
+        }
+        return;
+      }
+      /* the tail tip warms in the body painter from stage 2; small flames dance on the ear tips from stage 3 */
+      if (s >= 3) {
+        if (d === 2) { flame(p, 12.5, 1.6 + b, 1.6 + s * 0.4, 0.9, sw); flame(p, 16.5, 1.9 + b, 1.4 + s * 0.3, 0.8, -sw); }
+        else { flame(p, 5.4, 1.6 + b, 1.6 + s * 0.4, 0.9, sw); flame(p, 26.6, 1.6 + b, 1.6 + s * 0.4, 0.9, -sw); }
+      }
+      if (s >= 5 && d !== 1) { var x = d === 2 ? 10 : 16, y = (d === 2 ? 10.4 : 9.8) + b; p.ell(x, y, 1.2, 1.2, [EMB[0], EMB[1]]); }
+    }),
+    kilnturtle: (function () {
+      var base = gstg(function (p, f, s, L, d, b) {
+        var S = NP5.ktS, CuR = CU, i;
+        b *= 0.5;
+        if (L === 'back') {
+          /* the chimney grows tall from stage 3, and a second one rises from stage 4 */
+          if (s >= 3) { var x = d === 2 ? 20 : 19.5, y = (d === 2 ? 7.6 : 6.4) + b; p.rect(x - 1.5, y - 2 - (s - 3), 3, 3 + (s - 3), S[2]); p.rect(x - 2, y - 2.6 - (s - 3), 4, 1, S[3]); }
+          if (s >= 4 && d !== 2) { p.rect(11, 8.6 + b, 2.6, 3.6, S[2]); p.rect(10.6, 8 + b, 3.4, 1, S[3]); }
+          if (s >= 4 && d === 2) { p.rect(13.4, 9.4 + b, 2.6, 3.6, S[2]); p.rect(13, 8.8 + b, 3.4, 1, S[3]); }
+          return;
+        }
+        /* a copper rim rings its shell from stage 4 */
+        if (s >= 4) {
+          if (d === 2) p.rect(9.5, 22.2 + b, 16, 1, CuR[1]);
+          else p.rect(7.4, 21.8 + b, 17.2, 1, CuR[1]);
+        }
+      });
+      return function (p, f, s, L) {
+        base(p, f, s, L);
+        if (L !== 'fx') return;
+        /* warm smoke rises from the chimney (its cause is in plain sight) */
+        var d = p.side ? 2 : p.back ? 1 : 0, b = hop(p) * 0.5, x = d === 2 ? 20 : 19.5, y = (d === 2 ? 7.6 : 6.4) + b - (s >= 3 ? 3 + (s - 3) : 1);
+        for (var i = 0; i < 2; i++) { var t = ((f / NF) + i / 2) % 1, r = 0.8 + t * 1.4; if (t < 0.8) p.ell(x + t * 3, y - t * 8, r, r, SMK, true); }
+      };
+    })(),
+    sunflare: gstg(function (p, f, s, L, d, b) {
+      var G = NP5.sfG, fl = flyF(p), cy = 17 + Math.round(fl * 0.5 * 2) / 2, fp = Math.sin(p.ph * (p.mode === 'move' ? 4 : 2)), i;
+      if (L === 'back') {
+        /* long golden tail feathers from stage 3; wide shining wings from stage 4 (the rays grow in the body painter) */
+        if (s >= 3) {
+          var tp = [G, G, [EMB[0], EMB[1], EMB[1]]];
+          if (d === 2) for (i = 0; i < 2; i++) plume(p, 21, cy + 3, 0.3 + i * 0.4, 3 + s * 1.3, 1.3, tp, 0.8, 0.4);
+          else for (i = -1; i <= 1; i++) plume(p, 16, cy + 5, 1.57 + i * 0.4, 2 + s, 1.3, tp, i * 0.4, 0.4);
+        }
+        if (s >= 4) {
+          var ed = [G, G, [G[0], G[0], G[1]]];
+          if (d === 2) plume(p, 18, cy - 1 - fp, -0.8, 4 + s, 3, ed, -1, 0.6);
+          else [-1, 1].forEach(function (m) { plume(p, 16 + m * 6, cy - 1 - fp, m > 0 ? -0.4 : Math.PI + 0.4, 3 + s, 3, ed, m * -1, 0.6); });
+        }
+      }
+    })
+  };
+  var EL5 = [
+    ['cavebat', 'earth', 'dark', '#1e1420', 1, [['Echopip', 'A round cave bat with huge ears. It hangs in the dark and listens to the stone.'], ['Echowing', 'A fluffy collar of fur grows round its neck.'], ['Gloomvane', 'Pale crystal claws grow at the tips of its wings.'], ['Caverncloak', 'Its wings open wide, like a cloak for the dark.'], ['Deepecho', 'A legendary bat that can hear a single drop fall in the deepest cave.']]],
+    ['geodeling', 'earth', 'light', '#2a2632', 0, [['Druselet', 'A round stone that is hollow and full of crystals. It sparkles where its shell is cracked.'], ['Prismcrag', 'More crystals crowd out of the crack in its shell.'], ['Glintspire', 'One tall crystal rises from the middle, bright as a lamp.'], ['Lumendrusa', 'Crystal clusters grow on its shoulders.'], ['Heartgeode', 'A legendary geode with a crystal heart that lights the whole cave.']]],
+    ['burrowkit', 'earth', null, '#2e2014', 0, [['Tunnelpaw', 'A round kitten with big pink digging paws. It always has a little earth on its nose.'], ['Claymitt', 'Its digging paws grow broad and strong.'], ['Shalewhisk', 'An amber stone shines on its brow like a miner\'s lamp.'], ['Burrowmane', 'A ridge of stone plates runs down its back.'], ['Deepdelver', 'A legendary cat that digs roads under the mountains for others to walk.']]],
+    ['slatehorn', 'earth', null, '#22262e', 0, [['Flintcalf', 'A sturdy rhino calf of slate grey with one stubby horn on its nose.'], ['Slatebrow', 'A second, smaller horn grows above the first.'], ['Shalehide', 'Plates of slate cover its back.'], ['Ridgeplow', 'Its horn grows long and a ridge of stone runs along its spine.'], ['Mountainhide', 'A legendary rhino as steady as the mountain it walks on.']]],
+    ['mossmite', 'earth', 'grass', '#24201a', 0, [['Mossmite', 'A pill bug with a dome of stone plates and soft moss on top. It rolls up when it is shy.'], ['Lichenroll', 'Pale lichen spreads across its shell.'], ['Fernplate', 'A little fern sprouts from the moss on its back.'], ['Bloomback', 'More ferns grow, and small flowers open among them.'], ['Verdantroll', 'A legendary pill bug whose back is a little rolling hill of moss and flowers.']]],
+    ['pebblequail', 'earth', null, '#2a1e14', 0, [['Gritquail', 'A round quail chick with a speckled coat and a pebble on the tip of its topknot.'], ['Cobbleplume', 'Its topknot grows a second pebble.'], ['Stonecrest', 'Stone-grey scales mark its wings.'], ['Ridgequail', 'A fan of long tail feathers opens behind it.'], ['Summitquail', 'A legendary quail whose call echoes from peak to peak.']]],
+    ['quartzsnail', 'earth', null, '#3a2028', 0, [['Glintsnail', 'A soft peach snail that carries a spiral shell of rose quartz.'], ['Rosewhorl', 'Small crystal points grow on the rim of its shell.'], ['Quartzspire', 'A tall crystal rises from the top of its shell.'], ['Prismcurl', 'Crystals cover its shell and catch every light.'], ['Geomantle', 'A legendary snail whose shell is a little crystal cave.']]],
+    ['rumbletoad', 'earth', 'water', '#2a1e12', 0, [['Rumbletoad', 'A wide stone-brown toad with a round throat sac that hums like a drum.'], ['Drumthroat', 'Its throat sac grows big; its croak booms like a drum.'], ['Stonewart', 'Its warts harden into round river stones.'], ['Quakecroak', 'A crest of stone rises over its eyes.'], ['Riverdrum', 'A legendary toad whose croak makes the riverbed hum.']]],
+    ['cinderkit', 'fire', null, '#1e1a22', 0, [['Kindlet', 'A round charcoal kitten with warm ember ears and a little flame at the tip of its tail.'], ['Emberwhisk', 'Its whiskers glow like warm wire.'], ['Charpaw', 'Small flames dance on its ear tips and its paws glow.'], ['Flamemane', 'A soft mane of flame rings its neck.'], ['Hearthkeeper', 'A legendary cat that keeps the fire alive in every hearth of the mountain.']]],
+    ['ashmoth', 'fire', 'wind', '#3a2a22', 1, [['Ashmoth', 'A fluffy ash-white moth with round wings fringed in ember orange.'], ['Smokewing', 'Long tails like smoke trail from its hind wings.'], ['Cinderveil', 'Ember eyespots glow on its wings.'], ['Emberdrift', 'Its wings grow wide, edged with glowing embers.'], ['Sunsetwing', 'A legendary moth whose wings carry the colours of a fire at dusk.']]],
+    ['magmapup', 'fire', 'earth', '#1a1420', 0, [['Scorchpup', 'A basalt puppy with floppy ears and warm lava glowing in the cracks of its coat.'], ['Basaltpup', 'The lava cracks spread down to its paws.'], ['Lavaridge', 'A ridge of warm lava rocks rises along its back.'], ['Craterhound', 'Drops of glowing lava hang from its ears.'], ['Mountfire', 'A legendary dog that sleeps in the mouth of the volcano.']]],
+    ['emberfinch', 'fire', null, '#3a1410', 1, [['Emberfinch', 'A round red finch with a gold beak and a little flame for a crest.'], ['Flickercrest', 'Its flame crest grows taller and flickers.'], ['Sparkplume', 'Long ember feathers grow in its tail.'], ['Blazewing', 'Its wings open wide with flame at the tips.'], ['Hearthsong', 'A legendary finch whose song lights the morning fires.']]],
+    ['soothound', 'fire', 'dark', '#1a1824', 0, [['Sootpaw', 'A slim smoke-grey hound pup with pale socks and a warm ember spot on its chest.'], ['Smokewhisk', 'Wisps of smoke curl from the tips of its ears.'], ['Cinderhackle', 'Embers glow in the fur along its neck.'], ['Gloamhound', 'Its tail grows long and trails smoke.'], ['Nightkiln', 'A legendary hound that guards the fires that burn through the night.']]],
+    ['flarefox', 'fire', null, '#3a2410', 0, [['Fennflare', 'A sand-gold fennec with huge ears. It loves the hottest stone on the road.'], ['Sandflicker', 'The tip of its tail glows like a coal.'], ['Flareear', 'Small flames dance at the tips of its ears.'], ['Sunfennec', 'A ruff of warm fur rings its neck.'], ['Miragefox', 'A legendary fox with a sun mark on its brow. It walks the hot roads inside a shimmer of heat.']]],
+    ['kilnturtle', 'fire', 'earth', '#2a1810', 0, [['Kilnshell', 'A stony turtle that carries a dome of brick with a little chimney on top.'], ['Brickback', 'Warm smoke puffs from its chimney.'], ['Chimneyplod', 'Its chimney grows tall.'], ['Forgeshell', 'A second chimney rises and a copper rim rings its shell.'], ['Hearthmount', 'A legendary turtle that carries a warm hearth on its back for travellers.']]],
+    ['sunflare', 'fire', 'light', '#4a2a14', 1, [['Sunnip', 'A round golden chick with a little crown of rays.'], ['Raycrest', 'Its crown of rays grows longer.'], ['Dawnflare', 'Long golden tail feathers trail behind it.'], ['Noonplume', 'Its wings open wide and shine like morning light.'], ['Zenithar', 'A legendary bird that rises with the sun and carries its light into dark places.']]]
+  ];
+  var HAB5 = {
+    cavebat:     { f: { rock: 2, wall: 1.6, shade: 2, mushroom: 1 }, day: 0.1, night: 2.6, wx: { fog: 1.4, rain: 1.2 }, rare: 0.6 },
+    geodeling:   { f: { rock: 2.6, wall: 1.4, shade: 0.8, statue: 0.6 }, day: 0.8, night: 1.3, wx: { clear: 1.2 }, rare: 0.4 },
+    burrowkit:   { f: { path: 1.6, rock: 1.4, field: 1.2, garden: 0.8 }, day: 1, night: 0.8, wx: { rain: 0.8 }, rare: 0.85 },
+    slatehorn:   { f: { rock: 2.4, path: 1.2, open: 0.8 }, day: 1.2, night: 0.6, wx: { clear: 1.1 }, rare: 0.5 },
+    mossmite:    { f: { rock: 1.6, tallgrass: 1.4, shade: 1.2, mushroom: 1, tree: 0.6 }, day: 0.8, night: 1.1, wx: { rain: 1.8, fog: 1.2 }, rare: 0.8 },
+    pebblequail: { f: { tallgrass: 1.8, rock: 1.4, path: 1, field: 1 }, day: 1.3, night: 0.4, wx: { clear: 1.3, rain: 0.6 }, rare: 0.9 },
+    quartzsnail: { f: { rock: 2, wall: 1.4, shade: 1, water: 0.6 }, day: 0.6, night: 1.4, wx: { rain: 2, fog: 1.2 }, rare: 0.55 },
+    rumbletoad:  { f: { water: 2, rock: 1.6, reeds: 1, sand: 0.6 }, day: 0.9, night: 1.2, wx: { rain: 2.2 }, rare: 0.5 },
+    cinderkit:   { f: { warm: 2.4, path: 1, rock: 1, wall: 0.8 }, day: 1, night: 0.9, wx: { clear: 1.3, rain: 0.4 }, rare: 0.85 },
+    ashmoth:     { f: { warm: 2, lamp: 1.6, open: 1, flowers: 0.6 }, day: 0.3, night: 2, wx: { wind: 1.8, clear: 1, rain: 0.4 }, rare: 0.5 },
+    magmapup:    { f: { warm: 2.6, rock: 1.6, sand: 0.8 }, day: 1, night: 0.9, wx: { clear: 1.3, rain: 0.3 }, rare: 0.6 },
+    emberfinch:  { f: { warm: 1.6, tree: 1.4, open: 1.2, flowers: 0.8 }, day: 1.4, night: 0.3, wx: { clear: 1.4, rain: 0.5 }, rare: 0.9 },
+    soothound:   { f: { warm: 1.8, shade: 1.6, rock: 1, path: 0.8 }, day: 0.3, night: 2.2, wx: { fog: 1.6, clear: 0.9, rain: 0.5 }, rare: 0.45 },
+    flarefox:    { f: { sand: 2.2, warm: 1.8, rock: 1, open: 0.8 }, day: 1.3, night: 0.6, wx: { clear: 1.6, rain: 0.3 }, rare: 0.4 },
+    kilnturtle:  { f: { warm: 2.4, rock: 1.4, path: 0.8, wall: 0.6 }, day: 1, night: 1, wx: { clear: 1.2, rain: 0.5 }, rare: 0.45 },
+    sunflare:    { f: { warm: 1.6, open: 1.6, flowers: 1, statue: 0.6 }, day: 1.6, night: 0.1, wx: { clear: 2, rain: 0.3, fog: 0.5 }, rare: 0.3 }
+  };
+  EL5.forEach(function (d) {
+    var key = d[0], e = { key: key, name: d[5][0][0], element: d[1] };
+    if (d[2]) { e.element2 = d[2]; EL2[key] = d[2]; }
+    SEED[key] = hash(list.length * 3.7 + 1.3);
+    list.push(e);
+    DEF[key] = DEF5[key]; STG[key] = STG5[key]; OUT[key] = d[3]; if (d[4]) FLY[key] = 1;
+    BASEK[key] = ELK[d[1]]; AURA[key] = AURA[ELK[d[1]]];
+    STAGES[key] = d[5];
+    stages[key] = d[5].map(function (a) { return { name: a[0], desc: a[1] }; });
+    HAB3[key] = HAB5[key];
+  });
+  GLOW.geodeling = 0.3; GLOW.sunflare = 0.32; GLOW.magmapup = 0.26; GLOW.cinderkit = 0.24;
   // recolour a finished frame: every body pixel takes the dual's hue, keeps its shading
   function recolor(c, D) {
     var g = c.getContext('2d'), id = g.getImageData(0, 0, c.width, c.height), a = id.data;

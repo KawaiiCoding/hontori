@@ -158,7 +158,7 @@ export default {
   'ch3.ev.sef.2': 'Draw a U, like a cupped hand that holds the wind.',
   'ch3.ev.sef.3': 'That is it. It blocks one hit. Aya will be glad.',
   'ch3.ev.cole.1': 'You got my kite. Good.',
-  'ch3.ev.cole.2': 'My father is a ring-smith in Emberbrook. He says sparks are tricks.',
+  'ch3.ev.cole.2': 'My father is a ring-smith in Coilhaven. He says sparks are tricks.',
   'ch3.ev.cole.3': 'He makes rings all day and has never seen a school ring.',
   'ch3.ev.cole.4': 'So I will win one and put it in his hand.',
   'ch3.ev.cole.5': 'Duel me? Three hontori each. I have been training.',

@@ -40,7 +40,7 @@ const BODY_SCALE = MOUNT_SCALE * STAGE_SCALE;
 /* the painter's centre sits this far above the feet */
 const MOUNT_LIFT = 12;
 const FRAMES = 16;
-const FLYERS = new Set(['wind', 'dark', 'light', 'raven', 'firefly', 'kestrip', 'pufflet', 'skyfin', 'voltmoth']);
+const FLYERS = new Set(['wind', 'dark', 'light', 'raven', 'firefly', 'kestrip', 'pufflet', 'skyfin', 'voltmoth', 'bellfish', 'coralet', 'driftjelly', 'inkling', 'wireling', 'lampwisp', 'stormowl']);
 
 /* the kid's picture: feet at y, hip (top of the legs) this far above them */
 const KID_HIP = 5.5;

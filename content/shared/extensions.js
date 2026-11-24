@@ -11,11 +11,14 @@ export default {
     mana: { args: ['set?', 'add?:number'] },
     ring: { args: ['element:element'] },
     cast: { args: ['contest?', 'as:string'] },
-    addHontori: { args: ['kind:kind'] },
+    addHontori: { args: ['kind:kind', 'level?:number'] },
     revealMap: { args: ['radius:number'] },
     capsule: { args: ['turn:string'] },
     kiteFlight: { args: ['mode?:string', 'to?', 'bring?:string'] },
-    flight: { args: ['what:string', 'bring?:string'] }
+    flight: { args: ['what:string', 'bring?:string'] },
+    travel: { args: ['to', 'via?', 'seconds?:number', 'during?', 'after?'] },
+    gauntlet: { args: ['gauntlet:string', 'won?', 'lost?'] },
+    gauntletLeave: { args: ['gauntlet:string'] }
   },
   condition: {
     spell: { args: ['has:spell'] },
@@ -23,15 +26,16 @@ export default {
     ring: { args: ['has:element'] },
     mana: { args: ['lte?:number', 'lt?:number', 'gte?:number'] },
     full: { args: [] },
-    capsule: { args: ['done?', 'free?'] }
+    capsule: { args: ['done?', 'free?'] },
+    gauntlet: { args: ['gauntlet:string', 'stage?:number'] }
   },
   value: {
     leadLevel: { args: ['add?:number', 'min?:number', 'none?:number'] },
     fishWeight: { args: ['index:number'] },
     capsule: { args: ['cost?'] }
   },
-  battleRule: ['noCapture', 'noSwitch', 'sureBind', 'practice', 'windSwap'],
-  testType: { sight: { args: ['who:person'] }, sigil: { args: ['sigil:spell'] }, vanes: { args: ['puzzle:string'] } },
+  battleRule: ['noCapture', 'noSwitch', 'sureBind', 'practice', 'windSwap', 'tideRise', 'noRest'],
+  testType: { sight: { args: ['who:person'] }, sigil: { args: ['sigil:spell'] }, vanes: { args: ['puzzle:string'] }, tide: { args: ['puzzle:string'] }, circuit: { args: ['puzzle:string'] } },
   awardRule: { wandTrial: { args: ['sigil:spell', 'count:number', 'twist?:string'] }, ringDuel: { args: ['trainer:trainer'] } },
   elements: ['water', 'fire', 'wind', 'grass', 'electric', 'earth', 'dark', 'light']
 };

@@ -1,0 +1,93 @@
+/*
+ * ch4/maps/ferry.js
+ * Job: the ferry crossing: the ferry's deck on open water, the scene of the ride between Kitewick's jetty and
+ * Tidewell's pier (the travel command, content/ch4/scripts.js). Nobody walks onto or off it: it has no doors.
+ */
+
+export default {
+  id: 'ferry',
+  name: 'ch4.map.ferry',
+  tileset: 'outdoor',
+  rest: false,
+  legend: { g: 'grass', p: 'path', w: 'water', s: 'sand', b: 'bridge' },
+  rows: [
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwbbbbwwwwwwwwwww',
+    'wwwwwwwwwbbbbbbbbwwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwbbbbbbbbbbwwwwwwww',
+    'wwwwwwwwwbbbbbbbbwwwwwwwww',
+    'wwwwwwwwwwwbbbbwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwwwwwwwww'
+  ],
+  things: {
+    legend: { T: 'tree', P: 'pine', R: 'rock', L: 'lamp', C: 'windchime', b: 'bench', c: 'crate', a: 'barrel', l: 'lantern_string', r: 'reeds', p: 'lilypad' },
+    rows: [
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '...........L..............',
+      '.........C................',
+      '........a.......cc........',
+      '........a.................',
+      '.........l................',
+      '...............b..........',
+      '..........................',
+      '.........b................',
+      '..........................',
+      '..............l...........',
+      '.................a........',
+      '........c........c........',
+      '..........................',
+      '..............L...........',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................',
+      '..........................'
+    ]
+  },
+  doors: [],
+  spawn: { x: 12, y: 14, dir: 0 },
+  labels: [{ x: 12, y: 14, name: 'ch4.map.ferry.label.1' }],
+  start: { time: 10, weather: 'clear' },
+  spots: {
+    ferryman: [10, 10],
+    rook: [15, 14],
+    deck: [9, 10, 16, 19],
+    mid: [12, 14],
+    rail: [[8, 16], [17, 15]],
+    lakeEnd: [12, 9],
+    coastEnd: [12, 20]
+  }
+};

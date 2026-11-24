@@ -3,7 +3,9 @@
  * Job: the Fishing Sigil at the water (src/fishing.js): one cast and what it brings (a fish of this water,
  * a water hontori that bites, or only weeds), the fisher's weight in the contest, and the small glowing hook
  * on the water in front of the player once the sigil is known. The flow itself (asking, the lesson, the
- * contest, keeping the fish) is content: content/shared/scripts.js; the odds are content/shared/waters.js.
+ * contest, keeping the fish) is content: content/shared/scripts.js; the odds are content/shared/waters.js; each
+ * chapter adds its own waters (`waters` in its folder). While a thing with the effect "nightHook" is carried, the
+ * big night fish bite more often.
  *
  * Public API:
  *   installFishing(game)
@@ -20,7 +22,7 @@
  */
 
 import { DIR_STEP, TILE } from '../../core/units.js';
-import { table, tables } from './content.js';
+import { tables } from './content.js';
 import { addFloat } from './floats.js';
 import { word } from './words.js';
 
@@ -46,10 +48,29 @@ function knowsFishing(game) {
   return !!(wand && Array.isArray(wand.spells) && wand.spells.includes(FISH_SPELL));
 }
 
+/* this map's water from whichever content folder names it (a chapter brings its own waters); the cast rules
+   are the first folder's */
 function waterOf(game, mapId) {
-  const waters = table(game, 'waters') || {};
-  const water = waters[mapId] || waters[waters.default];
-  return { water: water && Array.isArray(water.fish) ? water : null, rules: waters.rules || {} };
+  const all = tables(game, 'waters');
+  const first = all[0] || {};
+  let water = null;
+  for (const waters of all) if (waters && waters[mapId]) water = waters[mapId];
+  if (!water) water = first[first.default];
+  return { water: water && Array.isArray(water.fish) ? water : null, rules: first.rules || {} };
+}
+
+/* a carried thing with this effect makes the big night fish bite more often (the Night Hook) */
+const NIGHT_HOOK = 'nightHook';
+const NIGHT_HOOK_ODDS = 0.45;
+
+function carriesNightHook(game) {
+  try {
+    const items = game.registry.has('service', 'items') ? game.registry.get('service', 'items') : null;
+    if (!items || !items.inventory || !items.book) return false;
+    return items.inventory.list().some((entry) => items.book.effect(entry.id) === NIGHT_HOOK);
+  } catch (error) {
+    return false;
+  }
 }
 
 function isNight(hour) {
@@ -118,7 +139,8 @@ function cast(game, node, ctx) {
     if (r < biteOdds + nothing) return store({ kind: 'none' });
     const pool = water.fish.filter((fish) => !fish.night || night);
     let fish = pool[Math.floor(Math.random() * pool.length)] || water.fish[0];
-    if (night && Math.random() < (Number(rules.bigAtNight) || 0)) fish = water.fish[water.fish.length - 1];
+    const bigOdds = carriesNightHook(game) ? Math.max(NIGHT_HOOK_ODDS, Number(rules.bigAtNight) || 0) : Number(rules.bigAtNight) || 0;
+    if (night && Math.random() < bigOdds) fish = water.fish[water.fish.length - 1];
     const items = game.registry.get('service', 'items');
     const name = items ? items.name(fish.item) : fish.item;
     game.save.commit();

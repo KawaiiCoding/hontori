@@ -140,7 +140,7 @@ window.H = window.H || {};
   /* Key people: each has a design of their own (the keys stay the same so every caller keeps working).
      Extra look fields: braid (style, blong = long), hood (style, with hood colour), clasp (closed-eye clasp),
      crown (leaf crown), staff 'living' (leafy staff), goggles, inner (open jacket shirt), sailor (wide collar),
-     shawl, stole, pendant, sprout, glasses 'round', expr 'flat'. */
+     shawl, stole, pendant, sprout, glasses 'round', expr 'flat', staff 'spark' (spark-tipped copper staff), keys (key ring at the belt). */
   C.elder = { name: 'Elder Wisteria', skin: '#ecc4a4', hair: '#d8d8e6', style: 'braid', blong: 1, ties: '#a88ad8', robe: '#4e4270', trim: '#c8b0e8',
     pants: '#3a3050', shoes: '#4a2a3a', shawl: '#a888d8', staff: 1, eye: '#6a5a8a', expr: 'closed', brow: '#f2f2f8', bg: '#d8c8f0' };
   C.sorrel = { name: 'Madam Sorrel', skin: '#f0c8a8', hair: '#4a3436', style: 'bun', ties: '#e0c060', robe: '#3a5a9a', trim: '#e0c060', pants: '#2a3050',
@@ -196,6 +196,40 @@ window.H = window.H || {};
   vary('warden', 'zephra', { name: 'Warden Zephra', skin: '#e0ac82', hair: '#e8eef4', robe: '#7ab8d8', trim: '#f4f8fc', eye: '#3a6a9a', bg: '#d0e8f4' });
   vary('apprentice', 'sef', { name: 'Sef', skin: '#f0c8a0', hair: '#3a2a22', style: 'ponytail', ties: '#e05a4a', robe: '#4a8ab8', trim: '#f0d070', sprout: null, eye: '#3a5a8a', bg: '#c0dcf0' });
   vary('apprentice', 'tolle', { name: 'Apprentice Tolle', skin: '#c88a60', hair: '#2a2024', robe: '#9ac8e0', trim: '#f0f4f8', sprout: null, eye: '#2a3a5a', bg: '#d8ecf4' });
+  /* chapter 4: Tidewell, the Lullaby Boat, the ferry and Deepbell Hall */
+  vary('fisher', 'ferryman', { name: 'Ferryman Garrow', skin: '#c88a60', hair: '#5a3a22', style: 'cap', cap: '#a8442a', beard: 1, brow: '#5a3a22', shirt: '#2a4a6a', apron: '#7a5a3a', eye: '#3a2a1a', bg: '#b0c8e0' });
+  vary('innkeeper', 'td_innkeeper', { name: 'Innkeeper Wynn', skin: '#f0c8a0', hair: '#c8783a', band: '#3aa0a8', moustache: 0, shirt: '#f4ecd8', apron: '#3a7a8a', eye: '#3a5a3a', bg: '#c0e4e0' });
+  vary('shopkeeper', 'td_shopkeeper', { name: 'Saba', skin: '#8a5a3e', hair: '#1e1e2a', style: 'ponytail', ties: '#f0d070', glasses: 0, shirt: '#e0a0b8', apron: '#3a6a8a', eye: '#2a1a10', bg: '#e8d0dc' });
+  vary('traveler', 'lullaby_keeper', { name: 'Keeper Neve', skin: '#f0c8a8', hair: '#c8c0e0', style: 'bun', ties: '#b9a8ff', robe: '#4a4a98', trim: '#e8e0ff', scarf: '#b9a8ff', eye: '#4a4a8a', expr: 'closed', bg: '#d8d0f4' });
+  vary('mom', 'lisel', { name: 'Lisel', skin: '#f4d0b0', hair: '#2a2a40', style: 'bun', ties: '#3aa0c8', dress: '#3a7a9a', collar: '#f6f0e6', eye: '#3a8ab8', bg: '#b8d8ec' });
+  vary('grandma', 'sava', { name: 'Old Sava', skin: '#d9a27a', hair: '#f0ece4', style: 'bun', ties: '#3a6a8a', glasses: 0, dress: '#4a6a8a', collar: '#e8e4d8', eye: '#3a3a4a', bg: '#c8d8e4' });
+  vary('mom', 'nell', { name: 'Nell the Net-mender', skin: '#c88a60', hair: '#8a5a2a', style: 'ponytail', dress: '#6a8a4a', ties: '#e0c060', collar: '#f0e8d0', eye: '#3a2a1a', bg: '#d0e0b0' });
+  vary('kid2', 'jory', { name: 'Jory', skin: '#f2c9a0', hair: '#a8582a', style: 'messy', shirt: '#3a8ab8', pants: '#5a4a3a', shoes: '#e8e0d0', freckles: 1, eye: '#3a5a8a', bg: '#b8d8f0' });
+  vary('fisher', 'doran', { name: 'Fisher Doran', skin: '#e0ac82', hair: '#3a2a22', style: 'cap', cap: '#3a6a4a', beard: 0, brow: null, shirt: '#d8c8a0', apron: '#4a6a8a', eye: '#3a2a1a', bg: '#c8dcc0' });
+  vary('grandma', 'hollis', { name: 'Hollis the Reed-cutter', skin: '#e0ac82', hair: '#a8a090', style: 'bandana', band: '#c8a050', glasses: 0, dress: '#7a8a4a', collar: '#f0e8d0', eye: '#4a3a2a', bg: '#e0dcb0' });
+  vary('apprentice', 'isk', { name: 'Apprentice Isk', skin: '#8a5a3e', hair: '#1e1e2a', style: 'short', robe: '#3a8ab8', trim: '#e8f4fc', sprout: null, freckles: 0, eye: '#2a3a5a', bg: '#b8dcf0' });
+  /* the third Warden: a layered sea-blue robe, a shell clasp, a long dark braid */
+  C.maren = { name: 'Warden Maren', skin: '#c88a60', hair: '#173434', style: 'braid', blong: 1, ties: '#e87a6a', robe: '#24507e', trim: '#a8e0f0',
+    shawl: '#4a8ec0', pendant: '#f6dcc8', pants: '#1e3050', shoes: '#3a2a2a', eye: '#3a7aa8', expr: 'smile', brow: '#173434', bg: '#b0d0e8' };
+  /* chapter 5: the coast road, Coilhaven, Sparkmoor and the Storm Works */
+  vary('traveler', 'suri', { name: 'Pedlar Suri', skin: '#8a5a3e', hair: '#5a2a3a', style: 'ponytail', ties: '#3aa0a8', robe: '#a8603a', trim: '#f0d070', scarf: '#3aa0a8', eye: '#2a1a10', bg: '#f0d0a8' });
+  vary('innkeeper', 'ch_innkeeper', { name: 'Innkeeper Odo', skin: '#c88a60', hair: '#2a1a14', band: '#e0a030', shirt: '#e8e0d0', apron: '#5a7a8a', eye: '#3a2a1a', bg: '#e8d0a8' });
+  vary('shopkeeper', 'ch_shopkeeper', { name: 'Mags', skin: '#f2c9a0', hair: '#c8783a', style: 'bun', ties: '#3a8a6a', glasses: 'round', shirt: '#5a8a6a', apron: '#b0683a', eye: '#3a5a3a', bg: '#d8e0c0' });
+  vary('shopkeeper', 'tinker', { name: 'Tinker Wenna', skin: '#e0ac82', hair: '#5a3a22', style: 'bandana', band: '#3a8a9a', glasses: 1, shirt: '#d8c8a0', apron: '#5a4a3a', eye: '#3a2a1a', bg: '#d8d0b8' });
+  vary('dad', 'joss', { name: 'Lamplighter Joss', skin: '#e0ac82', hair: '#7a4a2a', style: 'hat', cap: '#2a2a3a', shirt: '#3a4a7a', collar: '#e0c060', stubble: 0, moustache: 1, eye: '#3a2a1a', bg: '#c8c8e8' });
+  vary('kid2', 'tib', { name: 'Tib', skin: '#e0ac82', hair: '#7a4a2a', style: 'cap', cap: '#3a4a7a', shirt: '#e0c040', pants: '#3a3a4a', shoes: '#5a3a2a', freckles: 1, eye: '#3a2a1a', bg: '#f0e0a8' });
+  vary('mom', 'peg', { name: 'Peg', skin: '#d9a27a', hair: '#3a2a22', style: 'bandana', band: '#c8443a', dress: '#5a6a7a', collar: '#e8e0d0', eye: '#3a2a1a', bg: '#d8c8c0' });
+  vary('dad', 'rudd', { name: 'Rudd', skin: '#8a5a3e', hair: '#1e1e2a', style: 'short', shirt: '#5a7a8a', collar: '#e8dcc0', apron: '#3a6a5a', stubble: 0, beard: 1, brow: '#1e1e2a', eye: '#2a1a10', bg: '#c8e0c8' });
+  vary('grandma', 'hettie', { name: 'Clockmaker Hettie', skin: '#f0c8a8', hair: '#c8c0b8', style: 'bun', ties: '#e0c060', glasses: 'round', dress: '#8a4a5a', collar: '#f4ecd8', eye: '#4a3a2a', bg: '#e8c8d0' });
+  vary('guard', 'dov', { name: 'Linesman Dov', skin: '#c88a60', hair: '#4a3a2a', style: 'hat', cap: '#e0b030', shirt: '#d8a828', collar: '#3a3a4a', pants: '#3a3a4a', spear: 0, moustache: 0, beard: 1, brow: '#4a3a2a', eye: '#3a2a1a', bg: '#d0d8e0' });
+  vary('apprentice', 'pim', { name: 'Apprentice Pim', skin: '#f2c9a0', hair: '#4a2a1a', style: 'messy', robe: '#c89a2a', trim: '#fff0a0', sprout: null, goggles: '#5a6a7a', freckles: 1, eye: '#4a3a2a', bg: '#f4e4a0' });
+  vary('dad', 'foreman', { name: 'Foreman Grell', skin: '#e3b08a', hair: '#4a4a52', style: 'hat', cap: '#8a8a94', shirt: '#4a5a6a', collar: '#e8dcc0', apron: '#8a6a4a', stubble: 0, moustache: 1, wide: 1, eye: '#3a3a4a', bg: '#d0d0d8' });
+  /* the fourth Warden: copper goggles, a work apron over a teal coat, a spark-tipped staff */
+  C.volta = { name: 'Warden Volta Quill', skin: '#f0c8a8', hair: '#e6e2ea', style: 'messy', goggles: '#c8783a', shirt: '#2a7a80', collar: '#e0c060',
+    apron: '#7a5434', pants: '#2a3040', shoes: '#3a2a1a', staff: 'spark', eye: '#3a6a7a', expr: 'grin', brow: '#c8c4cc', bg: '#f0e0a0' };
+  /* Cole's father: a broad ring-smith in a leather apron, a ring of keys at his belt */
+  vary('dad', 'bram_ashfield', { name: 'Master Ashfield', skin: '#d9a27a', hair: '#26283a', style: 'bandana', band: '#6a4426', shirt: '#8a4a3a', collar: null, apron: '#6a4426',
+    keys: '#d8b050', beard: 1, brow: '#26283a', stubble: 0, wide: 1, eye: '#5a4a2a', expr: 'flat', bg: '#e8c8a0' });
   var E = '#2a1c2e', GL = '#3a2e44', WH = '#fbf6f0', MO = '#a8443c';
 
   // ---------- sprite (authored at 2x: 56x56 real px, local centre x = 16, feet bottom at local y = 47) ----------
@@ -475,6 +509,14 @@ window.H = window.H || {};
     traveler: ['map'], elder: ['beard'], innkeeper: ['mug'], shopkeeper: ['coins'], mom: ['stretch', 'yawn', 'fold'], dad: ['fold', 'yawn', 'stretch'],
     orlen: ['beard'], tam: ['fish'], lin: ['fish'], alder: ['spear'], ranger_moss: ['spear'], sela: ['map'], pell: ['coins'], burr: ['knit'],
     sumi: ['fold', 'stretch', 'yawn'], hazel: ['yawn', 'fold', 'stretch'], rook: ['yawn', 'fold', 'stretch'], corin: ['stretch', 'fold', 'yawn'], fenn: ['fold', 'stretch', 'yawn'] };
+  /* chapters 4 and 5 */
+  ['ferryman', 'doran'].forEach(function (k) { IDLE[k] = ['fish']; });
+  ['td_innkeeper', 'ch_innkeeper'].forEach(function (k) { IDLE[k] = ['mug']; });
+  ['td_shopkeeper', 'ch_shopkeeper', 'tinker'].forEach(function (k) { IDLE[k] = ['coins']; });
+  ['sava', 'hollis', 'hettie'].forEach(function (k) { IDLE[k] = ['knit']; });
+  ['lisel', 'nell', 'peg', 'joss', 'rudd', 'bram_ashfield'].forEach(function (k) { IDLE[k] = ['fold', 'stretch', 'yawn']; });
+  ['jory', 'tib'].forEach(function (k) { IDLE[k] = ['hop', 'swing', 'kick']; });
+  IDLE.suri = ['map'];
   function hsh(n) { var s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
 
   function sprite(d, dir, f, o) {
@@ -556,6 +598,12 @@ window.H = window.H || {};
       g.part(d.apron, function (m) { if (side) { m.r(tx, by + 4, 4, ly - by - 2); if (o.as) m.r(tx + 4, ly - 4, 1, 3); } else { m.r(11, by + 4, 10, ly - by - 2); m.r(11, by + 1, 2, 3); m.r(19, by + 1, 2, 3); if (o.as) { m.r(21, ly - 4, 1, 3); m.x(11, ly - 1); } } });
       if (!side) for (i = 13; i < 19; i++) g.set(i, by + 10, sh(d.apron, 0.8));
     }
+    /* a ring of keys at the belt */
+    if (d.keys && !up) {
+      var kx = side ? tx + 2 : 22, ky = by + 12, KD = sh(d.keys, 0.6);
+      g.part(d.keys, function (m) { m.r(kx - 1, ky - 1, 3, 1); m.r(kx - 1, ky + 1, 3, 1); m.r(kx - 1, ky, 1, 1); m.r(kx + 1, ky, 1, 1); }, 1, true);
+      [[kx - 1, ky + 2], [kx - 1, ky + 3], [kx - 2, ky + 4], [kx + 1, ky + 2], [kx + 1, ky + 3], [kx + 1, ky + 4], [kx + 2, ky + 4]].forEach(function (p, k) { g.set(p[0], p[1], k % 3 === 2 ? KD : d.keys); });
+    }
     // arms (swing opposite to the legs)
     if (!side) {
       [[4, st], [24, -st]].forEach(function (a) {
@@ -605,6 +653,14 @@ window.H = window.H || {};
       g.part('#4f9a3a', function (m) { m.e(lx + 1, by - 10, 3.5, 2.6); m.e(lx - 2, by - 13, 2, 1.6); m.e(lx + 4, by - 13, 2, 1.6); m.e(lx + 1, by - 14, 1.6, 2); });
       g.set(lx, by - 11, '#9ad870'); g.set(lx - 2, by - 14, '#9ad870'); g.set(lx + 4, by - 14, '#9ad870');
       g.set(lx + 1, by - 16, '#f8d8e8'); g.set(lx + 1, by - 15, '#f0a8c8');
+    } else if (d.staff === 'spark') {
+      /* copper rod, a brass coil near the top and a small fixed spark at the tip */
+      var vx = side ? 6 : up ? 2 : 28;
+      g.part('#a8683a', function (m) { m.r(vx, by - 8, 2, 56 - by); });
+      g.part('#e0b048', function (m) { m.r(vx - 1, by - 6, 4, 1); m.r(vx - 1, by - 4, 4, 1); m.r(vx - 1, by - 2, 4, 1); }, 1, true);
+      g.part('#ffd84a', function (m) { m.e(vx + 1, by - 10, 2.2, 2.2); });
+      g.set(vx, by - 11, '#fffbe0'); g.set(vx + 1, by - 10, '#fffbe0');
+      g.set(vx - 2, by - 13, '#ffe680'); g.set(vx + 3, by - 13, '#ffe680'); g.set(vx + 1, by - 14, '#ffe680');
     } else if (d.staff) {
       var fx = side ? 6 : up ? 2 : 28;
       g.part('#8a5a32', function (m) { m.r(fx, by - 8, 2, 56 - by); });

@@ -20,5 +20,5 @@ export * from './damage.js';
 export * from './growth.js';
 export { battleRewards } from './rewards.js';
 export { TEXT, line } from './text.js';
-export { defineRingRule, ringRulesOf, RING_RULES } from './ringRules.js';
+export { defineRingRule, ringRulesOf, ringPower, RING_RULES, TIDE_MAX, TIDE_STEP } from './ringRules.js';
 export { bringIn } from './swap.js';

@@ -1,5 +1,6 @@
 window.H = window.H || {};
-// Clear pixel icons for world items that had none of their own: every fish, the forest finds, and the merchant pouch.
+// Clear pixel icons for world items that had none of their own: every fish, the forest finds, the merchant pouch,
+// and chapters 4 and 5: tide_ring, spark_ring, ferry_ticket, night_hook, bell_order.
 // Rule: every item in the world is shown by an icon that looks like the thing itself.
 // API: H.itemIcons = { has(id), draw(g, id) (16 x 16 at 1x), url(id, scale) }
 (function () {
@@ -53,6 +54,48 @@ window.H = window.H || {};
       P(g, 3, 5, '#e0c060', 10, 1); P(g, 7, 4, '#e0c060', 2, 1);
       P(g, 9, 9, OL, 4, 4); P(g, 10, 10, '#ffd860', 2, 2); P(g, 10, 10, '#fff4c0', 1, 1);
     }
+  };
+  // the Warden rings, styled like the Gale Ring: a band with its element's gem on top [band, band light, band dark, gem, gem light, gem dark]
+  function ring(g, c) {
+    P(g, 4, 6, OL, 8, 9); P(g, 3, 8, OL, 10, 5);
+    P(g, 5, 7, c[0], 6, 7); P(g, 4, 8, c[0], 8, 5); P(g, 5, 7, c[1], 3, 1); P(g, 4, 8, c[1], 1, 2);
+    P(g, 9, 12, c[2], 2, 1); P(g, 6, 13, c[2], 4, 1);
+    P(g, 6, 9, OL, 4, 3); P(g, 6, 9, '#3a3448', 4, 3);
+    P(g, 6, 1, OL, 4, 6); P(g, 5, 2, OL, 6, 4);
+    P(g, 6, 2, c[3], 4, 4); P(g, 7, 2, c[4], 2, 1); P(g, 6, 3, c[4], 1, 1); P(g, 8, 4, c[5], 2, 2);
+  }
+  /* the Tide Ring: a pale silver-blue band with a round sea pearl */
+  DRAW.tide_ring = function (g) { ring(g, ['#c4d4e4', '#eef4fa', '#7a8ea8', '#4a9ad8', '#d8f2ff', '#2a5a9a']); };
+  /* the Spark Ring: a copper band with a yellow spark stone */
+  DRAW.spark_ring = function (g) {
+    ring(g, ['#d0844a', '#f4c08a', '#8a4a24', '#ffd84a', '#fffbe0', '#c89a20']);
+    P(g, 4, 1, '#ffe680', 1, 1); P(g, 11, 1, '#ffe680', 1, 1);
+  };
+  /* the ferry ticket: a cream paper stub with a torn edge, a blue boat printed on it and a red punch hole */
+  DRAW.ferry_ticket = function (g) {
+    P(g, 1, 4, OL, 14, 9); P(g, 2, 5, '#f4ead0', 12, 7); P(g, 2, 5, '#fffaf0', 12, 1);
+    for (var y = 5; y < 12; y += 2) P(g, 13, y, OL, 1, 1);
+    P(g, 10, 5, '#c8b898', 1, 7);
+    P(g, 3, 9, '#2a5a9a', 6, 1); P(g, 4, 10, '#2a5a9a', 4, 1); P(g, 6, 6, '#5a3a22', 1, 3); P(g, 4, 7, '#ffffff', 2, 2); P(g, 7, 7, '#e8e0d0', 1, 1);
+    P(g, 11, 7, '#c8443a', 2, 2); P(g, 11, 7, '#e87a6a', 1, 1);
+  };
+  /* the Night Hook: a bright silver fish hook with a small glowing lure bead on its line */
+  DRAW.night_hook = function (g) {
+    P(g, 8, 0, OL, 3, 3); P(g, 9, 1, '#e0e4ee', 1, 1);
+    P(g, 8, 3, OL, 3, 8); P(g, 9, 3, '#c8ccd8', 1, 8);
+    P(g, 3, 9, OL, 3, 4); P(g, 4, 9, '#c8ccd8', 1, 3); P(g, 3, 7, OL, 3, 3); P(g, 4, 7, '#f4f6fa', 1, 2);
+    P(g, 4, 11, OL, 7, 3); P(g, 5, 12, '#c8ccd8', 5, 1); P(g, 8, 11, '#c8ccd8', 2, 1);
+    P(g, 11, 4, OL, 4, 4); P(g, 12, 5, '#7ad8f0', 2, 2); P(g, 12, 5, '#e8fbff', 1, 1);
+    P(g, 10, 5, '#a8a8b8', 1, 1);
+  };
+  /* the bell order: a brass plate with engraved lines and a round grey seal with a closed eye */
+  DRAW.bell_order = function (g) {
+    P(g, 1, 2, OL, 14, 12); P(g, 2, 3, '#d8a840', 12, 10); P(g, 2, 3, '#f4d478', 12, 1); P(g, 2, 3, '#f4d478', 1, 10);
+    P(g, 13, 4, '#a87a24', 1, 9); P(g, 3, 12, '#a87a24', 11, 1);
+    P(g, 3, 4, '#fff0b0', 1, 1); P(g, 12, 4, '#8a6420', 1, 1); P(g, 3, 11, '#8a6420', 1, 1);
+    P(g, 4, 5, '#8a6420', 7, 1); P(g, 4, 7, '#8a6420', 5, 1); P(g, 4, 9, '#8a6420', 3, 1);
+    P(g, 8, 8, OL, 6, 6); P(g, 7, 9, OL, 8, 4); P(g, 9, 9, '#8a8a96', 4, 4); P(g, 8, 10, '#8a8a96', 6, 2); P(g, 9, 9, '#b0b0bc', 2, 1);
+    P(g, 9, 11, '#4a4a58', 1, 1); P(g, 10, 12, '#4a4a58', 2, 1); P(g, 12, 11, '#4a4a58', 1, 1);
   };
   Object.keys(FISH).forEach(function (k) { DRAW[k] = function (g) { fish(g, FISH[k]); }; });
   var urls = {};

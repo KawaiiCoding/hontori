@@ -1,6 +1,7 @@
 /*
  * ch3/maps/kitewick.js
  * Job: the town on stilts: decks over the valley lake, joined by plank walks and rope bridges; tavern, shop, four houses.
+ * The ferry jetty south of the shore pier is where the ferry to the coast puts in (its door: content/ch4/maps/links.js).
  */
 
 export default {
@@ -30,12 +31,12 @@ export default {
     'ggggggswwwwwwbwwwwbbbbbbbbbbbbbbbbbbwwwwbbbbbbbbbwwwwsgggg',
     'pppppppppbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbpppp',
     'pppppppppbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbpppp',
-    'ggggggswwwwwwwwwwwbbbbbbbbbbbbbbbbbbwwwwbbbbbbbbbwwwsggggg',
-    'ggggggswwwwwwwwwwwbbbbbbbbbbbbbbbbbbwwwwbbbbbbbbbwwwsggggg',
-    'ggggggswwwwwwwwwwwbbbbbbbbbbbbbbbbbbwwwwbbbbbbbbbwwwsggggg',
-    'gggggggswwwwwwwwwwbbbbbbbbbbbbbbbbbbwwwwwwwwwwwwwwwwsggggg',
-    'gggggggswwwwwwwwwwwwbwwwwwwbbwwwwwbwwwwwwwwwwwwwwwwwsggggg',
-    'gttttggswwwwwwwwwwwwbwwwsswbbwwwwwbwwwwwwwwwwwwwwwwwsggggg',
+    'ggggggswwwbbwwwwwwbbbbbbbbbbbbbbbbbbwwwwbbbbbbbbbwwwsggggg',
+    'ggggggswwwbbwwwwwwbbbbbbbbbbbbbbbbbbwwwwbbbbbbbbbwwwsggggg',
+    'ggggggswwbbbbwwwwwbbbbbbbbbbbbbbbbbbwwwwbbbbbbbbbwwwsggggg',
+    'gggggggswbbbbwwwwwbbbbbbbbbbbbbbbbbbwwwwwwwwwwwwwwwwsggggg',
+    'gggggggswbbbbwwwwwwwbwwwwwwbbwwwwwbwwwwwwwwwwwwwwwwwsggggg',
+    'gttttggswwbbwwwwwwwwbwwwsswbbwwwwwbwwwwwwwwwwwwwwwwwsggggg',
     'gttttgggswwwwwwwwwwwbwwwsswbbwwwwwbwwwwwwwwwwwwwwwwwsggggg',
     'gttttgggswwwwbbbbbbbbbbbwwwbbwwwwbbbbbbbbbbbbwwwwwwwsggggg',
     'gttttgggswwwwbbbbbbbbbbbwwwbbwwwwbbbbbbbbbbbbwwwwwwwwsgggg',
@@ -76,7 +77,7 @@ export default {
       '......................f......f............................',
       '...S...........................................f.......L..',
       'P.....................b.......b..a...........y..........T.',
-      '.P.e.......p.............l..............L................T',
+      '.P.e.....L..S............l..............L................T',
       'TP..B..r..........L................L.....................P',
       'TP.............p.........................................T',
       'T.....P..................P.....................p..........',
@@ -118,6 +119,8 @@ export default {
     mail: [27, 21],
     brokenBridge: [[50, 19], [51, 19], [52, 19], [50, 20], [51, 20], [52, 20]],
     bridgeWest: [49, 19],
-    shore: [[3, 8], [3, 29]]
+    shore: [[3, 8], [3, 29]],
+    ferryJetty: [10, 24],
+    ferryman: [12, 24]
   }
 };

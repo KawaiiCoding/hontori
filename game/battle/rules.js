@@ -26,6 +26,7 @@ import { staCost } from './moves.js';
 import { matrix, weatherMul, weatherWhy } from './elements.js';
 import { me, foe, say, itemCount, useItem } from './common.js';
 import { line } from './text.js';
+import { runRingRules } from './ringRules.js';
 
 function no(reason, id, vars) {
   return { reason, text: id ? line(id, vars) : '' };
@@ -82,6 +83,7 @@ export const hontoriRules = Object.freeze({
       weatherMe: weatherMul(m.el, S.env), weatherFoe: weatherMul(f.el, S.env),
       whyMe: weatherWhy(m.el, S.env), whyFoe: weatherWhy(f.el, S.env)
     });
+    runRingRules(b, 'begin');
     beginTurn(b);
   },
 

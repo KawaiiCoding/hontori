@@ -2,7 +2,8 @@
  * check.mjs
  * Job: check the music data without a browser. Run: node game/music/check.mjs
  * Every song needs its form to name real sections, one chord per bar, chords the synthesizer can read, notes it can read,
- * and melody bars that add up to the beats in a bar. Every tune named in places.js must exist in songs.js.
+ * and melody bars that add up to the beats in a bar (each bar marked with "|" is added up on its own, and there must be one
+ * marked bar for every chord). Every tune named in places.js must exist in songs.js, and no map may be in two rows.
  * Exits with code 1 and lists each problem when something is wrong.
  */
 
@@ -22,6 +23,15 @@ for (const [key, song] of Object.entries(SONGS)) {
     const chords = sec.ch.split(' ').filter(Boolean);
     for (const bar of chords) for (const chord of bar.split(',')) if (!CHORD.test(chord)) bad(`${where(name)}: unreadable chord ${chord}`);
     let beats = 0;
+    const bars = sec.mel.split('|').map((part) => part.trim()).filter(Boolean);
+    if (bars.length > 1 && bars.length !== chords.length) bad(`${where(name)}: ${bars.length} marked bars for ${chords.length} chords`);
+    if (bars.length === chords.length) {
+      bars.forEach((part, index) => {
+        let inBar = 0;
+        for (const tok of part.split(/\s+/)) inBar += parseFloat(tok.split(':')[1]) || 0;
+        if (Math.abs(inBar - song.bpb) > 0.001) bad(`${where(name)}: bar ${index + 1} has ${inBar} beats, not ${song.bpb}`);
+      });
+    }
     for (const tok of sec.mel.split(/\s+/)) {
       if (!tok || tok === '|') continue;
       const [note, len] = tok.split(':');
@@ -35,8 +45,14 @@ for (const [key, song] of Object.entries(SONGS)) {
   }
 }
 
+const seenMaps = new Map();
 for (const row of PLACES) {
   if (!Array.isArray(row.maps) || !row.maps.length) bad('places: a row has no maps');
+  for (const id of row.maps || []) {
+    if (typeof id !== 'string' || !id) bad(`places: unreadable map id ${id}`);
+    else if (seenMaps.has(id)) bad(`places: map ${id} is in two rows`);
+    seenMaps.set(id, true);
+  }
   for (const field of ['day', 'night', 'duel', 'wild']) {
     if (row[field] && !SONGS[row[field]] && !['duel', 'wild'].includes(row[field])) bad(`places: ${field} names a missing song ${row[field]}`);
   }

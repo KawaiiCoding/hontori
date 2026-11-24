@@ -191,7 +191,9 @@ export default [
     service: 'ch1.svc.duel.cole',
     /* chapter 3: after his warning kite he waits at the kite post of Kitewick for the rematch */
     phases: [
-      { if: 'c3:kite:note', at: { map: 'kitewick', x: 25, y: 20, dir: 0 }, lines: ['ch3.p.cole.1', 'ch3.p.cole.2'], service: 'ch3.svc.cole' }
+      { if: 'c3:kite:note', at: { map: 'kitewick', x: 25, y: 20, dir: 0 }, lines: ['ch3.p.cole.1', 'ch3.p.cole.2'], service: 'ch3.svc.cole' },
+      /* chapter 5: after the scene with his father he stays in the ring-smith's house in Coilhaven */
+      { if: 'c5:cole', at: { map: 'coilhaven_h1', x: 6, y: 6, dir: 2 }, lines: ['ch5.p.cole.1', 'ch5.p.cole.2'], service: 'ch5.svc.cole' }
     ]
   },
   {
@@ -200,7 +202,11 @@ export default [
     look: 'girl',
     at: { map: 'school', x: 15, y: 7, dir: 1 },
     lines: ['ch1.p.mira.1', 'ch1.p.mira.2'],
-    service: 'ch1.svc.duel.mira'
+    service: 'ch1.svc.duel.mira',
+    /* chapter 4: she has gone home to Tidewell, to her mother's house */
+    phases: [
+      { if: 'c4:open', at: { map: 'tidewell_h1', x: 5, y: 4, dir: 0 }, lines: ['ch4.p.mira.1', 'ch4.p.mira.2'], service: 'ch4.svc.mira' }
+    ]
   },
   {
     id: 'wren',

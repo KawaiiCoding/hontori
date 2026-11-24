@@ -72,6 +72,7 @@ export class HontoriBattleScene extends BattleScene {
   #env = { time: 12, weather: 'clear', indoor: false };
   #biome = 'meadow';
   #arena = null;
+  #tide = -1;
   #trainer = null;
   #species = null;
   #saved = null;
@@ -148,7 +149,14 @@ export class HontoriBattleScene extends BattleScene {
     for (const p of [places.foe, places.me]) p.y = p.gy - 10 * p.sc - 2;
     this.uiTop = (this.cssHeight - UI_HEIGHT) / stage.unit;
     this.#arena = new Arena(W, H, this.#biome, this.#env, places);
+    if (this.#tide >= 0) this.#arena.setTide(this.#tide);
     if (this.#ui.bar) this.#ui.bar.fit(true);
+  }
+
+  /* the ring rule of a flooded hall: how high the sea stands in the ring (battleEvents.js "tide") */
+  setTide(level, max) {
+    this.#tide = max > 0 ? Math.max(0, Math.min(1, level / max)) : 0;
+    if (this.#arena) this.#arena.setTide(this.#tide);
   }
 
   leaving() {

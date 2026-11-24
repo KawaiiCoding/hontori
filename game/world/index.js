@@ -50,12 +50,18 @@ export function install(game) {
   bus.on('world:interact', (event) => pickups.onInteract(event));
 
   registry.add('story.command', 'forage', forageCommand(game));
-  /* a push puzzle is reset here; a puzzle of another type (wind vanes) by the service that owns it */
+  /* a push puzzle is reset here; a puzzle of another type (wind vanes, tide wheels, power lines) by the
+     service that owns it (registry kind "puzzle.reset") */
   registry.add('story.command', 'puzzle', (node, ctx) => {
     const id = ctx.value(node.puzzle);
     if (puzzles.has(id)) return puzzles.command(node, ctx);
-    const gusts = registry.has('service', 'gusts') ? registry.get('service', 'gusts') : null;
-    if (gusts && (node.do || 'reset') === 'reset') guarded('the gusts', () => gusts.reset(id));
+    if ((node.do || 'reset') !== 'reset') return undefined;
+    /* every other puzzle type offers its own reset: the one that owns this id answers true */
+    for (const reset of registry.all('puzzle.reset')) {
+      let owned = false;
+      guarded('a puzzle reset', () => { owned = !!reset(id); });
+      if (owned) break;
+    }
     return undefined;
   });
   registry.add('story.command', 'pickup', (node, ctx) => pickups.command(node, ctx));

@@ -12,6 +12,7 @@
  *   damage { target, amount, crit, matchup, weather, shielded, guarded, hp, source }, heal { target, amount, source },
  *   stamina { target, change, sta }, skip { side, why: 'dozing' | 'stunned' | 'asleep' },
  *   foeAction { action: 'charge' | 'guard' | 'heal' | 'hex' }, status (from the fighters)
+ * The ring rules' power (ringRules.js) multiplies the damage of every attack.
  * Rules worth knowing: a sleeping hontori that is told to move only wakes up (no cost, no cooldown); any hit that
  * leaves the defender standing wakes it; a rune boost is spent by the next attack even if it misses; a ward is
  * spent only by a hit that lands; the foe's signature move is used for unleash (x2) or, on a strike, 30% of the
@@ -21,6 +22,7 @@
 import { rollMiss, hit } from './damage.js';
 import { staCost } from './moves.js';
 import { me, foe, say } from './common.js';
+import { ringPower } from './ringRules.js';
 
 export const BREATH = Object.freeze({ id: 'breath', name: 'Catch breath', breath: true, desc: '' });
 
@@ -37,7 +39,8 @@ export function attack(b, from, move, mult) {
     att.set('boost', 0);
     return 0;
   }
-  const r = hit(att, def, move.pow, { env: S.env, mult, wandPower: S.wandPower, foe: from === 'foe', random: b.random });
+  /* a ring rule may make this fighter's blows stronger or weaker (the rising tide of Deepbell Hall) */
+  const r = hit(att, def, move.pow, { env: S.env, mult: (mult || 1) * ringPower(b, att), wandPower: S.wandPower, foe: from === 'foe', random: b.random });
   def.damage(r.amount);
   att.set('boost', 0);
   if (r.shielded) def.set('shield', 0);

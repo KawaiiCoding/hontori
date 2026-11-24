@@ -44,7 +44,9 @@ export const SHAPES = Object.freeze({
   /* a peak */
   boost: { points: [[0, 1], [0.5, 0], [1, 1]] },
   stun: { points: [[0.25, 0], [0.75, 0.38], [0.25, 0.62], [0.75, 1]] },
-  sleep: { points: plot(40, (x) => [x, 0.5 + 0.22 * Math.sin(x * Math.PI * 4)]), maxCorners: 1 },
+  /* a wave of two crests and two troughs: each one may read as a corner when it is drawn tightly, so the limit
+     only keeps out a scribble (with a limit of 1 the guide itself was refused) */
+  sleep: { points: plot(40, (x) => [x, 0.5 + 0.22 * Math.sin(x * Math.PI * 4)]), maxCorners: 6 },
   /* a spiral from the outside in, two turns, starting on the left; it may be turned or mirrored */
   bind: {
     points: plot(60, (t) => [Math.cos(Math.PI + t * Math.PI * 4) * (1 - t * 0.85), Math.sin(Math.PI + t * Math.PI * 4) * (1 - t * 0.85)]),

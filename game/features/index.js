@@ -3,8 +3,9 @@
  * Job: install Hontori's features on the engine's feature system (systems/features): the prologue's picture
  * story, drawing a sigil outside a battle, the academy's entrance tests, rings, fishing, the Element Bloom,
  * riding with the saddle, the offer of the full journey, naming the fire hontori, the chimney entrance, a
- * clean restart of an opening that was cut off, the wind-vane puzzles, kites in the world, lessons at a school
- * and the drifting page of the drawing prompt.
+ * clean restart of an opening that was cut off, the wind-vane puzzles, kites in the world, lessons at a school,
+ * the twists of the drawing prompt (drifting, mirrored, quick), the tide-wheel and power-line puzzles, rides
+ * over a crossing map (the ferry) and duels in a row with save points (the Storm Works).
  *
  * Public API:
  *   install(game)   in main.js build, after the battle starter (installBattles) and before the stand-ins
@@ -16,19 +17,23 @@
  *   picture.painter   "main"       storyArt.js
  *   story.command     story, trial, ask:name, offer (systems/features); ext:draw (sigil.js);
  *                     ext:cast (fishing.js); ext:ring (rings.js); ext:bloom (bloom.js); ext:kiteFlight (kite.js);
- *                     ext:flight (flyby.js)
- *   story.condition   ext:ring (rings.js); ext:full (unlock.js)
+ *                     ext:flight (flyby.js); ext:travel (travel.js); ext:gauntlet, ext:gauntletLeave (gauntlet.js)
+ *   story.condition   ext:ring (rings.js); ext:full (unlock.js); ext:gauntlet (gauntlet.js)
  *   story.value       ext:fishWeight (fishing.js)
- *   trial.test        sight, sigil, push (trialTests.js); vanes (vanes.js)
- *   draw.twist        drift (sigil.js)
+ *   trial.test        sight, sigil, push (trialTests.js); vanes (vanes.js); tide (tide.js); circuit (circuit.js)
+ *   draw.twist        drift, mirror, quick (sigil.js)
  *   companion.entrance  chimney (entrance.js)
  *   title.action      code: "I have a code" on the title; the same row is added to panel "settings"
  *   closeup           blackboard: the Element Wheel (closeups.js)
  *   world.layer       features (floats.js); features:flights (systems/features/Flights.js);
- *                     features:gusts (vanes.js on systems/features/Gusts.js)
- *   gate              features:gusts       service   gusts { solved, reset }
- *   save sections     opening, rings, gusts
- *   systems           opening, fishing-spot, bloom, ride, features:gusts
+ *                     features:gusts (vanes.js on systems/features/Gusts.js); features:tides (tide.js);
+ *                     features:circuits (circuit.js); features:travel (travel.js)
+ *   gate              features:gusts, features:tides, features:circuits, features:travel
+ *   service           gusts, tides, circuits { solved, reset }; travel { go, riding }; gauntlets { open, stage, leave }
+ *   puzzle.reset      vanes, tide, circuit   (type -> (puzzleId) => owned and reset)
+ *   save sections     opening, rings, gusts, tides, circuits, travel, gauntlet
+ *   systems           opening, fishing-spot, bloom, ride, features:gusts, features:tides, features:circuits,
+ *                     features:travel, features:gauntlet
  */
 
 import { install as installEngine, installFlights } from '../../systems/features/index.js';
@@ -49,6 +54,10 @@ import { installCloseUps } from './closeups.js';
 import { installVanes } from './vanes.js';
 import { installKite } from './kite.js';
 import { installFlyby } from './flyby.js';
+import { installTide } from './tide.js';
+import { installCircuit } from './circuit.js';
+import { installTravelling } from './travel.js';
+import { installGauntlet } from './gauntlet.js';
 
 export { openUnlock, isFull } from './unlock.js';
 
@@ -82,6 +91,10 @@ export function install(game) {
   installVanes(game);
   installKite(game);
   installFlyby(game);
+  installTide(game);
+  installCircuit(game);
+  installTravelling(game);
+  installGauntlet(game);
   /* "I have a code": a row in the Menu and a link on the title, until the full journey is open */
   registry.add('title.action', 'code', {
     label: () => word(game, 'shared.feat.offer.code'),

@@ -145,7 +145,7 @@ export default {
     { say: 'ch3.ev.bell.7', who: 'kid' },
     {
       choose: [
-        { text: 'ch3.ev.bell.take', then: [{ ext: 'addHontori', kind: 'kestrip' }, { say: 'ch3.ev.bell.8', who: 'companion' }] },
+        { text: 'ch3.ev.bell.take', then: [{ ext: 'addHontori', kind: 'kestrip', level: 8 }, { say: 'ch3.ev.bell.8', who: 'companion' }] },
         { text: 'ch3.ev.bell.leave', then: [{ say: 'ch3.ev.bell.9', who: 'oda' }] }
       ],
       cancel: 1

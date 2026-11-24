@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-export const ORDER = ['shared', 'prologue', 'ch1', 'ch2', 'ch3'];
+export const ORDER = ['shared', 'prologue', 'ch1', 'ch2', 'ch3', 'ch4', 'ch5'];
 
 const COMMANDS = new Set(['say', 'choose', 'if', 'branch', 'cycle', 'random', 'repeat', 'set', 'run', 'stop', 'pass', 'give', 'take', 'find',
   'money', 'spend', 'flag', 'unflag', 'mark', 'quest', 'battle', 'move', 'face', 'place', 'spawn', 'remove', 'companion', 'wait', 'fade', 'blackout',
@@ -123,7 +123,7 @@ export function check(folders, opts = {}) {
     const verb = Object.keys(c).find((k) => COMMANDS.has(k));
     if (!verb) return bad(where, `unknown command ${JSON.stringify(Object.keys(c))}`);
     texts(c, where);
-    for (const k of NESTED) if (c[k] !== undefined && verb !== 'if' && verb !== 'branch' && verb !== 'battle' && verb !== 'spend' && verb !== 'blackout' && verb !== 'repeat' && verb !== 'ask') bad(where, `"${k}" is not an option of ${verb}`);
+    for (const k of NESTED) if (c[k] !== undefined && verb !== 'if' && verb !== 'branch' && verb !== 'battle' && verb !== 'spend' && verb !== 'blackout' && verb !== 'repeat' && verb !== 'ask' && verb !== 'ext') bad(where, `"${k}" is not an option of ${verb}`);
     switch (verb) {
       case 'say': if (c.who !== 'self' && !R.people[c.who] && !R.voices[c.who]) bad(where, `unknown speaker "${c.who}"`); if (c.params) Object.values(c.params).forEach((v) => value(v, where)); break;
       case 'choose': c.choose.forEach((o, i) => { cond(o.if, where); cond(o.off, where); if (o.params) Object.values(o.params).forEach((v) => value(v, where)); script(o.then || [], `${where}.choose[${i}]`); }); break;
@@ -159,7 +159,12 @@ export function check(folders, opts = {}) {
       case 'puzzle': if (!R.puzzles[c.puzzle]) bad(where, `unknown puzzle "${c.puzzle}"`); break;
       case 'trial': if (!R.trials[c.trial]) bad(where, `unknown trial "${c.trial}"`); break;
       case 'ask': if (c.then) script(c.then, where + '.then'); break;
-      case 'ext': extUse('command', c, where); if (c.ext === 'learn') spellsLearned.add(c.spell); break;
+      case 'ext':
+        extUse('command', c, where);
+        if (c.ext === 'learn') spellsLearned.add(c.spell);
+        /* an extension may carry scripts of its own (a run of duels, a ride) */
+        for (const k of ['won', 'lost', 'during', 'after']) if (Array.isArray(c[k])) script(c[k], `${where}.${k}`);
+        break;
       default: break;
     }
   }
@@ -220,6 +225,24 @@ export function check(folders, opts = {}) {
     [].concat(t.award || []).forEach((x) => { if (x.type) ext && ext.check('awardRule', x, w); if (x.script) isScript(x.script, w); });
     if (t.passed) flagsUsed.push([t.passed, w]);
     if (t.award && t.award.flag) flagsUsed.push([t.award.flag, w]);
+  }
+  /* runs of battles in a row: every stage is a battle with its own scripts */
+  for (const f of folders) for (const [id, g] of Object.entries(f.gauntlets || {})) {
+    const w = 'gauntlet ' + id;
+    [].concat(g.venue || []).forEach((m) => isMap(m, w));
+    (g.rules || []).forEach((r) => (ext ? ext.check('battleRule', r, w) : null));
+    if (g.done) flagsSet.add(g.done);
+    if (g.left) isText(g.left, w);
+    script(g.onLeave || [], w + '.onLeave');
+    if (!Array.isArray(g.stages) || !g.stages.length) bad(w, 'a gauntlet needs stages');
+    (g.stages || []).forEach((stage, i) => {
+      const sw = `${w} stage ${i}`;
+      const b = stage.battle || {};
+      if (!R.trainers[b.opponent]) bad(sw, `unknown trainer "${b.opponent}"`);
+      (b.rules || []).forEach((r) => (ext ? ext.check('battleRule', r, sw) : null));
+      script(stage.before || [], sw + '.before');
+      script(stage.won || [], sw + '.won');
+    });
   }
   for (const [id, p] of Object.entries(R.puzzles)) { const w = 'puzzle ' + id; isMap(p.map, w); script(p.onSolve || [], w); flagsSet.add(p.solved); if ((p.type || 'push') === 'push' && p.boxes.length < p.pads.length) bad(w, 'fewer piles than pads'); }
   for (const tr of Object.values(R.trials)) if (tr.passed && tr.entrance && tr.entrance.every((x) => x.type !== 'push')) flagsSet.add(tr.passed);
@@ -330,7 +353,7 @@ export function loadWorld(src = path.join(HERE, '../src/'), contentMaps = [], li
     const win = { document: doc, addEventListener() {}, setTimeout: () => 0, setInterval: () => 0, requestAnimationFrame: () => 0, performance: { now: () => 0 }, localStorage: { getItem: () => null, setItem() {} }, location: { search: '', pathname: '/' }, navigator: { userAgent: '' }, console: { log() {}, warn() {} }, devicePixelRatio: 1, innerWidth: 400, innerHeight: 800, getComputedStyle: () => ({}), Image: function () { return stub(); } };
     win.window = win;
     const ctx = vm.createContext(win);
-    for (const f of ['characters', 'spirits', 'props_outdoor', 'outdoor_plus', 'buildings', 'furniture', 'interior_plus', 'hall_props', 'walltops', 'maps', 'village', 'whisperwood', 'mossgrove', 'interiors_props', 'interiors']) vm.runInContext(fs.readFileSync(src + f + '.js', 'utf8'), ctx, { filename: f });
+    for (const f of ['characters', 'spirits', 'props_outdoor', 'outdoor_plus', 'props_ch45', 'buildings', 'furniture', 'interior_plus', 'hall_props', 'walltops', 'maps', 'village', 'whisperwood', 'mossgrove', 'interiors_props', 'interiors']) vm.runInContext(fs.readFileSync(src + f + '.js', 'utf8'), ctx, { filename: f });
     const H = win.H, maps = {};
     const info = (t) => (H.propsOutdoor && H.propsOutdoor.info && H.propsOutdoor.info[t]) || (H.furniture && H.furniture.info && H.furniture.info[t]) || null;
     /* the maps written as data (map descriptions: rows instead of ground) are read the same way */

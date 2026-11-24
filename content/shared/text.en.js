@@ -887,6 +887,10 @@ export default {
   'shared.world.mossgrove': 'Mossgrove',
   'shared.world.pass': 'Whistling Pass',
   'shared.world.pass.why': 'Rockslide',
+  'shared.world.coast': 'Tidewell',
+  'shared.world.coast.why': 'No ferry yet',
+  'shared.world.coilhaven': 'Coilhaven',
+  'shared.world.coilhaven.why': 'Road closed',
 
   'shared.ui.guide.party.title': 'Your hontori',
   'shared.ui.guide.party.text': 'Five can travel with you. The first walks by you.',

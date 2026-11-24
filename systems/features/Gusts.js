@@ -34,6 +34,7 @@
  *   world.layer   "features:gusts"    carries the player along the wind; draws the wind lines
  *   system        "features:gusts"    places the vanes on map:enter, watches player:step for the goal
  *   service       "gusts"             { solved(id), reset(id) }
+ *   puzzle.reset  type -> (id) => true when it owns that puzzle (and reset it)
  *   save section  "gusts"             { turns: { puzzleId: [turn index of each vane] } }
  * With the debug tools, every puzzle of a map is proved fair on entering it (checkGustField) and the
  * problems go to the console.
@@ -379,5 +380,6 @@ export function installGusts(game, options = {}) {
   registry.add('world.layer', 'features:gusts', { update: (dt, world) => gusts.update(dt, world), draw: (ctx, world) => gusts.draw(ctx, world) });
   registry.add('system', 'features:gusts', gusts);
   registry.add('service', 'gusts', { solved: (id) => gusts.solved(id), reset: (id) => gusts.reset(id) });
+  registry.add('puzzle.reset', options.type || 'vanes', (id) => (gusts.fieldOf(id) ? (gusts.reset(id), true) : false));
   return gusts;
 }

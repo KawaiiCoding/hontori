@@ -50,6 +50,11 @@ export const handlers = {
     this.message.say(e.text);
   },
 
+  /* the tide of a flooded ring stands a little higher (ring rule tideRise) */
+  tide(e) {
+    this.setTide(e.level, e.max);
+  },
+
   async matchup(e) {
     await this.stage.wait(300);
     this.showMatchup(e);

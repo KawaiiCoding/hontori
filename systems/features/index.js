@@ -19,7 +19,11 @@
  * Also exported for other pieces of a game: ScreenScene, openScreen, drawPrompt, askName, openOffer, Entitlement,
  * and the pieces a game installs with its own look: installGusts (wind-vane puzzles, Gusts.js), GustField and
  * checkGustField (their rules and fairness proof), installFlights and fly (things flying over the world,
- * Flights.js), driftTwist and twistOf (twists of the drawing prompt, twists.js)
+ * Flights.js), driftTwist, mirrorTwist, quickTwist and twistOf (twists of the drawing prompt, twists.js),
+ * installTides with TideField and checkTideField (water-level puzzles, Tides.js), installCircuits with
+ * CircuitField and checkCircuitField (power-line puzzles, Circuits.js), installTravel (a ride from one place
+ * to another over a crossing map, Travel.js) and installGauntlets (battles in a row with save points,
+ * Gauntlet.js). Every puzzle type also registers kind "puzzle.reset" (type -> (id) => owned and reset).
  */
 
 import { installPictureStory } from './PictureStory.js';
@@ -38,7 +42,13 @@ export { openCloseUp } from './CloseUp.js';
 export { installGusts, Gusts } from './Gusts.js';
 export { GustField, checkGustField, DIRS } from './GustField.js';
 export { installFlights, fly } from './Flights.js';
-export { driftTwist, twistOf } from './twists.js';
+export { driftTwist, mirrorTwist, quickTwist, twistOf } from './twists.js';
+export { installTides, Tides } from './Tides.js';
+export { TideField, checkTideField } from './TideField.js';
+export { installCircuits, Circuits } from './Circuits.js';
+export { CircuitField, checkCircuitField, SIDES, SHAPES } from './CircuitField.js';
+export { installTravel, Travel } from './Travel.js';
+export { installGauntlets, Gauntlets } from './Gauntlet.js';
 
 export function install(game, { names, offer } = {}) {
   installPictureStory(game);

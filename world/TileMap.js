@@ -8,7 +8,8 @@
  *   props, buildings, people, doors, spawn, lights, labels, start   as described, doors as Door objects
  *   description                     the description it was built from
  *   inside(tx, ty)
- *   tileAt(tx, ty)                  tile id; outside the map, the id the tileset assumes there
+ *   tileAt(tx, ty)                  tile id; outside the map, the id the tileset assumes there, or the
+ *                                   nearest edge tile when that is flowing water (the sea runs on)
  *   solidAt(tx, ty)                 true for solid tiles, solid props, buildings and outside the map
  *   groundSolidAt(tx, ty)           true where the ground itself cannot be stood on (water, a wall) or outside
  *   openNear(tx, ty)                [tx, ty] itself when it can be stood on, else the nearest tile that can
@@ -26,6 +27,7 @@ export class TileMap {
   #tiles;
   #solid;
   #beyond;
+  #flowing = new Map();
   #doors = new Map();
 
   constructor(description, art) {
@@ -59,7 +61,26 @@ export class TileMap {
   }
 
   tileAt(tx, ty) {
-    return this.inside(tx, ty) ? this.#tiles[ty][tx] : this.#beyond;
+    if (this.inside(tx, ty)) return this.#tiles[ty][tx];
+    /* open water runs on past the edge of the map (no thin bank where the sea meets the border) */
+    if (this.height > 0 && this.width > 0) {
+      const edge = this.#tiles[Math.max(0, Math.min(this.height - 1, ty))][Math.max(0, Math.min(this.width - 1, tx))];
+      if (this.#flows(edge)) return edge;
+    }
+    return this.#beyond;
+  }
+
+  #flows(tile) {
+    let known = this.#flowing.get(tile);
+    if (known === undefined) {
+      try {
+        known = !!this.#art.tileFlows(this.indoor, tile);
+      } catch (error) {
+        known = false;
+      }
+      this.#flowing.set(tile, known);
+    }
+    return known;
   }
 
   solidAt(tx, ty) {

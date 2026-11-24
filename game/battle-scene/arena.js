@@ -13,6 +13,8 @@
  *   update(dt)                 move clouds, rain, snow, leaves and ripples
  *   drawBack(g, time)          everything behind the hontori
  *   drawFront(g, time, uiTop)  foliage and weather in front of them; uiTop: where the interface begins
+ *   setTide(share)             sea water standing in the ring, 0 (none) to 1 (up to the near platform); it rises
+ *                              smoothly (the ring rule of a flooded hall reports each rise)
  *   horizon                    the y of the horizon
  *   timeOfDay(hour)            'dawn' | 'day' | 'dusk' | 'night'
  */
@@ -318,6 +320,9 @@ export class Arena {
   #right = null;
   #uiTop = 0;
   #time = 0;
+  #tide = -1;
+  #tideTo = -1;
+  #nearGround = 0;
 
   constructor(width, height, biome, env, places) {
     this.#W = width;
@@ -326,7 +331,14 @@ export class Arena {
     this.#env = { time: env.time == null ? 12 : env.time, weather: env.weather || 'clear' };
     this.horizon = Math.round(height * 0.25);
     this.#uiTop = height;
+    this.#nearGround = places && places.me ? places.me.gy : Math.round(height * 0.7);
     this.#build(places);
+  }
+
+  setTide(share) {
+    const to = Math.max(0, Math.min(1, Number(share) || 0));
+    if (this.#tideTo < 0) this.#tide = to;
+    this.#tideTo = to;
   }
 
   update(dt) {
@@ -338,6 +350,10 @@ export class Arena {
       if (c.x > W + 2) c.x = -c.c.width - 2;
     }
     this.#time += dt;
+    if (this.#tideTo >= 0 && this.#tide !== this.#tideTo) {
+      const gap = this.#tideTo - this.#tide;
+      this.#tide = Math.abs(gap) < 0.004 ? this.#tideTo : this.#tide + gap * Math.min(1, dt * 1.6);
+    }
     for (const l of this.#leaves) {
       l.x += l.v * dt;
       l.y += Math.sin(this.#time * 2 + l.ph) * 0.15 + (wx === 'wind' ? 0.1 : 0.25) * dt * 20;
@@ -441,6 +457,7 @@ export class Arena {
     const H = this.#H;
     const wx = this.#env.weather;
     this.#uiTop = uiTop;
+    if (this.#tideTo >= 0) this.#drawTide(g, T, uiTop);
     if (this.#left) {
       const wind = wx === 'wind' ? 2.5 : 1;
       const base = uiTop + 6;
@@ -505,6 +522,29 @@ export class Arena {
   }
 
   /* ---------- private ---------- */
+
+  /* the sea standing in the ring: a pale band from the bottom of the arena up to the tide line */
+  #drawTide(g, T, uiTop) {
+    const W = this.#W;
+    /* from a first film of water at the bottom of the arena up over the near platform's foot */
+    const low = uiTop - 8;
+    const high = Math.min(low - 10, this.#nearGround - 20);
+    const top = Math.round(low - (low - high) * this.#tide);
+    g.fillStyle = 'rgba(46,128,214,.5)';
+    g.fillRect(0, top, W, Math.max(0, uiTop + 8 - top));
+    g.fillStyle = 'rgba(214,240,255,.7)';
+    for (let x = 0; x < W; x += 6) {
+      const lift = Math.sin(T * 1.6 + x * 0.21) > 0.3 ? -1 : 0;
+      g.fillRect(x, top + lift, 6, 1);
+    }
+    g.fillStyle = 'rgba(214,240,255,.22)';
+    for (let k = 0; k < 4; k++) {
+      const y = top + 5 + k * 7;
+      if (y > uiTop) break;
+      const x = (((T * (6 + k * 2) + k * 61) % (W + 30)) + W + 30) % (W + 30) - 30;
+      g.fillRect(x | 0, y, 22, 1);
+    }
+  }
 
   #drawRiver(g, T, wind) {
     const W = this.#W;

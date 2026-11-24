@@ -1,7 +1,7 @@
 /*
  * content.js
  * Job: hand Hontori's content folders to the engine, in load order (content/schema.md section 1:
- * shared, prologue, ch1, ch2, ch3), as registry kind "content". Any system that reads content takes it
+ * shared, prologue, ch1, ch2, ch3, ch4, ch5), as registry kind "content". Any system that reads content takes it
  * from there; a new chapter is one more import and one more entry in FOLDERS.
  *
  * Public API:
@@ -14,8 +14,10 @@ import prologue from '../../content/prologue/index.js';
 import ch1 from '../../content/ch1/index.js';
 import ch2 from '../../content/ch2/index.js';
 import ch3 from '../../content/ch3/index.js';
+import ch4 from '../../content/ch4/index.js';
+import ch5 from '../../content/ch5/index.js';
 
-export const FOLDERS = [shared, prologue, ch1, ch2, ch3];
+export const FOLDERS = [shared, prologue, ch1, ch2, ch3, ch4, ch5];
 
 export function registerContent(game) {
   for (const folder of FOLDERS) {

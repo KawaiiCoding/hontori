@@ -8,11 +8,12 @@
  */
 
 import { seeded, scripted } from '../../systems/battle/random.js';
+import { ringPower } from './ringRules.js';
 import {
   HontoriBattle, HontoriFighter, matrix, weatherMul, hit, rollMiss, intentWeights, pickIntent, quickFoe,
   bindChance, escapeChance, escapeBars, need, hpAt, atkAt, staMax, stageFor, newMember, award, applyEvolve,
   wandAward, wandPerks, gradeOf, masteryOf, spellCost, tolerance, staCost, movesFor, battleRewards, foeMaxHp,
-  ringRulesOf, RING_RULES
+  ringRulesOf, RING_RULES, TIDE_MAX, TIDE_STEP
 } from './index.js';
 
 let failed = 0;
@@ -25,6 +26,7 @@ function ok(name, cond, detail) {
   }
 }
 const near = (a, b) => Math.abs(a - b) < 1e-9;
+const ringPowerOf = (b, f) => ringPower(b, f);
 
 const SPECIES = {
   fox: { element: 'fire', name: 'Fire Hontori' },
@@ -282,6 +284,64 @@ const wandOf = (spells) => ({ mana: 3, maxMana: 3, spells, loadout: spells, perk
   const full = new HontoriBattle(setup(), { random: seeded(9) });
   play(full, simple, 300);
   ok('a windSwap duel plays to its end', full.over && full.errors.length === 0, full.result);
+}
+
+/* the ring rule of Deepbell Hall: the tide rises every round; water grows stronger, fire weaker */
+{
+  const team = [{ spirit: 'frog', level: 3 }, { spirit: 'frog', level: 3 }];
+  const setup = (rules) => ({ party: [lead('fox', 6), lead('frog', 6)], species, env: day,
+    trainer: { name: 'Maren', key: 'girl', team, rules, noCapture: true }, noCapture: true, wand: wandOf(['mend']) });
+  ok('tideRise and noRest are ring rules', ringRulesOf(['tideRise', 'noRest']).join() === 'tideRise,noRest' && RING_RULES.includes('tideRise') && RING_RULES.includes('noRest'));
+  const b = new HontoriBattle(setup(['tideRise']), { random: seeded(5) });
+  const opening = b.begin();
+  ok('the tide starts at 0 and says so', b.state.tide === 0 && opening.some((e) => e.type === 'tide' && e.level === 0) && opening.some((e) => e.type === 'say' && e.id === 'tideBegin'), opening.map((e) => e.type));
+  const levels = [];
+  for (let i = 0; i < 8 && !b.over; i++) {
+    b.me.hp = b.me.max;
+    b.foe.hp = b.foe.max;
+    const ev = b.useMove(0);
+    for (const e of ev) if (e.type === 'tide') levels.push(e.level);
+  }
+  ok('the tide rises once a round up to its height', levels.join() === [1, 2, 3, 4, 5].slice(0, TIDE_MAX).join(), levels);
+  ok('tideRise: no rule errors', b.errors.length === 0, b.errors.map(String));
+  /* the same blow, with the tide at its height and without it */
+  const fox = fighter({ element: 'fire' });
+  const frog = fighter({ side: 'foe', element: 'water' });
+  const calm = hit(fox, frog, 6, { env: day, random: scripted([0.5, 0.5]) }).amount;
+  const low = hit(fox, frog, 6, { env: day, mult: 1 - TIDE_STEP * TIDE_MAX, random: scripted([0.5, 0.5]) }).amount;
+  ok('a high tide weakens fire', low < calm, [calm, low]);
+  const power = (el, el2) => fighter({ element: el, element2: el2 });
+  const tb = new HontoriBattle(setup(['tideRise']), { random: seeded(5) });
+  tb.begin();
+  tb.state.tide = TIDE_MAX;
+  const near2 = (a, c) => Math.abs(a - c) < 1e-9;
+  ok('at its height: water x1.4, fire x0.6, water and fire both, grass unchanged',
+    near2(ringPowerOf(tb, power('water')), 1 + TIDE_STEP * TIDE_MAX) && near2(ringPowerOf(tb, power('fire')), 1 - TIDE_STEP * TIDE_MAX)
+    && near2(ringPowerOf(tb, power('water', 'fire')), (1 + TIDE_STEP * TIDE_MAX) * (1 - TIDE_STEP * TIDE_MAX)) && ringPowerOf(tb, power('grass')) === 1);
+  const off = new HontoriBattle(setup([]), { random: seeded(5) });
+  off.begin();
+  ok('without the rule there is no tide', off.state.tide === undefined && ringPowerOf(off, power('water')) === 1);
+  /* a fire lead hits a water foe for less and less as the rounds go by */
+  const hits = [];
+  const fb = new HontoriBattle({ ...setup(['tideRise']), party: [lead('fox', 8)] }, { random: () => 0.5 });
+  fb.begin();
+  for (let i = 0; i < 6 && !fb.over; i++) {
+    fb.me.hp = fb.me.max;
+    fb.foe.hp = fb.foe.max;
+    const ev = fb.useMove(0);
+    const d = ev.find((e) => e.type === 'damage' && e.target === 'foe' && e.source === 'move');
+    if (d) hits.push(d.amount);
+  }
+  ok('fire grows weaker each round in the flooding ring', hits.length >= 4 && hits[hits.length - 1] < hits[0], hits);
+  const full = new HontoriBattle(setup(['tideRise']), { random: seeded(11) });
+  play(full, simple, 300);
+  ok('a tideRise duel plays to its end', full.over && full.errors.length === 0, full.result);
+  const nr = new HontoriBattle(setup(['noRest']), { random: seeded(5) });
+  const said = nr.begin();
+  ok('noRest says so at the start', said.some((e) => e.type === 'say' && e.id === 'noRest'));
+  const both = new HontoriBattle(setup(['noRest', 'tideRise']), { random: seeded(13) });
+  play(both, simple, 300);
+  ok('a duel with two ring rules plays to its end', both.over && both.errors.length === 0, both.result);
 }
 
 console.log('hontori battle rules: ' + passed + ' passed, ' + failed + ' failed');

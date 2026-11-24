@@ -1,6 +1,6 @@
 /*
  * index.js
- * Job: the music of the Whistling Pass chapter on top of the current game's synthesizer: puts the new songs in its
+ * Job: the music of chapters 3 to 7 on top of the current game's synthesizer: puts the new songs in its
  * song book and chooses the tune of each place. Only game/HontoriSound.js uses it.
  *
  * Public API:

@@ -19,6 +19,9 @@
  *       twist        optional: { offset(seconds, width, height, out) } writes out.x, out.y (screen pixels):
  *                    the page moves by that much while the prompt is open; the guide moves with it and
  *                    ink already drawn rides along, so the player has to follow the page (twists.js)
+ *                    It may also show the guide another way (guide), paint under it (paint), give each try a
+ *                    time limit (limit, with the words `late` when a try runs out) and words of its own (note):
+ *                    see twists.js
  *     }
  */
 
@@ -54,6 +57,8 @@ export class DrawPromptScene extends ScreenScene {
   #timer = 0;
   #page = { x: 0, y: 0 };
   #moved = { x: 0, y: 0 };
+  #tryAt = 0;
+  #look = { seconds: 0, width: 0, height: 0, cx: 0, cy: 0, size: 0, color: '', left: null, drawing: false };
 
   constructor(game) {
     super(game, 'ft-draw');
@@ -63,15 +68,26 @@ export class DrawPromptScene extends ScreenScene {
     this.#o = { color: '#ffd98a', sounds: {}, ...options };
     const o = this.#o;
     const canvas = this.makeCanvas(root);
+    const twist = o.twist || null;
     this.#tip = element('div', 'tip', root, o.text || '');
-    if (o.sub) element('div', 'sub', this.#tip, o.sub);
+    const sub = o.sub || (twist && twist.note) || '';
+    if (sub) element('div', 'sub', this.#tip, sub);
     this.#guide = (o.recognizer && o.recognizer.glyph(o.shape)) || [];
+    if (twist && typeof twist.guide === 'function') {
+      try {
+        const shown = twist.guide(this.#guide);
+        if (Array.isArray(shown)) this.#guide = shown;
+      } catch (error) {
+        /* a twist that fails shows the plain guide */
+      }
+    }
     for (let i = 1; i < this.#guide.length; i++) {
       const a = this.#guide[i - 1];
       const b = this.#guide[i];
       this.#lengths.push(this.#lengths[i - 1] + Math.hypot(b[0] - a[0], b[1] - a[1]));
     }
     this.#started = performance.now();
+    this.#tryAt = this.#started;
     this.#release = this.game.clock.requestRate(60);
     this.#surface = new SigilSurface(canvas, {
       unit: () => UNIT,
@@ -94,6 +110,7 @@ export class DrawPromptScene extends ScreenScene {
 
   update(dt) {
     this.#drift();
+    this.#clock();
     this.#carry += dt;
     while (this.#carry >= SPARK_STEP) {
       this.#carry -= SPARK_STEP;
@@ -120,6 +137,11 @@ export class DrawPromptScene extends ScreenScene {
     const cy = height * 0.54 + this.#page.y;
     g.clearRect(0, 0, width, height);
     try {
+      if (!this.#won) this.#paintTwist(g, o, cx, cy, s, t, width, height);
+    } catch (error) {
+      /* a twist painter that fails is left out */
+    }
+    try {
       if (!this.#won) this.#drawGuide(g, o, cx, cy, s, t);
       else this.#drawWin(g, o, cx, cy, s, t, (now - this.#won) / 1000, width, height);
     } catch (error) {
@@ -137,6 +159,40 @@ export class DrawPromptScene extends ScreenScene {
     }
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
+  }
+
+  /* the share of this try's time still left (1 .. 0), or null without a time limit */
+  #left(now) {
+    const limit = this.#o && this.#o.twist && this.#o.twist.limit;
+    if (!(limit > 0)) return null;
+    return Math.max(0, 1 - (now - this.#tryAt) / 1000 / limit);
+  }
+
+  /* a try whose time ran out is lost; a stroke being drawn may still be finished */
+  #clock() {
+    if (this.#won || !this.#surface || this.#surface.drawing) return;
+    const now = performance.now();
+    if (this.#left(now) !== 0) return;
+    const twist = this.#o.twist;
+    if (this.#tip) this.#tip.textContent = (twist && twist.late) || this.#o.retry || '';
+    this.#sound(this.#o.sounds.miss);
+    this.#tryAt = now;
+  }
+
+  #paintTwist(g, o, cx, cy, s, t, width, height) {
+    const twist = o.twist;
+    if (!twist || typeof twist.paint !== 'function') return;
+    const look = this.#look;
+    look.seconds = t;
+    look.width = width;
+    look.height = height;
+    look.cx = cx;
+    look.cy = cy;
+    look.size = s;
+    look.color = o.color;
+    look.left = this.#left(performance.now());
+    look.drawing = !!(this.#surface && this.#surface.drawing);
+    twist.paint(g, look);
   }
 
   /* the twist moves the page; ink of the stroke being drawn rides along with it */
@@ -241,7 +297,9 @@ export class DrawPromptScene extends ScreenScene {
       kind = null;
     }
     if (kind !== o.shape) {
-      if (this.#tip) this.#tip.textContent = o.retry || '';
+      const late = this.#left(performance.now()) === 0;
+      this.#tryAt = performance.now();
+      if (this.#tip) this.#tip.textContent = (late && o.twist && o.twist.late) || o.retry || '';
       this.#surface.ash();
       this.#sound(o.sounds.miss);
       return;
