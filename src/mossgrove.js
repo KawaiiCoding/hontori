@@ -38,8 +38,8 @@ window.H = window.H || {};
   buildings.forEach(function (b) { var f = { school: [10, 6], house_a: [5, 4] }[b.type]; res(b.x - 1, b.y - 1, b.x + f[0], b.y + f[1]); });
   var npcs = [
     // Granny Burr sits in the square by day and goes home at dusk
-    { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wonders used to come every spring.']], sched: [{ from: 7, to: 18 }, { from: 18, to: 7, away: true }] },
-    { key: 'sorreljr', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'Madam Sorrel is my grandma. I am not a Wonder. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
+    { key: 'grandma', x: 8, y: 17, dir: 0, lines: [['Granny Burr', 'The moss here is older than my grandma.'], ['Granny Burr', 'Wanders used to come every spring.']], sched: [{ from: 7, to: 18 }, { from: 18, to: 7, away: true }] },
+    { key: 'sorreljr', x: 30, y: 17, dir: 2, lines: [['Sorrel Jr.', 'Madam Sorrel is my grandma. I am not a Wander. Yet.'], ['Sorrel Jr.', 'I can almost see the shimmer near the pond.']] },
     { key: 'fisher', x: 29, y: 6, dir: 3, fixed: true, lines: [['Fisher Lin', 'Mirror Pond keeps its fish deep.']] },
     { key: 'traveler', x: 32, y: 17, dir: 3, lines: [['Rowan', 'Rocks came down on the road to Whistling Pass.'], ['Rowan', 'They say it will be clear soon.']] }
   ];
@@ -162,7 +162,7 @@ window.H = window.H || {};
     { name: 'moss_house1', title: 'Granny Burr\'s Cottage', b: buildings[1], w: 14, h: 10, door: 7, floor: 'H',
       props: [pr('window', 3, 1), pr('picture', 6, 1), pr('window', 10, 1), pr('fireplace', 6, 2), pr('stove', 1, 2), pr('cupboard', 2, 2), pr('armchair', 4, 3),
         pr('bed', 11, 2), pr('dresser', 12, 5), pr('table', 2, 6), pr('chair', 3, 6), pr('plant', 12, 8), pr('cat_bed', 1, 8), pr('herb_rack', 9, 1), pr('bookshelf', 9, 2)],
-      npcs: [{ key: 'grandma', x: 5, y: 6, dir: 0, lines: [['Granny Burr', 'Tea is always warm here. Sit, if you like.'], ['Granny Burr', 'My husband was a Wonder. He wrote everything down.']], sched: [{ from: 18, to: 7 }, { from: 7, to: 18, away: true }] }] },
+      npcs: [{ key: 'grandma', x: 5, y: 6, dir: 0, lines: [['Granny Burr', 'Tea is always warm here. Sit, if you like.'], ['Granny Burr', 'My husband was a Wander. He wrote everything down.']], sched: [{ from: 18, to: 7 }, { from: 7, to: 18, away: true }] }] },
     { name: 'moss_house2', title: 'Pell\'s Trading Post', b: buildings[2], w: 14, h: 10, door: 7, floor: 'F',
       props: [pr('window', 2, 1), pr('wall_map', 5, 1), pr('window', 10, 1), pr('shop_shelf', 1, 2), pr('barrel_in', 3, 2), pr('barrel_in', 4, 2), pr('desk', 8, 2), pr('chair', 8, 3), pr('bed', 11, 2),
         pr('table', 9, 6), pr('chair', 10, 6), pr('chest', 1, 7), pr('potted_tree', 12, 8), pr('lantern_hang', 7, 1), pr('toybox', 12, 6), pr('shop_counter', 2, 4)],
@@ -186,7 +186,7 @@ window.H = window.H || {};
     ww.ground = rows.map(function (r) { return r.join(''); });
     ww.props = (ww.props || []).filter(function (p) { return !((p.x >= 23 && p.x <= 26) && rows[p.y] && rows[p.y][24] === path && p.y > 2); });
     ww.npcs = ww.npcs || [];
-    ww.npcs.push({ key: 'guard', x: 26, y: wh - 3, dir: 2, lines: [['Ranger Moss', 'Mossgrove lies south of here.'], ['Ranger Moss', 'Mind the roots on the path, young Wonder.']] });
+    ww.npcs.push({ key: 'guard', x: 26, y: wh - 3, dir: 2, lines: [['Ranger Moss', 'Mossgrove lies south of here.'], ['Ranger Moss', 'Mind the roots on the path, young Wander.']] });
     ww.doors = ww.doors || [];
     ww.doors.push({ x: 24, y: wh - 1, to: 'mossgrove', tx: 26, ty: 1, dir: 0 }, { x: 25, y: wh - 1, to: 'mossgrove', tx: 27, ty: 1, dir: 0 });
     ww.labels = (ww.labels || []).concat([{ x: 25, y: wh - 3, name: 'Road to Mossgrove' }]);

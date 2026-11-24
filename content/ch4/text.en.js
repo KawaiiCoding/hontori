@@ -47,7 +47,7 @@ export default {
   'ch4.p.doran.1': 'Tidefin only bite after dark. A Night Hook from Saba brings in more of them.',
   'ch4.p.doran.2': 'Jory counts the boats. I count the fish.',
   'ch4.p.doran.3': 'Home for supper. The fish can wait until dark.',
-  'ch4.p.doran.4': 'Sleep well, Wonder. Or fish well.',
+  'ch4.p.doran.4': 'Sleep well, Wander. Or fish well.',
   'ch4.name.hollis': 'Hollis the Reed-cutter',
   'ch4.p.hollis.1': 'I cut reeds for the roofs of Tidewell.',
   'ch4.p.hollis.2': 'Halfway is a good place to sit down.',
@@ -67,7 +67,7 @@ export default {
   /* the ferry comes, the crossing */
   'ch4.ev.open.1': 'A horn sounds from the lake below. A ferry has come in to the dock.',
   'ch4.ev.open.2': 'A boat to the south, the open sea. The next ring waits where the tides run free.',
-  'ch4.ferry.hask.1': 'You are the Wonder from Hask\'s bridge? He sent word down the rope.',
+  'ch4.ferry.hask.1': 'You are the Wander from Hask\'s bridge? He sent word down the rope.',
   'ch4.ferry.hask.2': 'This crossing is on him. Hask\'s friends ride free the first time.',
   'ch4.ferry.closed': 'The jetty is empty. No boat is in today.',
   'ch4.ferry.later': 'The boat will wait.',
@@ -87,7 +87,7 @@ export default {
   'ch4.ev.tidewell.3': 'Mira is from the coast. Her house must be here somewhere.',
   'ch4.hall.closed.1': 'The causeway to Deepbell Hall is under the sea. Water stands in the hall up to the second step.',
   'ch4.hall.closed.2': 'A woman in sea-blue robes stands at the water\'s edge, watching the hall.',
-  'ch4.ev.maren.1': 'You are the Wonder Zephra wrote about. I am Maren, Warden of Deepbell Hall.',
+  'ch4.ev.maren.1': 'You are the Wander Zephra wrote about. I am Maren, Warden of Deepbell Hall.',
   'ch4.ev.maren.2': 'Look at my hall. The sea is in it up to the second step.',
   'ch4.ev.maren.3': 'Our spirit bell lies on the Sunken Stair, past the Saltmarsh. While it lies there, the tide keeps coming in to look for it.',
   'ch4.ev.maren.4': 'No duel in a drowned hall. Raise the bell, and I will raise my ring.',
@@ -119,7 +119,7 @@ export default {
   'ch4.hollis.5': 'Warm cup, soft reed, a rest so sweet. Back on the boards, on rested feet.',
 
   /* the Sunken Stair and the tide wheels */
-  'ch4.ev.stair.1': 'You are the Wonder? Maren sent word. I am Isk.',
+  'ch4.ev.stair.1': 'You are the Wander? Maren sent word. I am Isk.',
   'ch4.ev.stair.2': 'Three wheels, three pools. Turn a wheel, and its pool fills or drains.',
   'ch4.ev.stair.3': 'Low water opens the path. But a pool that drains spills into the one below it.',
   'ch4.ev.stair.4': 'If the water gets muddled, ask me to set the wheels back.',
@@ -162,8 +162,8 @@ export default {
 
   /* Orlen Vael's letter */
   'ch4.ev.vael.1': 'A kite drops down over the harbour. It has a gold seal.',
-  'ch4.ev.vael.2': 'For the Wonder in Tidewell. From the Grand Archmage.',
-  'ch4.vael.1': 'My dear young Wonder. Word of you travels faster than kites.',
+  'ch4.ev.vael.2': 'For the Wander in Tidewell. From the Grand Archmage.',
+  'ch4.vael.1': 'My dear young Wander. Word of you travels faster than kites.',
   'ch4.vael.2': 'Two rings, and kind to every spirit you meet. The world is lucky to have you.',
   'ch4.vael.3': 'Rest when you can, and keep my Token close. Warmly, Orlen.',
   'ch4.ev.vael.3': 'He wrote the order that sank the bell. And he writes like a grandfather.',
@@ -196,7 +196,7 @@ export default {
   'ch4.ev.mira.1': 'You came all the way to Tidewell! Welcome to my home.',
   'ch4.ev.mira.2': 'That is my mother, Lisel. She cannot see the spirits.',
   'ch4.ev.mira.3': 'When my otter splashes her, she says it is the wind.',
-  'ch4.ev.mira.4': 'She is afraid to see. Maybe, from a real Wonder, the V would help?',
+  'ch4.ev.mira.4': 'She is afraid to see. Maybe, from a real Wander, the V would help?',
   'ch4.ev.mira.opt': 'Ask Lisel about the V',
   'ch4.ev.mira.5': 'Whenever you are ready.',
   'ch4.ev.mira.6': 'Lisel, my wand can lift the veil. Only if you want it to.',

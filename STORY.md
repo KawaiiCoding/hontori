@@ -80,7 +80,7 @@ Expose Orlen Vael and pass a new law, so hontori are known and respected by ever
    Built in src/mossgrove.js and src/chapter2.js:
    - Ranger Moss keeps the south edge of Whisperwood closed until Chapter 1 is complete (the letter).
    - **The Leaf Ring**: reach Mossgrove, meet Warden Fern in Rootwood Hall, the wand trial (wake three wilted sprouts with the Mending Sigil), then a ring duel where switching is not allowed.
-   - After the ring a grey-cloaked visitor says the Archmage wants to meet promising Wonders.
+   - After the ring a grey-cloaked visitor says the Archmage wants to meet promising Wanders.
    - The road east to Whistling Pass is closed by a rockslide (Rowan). Chapter 3 starts there.
 3. **Tidewell**
 4. **Whistling Pass**
