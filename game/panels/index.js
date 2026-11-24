@@ -22,9 +22,11 @@ import { installGuide } from './guide.js';
 import { installScreens } from './screens.js';
 import { installWorldTab } from './worldmap.js';
 import { applyThemeWords } from './words.js';
+import { SANCTUM_WORDS } from '../features/sanctum.js';
 
 export function install(game) {
-  const roster = new Roster(game, text);
+  /* the words of the sealed Sanctum stand in until the content has its own */
+  const roster = new Roster(game, { ...SANCTUM_WORDS, ...text });
   applyThemeWords(game, roster);
   const guide = installGuide(game, roster);
   installScreens(game, roster, guide);

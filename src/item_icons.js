@@ -2,7 +2,7 @@ window.H = window.H || {};
 // Clear pixel icons for world items that had none of their own: every fish, the forest finds, the merchant pouch,
 // chapters 4 and 5: tide_ring, spark_ring, ferry_ticket, night_hook, bell_order; chapters 6 and 7: stone_ring,
 // flame_ring, lantern_oil, miner_rope, dug_treat, carving_chisel, burr_page, sanctum_order, heat_cloak, grandma_wand,
-// grandma_letter, vael_young_letter.
+// grandma_letter, vael_young_letter; chapters 8 and 9: moon_ring, halo_ring, favour_token, garden_key.
 // Rule: every item in the world is shown by an icon that looks like the thing itself.
 // API: H.itemIcons = { has(id), draw(g, id) (16 x 16 at 1x), url(id, scale) }
 (function () {
@@ -200,6 +200,33 @@ window.H = window.H || {};
     for (var i = 0; i < 6; i++) { P(g, 2 + i, 5 + i, '#b8a480', 1, 1); P(g, 13 - i, 5 + i, '#b8a480', 1, 1); }
     P(g, 6, 9, OL, 4, 4); P(g, 7, 10, '#3a5ab0', 2, 2); P(g, 7, 10, '#7a9ae0', 1, 1);
     P(g, 3, 12, '#c8b48c', 10, 1);
+  };
+  /* ---------- chapters 8 and 9 ---------- */
+  /* the Moon Ring: a silver band with a pale violet moonstone, a thin crescent cut in it */
+  DRAW.moon_ring = function (g) {
+    ring(g, ['#b8b8cc', '#eeeef8', '#6a6a86', '#a898e8', '#f0ecff', '#5a4aa0']);
+    P(g, 8, 3, '#5a4aa0', 1, 2);
+  };
+  /* the Halo Ring: a gold band with a white-gold stone and a thin halo over it */
+  DRAW.halo_ring = function (g) {
+    ring(g, ['#e8b840', '#fff0a0', '#a87a24', '#fff4d0', '#ffffff', '#e0b048']);
+    P(g, 4, 0, '#ffe680', 8, 1); P(g, 3, 1, '#ffe680', 1, 1); P(g, 12, 1, '#ffe680', 1, 1);
+  };
+  /* a favour token: a round wooden token on a red cord, a knot carved in its face */
+  DRAW.favour_token = function (g) {
+    P(g, 7, 0, '#c8443a', 2, 4); P(g, 6, 1, '#c8443a', 1, 2); P(g, 9, 1, '#c8443a', 1, 2);
+    P(g, 4, 4, OL, 8, 11); P(g, 3, 5, OL, 10, 9); P(g, 2, 7, OL, 12, 5);
+    P(g, 4, 5, '#b07a44', 8, 9); P(g, 3, 7, '#b07a44', 10, 5); P(g, 4, 5, '#d0a068', 3, 2); P(g, 3, 7, '#d0a068', 1, 2);
+    P(g, 11, 10, '#8a5a30', 1, 2); P(g, 6, 13, '#8a5a30', 5, 1);
+    P(g, 6, 7, '#5a3a20', 4, 1); P(g, 6, 10, '#5a3a20', 4, 1); P(g, 6, 7, '#5a3a20', 1, 4); P(g, 9, 7, '#5a3a20', 1, 4); P(g, 7, 8, '#5a3a20', 2, 2);
+  };
+  /* the garden key: a long gold key with a leaf-shaped bow */
+  DRAW.garden_key = function (g) {
+    P(g, 1, 1, OL, 7, 7); P(g, 2, 2, '#e0b048', 5, 5); P(g, 3, 2, '#fff0a0', 2, 1); P(g, 2, 3, '#fff0a0', 1, 2);
+    P(g, 4, 4, OL, 1, 1); P(g, 5, 3, '#a87a24', 1, 1); P(g, 3, 5, '#a87a24', 1, 1);
+    for (var i = 0; i < 7; i++) { P(g, 6 + i, 6 + i, OL, 3, 3); }
+    for (i = 0; i < 7; i++) P(g, 7 + i, 7 + i, '#e0b048', 1, 1);
+    P(g, 11, 13, OL, 3, 3); P(g, 12, 14, '#e0b048', 1, 1); P(g, 13, 10, OL, 3, 3); P(g, 14, 11, '#e0b048', 1, 1);
   };
   Object.keys(FISH).forEach(function (k) { DRAW[k] = function (g) { fish(g, FISH[k]); }; });
   var urls = {};

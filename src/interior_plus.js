@@ -775,7 +775,7 @@ window.H = window.H || {};
   //   iplus:<type>       static piece: the 2x picture HD.blit shows (armchair, desk, wardrobe, ...)
   //   iplus:<type>:<f>   animated piece, frame f: cat_bed 8 frames at 3 fps, candles 6 at 8 fps,
   //                      wall_shelf 6 at 4 fps, garland 8 at 4 fps
-  //   iplus:<id><tx>_<ty>[s]  floor tile (floor_herring, floor_stone, carpet_blue) at tile (tx, ty),
+  //   iplus:<id><tx>_<ty>[s]  floor tile (floor_herring, floor_stone, carpet_blue, floor_marble, carpet_gold) at tile (tx, ty),
   //                      's' when a wall above casts its shadow: the module's own tile cache key.
   //                      32x32, drawn at 16x16. These tiles depend on their position, so the
   //                      enumerator bakes the ones the indoor maps in H.maps use.
@@ -961,8 +961,49 @@ window.H = window.H || {};
     wallShadow(g, sh);
   }
 
+  /* floor_marble: white marble slabs (one per tile) with soft grey veins, joined by gold inlay, a gold diamond where four meet */
+  function drawMarble(g, tx, ty, sh) {
+    var W0 = '#f4f2ec', W1 = '#e8e4da', W2 = '#d8d2c6', V = '#c4bdb0', G = '#e0b048', GL = '#fff0a0', GD = '#a87a24';
+    P(g, 0, 0, W0, S, S);
+    for (var y = 0; y < S; y++) for (var x = 0; x < S; x++) {
+      var gx = tx * S + x, gy = ty * S + y, r = hash(gx >> 2, gy >> 2);
+      if (r < 0.22) P(g, x, y, W1); else if (r > 0.92) P(g, x, y, '#ffffff');
+      if (x > 26 || y > 26) P(g, x, y, (x + y) & 1 ? W1 : W2);
+    }
+    /* a vein or two wandering across the slab */
+    var vn = 1 + ((hash(tx + 7, ty + 3) * 2) | 0);
+    for (var i = 0; i < vn; i++) {
+      var vx = 3 + ((hash(tx * 5 + i, ty * 7) * 24) | 0), vy = 2;
+      for (var k = 0; k < 26; k++) { vy = 2 + k; vx += hash(tx + k, ty + i * 9 + k) > 0.6 ? 1 : hash(tx - k, ty + i) > 0.7 ? -1 : 0; if (vx > 1 && vx < 30) P(g, vx, vy, k % 5 === 0 ? W2 : V); }
+    }
+    /* gold inlay along the slab's top and left edges, a diamond at the corner */
+    P(g, 0, 0, G, S, 1); P(g, 0, 0, G, 1, S); P(g, 0, 1, GD, S, 1); P(g, 1, 0, GD, 1, S);
+    P(g, 1, 1, GL, 2, 1); P(g, 1, 1, GL, 1, 2);
+    P(g, 0, 0, GL, 2, 2);
+    wallShadow(g, sh);
+  }
+  /* carpet_gold: a pale gold rug with a cream lattice; every other tile carries a small halo ring */
+  function drawCarpetGold(g, tx, ty, sh) {
+    var base = '#ecc86a', mid = '#f4d888', dark = '#d4aa4a', C = '#fff4d0', R = '#fffbe8', RD = '#c8962a';
+    P(g, 0, 0, base, S, S);
+    for (var y = 0; y < S; y++) for (var x = 0; x < S; x++) {
+      var gx = tx * S + x, gy = ty * S + y, r = hash(gx, gy);
+      if (r < 0.14) P(g, x, y, dark); else if (r > 0.86) P(g, x, y, mid);
+      /* the lattice: diagonal cream threads crossing every 16 pixels */
+      if (((gx + gy) & 15) === 0 || ((gx - gy) & 15) === 0) P(g, x, y, C);
+    }
+    if (((tx + ty) & 1) === 0) {
+      for (var a = 0; a < 40; a++) {
+        var t = a / 40 * Math.PI * 2, hx = Math.round(16 + Math.cos(t) * 7), hy = Math.round(16 + Math.sin(t) * 3);
+        P(g, hx, hy + 1, RD); P(g, hx, hy, R);
+      }
+      P(g, 15, 15, R, 2, 2);
+    }
+    wallShadow(g, sh);
+  }
+
   var tcache = {};
-  var tdraw = { floor_herring: drawHerring, floor_stone: drawStone, carpet_blue: drawCarpetBlue };
+  var tdraw = { floor_herring: drawHerring, floor_stone: drawStone, carpet_blue: drawCarpetBlue, floor_marble: drawMarble, carpet_gold: drawCarpetGold };
   // one entry per tile picture, found by number (no string built per draw):
   // TE[id][(ty * 8192 + tx) * 2 + shadow] = { k: sheet key, key: own cache key, id, tx, ty, sh }
   var TE = {};
@@ -994,9 +1035,9 @@ window.H = window.H || {};
   if (H.tilesIndoor) {
     var TI = H.tilesIndoor;
     TI.solid = TI.solid || {};
-    TI.solid.floor_herring = false; TI.solid.floor_stone = false; TI.solid.carpet_blue = false;
+    TI.solid.floor_herring = false; TI.solid.floor_stone = false; TI.solid.carpet_blue = false; TI.solid.floor_marble = false; TI.solid.carpet_gold = false;
     TI.still = TI.still || {};
-    TI.still.floor_herring = true; TI.still.floor_stone = true; TI.still.carpet_blue = true;
+    TI.still.floor_herring = true; TI.still.floor_stone = true; TI.still.carpet_blue = true; TI.still.floor_marble = true; TI.still.carpet_gold = true;
     var origTile = TI.draw;
     TI.draw = function (ctx, id, px, py, tx, ty, env, nb) {
       var fn = tdraw[id];

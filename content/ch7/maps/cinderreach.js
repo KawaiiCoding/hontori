@@ -55,7 +55,7 @@ export default {
     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaclllcaaa'
   ],
   things: {
-    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', w: 'well', f: 'flowerbed', k: 'cart', c: 'crate', a: 'barrel', o: 'log_pile', g: 'garden_bed', m: 'mailbox', M: 'market_stall', s: 'statue', l: 'lantern_string', y: 'laundry_line', H: { building: 'house_a' }, I: { building: 'tavern' }, '$': { building: 'shop' }, G: { building: 'school_fire' } },
+    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', w: 'well', f: 'flowerbed', k: 'cart', c: 'crate', a: 'barrel', o: 'log_pile', g: 'garden_bed', m: 'mailbox', M: 'market_stall', s: 'statue', l: 'lantern_string', y: 'laundry_line', F: 'school_touch_fire', H: { building: 'house_a' }, I: { building: 'tavern' }, '$': { building: 'shop' }, G: { building: 'school_fire' } },
     rows: [
       '.R.RR.....RR...............................RR............R',
       '..RR.RRR.RRRRRR.............................RR.RR........R',
@@ -87,7 +87,7 @@ export default {
       'RRR..H........H...................H........H.............R',
       'RR.........o........y...R...............R.................',
       'RR....................R...................................',
-      '.R.f......L.C......m....c...L..Lf......m.f......mL........',
+      '.R.f......L.CF.....mF...c...L..Lf......m.f......mL........',
       '.R........................................................',
       'RR........................................................',
       'R.........................................................',

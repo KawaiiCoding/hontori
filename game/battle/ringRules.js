@@ -6,15 +6,18 @@
  * flags instead (setup.js).
  *
  * Public API:
- *   defineRingRule(id, hooks)   hooks: { begin(b), roundStart(b), power(b, fighter) }
+ *   defineRingRule(id, hooks)   hooks: { begin(b), roundStart(b), power(b, fighter), refill(b) }
  *                               begin runs once after the opening lines, before the first round;
  *                               roundStart runs at the start of every round after the first, before the foe
  *                               picks its intent; both may emit events. power answers a multiplier for the
- *                               damage that fighter deals (1: no change)
+ *                               damage that fighter deals (1: no change); refill answers false when the
+ *                               wand gets no mana back from the rounds
  *   ringRulesOf(ids)            the ids among them that name a ring rule (unknown names are left out)
  *   runRingRules(b, hook)       call that hook of every ring rule of this battle (b.state.rules); a rule
  *                               that throws is reported in b.errors through the engine and skipped
- *   ringPower(b, fighter)       the product of every ring rule's power for that fighter (1 when none)
+ *   ringPower(b, fighter)       the product of every ring rule's power for that fighter (1 when none), times
+ *                               the power of a foe that has flared up in a later phase (phases.js)
+ *   ringRefills(b)              false when a ring rule stops the mana of the rounds
  *   RING_RULES                  the ids defined so far
  *
  * Defined here:
@@ -28,11 +31,17 @@
  *   noRest     NO REST (the Storm Works): duels in a row with only what you carry. In the battle it only says so
  *              at the start; the run itself (save points, no rest between) is the gauntlet of the story
  *              (systems/features/Gauntlet.js). A duel never heals anyone, so nothing else is needed here.
+ *   heat       THE HEAT (Ember Crucible): the wand gets no mana back from the rounds; only what it holds at the
+ *              start (and herbs carried in) can be spent. The Warden's lead may flare up in a second phase
+ *              (a team member's `phases`, phases.js), which the screen answers with the place's phase music.
+ *   wandDuel   WAND TO WAND (Bedrock Hall): named here so it is a known ring rule; a battle under it is not a
+ *              hontori battle at all but a WandDuel (wandDuel.js), which the battle screen starts instead.
  */
 
 import { me, say } from './common.js';
 import { bringIn } from './swap.js';
 import { aliveOthers } from './turn.js';
+import { phasePower } from './phases.js';
 
 const RULES = new Map();
 export const RING_RULES = [];
@@ -59,7 +68,20 @@ export function ringPower(b, fighter) {
       b.emit('error', { message: `ring rule ${id}: ${error && error.message}` });
     }
   }
-  return m;
+  return m * phasePower(b, fighter);
+}
+
+export function ringRefills(b) {
+  for (const id of b.state.rules || []) {
+    const rule = RULES.get(id);
+    if (!rule || typeof rule.refill !== 'function') continue;
+    try {
+      if (rule.refill(b) === false) return false;
+    } catch (error) {
+      b.emit('error', { message: `ring rule ${id}: ${error && error.message}` });
+    }
+  }
+  return true;
 }
 
 export function runRingRules(b, hook) {
@@ -124,3 +146,14 @@ defineRingRule('noRest', {
     say(b, 'noRest');
   },
 });
+
+defineRingRule('heat', {
+  begin(b) {
+    say(b, 'heatBegin');
+  },
+  refill() {
+    return false;
+  },
+});
+
+defineRingRule('wandDuel', {});

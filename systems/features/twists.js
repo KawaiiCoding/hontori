@@ -9,6 +9,8 @@
  *   guide(points)                         the guide as it is shown (the stroke is still judged against the shape)
  *   paint(g, look)                        drawn under the guide, in screen pixels; look: { seconds, width, height,
  *                                         cx, cy, size, color, left (0..1 of the time left, or null), drawing }
+ *   fade                                  drawing pixels of ink that stay visible behind the finger; the older
+ *                                         part of the stroke fades away (it still counts when it is judged)
  *   limit                                 seconds for one try; when they run out the try is lost (`late` says so)
  *                                         and a new one starts. A stroke being drawn may still be finished.
  *   note, late                            words under the prompt while it is open; the words after a lost try
@@ -22,6 +24,8 @@
  *   mirrorTwist({ axis, paint, note })   the guide is shown mirrored (axis 'y': upside down, as in still water;
  *        'x': left to right); the player draws the shape the right way round
  *   quickTwist({ seconds, paint, note, late })   each try must be finished within `seconds` (default 10)
+ *   burnTwist({ fade, paint, note })   the line burns away behind the finger (default: the last 70 drawing
+ *        pixels show), so the shape must be drawn in one sure stroke; it is judged like any other stroke
  *   twistOf(game, id, options)   the twist registered under "draw.twist" id, made with options, or null
  *        registry kind "draw.twist": id -> (options) => twist
  */
@@ -50,6 +54,10 @@ export function mirrorTwist({ axis = 'y', paint, note } = {}) {
 
 export function quickTwist({ seconds = 10, paint, note, late } = {}) {
   return { limit: Math.max(2, Number(seconds) || 10), paint, note, late };
+}
+
+export function burnTwist({ fade = 70, paint, note } = {}) {
+  return { fade: Math.max(20, Number(fade) || 70), paint, note };
 }
 
 export function twistOf(game, id, options) {

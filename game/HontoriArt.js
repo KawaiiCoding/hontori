@@ -63,13 +63,16 @@ import { hasItemIcon, itemIconUrl as ownItemIconUrl } from './items/icons.js';
 const REQUIRED = ['icons', 'fx', 'tilesOutdoor', 'tilesIndoor', 'propsOutdoor', 'furniture', 'buildings', 'chars', 'spirits'];
 
 /* tiles_outdoor.js: blades sway with wind and time, each tile on its own */
-const SWAYING_OUTDOOR_TILES = new Set(['grass', 'tallgrass', 'flowers']);
+/* tiles_cave.js: lava pulses slowly, each tile on its own (it is not water and never flows) */
+const SWAYING_OUTDOOR_TILES = new Set(['grass', 'tallgrass', 'flowers', 'lava']);
 /* tiles_outdoor.js: one sheet of drifting strokes, sparkles and shore foam runs through all water */
 const FLOWING_OUTDOOR_TILES = new Set(['water', 'bridge']);
-const OUTDOOR_TILES = new Set(['grass', 'tallgrass', 'flowers', 'path', 'cobble', 'sand', 'water', 'bridge']);
+const OUTDOOR_TILES = new Set(['grass', 'tallgrass', 'flowers', 'path', 'cobble', 'sand', 'water', 'bridge', 'lava', 'cooled_lava', 'ash']);
 /* tiles_indoor.js, interior_plus.js, walltops.js: every indoor tile is a fixed picture */
 const INDOOR_TILES = new Set([
-  'floor_wood', 'floor_tile', 'rug', 'wall', 'void', 'floor_herring', 'floor_stone', 'carpet_blue',
+  'floor_wood', 'floor_tile', 'rug', 'wall', 'void', 'floor_herring', 'floor_stone', 'carpet_blue', 'floor_marble', 'carpet_gold',
+  /* tiles_cave.js: natural rock */
+  'cave_floor', 'cave_rock', 'cave_wall', 'cave_carving', 'cave_lava', 'cave_pool', 'cave_stalagmite', 'cave_crystal', 'cave_nest',
 ]);
 /* tall grass blades reach 12 pixels above their tile */
 const OUTDOOR_OVERHANG = 12;

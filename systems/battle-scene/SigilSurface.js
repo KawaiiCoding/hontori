@@ -13,6 +13,8 @@
  *     onHum()             called now and then while the stroke grows (a soft sound)
  *   })
  *   color               the ink colour (the scene may change it while the stroke grows)
+ *   fade                0: the whole stroke shows; else only its last `fade` art pixels, the older part
+ *                       fading out behind the finger (the whole stroke is still handed over and judged)
  *   drawing             a stroke is being drawn
  *   trail               the points of the stroke
  *   drop()              forget the stroke
@@ -51,6 +53,7 @@ export function inkStroke(g, points, width, color, alpha) {
 
 export class SigilSurface {
   color = '#ffe6b0';
+  fade = 0;
   drawing = false;
   trail = [];
 
@@ -72,6 +75,27 @@ export class SigilSurface {
       ['pointercancel', (e) => this.#up(e)]
     ];
     for (const [type, fn] of this.#listeners) element.addEventListener(type, fn);
+  }
+
+  /* only the newest part of the stroke: the last half of `fade` bright, the half before it fading out */
+  #drawFading(g, width) {
+    const trail = this.trail;
+    const half = this.fade / 2;
+    let length = 0;
+    let cut = trail.length - 1;
+    let mid = -1;
+    while (cut > 0) {
+      length += Math.hypot(trail[cut][0] - trail[cut - 1][0], trail[cut][1] - trail[cut - 1][1]);
+      if (mid < 0 && length >= half) mid = cut - 1;
+      if (length >= this.fade) break;
+      cut--;
+    }
+    if (mid < 0) {
+      inkStroke(g, trail.slice(cut), width, this.color, 1);
+      return;
+    }
+    if (mid > cut) inkStroke(g, trail.slice(Math.max(0, cut - 1), mid + 1), width, this.color, 0.35);
+    inkStroke(g, trail.slice(mid), width, this.color, 1);
   }
 
   dispose() {
@@ -106,7 +130,10 @@ export class SigilSurface {
   }
 
   draw(g, width) {
-    if (this.trail.length > 1) inkStroke(g, this.trail, width, this.color, 1);
+    if (this.trail.length > 1) {
+      if (this.fade > 0) this.#drawFading(g, width);
+      else inkStroke(g, this.trail, width, this.color, 1);
+    }
     for (const p of this.#sparks) {
       if (p.mark) {
         this.#drawMark(g, p);

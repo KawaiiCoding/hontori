@@ -145,6 +145,10 @@ export default {
   'ch7.wand.1': 'Grandma\'s wand. The tip glows warm when I hold it.',
   'ch7.wand.2': 'Old and warm, it knows your hand. Its light still wakes at your command.',
 
+  'ch7.p.cole.1': 'Go and win your ring. We will be here.',
+  'ch7.p.cole.2': 'I keep thinking of those crates. One day they will all be open.',
+  'ch7.p.mira.1': 'My otter does not like the ash. It sneezes.',
+  'ch7.p.mira.2': 'Cole talks less now. He listens more.',
   'ch7.ev.friends.1': 'There you are. Cole would not stop walking until we found you.',
   'ch7.ev.friends.2': 'I saw the jars. In my father\'s workshop. Crates of them.',
   'ch7.ev.friends.3': 'I used to want rings to prove I was right. Now I just want the jars open.',

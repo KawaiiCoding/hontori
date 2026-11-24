@@ -13,7 +13,8 @@ import {
   HontoriBattle, HontoriFighter, matrix, weatherMul, hit, rollMiss, intentWeights, pickIntent, quickFoe,
   bindChance, escapeChance, escapeBars, need, hpAt, atkAt, staMax, stageFor, newMember, award, applyEvolve,
   wandAward, wandPerks, gradeOf, masteryOf, spellCost, tolerance, staCost, movesFor, battleRewards, foeMaxHp,
-  ringRulesOf, RING_RULES, TIDE_MAX, TIDE_STEP
+  ringRulesOf, RING_RULES, TIDE_MAX, TIDE_STEP, WandDuel, clash, isWandDuel, ANSWER, STRIKE, STRIKE_FLAWLESS, ECHO,
+  PHASE_POWER, SPELLS, BATTLE_SPELLS
 } from './index.js';
 
 let failed = 0;
@@ -342,6 +343,116 @@ const wandOf = (spells) => ({ mana: 3, maxMana: 3, spells, loadout: spells, perk
   const both = new HontoriBattle(setup(['noRest', 'tideRise']), { random: seeded(13) });
   play(both, simple, 300);
   ok('a duel with two ring rules plays to its end', both.over && both.errors.length === 0, both.result);
+}
+
+/* the wand duel of Bedrock Hall: no hontori, sigil against sigil */
+{
+  ok('clash: a ward stops a strike and turns some back', (() => { const r = clash('shield', 'boost'); return r.me.blocked && r.foe.loss === ECHO && r.me.loss === 0; })());
+  ok('clash: a strike breaks a seal and lands', (() => { const r = clash('boost', 'stun'); return r.foe.loss === STRIKE && !r.me.sealed && r.me.loss === 0; })());
+  ok('clash: a seal breaks a ward; the warder loses a turn', (() => { const r = clash('stun', 'shield'); return r.foe.sealed && r.foe.broke && !r.me.sealed; })());
+  ok('clash: two strikes both land, two seals cancel', (() => { const a = clash('boost', 'boost'); const c = clash('stun', 'stun'); return a.me.loss === STRIKE && a.foe.loss === STRIKE && !c.me.sealed && !c.foe.sealed; })());
+  ok('clash: a seal on a sealed caster fizzles', (() => { const r = clash('stun', null); return !r.foe.sealed && r.foe.loss === 0; })());
+  ok('clash: every sigil has exactly one answer', Object.keys(ANSWER).every((k) => clash(ANSWER[k], k).line === `wdAnswer_${ANSWER[k]}`));
+  const wand = { focus: 8, kidFocus: 8, pattern: ['shield', 'boost', 'stun', 'boost'] };
+  const setup = () => ({ party: [lead('fox', 19)], species, rules: ['noCapture', 'wandDuel'],
+    trainer: { name: 'Harrow', key: 'harrow', team: [], wand }, wand: wandOf(['mend']) });
+  ok('a setup naming wandDuel is a wand duel', isWandDuel(setup()) && !isWandDuel({ rules: ['heat'] }) && ringRulesOf(['wandDuel']).length === 1);
+  const answer = (b) => (b.sealed ? b.waitSealed() : b.castSpell(b.foeSigil ? ANSWER[b.foeSigil] : 'boost', 0.4));
+  const good = new WandDuel(setup());
+  good.begin();
+  let rounds = 0;
+  while (!good.over && rounds++ < 40) answer(good);
+  ok('answering every sigil wins without losing focus', good.result === 'won' && good.focus === good.focusMax && good.errors.length === 0, [good.result, good.focus, rounds]);
+  ok('the wand duel report pays like a ring duel and touches no hontori', good.report.won && good.report.trainer === 'Harrow' && good.report.party.length === 0 && !good.report.bound && good.report.foeLevel === 19);
+  ok('a flawless strike drains more', STRIKE_FLAWLESS > STRIKE);
+  const bad = new WandDuel(setup());
+  bad.begin();
+  rounds = 0;
+  while (!bad.over && rounds++ < 60) bad.sealed ? bad.waitSealed() : bad.castSpell(bad.foeSigil ? ANSWER[ANSWER[bad.foeSigil]] : 'shield', 0.4);
+  ok('answering wrong every time loses', bad.result === 'lost' && bad.focus === 0 && bad.errors.length === 0, [bad.result, bad.focus, bad.foeFocus]);
+  const any = new WandDuel(setup(), { random: seeded(3) });
+  any.begin();
+  rounds = 0;
+  const kinds = ['shield', 'stun', 'boost'];
+  while (!any.over && rounds++ < 200) any.sealed ? any.waitSealed() : any.castSpell(kinds[Math.floor(any.random() * 3)], any.random());
+  ok('random sigils always reach an end', any.over && any.errors.length === 0, rounds);
+  const sealedTurn = new WandDuel(setup());
+  sealedTurn.begin();
+  ok('a sealed kid cannot draw, a free kid cannot wait', sealedTurn.waitSealed()[0].type === 'refused' && sealedTurn.castSpell('veil', 1)[0].type === 'refused');
+}
+
+/* the heat of the Ember Crucible: no mana from the rounds; a lead that flares up at half health */
+{
+  const team = [{ spirit: 'fox', level: 6, phases: [{ at: 0.5, say: 'Now it burns.' }] }];
+  const setup = (rules) => ({ party: [lead('frog', 9)], species, env: day,
+    trainer: { name: 'Brasa', key: 'girl', team, rules, noCapture: true }, noCapture: true, rules, wand: { ...wandOf(['mend']), mana: 1 } });
+  ok('heat is a ring rule', ringRulesOf(['heat']).join() === 'heat');
+  const b = new HontoriBattle(setup(['heat']), { random: seeded(4) });
+  const said = b.begin();
+  ok('heat says so at the start', said.some((e) => e.type === 'say' && e.id === 'heatBegin'));
+  let gained = 0;
+  let phases = 0;
+  let phaseAt = -1;
+  for (let i = 0; i < 40 && !b.over; i++) {
+    b.me.hp = b.me.max;
+    b.me.sta = b.me.staMax;
+    const ev = b.useMove(0);
+    gained += ev.filter((e) => e.type === 'mana' && e.source === 'round').length;
+    for (const e of ev) if (e.type === 'phase') { phases++; phaseAt = b.foe.hp / b.foe.max; }
+  }
+  ok('under heat the rounds give no mana', gained === 0 && b.mana === 1, [gained, b.mana]);
+  ok('the lead flares up once, at half health or below', phases === 1 && phaseAt <= 0.5, [phases, phaseAt]);
+  ok('after the flare its blows are stronger', b.over || ringPowerOf(b, b.foe) === PHASE_POWER);
+  const cool = new HontoriBattle(setup([]), { random: seeded(4) });
+  cool.begin();
+  let back = 0;
+  for (let i = 0; i < 6 && !cool.over; i++) {
+    cool.me.hp = cool.me.max;
+    cool.foe.hp = cool.foe.max;
+    back += cool.useMove(0).filter((e) => e.type === 'mana' && e.source === 'round').length;
+  }
+  ok('without heat the rounds give mana back', back > 0);
+  const full = new HontoriBattle(setup(['heat']), { random: seeded(21) });
+  play(full, simple, 300);
+  ok('a heat duel plays to its end', full.over && full.errors.length === 0, full.result);
+}
+
+/* Swift Step: escape much likelier, never certain */
+{
+  ok('Swift Step is a battle spell', BATTLE_SPELLS.includes('step') && SPELLS.step.cost === 1);
+  const base = { me: fighter({ level: 5 }), foe: fighter({ side: 'foe', level: 5 }), tries: 0 };
+  const plain = escapeChance(base);
+  const stepped = escapeChance({ ...base, step: 1 });
+  ok('a step makes escape much likelier', stepped - plain >= 0.3, [plain, stepped]);
+  ok('never certain', escapeChance({ ...base, me: fighter({ level: 40 }), tries: 5, step: 1.3 }) < 1);
+  const b = new HontoriBattle({ party: [lead('fox', 3)], species, env: day, enemy: 'frog', level: 9, wand: wandOf(['step']) }, { random: () => 0.5 });
+  b.begin();
+  const before = b.escapeChance();
+  const ev = b.castSpell('step', 0.6);
+  ok('casting it raises the shown chance and keeps the turn open', ev.some((e) => e.type === 'spell') && b.escapeChance() > before && !b.over);
+  ok('one step at a time', b.canCast('step') !== true);
+  const duel = new HontoriBattle({ party: [lead('fox', 3)], species, env: day, trainer: { name: 'K', key: 'boy', team: [{ spirit: 'frog', level: 3 }] }, wand: wandOf(['step']) });
+  duel.begin();
+  ok('no Swift Step in a duel', duel.castSpell('step', 0.6)[0].type === 'refused');
+}
+
+/* an earth treat in battle: half for anyone, full for an earth hontori; it costs the turn */
+{
+  const mk = (key) => new HontoriBattle({ party: [lead(key, 6)], species, env: day, enemy: 'frog', level: 2, wand: wandOf(['mend']),
+    items: [{ id: 'dug_treat', n: 1, effect: 'earthTreat' }] }, { random: () => 0.5 });
+  const fox = mk('fox');
+  fox.begin();
+  ok('the treat is offered while carried', fox.treat && fox.treat.id === 'dug_treat');
+  ok('not at full health', fox.useItem('dug_treat')[0].type === 'refused');
+  fox.me.hp = 1;
+  const ev = fox.useItem('dug_treat');
+  const healed = ev.find((e) => e.type === 'heal' && e.source === 'treat');
+  ok('it mends half and the foe acts', healed && healed.amount === Math.ceil(fox.me.max / 2) && ev.some((e) => e.type === 'roundEnd') && !fox.treat, ev.map((e) => e.type));
+  const mole = mk('mole');
+  mole.begin();
+  mole.me.hp = 1;
+  const full = mole.useItem('dug_treat').find((e) => e.type === 'heal');
+  ok('an earth hontori is mended fully', full && full.amount === mole.me.max - 1);
 }
 
 console.log('hontori battle rules: ' + passed + ' passed, ' + failed + ' failed');

@@ -34,13 +34,13 @@ export default {
     'gggggggggggppggggggggggg'
   ],
   things: {
-    legend: { P: 'pine', R: 'rock', L: 'lamp', S: 'sign', b: 'bench', a: 'barrel', l: 'lantern_string' },
+    legend: { P: 'pine', R: 'rock', L: 'lamp', S: 'sign', b: 'bench', a: 'drum', D: 'drum_big', E: 'school_touch_earth', l: 'lantern_string' },
     rows: [
       'RR.RPPPPRRRPRPR.PPRPPRRP',
       '..RPPRP.R.PPRRRP.PPRP.RP',
       'RR....................PR',
       '.P......R.l....R.P....PP',
-      'R.................RR..PR',
+      'R..........D......RR..PR',
       'PR...R....a..a....RR..RP',
       'RP......a......a......RR',
       'R...L..............L..RP',
@@ -53,7 +53,7 @@ export default {
       'P....R............R...RP',
       'RR.....................P',
       'R........L....L........P',
-      'R......................R',
+      'R.........E..E.........R',
       '.............S.P.......P',
       'P......................R',
       'PRRRPPRP.......PRP.P..PP',

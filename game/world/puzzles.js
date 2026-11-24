@@ -6,6 +6,9 @@
  * pile the puzzle's `solved` flag is set, the game is saved and its `onSolve` commands run; the gate
  * is gone and the leaves bloom into the moss. Unsolved piles go back when the room is entered again
  * (`resetOnEnter`), or on the story command { puzzle: id, do: 'reset' }.
+ * A puzzle's `look` picks the dressing: 'moss' (default: moss pads, leaf piles, a root lattice) or 'boulder' (the
+ * Listening Cave: rune plates that glow amber in the dark, round boulders that roll, a stone slab across the
+ * gate). The pads light the dark either way (their lights carve the darkness pass).
  *
  * Public API:
  *   class Puzzles
@@ -31,6 +34,10 @@ const GLIDE = 0.35;
 const LEAF_COLORS = ['#6a2a10', '#a8461a', '#d8742a', '#f0a83a', '#ffd060', '#c03a24'];
 const PAD_BLIP_MS = 200;
 const PAD_LIGHT = { color: '#b0ff90', r: 16, on: 26 };
+const RUNE_LIGHT = { color: '#ffc870', r: 20, on: 30 };
+const STONE = { outline: '#1e1a1c', dark: '#4e4a50', mid: '#77727a', light: '#a29ca4', shine: '#c8c2c8' };
+const RUNE = { off: '#a8742c', on: '#ffd890', plate: '#3a3438', edge: '#5a5258' };
+const lookOf = (id, defs) => ((defs[id] && defs[id].look) === 'boulder' ? 'boulder' : 'moss');
 
 export class Puzzles {
   #game;
@@ -126,9 +133,10 @@ export class Puzzles {
       const { id, puzzle, x, y, box } = piece.data;
       if (box || x == null || y == null) continue;
       const on = this.solved(id) || !!puzzle.boxAt(x, y);
-      if (!piece.data.light) piece.data.light = { x: x * TILE + 8, y: y * TILE + 8, r: PAD_LIGHT.r, color: PAD_LIGHT.color, flicker: true };
+      const glow = lookOf(id, this.#all()) === 'boulder' ? RUNE_LIGHT : PAD_LIGHT;
+      if (!piece.data.light) piece.data.light = { x: x * TILE + 8, y: y * TILE + 8, r: glow.r, color: glow.color, flicker: true };
       const light = piece.data.light;
-      light.r = on ? PAD_LIGHT.on : PAD_LIGHT.r;
+      light.r = on ? glow.on : glow.r;
       light.flicker = !on;
       world.addLight(light);
     }
@@ -200,6 +208,10 @@ export class Puzzles {
   /* ---------- the look (src/puzzles.js) ---------- */
 
   #paintPad(ctx, piece, env) {
+    if (lookOf(piece.data.id, this.#all()) === 'boulder') {
+      this.#paintRune(ctx, piece, env);
+      return;
+    }
     const { id, puzzle, x: tx, y: ty } = piece.data;
     const x = piece.x;
     const y = piece.y;
@@ -222,7 +234,60 @@ export class Puzzles {
     ctx.fillRect(x + 7, y + 6, 2, 2);
   }
 
+  /* a square stone plate set in the cave floor with a rune cut into it, glowing amber; steady once a boulder sits on it */
+  #paintRune(ctx, piece, env) {
+    const { id, puzzle, x: tx, y: ty } = piece.data;
+    const x = piece.x;
+    const y = piece.y;
+    const on = this.solved(id) || !!puzzle.boxAt(tx, ty);
+    const pulse = (Math.sin((env.t || 0) * 2 + tx) + 1) / 2;
+    ctx.fillStyle = RUNE.edge;
+    ctx.fillRect(x + 1, y + 2, 14, 13);
+    ctx.fillStyle = RUNE.plate;
+    ctx.fillRect(x + 2, y + 3, 12, 11);
+    ctx.fillStyle = on ? RUNE.on : RUNE.off;
+    ctx.globalAlpha = on ? 1 : 0.55 + pulse * 0.45;
+    ctx.fillRect(x + 7, y + 4, 2, 9);
+    ctx.fillRect(x + 4, y + 6, 8, 2);
+    ctx.fillRect(x + 4, y + 11, 3, 1);
+    ctx.fillRect(x + 9, y + 11, 3, 1);
+    ctx.globalAlpha = 1;
+  }
+
+  /* a round grey boulder with a lit top and a dark underside; it rolls a little as it glides */
+  #paintBoulder(ctx, piece) {
+    const x = Math.round(piece.x);
+    const y = Math.round(piece.y);
+    const roll = ((x + y) >> 2) % 2;
+    ctx.fillStyle = 'rgba(10,8,10,0.4)';
+    ctx.fillRect(x + 1, y + 12, 14, 4);
+    ctx.fillStyle = STONE.outline;
+    ctx.fillRect(x + 3, y, 10, 15);
+    ctx.fillRect(x + 1, y + 2, 14, 11);
+    ctx.fillRect(x, y + 4, 16, 7);
+    ctx.fillStyle = STONE.dark;
+    ctx.fillRect(x + 3, y + 1, 10, 13);
+    ctx.fillRect(x + 2, y + 3, 12, 9);
+    ctx.fillRect(x + 1, y + 5, 14, 5);
+    ctx.fillStyle = STONE.mid;
+    ctx.fillRect(x + 3, y + 2, 9, 8);
+    ctx.fillRect(x + 2, y + 4, 11, 5);
+    ctx.fillStyle = STONE.light;
+    ctx.fillRect(x + 4, y + 2, 6, 3);
+    ctx.fillRect(x + 3, y + 4, 3, 2);
+    ctx.fillStyle = STONE.shine;
+    ctx.fillRect(x + 5, y + 2, 2, 1);
+    ctx.fillStyle = STONE.dark;
+    ctx.fillRect(x + 8 + roll, y + 6, 2, 1);
+    ctx.fillRect(x + 5 - roll, y + 9, 3, 1);
+    ctx.fillRect(x + 11, y + 4 + roll, 1, 2);
+  }
+
   #paintPile(ctx, piece, env) {
+    if (lookOf(piece.data.id, this.#all()) === 'boulder') {
+      this.#paintBoulder(ctx, piece);
+      return;
+    }
     const { puzzle, box } = piece.data;
     const x = Math.round(piece.x);
     const y = Math.round(piece.y);
@@ -249,7 +314,31 @@ export class Puzzles {
     }
   }
 
+  /* a slab of dressed stone across the opening, with the same rune as the plates, dark until it opens */
+  #paintSlab(ctx, piece) {
+    const gx = piece.x;
+    const gy = piece.y;
+    ctx.fillStyle = STONE.outline;
+    ctx.fillRect(gx - 2, gy - 18, 20, 34);
+    ctx.fillStyle = STONE.dark;
+    ctx.fillRect(gx - 1, gy - 17, 18, 32);
+    ctx.fillStyle = STONE.mid;
+    ctx.fillRect(gx, gy - 16, 16, 28);
+    ctx.fillStyle = STONE.light;
+    ctx.fillRect(gx, gy - 16, 16, 2);
+    ctx.fillStyle = STONE.dark;
+    ctx.fillRect(gx, gy - 4, 16, 1);
+    ctx.fillRect(gx + 7, gy - 14, 2, 22);
+    ctx.fillRect(gx + 3, gy - 8, 10, 2);
+    ctx.fillStyle = RUNE.off;
+    ctx.fillRect(gx + 7, gy - 13, 2, 3);
+  }
+
   #paintGate(ctx, piece) {
+    if (lookOf(piece.data.id, this.#all()) === 'boulder') {
+      this.#paintSlab(ctx, piece);
+      return;
+    }
     const gx = piece.x;
     const gy = piece.y;
     ctx.fillStyle = '#2a1a0c';

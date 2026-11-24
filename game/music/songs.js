@@ -11,7 +11,10 @@
  *             tidewell, tidewell_night, deepbell_duel,
  *             coilhaven, storm_duel,
  *             stonehollow, stonehollow_night, bedrock_duel,
- *             cinderreach, cinderreach_night, hearth_below, crucible_duel, crucible_duel_2 }
+ *             cinderreach, cinderreach_night, hearth_below, crucible_duel, crucible_duel_2,
+ *             duskmere, duskmere_night, hollow_moon_duel,
+ *             goldmere, goldmere_night, halo_duel, vael_garden,
+ *             tournament, tournament_2, tournament_3, tournament_4 }
  *
  * kitewick        a town tune for Kitewick, the hamlet on stilts: a lilting 3/4 in D, floating high, with the raised
  *                 fourth (G sharp) over the chord on the second step, the airy colour of a wide open sky.
@@ -50,8 +53,29 @@
  * crucible_duel   the duel tune for Ember Crucible (heat, where the wand does not refill): 4/4 in B minor with a dotted
  *                 flicker, a long note and a short one; the middle section sings in the major side, the third is the breath.
  * crucible_duel_2 the second phase of Brasa's fight: the same sections a whole step higher and a little quicker, with no
- *                 breath. Not placed by places.js (a row names one duel tune); the fight scene plays it with
- *                 audio.battle('crucible_duel_2') when the second phase begins, and the first tune again afterwards.
+ *                 breath. It is the `phase` song of the Ember Crucible row in places.js: PlaceMusic.battle('phase') plays it
+ *                 when the second phase begins.
+ * duskmere        the town of chapter 8 where it is always evening: a slow 3/4 waltz in F sharp minor. A quick pair of soft
+ *                 notes before a long one is a moth settling on its light. The middle section deepens into A major and
+ *                 ends on the C sharp chord, asking to be answered.
+ * duskmere_night  the same tune, slower, a step lower, fewer voices. It also plays in the Mothwood, the Hollow Moon crater
+ *                 and anywhere the dark is meant to be quiet.
+ * hollow_moon_duel  the duel tune for Hollow Moon (the blind rule, and the ally fight beside Nox): a hushed 3/4 in G minor
+ *                 with rests in the line, the places where the foe's plan is not shown. The middle is the moonlight in B
+ *                 flat; the third section is steadier, two beats a note, for the friend who stands beside you.
+ * goldmere        the capital of chapter 9: a broad, calm 4/4 processional in E major. Each phrase opens with a leap of a
+ *                 fifth, a gate swinging open, and walks down the stairs of the plaza.
+ * goldmere_night  the same tune at night, a step lower and sparser. It also plays in Halo Court between fights.
+ * halo_duel       the duel tune for Halo Court (single fights there): 4/4 in C major in which every bar is answered by the
+ *                 same shape turned upside down, a mirror; the middle is long high notes, the halo; then a breath.
+ * vael_garden     the lullaby of the garden of jars: 3/4 in C major in the music box voice, sweet but a little too still;
+ *                 the F minor bar and the flat chords of the middle section are the sleeping spirits behind glass.
+ * tournament, tournament_2, tournament_3, tournament_4
+ *                 the four rounds of the Ring Tournament. One processional in D major with four sections (the herald, the
+ *                 field, a breath, a hush); each round plays them in a new order and a little higher and quicker
+ *                 (rounds 1 to 3), and the final round returns to the home key, slower, opening on the hush. The fight
+ *                 scene asks for round n with sound.battle('tournament') for round 1 and sound.battle('tournament_n')
+ *                 for the others, and sound.battle(null) when the bracket screen shows.
  */
 
 const KITEWICK = {
@@ -219,6 +243,134 @@ const CRUCIBLE_DUEL = {
   }
 };
 
+/* the town where it is always evening: a slow waltz in F sharp minor; a quick pair of soft notes before a long one is a
+   moth, and the long note is the light it settles on */
+const DUSKMERE = {
+  A: {
+    ch: 'F#m D A E F#m D Bm,C# F#m',
+    mel: 'A5:1.5 C#6:.5 A5:1 | F#5:.25 A5:.25 D6:1.5 A5:1 | E6:1.5 C#6:.5 A5:1 | G#5:.25 B5:.25 E6:1.5 B5:1 | ' +
+         'C#6:1.5 A5:.5 F#5:1 | A5:1 D6:1 A5:1 | D6:1 B5:1 F5:1 | F#5:3'
+  },
+  /* the same bars a little higher; the moths now settle on the long notes */
+  A2: {
+    ch: 'F#m D A E F#m D Bm,C# F#m',
+    mel: 'A5:1 C#6:1 A5:1 | D6:1.5 F#5:.5 A5:1 | C#6:1 E6:1 C#6:1 | B5:1.5 G#5:.5 E5:1 | ' +
+         'F#5:.25 A5:.25 C#6:1.5 A5:1 | D6:1 B5:.5 A5:.5 F#5:1 | B5:1 D6:1 G#5:1 | F#5:1.5 A5:.5 F#5:1'
+  },
+  /* the evening deepens into the relative major, long notes, and the last bar asks to be answered */
+  B: {
+    ch: 'A E F#m C#m D A Bm C#',
+    mel: 'C#6:2 E6:1 | B5:2 G#5:1 | A5:1.5 F#5:.5 C#6:1 | G#5:1 E5:1 G#5:1 | ' +
+         'F#5:1 A5:1 D6:1 | C#6:1.5 B5:.5 A5:1 | D6:1.5 B5:.5 F#5:1 | G#5:1 F5:.5 G#5:.5 C#6:1'
+  }
+};
+
+/* the golden city: a broad, calm processional in E major; the first step of each phrase leaps a fifth, a gate opening,
+   and the line then walks down the stairs of the plaza */
+const GOLDMERE = {
+  A: {
+    ch: 'E A E B C#m A B E',
+    mel: 'E5:1 B5:1.5 G#5:.5 E5:1 | A5:1 C#6:1 E6:2 | B5:1.5 G#5:.5 E5:2 | D#5:1 F#5:1 B5:2 | ' +
+         'C#6:1.5 B5:.5 G#5:2 | A5:1 C#6:1 E6:1 C#6:1 | D#6:1.5 B5:.5 F#5:1 B5:1 | E6:2 B5:1 G#5:1'
+  },
+  /* the answer, higher and warmer, with a turn through F sharp minor */
+  A2: {
+    ch: 'E A F#m B E C#m B E',
+    mel: 'G#5:1 B5:1 E6:2 | C#6:1.5 A5:.5 E5:2 | F#5:1 A5:1 C#6:1 A5:1 | B5:1.5 D#6:.5 B5:2 | ' +
+         'E6:1 B5:1 G#5:2 | E6:1.5 C#6:.5 G#5:2 | F#5:1 B5:1 D#6:1 F#6:1 | E6:3 B5:1'
+  },
+  /* the plaza opens: long singing notes, and a close on the B chord that leads home */
+  B: {
+    ch: 'A E F#m C#m A E F#m B',
+    mel: 'C#6:2 E6:2 | B5:2 G#5:1 B5:1 | A5:2 C#6:1 A5:1 | G#5:1.5 E5:.5 G#5:2 | ' +
+         'A5:1 C#6:1 E6:2 | G#5:1 B5:1 E6:1 B5:1 | C#6:1.5 A5:.5 F#5:2 | D#5:1 F#5:1 B5:2'
+  }
+};
+
+/* a lullaby for sleeping spirits in glass, in C major. It is sweet, but the F minor bar (the A flat) and the flat chords
+   of the middle section make it a little too still, the way a garden is when nothing in it is allowed to wake */
+const VAEL_GARDEN = {
+  A: {
+    ch: 'C Am F Fm C Am F,G C',
+    mel: 'E5:2 G5:1 | C6:2 A5:1 | A5:2 F5:1 | Ab5:2 F5:1 | G5:1 E5:1 C5:1 | E5:2 A5:1 | F5:1 A5:1 B5:1 | C6:3'
+  },
+  A2: {
+    ch: 'C Am F Fm C Am F,G C',
+    mel: 'G5:1 C6:1 E6:1 | C6:2 A5:1 | C6:1 A5:1 F5:1 | C6:1.5 Ab5:.5 F5:1 | E5:1 G5:1 C6:1 | A5:2 E5:1 | A5:1 F5:1 D6:1 | C6:2 G5:1'
+  },
+  B: {
+    ch: 'Ab Eb Fm C Ab Bbm Fm,G C',
+    mel: 'C6:2 Eb6:1 | Bb5:2 G5:1 | Ab5:2 C6:1 | G5:2 E5:1 | Eb6:2 C6:1 | Db6:2 Bb5:1 | C6:1 Ab5:1 D6:1 | E5:3'
+  }
+};
+
+/* the blind duel: a hushed waltz in G minor with rests in it, the places where the foe's plan is not shown */
+const HOLLOW_MOON_DUEL = {
+  A: {
+    ch: 'Gm Eb Bb F Gm Cm D Gm',
+    mel: 'G5:1 -:.5 Bb5:.5 D6:1 | Eb6:1 Bb5:1 G5:1 | F5:1 -:.5 Bb5:.5 D6:1 | C6:1.5 A5:.5 F5:1 | ' +
+         'Bb5:1 G5:.5 D5:.5 G5:1 | C6:1 Eb6:1 G5:1 | F#5:1 A5:1 D6:1 | G5:2 -:1'
+  },
+  /* the moonlight: the line climbs into B flat and stays on long notes */
+  B: {
+    ch: 'Bb F Gm Eb Bb F Cm,D Gm',
+    mel: 'D6:1.5 Bb5:.5 F5:1 | A5:1.5 C6:.5 F6:1 | G5:1 Bb5:1 D6:1 | Eb6:1.5 Bb5:.5 G5:1 | ' +
+         'F5:1 Bb5:1 D6:1 | C6:1 A5:1 F5:1 | Eb6:1 C6:1 F#5:1 | Bb5:2 G5:1'
+  },
+  /* the ally: a steadier turn through E flat, two beats a note, for the moment a friend stands beside you */
+  C: {
+    ch: 'Eb Bb Cm Gm Eb Bb F D',
+    mel: 'G5:2 Bb5:1 | D6:2 F5:1 | Eb6:2 G5:1 | D6:2 Bb5:1 | Bb5:2 G5:1 | F5:2 D6:1 | C6:2 A5:1 | A5:1 F#5:1 D5:1'
+  }
+};
+
+/* the court of light: each bar is answered by the same shape turned upside down, a mirror, in C major */
+const HALO_DUEL = {
+  A: {
+    ch: 'C F Am G C Am F G',
+    mel: 'C5:.5 E5:.5 G5:1 C6:2 | C6:.5 A5:.5 F5:1 C5:2 | E5:.5 A5:.5 C6:1 E6:2 | D6:.5 B5:.5 G5:1 D5:2 | ' +
+         'E5:.5 G5:.5 C6:1 E6:2 | C6:.5 A5:.5 E5:1 A4:2 | F5:.5 A5:.5 C6:1 F6:2 | B5:.5 G5:.5 D5:1 G5:2'
+  },
+  /* the halo: long high notes that shine and then step down */
+  B: {
+    ch: 'F C G Am F C G C',
+    mel: 'A5:2 C6:2 | E6:1.5 C6:.5 G5:2 | D6:2 B5:1 G5:1 | A5:1.5 C6:.5 E6:2 | ' +
+         'F6:1.5 C6:.5 A5:1 F5:1 | G5:1 E5:1 G5:1 C6:1 | B5:1.5 D6:.5 B5:1 G5:1 | C6:2 G5:2'
+  },
+  /* the breath: two beats a note */
+  C: {
+    ch: 'C Am F G C Em F G',
+    mel: 'E5:2 G5:2 | C6:2 A5:2 | A5:2 C6:2 | B5:2 D6:2 | E6:2 G5:2 | G5:2 B5:2 | A5:2 F5:2 | D6:2 B5:2'
+  }
+};
+
+/* the Ring Tournament: a processional in D major, a herald's rising fourth answered by the crowd falling; four sections
+   so that four rounds can each start somewhere new, and the last is the quietest, for the final round */
+const TOURNAMENT = {
+  /* the herald: D, a leap, then the crowd answers */
+  A: {
+    ch: 'D A Bm G D G A D',
+    mel: 'D5:1 F#5:1 A5:2 | E5:.5 A5:.5 C#6:1 E6:2 | D6:1 B5:1 F#5:2 | G5:.5 B5:.5 D6:1 B5:1 G5:1 | ' +
+         'D5:.5 F#5:.5 A5:1 D6:2 | B5:1 D6:1 B5:2 | C#6:1 E6:1 A5:1 C#6:1 | D6:2 A5:1 F#5:1'
+  },
+  /* the field: the line sings across a turn through E minor and a dominant seventh */
+  B: {
+    ch: 'G D Em A G D A7 D',
+    mel: 'B5:1.5 D6:.5 B5:1 G5:1 | A5:1.5 F#5:.5 D5:2 | G5:1 B5:1 E6:1 B5:1 | C#6:1.5 A5:.5 E5:2 | ' +
+         'D6:1 B5:.5 G5:.5 B5:1 D6:1 | D6:1.5 A5:.5 F#5:2 | G5:1 C#6:1 E6:1 C#6:1 | D6:2 A5:2'
+  },
+  /* the breath between bouts: two beats a note */
+  C: {
+    ch: 'D Bm G A D Bm A D',
+    mel: 'F#5:2 A5:2 | D6:2 F#5:2 | D6:2 B5:2 | C#6:2 E6:2 | A5:2 F#5:2 | B5:2 D6:2 | E6:2 C#6:2 | D6:4'
+  },
+  /* the hush: the hall holds its breath for the last round, long notes and nothing hurried */
+  D: {
+    ch: 'D G D A Bm G A D',
+    mel: 'A5:2 D6:2 | B5:2 G5:2 | F#5:2 A5:2 | E6:2 C#6:2 | D6:2 F#5:2 | G5:2 B5:2 | C#6:1 E6:1 A5:2 | D6:4'
+  }
+};
+
 export const SONGS = {
   kitewick: {
     bpm: 88, bpb: 3, style: 'pastoral', transpose: 0, form: ['A', 'A2', 'B', 'A2'],
@@ -335,9 +487,55 @@ export const SONGS = {
     sections: CRUCIBLE_DUEL
   },
   /* the second phase of Brasa's fight: the same tune a whole step higher and a little quicker, with no breath section
-     (the way the common wild tune is the duel tune moved up). Played with audio.battle('crucible_duel_2'). */
+     (the way the common wild tune is the duel tune moved up). Played through the row's `phase` field. */
   crucible_duel_2: {
     bpm: 122, bpb: 4, style: 'duel', transpose: 2, form: ['B', 'A', 'B', 'A'],
     sections: CRUCIBLE_DUEL
+  },
+  duskmere: {
+    bpm: 68, bpb: 3, style: 'pastoral', transpose: 0, form: ['A', 'A2', 'B', 'A2'],
+    sections: DUSKMERE
+  },
+  duskmere_night: {
+    bpm: 50, bpb: 3, style: 'nocturne', transpose: -2, form: ['A', 'B', 'A2'],
+    sections: DUSKMERE
+  },
+  hollow_moon_duel: {
+    bpm: 96, bpb: 3, style: 'duel', transpose: 0, form: ['A', 'B', 'C', 'A', 'B'],
+    sections: HOLLOW_MOON_DUEL
+  },
+  goldmere: {
+    bpm: 88, bpb: 4, style: 'pastoral', transpose: 0, form: ['A', 'A2', 'B', 'A2'],
+    sections: GOLDMERE
+  },
+  goldmere_night: {
+    bpm: 62, bpb: 4, style: 'nocturne', transpose: -2, form: ['A', 'B', 'A2'],
+    sections: GOLDMERE
+  },
+  halo_duel: {
+    bpm: 108, bpb: 4, style: 'duel', transpose: 0, form: ['A', 'B', 'C', 'A', 'B'],
+    sections: HALO_DUEL
+  },
+  vael_garden: {
+    bpm: 54, bpb: 3, style: 'lullaby', transpose: 0, form: ['A', 'A2', 'B', 'A2'],
+    sections: VAEL_GARDEN
+  },
+  /* the four rounds of the tournament: the same sections each round, in a new order and a step higher each time;
+     the last round returns to the home key, slower and quieter */
+  tournament: {
+    bpm: 108, bpb: 4, style: 'duel', transpose: 0, form: ['A', 'B', 'C', 'A', 'B'],
+    sections: TOURNAMENT
+  },
+  tournament_2: {
+    bpm: 112, bpb: 4, style: 'duel', transpose: 2, form: ['B', 'A', 'C', 'B', 'A'],
+    sections: TOURNAMENT
+  },
+  tournament_3: {
+    bpm: 116, bpb: 4, style: 'duel', transpose: 3, form: ['A', 'B', 'A', 'C', 'B'],
+    sections: TOURNAMENT
+  },
+  tournament_4: {
+    bpm: 100, bpb: 4, style: 'duel', transpose: 0, form: ['D', 'B', 'C', 'D', 'A', 'D'],
+    sections: TOURNAMENT
   }
 };

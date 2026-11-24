@@ -49,10 +49,10 @@ export default {
     'gggggggggggggggggggggggggggggggggggggggggggggg'
   ],
   things: {
-    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', b: 'bench', k: 'cart', c: 'crate', a: 'barrel', o: 'log_pile', r: 'reeds', p: 'lilypad' },
+    legend: { Q: { building: 'cave_mouth' }, P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', b: 'bench', k: 'cart', c: 'crate', a: 'barrel', o: 'log_pile', r: 'reeds', p: 'lilypad' },
     rows: [
-      'RPPRP.PPP.PPRRPRPPRRR..RRRRPR.PPPPRPPRPPR.PRRP',
-      'RRRPR..PRRPRRPRR.RPRR..RRPR.RP.PPRP.RPP.RP.PRP',
+      'RPPRP.PPP.PPRRPRPPRRQ..RRRRPR.PPPPRPPRPPR.PRRP',
+      'RRRPR..PRRPRRPRR.RPR...RRPR.RP.PPRP.RPP.RP.PRP',
       'RR.P.RPRRPRRPPRRPPR.R..R.R.PRP............R.RP',
       'PPP.................L..L..................RPPR',
       '.PP........................................R.R',
@@ -93,7 +93,7 @@ export default {
   },
   doors: [
     { x: 45, y: 18, to: 'stonehollow', tx: 1, ty: 13, dir: 3 }, { x: 45, y: 19, to: 'stonehollow', tx: 1, ty: 14, dir: 3 },
-    { x: 21, y: 0, to: 'listening_cave', tx: 22, ty: 38, dir: 1 }, { x: 22, y: 0, to: 'listening_cave', tx: 22, ty: 38, dir: 1 }
+    { x: 21, y: 1, to: 'listening_cave', tx: 22, ty: 38, dir: 1 }
   ],
   spawn: { x: 43, y: 18, dir: 2 },
   labels: [

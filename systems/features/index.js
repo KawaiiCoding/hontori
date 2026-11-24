@@ -16,13 +16,15 @@
  *   save section    "opening" { state }    system "opening" (Opening.js)
  * Registry kinds it reads: "picture.painter" (main), "trial.test" (type), "service" "items" and "story"
  *
- * Also exported for other pieces of a game: ScreenScene, openScreen, drawPrompt, askName, openOffer, Entitlement,
+ * Also exported for other pieces of a game: ScreenScene, openScreen, drawPrompt, askName, chooseCarry (the
+ * choose-who-comes screen, CarryChoice.js), openOffer, Entitlement,
  * and the pieces a game installs with its own look: installGusts (wind-vane puzzles, Gusts.js), GustField and
  * checkGustField (their rules and fairness proof), installFlights and fly (things flying over the world,
- * Flights.js), driftTwist, mirrorTwist, quickTwist and twistOf (twists of the drawing prompt, twists.js),
+ * Flights.js), driftTwist, mirrorTwist, quickTwist, burnTwist and twistOf (twists of the drawing prompt, twists.js),
  * installTides with TideField and checkTideField (water-level puzzles, Tides.js), installCircuits with
  * CircuitField and checkCircuitField (power-line puzzles, Circuits.js), installTravel (a ride from one place
- * to another over a crossing map, Travel.js) and installGauntlets (battles in a row with save points,
+ * to another over a crossing map, Travel.js), installBraziers with BrazierField and checkBrazierField (lighting in
+ * order, Braziers.js) and installGauntlets (battles in a row with save points,
  * Gauntlet.js). Every puzzle type also registers kind "puzzle.reset" (type -> (id) => owned and reset).
  */
 
@@ -36,13 +38,16 @@ import { installCloseUps } from './CloseUp.js';
 export { ScreenScene, openScreen, guardInput } from './ScreenScene.js';
 export { drawPrompt } from './DrawPrompt.js';
 export { askName, cleanName } from './NameEntry.js';
+export { chooseCarry, CarryChoiceScene } from './CarryChoice.js';
+export { installBraziers, Braziers } from './Braziers.js';
+export { BrazierField, checkBrazierField } from './BrazierField.js';
 export { openOffer, Entitlement } from './Offer.js';
 export { trialOf } from './Trials.js';
 export { openCloseUp } from './CloseUp.js';
 export { installGusts, Gusts } from './Gusts.js';
 export { GustField, checkGustField, DIRS } from './GustField.js';
 export { installFlights, fly } from './Flights.js';
-export { driftTwist, mirrorTwist, quickTwist, twistOf } from './twists.js';
+export { driftTwist, mirrorTwist, quickTwist, burnTwist, twistOf } from './twists.js';
 export { installTides, Tides } from './Tides.js';
 export { TideField, checkTideField } from './TideField.js';
 export { installCircuits, Circuits } from './Circuits.js';

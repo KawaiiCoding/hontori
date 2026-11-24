@@ -237,6 +237,8 @@ window.H = window.H || {};
        school_electric  the Storm Works    a brick factory hall, a copper roof, two chimneys, coils on the roof
        school_earth     Bedrock Hall       a heavy carved stone front cut into the rock, pillars, grass on the cliff above
        school_fire      the Ember Crucible dark stone, a forge stack with a glowing furnace mouth and a hot chimney lip
+       school_dark      Hollow Moon        dark stone, a ribbed observatory dome with its slit open and a telescope, violet windows
+       school_light     Halo Court         white marble and gold, a colonnade, an arena drum with a gold dome and a halo on a spire
      and the cave mouth (cave_mouth, 3 x 2): a rock face with a timbered mine mouth, its opening the doorway tile.
      Each wears its element's crest. Day and night like every building (lit windows from 18:30). */
   var PALE = ['#3a3e4a', '#8a909e', '#b4bac6', '#d2d6e0', '#eef0f4'];
@@ -247,6 +249,11 @@ window.H = window.H || {};
   var BARK = ['#1e140e', '#3e2a1a', '#5a3e24', '#7a5632', '#9a7044'];
   var LEAF = ['#163a1e', '#24582a', '#357a34', '#4e9c40', '#7cc458'];
   var BRONZE = ['#3a2614', '#6a4a20', '#a07830', '#d0a848', '#f4d88a'];
+  var NIGHTSTONE = ['#0e0c18', '#221e36', '#332c4e', '#463e66', '#5e5484'];
+  var DOME = ['#16122a', '#28223e', '#3a3258', '#544a78', '#7a70a6'];
+  var MARBLE = ['#8a8478', '#c8c4bc', '#e4e0d8', '#f4f2ec', '#ffffff'];
+  ROOF.dusk = ['#120e1e', '#241c3a', '#342a52', '#463a6a', '#6a5a94'];
+  ROOF.gold = ['#5a3a10', '#9a6a1a', '#c8962a', '#e8c050', '#fff0a0'];
   ROOF.sky = ['#1a2a3a', '#3a5a7a', '#5a82a8', '#80aacc', '#b8d8f0'];
   ROOF.sea = ['#0c2030', '#164466', '#20628e', '#3484b0', '#6cb8d8'];
   ROOF.copper = ['#162e2a', '#2a5e52', '#3e8a74', '#5eae92', '#e0a066'];
@@ -312,6 +319,8 @@ window.H = window.H || {};
     wave: function (c, x, y) { px(c, [-4, 0, -3, -1, -2, -1, -1, 0, 0, 1, 1, 1, 2, 0, 3, -1, 4, -1, -4, 3, -3, 2, -2, 2, -1, 3, 0, 4, 1, 4, 2, 3, 3, 2, 4, 2, 0, -4, -1, -3, 1, -3, 0, -2], '#e8f6ff', x, y); },
     bolt: function (c, x, y) { px(c, [1, -4, 0, -3, 1, -3, -1, -2, 0, -2, -2, -1, -1, -1, 0, -1, 1, -1, 2, -1, 0, 0, 1, 0, -1, 1, 0, 1, -1, 2, -2, 3, -1, 3, -2, 4], '#ffe040', x, y); },
     mountain: function (c, x, y) { px(c, [0, -3, -1, -2, 0, -2, 1, -2, -2, -1, -1, -1, 0, -1, 1, -1, 2, -1, -3, 0, -2, 0, -1, 0, 0, 0, 1, 0, 2, 0, 3, 0, -4, 1, -3, 1, -2, 1, -1, 1, 0, 1, 1, 1, 2, 1, 3, 1, 4, 1], '#f0b040', x, y); px(c, [0, -3, -1, -2, 0, -2], '#fff4d0', x, y); },
+    moon: function (c, x, y) { px(c, [-1, -4, 0, -4, 1, -4, -2, -3, -1, -3, -3, -2, -2, -2, -3, -1, -2, -1, -3, 0, -2, 0, -3, 1, -2, 1, -2, 2, -1, 2, -1, 3, 0, 3, 1, 3, 2, 2], '#f0ecff', x, y); px(c, [3, -3, 2, -1], '#ffffff', x, y); },
+    halo: function (c, x, y) { px(c, [-2, -3, -1, -3, 0, -3, 1, -3, 2, -3, -3, -2, 3, -2, -4, -1, 4, -1, -4, 0, 4, 0, -4, 1, 4, 1, -3, 2, 3, 2, -2, 3, -1, 3, 0, 3, 1, 3, 2, 3], '#ffe680', x, y); px(c, [0, -1, -1, 0, 0, 0, 1, 0, 0, 1], '#ffffff', x, y); },
     flame: function (c, x, y) { px(c, [0, -4, 0, -3, 1, -3, -1, -2, 0, -2, 1, -2, -2, -1, -1, -1, 0, -1, 1, -1, 2, -1, -2, 0, -1, 0, 0, 0, 1, 0, 2, 0, -2, 1, -1, 1, 0, 1, 1, 1, 2, 1, -1, 2, 0, 2, 1, 2], '#ffb030', x, y); px(c, [0, -1, 0, 0, -1, 0, 0, 1, 1, 1, 0, 2], '#fff090', x, y); }
   };
   /* the arched stone doorway of a great school, in the hall's own stone, then the door; rune: keystone colours [day, night] */
@@ -594,8 +603,93 @@ window.H = window.H || {};
       R(c, ox + 3, oy - 2, 2, 1, '#3b4058'); R(c, ox + ow - 5, oy - 2, 2, 1, '#3b4058');
       /* a few loose stones at the foot */
       [[6, H - 3], [40, H - 4], [36, H - 2]].forEach(function (s) { R(c, s[0] - 1, s[1] - 1, 5, 4, OUT); R(c, s[0], s[1], 3, 2, ROCK[3]); R(c, s[0], s[1], 2, 1, ROCK[4]); });
+    },
+    school_dark: function (c, Lt, n, H) {
+      var wy = H - Lt.wallH;
+      masonry(c, 1, wy, 158, Lt.wallH, NIGHTSTONE, 10, 4, 3);
+      roof(c, 1, Lt.roofTop, 158, wy - Lt.roofTop + 2, ROOF.dusk, 9);
+      Lt.vwin.forEach(function (w) { violetWindow(c, w[0], wy + 12, w[1], w[2], n); });
+      /* the observatory: a round stone drum, a ribbed dark dome with its slit open, the telescope looking out */
+      var dx = 50, dw = 76, dy = 80;
+      masonry(c, dx, dy, dw, H - 4 - dy, NIGHTSTONE, 9, 4, 11);
+      R(c, dx - 3, dy - 3, dw + 6, 4, OUT); R(c, dx - 2, dy - 2, dw + 4, 2, NIGHTSTONE[4]);
+      var cx = 88, rx = 36, ry = 34;
+      for (var Y = -ry; Y <= 0; Y++) {
+        var hw = Math.round(rx * Math.sqrt(1 - (Y * Y) / (ry * ry)));
+        R(c, cx - hw - 1, dy - 3 + Y, hw * 2 + 2, 1, OUT);
+        if (Y === -ry) R(c, cx - hw, dy - 4 + Y, hw * 2, 1, OUT);
+        for (var X = -hw; X < hw; X++) {
+          var u = X / rx, v = 0.66 - u * 0.42 - (Y / ry) * 0.12;
+          var mer = function (q) { return Math.floor((Math.asin(Math.max(-1, Math.min(1, q / Math.max(1, hw)))) / Math.PI + 0.5) * 7); };
+          var col = DOME[Math.max(0, Math.min(4, Math.floor(v * 5)))];
+          if (hw > 3 && mer(X) !== mer(X + 1)) col = DOME[0];
+          if (Y > -ry + 2 && Y < -ry + 6 && X > -hw + 3 && X < -hw + 12) col = DOME[4];
+          R(c, cx + X, dy - 3 + Y, 1, 1, col);
+        }
+      }
+      /* the slit, open to the sky, and the brass telescope */
+      R(c, cx + 2, dy - 3 - ry + 3, 8, ry - 4, '#0a0812');
+      for (var k = 0; k < 30; k++) { var tx = cx + 6 + k * 0.9, ty = dy - 18 - k * 0.95; R(c, Math.round(tx) - 3, Math.round(ty) - 3, 7, 7, OUT); }
+      for (k = 0; k < 30; k++) { var tx2 = cx + 6 + k * 0.9, ty2 = dy - 18 - k * 0.95; R(c, Math.round(tx2) - 2, Math.round(ty2) - 2, 5, 5, k > 26 ? '#5a4a2a' : BRONZE[2]); R(c, Math.round(tx2) - 2, Math.round(ty2) - 2, 2, 1, BRONZE[4]); }
+      R(c, cx + 13, dy - 32, 5, 2, BRONZE[1]); R(c, cx + 22, dy - 41, 5, 2, BRONZE[1]);
+      /* round violet windows in the drum, the moon crest over the door */
+      [[62, 104], [114, 104]].forEach(function (p) { disc(c, p[0], p[1], 6, OUT); disc(c, p[0], p[1], 5, NIGHTSTONE[1]); disc(c, p[0], p[1], 4, n ? '#d8c8ff' : '#6a5aa8'); R(c, p[0] - 4, p[1], 9, 1, NIGHTSTONE[1]); if (!n) R(c, p[0] - 2, p[1] - 2, 1, 1, '#b9a8ff'); });
+      crest(c, 88, 96, '#2a2450', '#463a7a', 'moon');
+      banner(c, 60, wy + 8, '#2a2450', '#463a7a', 'moon'); banner(c, 108, wy + 8, '#2a2450', '#463a7a', 'moon');
+      archway(c, Lt, H, n, ROOF.dusk, NIGHTSTONE, ['#b9a8ff', '#e8e0ff']);
+      foot(c, 1, H, 158);
+    },
+    school_light: function (c, Lt, n, H) {
+      var wy = H - Lt.wallH;
+      /* the arena drum behind the front, its gold dome and the halo held up on a slim spire */
+      var dx = 52, dw = 72, dy = 54;
+      masonry(c, dx, dy, dw, Lt.roofTop - dy + 4, MARBLE, 12, 5, 4);
+      [64, 80, 96, 112].forEach(function (x) { tallWindow(c, x - 3, dy + 12, 6, 18, n, '#c8962a'); });
+      R(c, dx - 3, dy - 3, dw + 6, 4, OUT); R(c, dx - 2, dy - 2, dw + 4, 2, '#e8c050'); R(c, dx - 2, dy - 2, dw + 4, 1, '#fff0a0');
+      var cx = 88, rx = 30, ry = 20;
+      for (var Y = -ry; Y <= 0; Y++) {
+        var hw = Math.round(rx * Math.sqrt(1 - (Y * Y) / (ry * ry)));
+        R(c, cx - hw - 1, dy - 3 + Y, hw * 2 + 2, 1, OUT);
+        if (Y === -ry) R(c, cx - hw, dy - 4 + Y, hw * 2, 1, OUT);
+        for (var X = -hw; X < hw; X++) {
+          var u = X / rx, v = 0.7 - u * 0.45 + (Y / ry) * 0.15;
+          var col = ROOF.gold[Math.max(0, Math.min(4, Math.floor(v * 5)))];
+          if ((X + 40) % 10 === 0) col = ROOF.gold[1];
+          R(c, cx + X, dy - 3 + Y, 1, 1, col);
+        }
+      }
+      R(c, cx - 1, dy - 3 - ry - 12, 2, 13, OUT); R(c, cx - 0.5, dy - 3 - ry - 12, 1, 12, '#e8c050');
+      var hy = dy - 3 - ry - 16;
+      for (var a = 0; a < 64; a++) { var t = a / 64 * Math.PI * 2, X2 = Math.round(cx + Math.cos(t) * 13), Y2 = Math.round(hy + Math.sin(t) * 4); R(c, X2 - 1, Y2 - 1, 3, 3, OUT); }
+      for (a = 0; a < 64; a++) { var t2 = a / 64 * Math.PI * 2, X3 = Math.round(cx + Math.cos(t2) * 13), Y3 = Math.round(hy + Math.sin(t2) * 4); R(c, X3, Y3, 1, 1, Math.sin(t2) > 0 ? '#e0b048' : '#fff0a0'); }
+      /* the front: white marble, a gold roof, a colonnade with a pediment */
+      masonry(c, 1, wy, 158, Lt.wallH, MARBLE, 14, 6, 6);
+      roof(c, 1, Lt.roofTop, 158, wy - Lt.roofTop + 2, ROOF.gold, 10);
+      Lt.win.forEach(function (w) { windowAt(c, w[0], wy + 12, w[1], w[2], n, false); });
+      var py = wy - 26;
+      for (Y = 0; Y < 20; Y++) { var pw = Math.round(Y * 2.4); R(c, 88 - pw - 1, py + Y, pw * 2 + 2, 1, OUT); R(c, 88 - pw, py + Y, pw * 2, 1, Y > 16 ? '#e8c050' : MARBLE[Y % 6 === 5 ? 2 : 3]); }
+      R(c, 40, py + 19, 96, 6, OUT); R(c, 41, py + 20, 94, 4, MARBLE[4]); R(c, 41, py + 23, 94, 1, '#e8c050');
+      crest(c, 88, py + 4, '#5a8ad0', '#3a6ab0', 'halo');
+      [44, 58, 72, 104, 118, 132].forEach(function (x) {
+        R(c, x - 1, py + 25, 8, H - py - 28, OUT); R(c, x, py + 25, 6, H - py - 28, MARBLE[3]); R(c, x, py + 25, 1, H - py - 28, MARBLE[4]); R(c, x + 4, py + 25, 2, H - py - 28, MARBLE[1]);
+        R(c, x - 2, py + 25, 10, 3, '#e8c050'); R(c, x - 2, py + 25, 10, 1, '#fff0a0'); R(c, x - 2, H - 7, 10, 3, MARBLE[2]);
+      });
+      archway(c, Lt, H, n, ROOF.gold, MARBLE, ['#fff0a0', '#ffffff']);
+      foot(c, 1, H, 158);
     }
   };
+  /* a window of violet glass: dim by day, glowing lavender by night */
+  function violetWindow(c, x, y, w, h, night) {
+    if (night) { c.fillStyle = 'rgba(185,168,255,0.18)'; c.fillRect(x - 3, y - 3, w + 6, h + 7); }
+    R(c, x - 1, y - 1, w + 2, h + 2, OUT);
+    for (var yy = 0; yy < h; yy++) for (var xx = 0; xx < w; xx++) {
+      var f = yy / h, col = night ? (f < 0.4 ? '#efe6ff' : f < 0.75 ? '#d4c4ff' : '#b4a0f0') : (f < 0.3 ? '#8a7ad0' : f < 0.7 ? '#6a5ab0' : '#4a3e8a');
+      if (!night && (xx + yy) % 11 === 2) col = '#c8bcf4';
+      R(c, x + xx, y + yy, 1, 1, col);
+    }
+    R(c, x + (w >> 1), y, 1, h, NIGHTSTONE[1]); R(c, x, y + (h >> 1), w, 1, NIGHTSTONE[1]);
+    R(c, x - 1, y + h, w + 2, 1.5, NIGHTSTONE[3]);
+  }
 
   // ---------- layouts ----------
   // each: fw, fh, ext (px above footprint), wallH, roof palette, windows [x,w,h], beams, extra(c,L,night,H)
@@ -723,7 +817,12 @@ window.H = window.H || {};
       glow: [[43, 100, 30, '#ffc070'], [131, 100, 30, '#ffc070'], [68, 84, 24, '#ffc070'], [106, 84, 24, '#ffc070']] },
     school_fire: { hall: 1, fw: 10, fh: 6, ext: 84, wallH: 56, roofTop: 52, win: [[20, 14, 16], [42, 14, 16], [120, 14, 16], [142, 14, 16]], wide: true,
       glow: [[88, 75, 38, '#ff9040'], [88, 6, 18, '#ffa050']] },
-    cave_mouth: { hall: 1, fw: 3, fh: 2, ext: 24, wallH: 0, roofTop: 0, win: [], noDoorLight: true }
+    cave_mouth: { hall: 1, fw: 3, fh: 2, ext: 24, wallH: 0, roofTop: 0, win: [], noDoorLight: true },
+    school_dark: { hall: 1, fw: 10, fh: 6, ext: 84, wallH: 56, roofTop: 92, win: [], wide: true,
+      glow: [[15, 144, 30, '#b9a8ff'], [37, 144, 30, '#b9a8ff'], [136, 144, 30, '#b9a8ff'], [151, 144, 30, '#b9a8ff'], [62, 104, 20, '#b9a8ff'], [114, 104, 20, '#b9a8ff']],
+      vwin: [[8, 14, 16], [30, 14, 16], [130, 12, 16], [145, 12, 16]] },
+    school_light: { hall: 1, fw: 10, fh: 6, ext: 100, wallH: 56, roofTop: 104, win: [[16, 14, 16], [142, 14, 16]], wide: true,
+      glow: [[64, 75, 22, '#ffd27a'], [112, 75, 22, '#ffd27a']] }
   };
 
   /* ---------- sprite sheets (window.H.sheets, group 'outdoor') ----------
@@ -731,7 +830,7 @@ window.H = window.H || {};
        bld:<type>D, bld:<type>N   the whole building by day / by night (lit windows and door, from 18:30 to
                                   6:00), drawn at half size (the canvas is 2x). Types: house_player house_a
                                   tavern shop school, the halls school_grass school_wind school_water
-                                  school_electric school_earth school_fire, and cave_mouth. The tavern and the shop are cached without their sign board.
+                                  school_electric school_earth school_fire school_dark school_light, and cave_mouth. The tavern and the shop are cached without their sign board.
        bld:<type>S<D|N><j>        tavern and shop sign board, by day / night, cut into its 4 strips j = 0..3
                                   (each strip swings by its own offset), drawn at half size
      Chosen at draw time: day or night, the sign swing. Stays painted every frame (continuous): the contact

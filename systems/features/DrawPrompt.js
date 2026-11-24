@@ -20,7 +20,8 @@
  *                    the page moves by that much while the prompt is open; the guide moves with it and
  *                    ink already drawn rides along, so the player has to follow the page (twists.js)
  *                    It may also show the guide another way (guide), paint under it (paint), give each try a
- *                    time limit (limit, with the words `late` when a try runs out) and words of its own (note):
+ *                    time limit (limit, with the words `late` when a try runs out), let the ink fade behind the
+ *                    finger (fade, in drawing pixels) and words of its own (note):
  *                    see twists.js
  *     }
  */
@@ -97,6 +98,7 @@ export class DrawPromptScene extends ScreenScene {
       onEnd: (trail) => this.#judge(trail),
     });
     this.#surface.color = o.color;
+    if (o.twist && Number(o.twist.fade) > 0) this.#surface.fade = Number(o.twist.fade);
   }
 
   exit() {

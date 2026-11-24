@@ -22,6 +22,8 @@
  *         building, "." is nothing
  *     props, buildings, doors, spawn, passable, lights, labels, start     as in INTERFACES.md section 6
  *     spots: { name: [x, y] | [[x, y] ...] }    named tiles for other content (carried untouched)
+ *     dark: { level, sight, lantern: { item, sight, oil } }   optional: a dark map (world/Darkness.js); the
+ *         lantern sight while that item is carried, the oil sight while Lantern Oil is carried too
  *     school: { door: [x, y], element, name: text id, touch: 'kites', touchAt: [[x, y] ...] }
  *         optional: the house with that door is a small school. It gets the small school dressing: a
  *         name board over the door ("school_sign:<map id>"), the banner of its element on the wall
@@ -41,8 +43,10 @@
 import ch3 from '../../content/ch3/maps/index.js';
 import ch4 from '../../content/ch4/maps/index.js';
 import ch5 from '../../content/ch5/maps/index.js';
+import ch6 from '../../content/ch6/maps/index.js';
+import ch7 from '../../content/ch7/maps/index.js';
 
-export const MAP_FOLDERS = [ch3, ch4, ch5];
+export const MAP_FOLDERS = [ch3, ch4, ch5, ch6, ch7];
 
 const EMPTY = '.';
 let testCondition = null;
@@ -89,6 +93,8 @@ export function buildMap(data, text = {}) {
   };
   if (data.school) description.school = { ...data.school, name: words(data.school.name) };
   if (data.rest === false) description.rest = false;
+  /* a dark map (a cave): the world's darkness pass reads it (world/Darkness.js, game/features/lantern.js) */
+  if (data.dark && typeof data.dark === 'object') description.dark = { ...data.dark, lantern: data.dark.lantern ? { ...data.dark.lantern } : undefined };
   return description;
 }
 

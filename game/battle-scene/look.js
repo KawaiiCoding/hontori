@@ -32,12 +32,12 @@ export const BADGE_COLORS = Object.freeze({
 
 export const SPELL_COLORS = Object.freeze({
   mend: '#9cf0a6', shield: '#8fd8ff', boost: '#ffb35a', stun: '#ffe27a', sleep: '#b9a8ff', bind: '#ffd98a',
-  revive: '#fff0d0', veil: '#ffd98a', fish: '#7fd8ff'
+  revive: '#fff0d0', veil: '#ffd98a', fish: '#7fd8ff', step: '#c8f0ff'
 });
 
 export const SPELL_NOTES = Object.freeze({
   mend: 'Heal', shield: 'Block', boost: 'Power up', stun: 'Stun', sleep: 'Sleep', bind: 'Capture', revive: 'Revive',
-  veil: 'Lift veil'
+  veil: 'Lift veil', step: 'Escape'
 });
 
 /* the stamina one breath gives back, shown on the Catch breath button (the rule is in game/battle/fight.js) */
@@ -77,6 +77,7 @@ export const LABELS = Object.freeze({
   spells: 'Spells',
   herb: 'Herb x{n}',
   bread: 'Bread',
+  treat: 'Treat x{n}',
   switch: 'Switch',
   escape: 'Escape',
   breath: 'Catch breath',

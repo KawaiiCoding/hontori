@@ -57,6 +57,8 @@ export const SHAPES = Object.freeze({
     points: plot(5, (t, i) => [Math.cos(Math.PI * 0.7 + (i * Math.PI * 4) / 5), Math.sin(Math.PI * 0.7 + (i * Math.PI * 4) / 5)]),
     closed: true, minCorners: 3, limit: 0.16
   },
+  /* Swift Step: a seven, right along the top and then a long stride down to the left */
+  step: { points: [[0, 0], [1, 0], [0.3, 1]], maxCorners: 2 },
   /* the veil spell: a V, opening the curtain */
   veil: { points: [[0, 0], [0.5, 1], [1, 0]] },
   /* the fishing sigil: a hook, straight down, then curling up to the left */

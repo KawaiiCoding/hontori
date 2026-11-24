@@ -6,6 +6,17 @@
  * picture props, read again in turn), and the bench and guest bed in Bedrock Hall (the rest before Harrow).
  */
 
+/* a tap on a drum: a few low notes and a word */
+const DRUM = [
+    {
+      map: 'drum_circle',
+      then: [
+        { note: [45, 45, 52, 45, 57], count: [2, 3] },
+        { cycle: [[{ say: 'ch6.drum.1', who: 'kid' }], [{ say: 'ch6.drum.2', who: 'kid' }], [{ say: 'ch6.drum.3', who: 'kid' }]], mode: 'loop' }
+      ]
+    }
+  ];
+
 export default {
   ramen_pot: [{ map: 'stonehollow_tavern', then: [{ run: 'ch6.svc.ramen' }] }],
   tavern_counter: [{ map: 'stonehollow_tavern', then: [{ run: 'ch6.svc.ramen' }] }],
@@ -15,15 +26,9 @@ export default {
     { map: 'bedrock_hall', then: [{ run: 'ch6.svc.hallbench' }] }
   ],
   shop_counter: [{ map: 'stonehollow_shop', then: [{ shop: 'stonehollow' }] }],
-  barrel: [
-    {
-      map: 'drum_circle',
-      then: [
-        { note: [45, 45, 52, 45, 57], count: [2, 3] },
-        { cycle: [[{ say: 'ch6.drum.1', who: 'kid' }], [{ say: 'ch6.drum.2', who: 'kid' }], [{ say: 'ch6.drum.3', who: 'kid' }]], mode: 'loop' }
-      ]
-    }
-  ],
+  /* the drums of the Drum Circle (props drum and drum_big) */
+  drum: DRUM,
+  drum_big: DRUM,
   rockslide: [{ map: 'listening_cave', then: [{ run: 'ch6.drift' }] }],
   chest: [{ map: 'listening_cave', then: [{ run: 'ch6.chest' }] }],
   wall_map: [

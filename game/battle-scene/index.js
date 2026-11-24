@@ -4,7 +4,7 @@
  *
  * Public API:
  *   install(game)
- *       registers the scene "battle" and the save section `battleScene` ({ guideOff, told }).
+ *       registers the scenes "battle" and "wand-duel" (WandDuelScene.js), and the save section `battleScene` ({ guideOff, told }).
  *       Call it in main.js before game.start(...).
  *   startBattle(game, setup, options) -> Promise<{ result, report, rewards }>
  *       setup    the battle setup of game/battle/setup.js (party, enemy and level, or trainer; wand, items,
@@ -20,6 +20,8 @@
  *         result   'won' | 'captured' | 'lost' | 'fled' | 'foeFled'
  *         report   the rules' report (game/battle/turn.js): party hp and stamina, mana, items used, spell EXP ...
  *         rewards  game/battle battleRewards(report, rewards): { exp: [{ index, gain }], wandExp, money }
+ *       A setup whose rules name wandDuel (game/battle/wandDuel.js) opens the scene "wand-duel" instead: no
+ *       hontori on the field, the kid and the trainer draw sigils (trainer.wand { focus, kidFocus, pattern }).
  *       It resolves with null if the scene was removed from outside. Nothing is written to the save: the caller
  *       (the story's battle command) applies report and rewards.
  *   speciesFromContent(key)   the default species lookup: { element, element2, name } of a kind
@@ -28,10 +30,13 @@
 import { install as installScene, openBattle } from '../../systems/battle-scene/index.js';
 import { HontoriBattle } from '../battle/index.js';
 import { HontoriBattleScene, BATTLE_SCENE_SAVE } from './HontoriBattleScene.js';
+import { WandDuelScene } from './WandDuelScene.js';
+import { WandDuel, isWandDuel } from '../battle/wandDuel.js';
 import kinds from '../../content/shared/hontori.js';
 import kindText from '../../content/shared/text.kinds.en.js';
 
 const SCENE_ID = 'battle';
+const WAND_SCENE_ID = 'wand-duel';
 const byKind = new Map(kinds.map((k) => [k.kind, k]));
 
 export function speciesFromContent(key) {
@@ -44,6 +49,7 @@ export function speciesFromContent(key) {
 export function install(game) {
   game.save.define('battleScene', BATTLE_SCENE_SAVE);
   installScene(game, { id: SCENE_ID, create: (owner) => new HontoriBattleScene(owner) });
+  installScene(game, { id: WAND_SCENE_ID, create: (owner) => new WandDuelScene(owner) });
 }
 
 function envOfWorld(game) {
@@ -56,6 +62,10 @@ export function startBattle(game, setup, options) {
   const o = options || {};
   const full = Object.assign({ species: speciesFromContent }, setup);
   full.env = Object.assign(envOfWorld(game), full.env);
+  if (isWandDuel(full)) {
+    const duel = new WandDuel(full, { random: o.random });
+    return openBattle(game, { battle: duel, env: full.env, rewards: o.rewards }, WAND_SCENE_ID);
+  }
   const battle = new HontoriBattle(full, { random: o.random });
   return openBattle(game, {
     battle, env: full.env, species: full.species, biome: o.biome, tutorial: !!o.tutorial, joinsParty: o.joinsParty, rewards: o.rewards

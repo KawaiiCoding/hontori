@@ -9,8 +9,8 @@ export default {
   tileset: 'outdoor',
   legend: { g: 'grass', t: 'tallgrass', f: 'flowers', p: 'path', c: 'cobble', w: 'water', s: 'sand', b: 'bridge' },
   rows: [
-    'gggggggggggswwwsgggggggggggggggggggggggggggggggggggggggggggg',
-    'gggggggggggswwwsgggggggggggggggggggggggggggggggggggggggggggg',
+    'gggggggggggswwwsgggggggggggggggccggggggggggggggggggggggggggg',
+    'gggggggggggswwwsgggggggggggggggccggggggggggggggggggggggggggg',
     'gggggggggggswwwsgggggggggggggggccggggggggggggggggggggggggggg',
     'ggggggggggggswwwsggggggggggggggccggggggggggggggggggggggggggg',
     'ggggggggggggswwwscccccccccccccccccccccccccccccccccccccccgggg',

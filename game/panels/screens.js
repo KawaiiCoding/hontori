@@ -24,6 +24,7 @@ import { Button } from '../../ui/Button.js';
 import { setHead, swapPanel } from '../../ui/PanelExtras.js';
 import { badge, detail, face, grid, gridCard, memberCard, orbs, pickRow, pips, statBar } from '../../ui/RosterKit.js';
 import { sigilSvg } from '../battle-scene/sigils.js';
+import { sealedFace } from '../../ui/SealedFace.js';
 
 const MEMORY_TOTAL = 100;
 const MEND_SHARE = 0.4;
@@ -152,7 +153,7 @@ export function installScreens(game, roster, guide) {
           } });
         }
         actions.push({ icon: 'claw', label: t('shared.ui.party.moves'), desc: t('shared.ui.party.moves.desc'), onPress: () => s.go('moves', m) });
-        if (members.length > 1) {
+        if (members.length > 1 && !roster.sealed()) {
           actions.push({ icon: 'crystal', label: t('shared.ui.party.rest'), desc: t('shared.ui.party.rest.desc'), onPress: () => {
             if (roster.toSanctum(i)) s.ctx.refresh();
           } });
@@ -166,7 +167,8 @@ export function installScreens(game, roster, guide) {
       const row = s.panel.actions();
       s.panel.button(row, {
         icon: 'crystal', label: t('shared.ui.sanctum.title'),
-        desc: t('shared.ui.party.sanctum.desc', { n: roster.resting().length, max: roster.capacity() }), onPress: () => s.go('sanctum'),
+        desc: roster.sealed() ? t('shared.ui.sanctum.sealed') : t('shared.ui.party.sanctum.desc', { n: roster.resting().length, max: roster.capacity() }),
+        onPress: () => s.go('sanctum'),
       });
     },
 
@@ -196,6 +198,21 @@ export function installScreens(game, roster, guide) {
 
     sanctum(s) {
       const resting = roster.resting();
+      /* sealed by the Council: everyone sleeps under grey wax, and nobody can be opened, swapped or released */
+      if (roster.sealed()) {
+        s.head(t('shared.ui.sanctum.sealed'), t('shared.ui.sanctum.sealed.sub', { n: resting.length }));
+        s.panel.note(t('shared.ui.sanctum.sealed.note'));
+        const sleeping = s.panel.add(grid(null));
+        resting.forEach((m) => {
+          gridCard(sleeping, {
+            face: sealedFace(roster.faceOf(m.key, m.stage)) || roster.faceOf(m.key, m.stage), corner: `Lv ${m.level || 1}`,
+            badge: roster.badgeOf(roster.elementOf(m.key)), name: roster.stageName(m),
+            onPress: () => game.ui.toast(t('shared.ui.sanctum.sealed.tap', { name: m.nick || roster.stageName(m) })),
+          });
+        });
+        backRow(s, backWord(s));
+        return;
+      }
       s.head(t('shared.ui.sanctum.title'), t('shared.ui.sanctum.sub', { n: resting.length, max: roster.capacity() }));
       if (!resting.length) empty(s, t('shared.ui.sanctum.none'));
       const cards = s.panel.add(grid(null));
@@ -415,7 +432,8 @@ export function installScreens(game, roster, guide) {
     };
     SCREENS[at.screen](s);
     shown = at;
-    const card = GUIDES[at.screen];
+    /* the Sanctum's first-touch card speaks of swapping, which the seal forbids: it waits until the seal is gone */
+    const card = at.screen === 'sanctum' && roster.sealed() ? null : GUIDES[at.screen];
     if (card) guide.show(`panel:${at.screen}`, { ...card, still: () => shown === at && panel.element.isConnected && nav.stack.includes(at) });
   }
 

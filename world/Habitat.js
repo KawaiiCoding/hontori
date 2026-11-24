@@ -8,11 +8,12 @@
  * Public API:
  *   new Habitat(map, art, table, place)
  *        map: a TileMap; art: the art provider (building footprints)
- *        table: { night: [from, to], dusk: [[from, to]...], base, habitats: { kind: { f, day, night, wx, rare } },
+ *        table: { night: [from, to], dusk: [[from, to]...], base, habitats: { kind: { f, day, night, wx, rare, maps } },
  *                 features: { props: { type: feature }, tiles: { tile: feature } },
  *                 warmBuildings: [type] }   warmBuildings: buildings with a big hearth (warmer around them)
  *        place: { level: [min, max], zones: [{ x, y, r, kind, w }] }
- *   kinds                         the kinds that can live here (every kind of the table)
+ *   kinds                         the kinds that can live here (every kind of the table, less those whose
+ *                                 `maps` list leaves this map out)
  *   isNight(hour), isDusk(hour)
  *   weights(tx, ty, env, factor)  { kind: score }; factor(kind) -> number scales a kind (a lantern)
  *   pick(tx, ty, env, factor, random)   { kind, level, score }
@@ -22,7 +23,7 @@
 
 const NEAR_FEATURES = new Set(['statue', 'lamp', 'warm', 'chime']);
 const ROAD_TILES = new Set(['path', 'cobble', 'bridge']);
-const TOWN_WILD_TILES = new Set(['tallgrass', 'sand', 'flowers']);
+const TOWN_WILD_TILES = new Set(['tallgrass', 'sand', 'flowers', 'ash']);
 
 function inRange(hour, [from, to]) {
   return from <= to ? hour >= from && hour < to : hour >= from || hour < to;
@@ -41,7 +42,11 @@ export class Habitat {
     this.#art = art;
     this.#table = table;
     this.#place = place;
-    this.kinds = Object.keys(table.habitats || {});
+    /* a kind that names its maps (`maps: [map id ...]`) lives only there: a far country's creatures stay in it */
+    this.kinds = Object.keys(table.habitats || {}).filter((kind) => {
+      const only = table.habitats[kind] && table.habitats[kind].maps;
+      return !Array.isArray(only) || only.includes(map.id);
+    });
   }
 
   isNight(hour) {

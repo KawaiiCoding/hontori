@@ -66,7 +66,7 @@ export default [
   },
   {
     id: 'c7_cool',
-    on: { tile: 'water', map: 'cinderreach' },
+    on: { tile: 'lava', map: 'cinderreach' },
     if: { all: [{ area: P.crCoolBox }, { not: 'c7:cooled' }] },
     once: false,
     then: [{ run: 'ch7.cool' }]

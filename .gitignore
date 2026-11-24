@@ -13,3 +13,6 @@ GAME_DESIGN.excalidraw
 # release builds (node tools/build_release.js)
 dist/
 dist2/
+
+# test pages (not published)
+test/

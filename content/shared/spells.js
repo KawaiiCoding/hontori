@@ -77,6 +77,16 @@ export default {
       shape: 'star',
       howText: 'shared.spell.how.star'
     },
+    step: {
+      id: 'step',
+      name: 'shared.spell.step',
+      cost: 1,
+      color: '#ffb070',
+      on: 'me',
+      desc: 'shared.spell.step.desc',
+      shape: 'seven',
+      howText: 'shared.spell.how.seven'
+    },
     veil: {
       id: 'veil',
       name: 'shared.spell.veil',
@@ -100,5 +110,5 @@ export default {
       world: true
     }
   },
-  battleOrder: ['mend', 'shield', 'boost', 'stun', 'sleep', 'bind', 'revive']
+  battleOrder: ['mend', 'shield', 'boost', 'stun', 'sleep', 'bind', 'revive', 'step']
 };

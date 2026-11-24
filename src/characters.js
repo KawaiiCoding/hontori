@@ -262,7 +262,41 @@ window.H = window.H || {};
   /* the sixth Warden: a charcoal robe with ember trim, an ember shawl over her shoulders, a warm stone at her throat */
   C.brasa = { name: 'Warden Brasa', skin: '#8a5a3e', hair: '#3a1a16', style: 'ponytail', ties: '#f08030', robe: '#3a2a2e', trim: '#f08a3a', shawl: '#b8442e',
     pendant: '#ffb040', pants: '#2a2024', shoes: '#1e1414', eye: '#a8502a', expr: 'smile', brow: '#3a1a16', bg: '#f0c8a0' };
-  var E ='#2a1c2e', GL = '#3a2e44', WH = '#fbf6f0', MO = '#a8443c';
+  /* chapter 8: the Mothwood, Duskmere, the Lantern Room and Hollow Moon */
+  vary('grandma', 'wick', { name: 'Old Wick', skin: '#d9a27a', hair: '#c8c4bc', style: 'bandana', band: '#5a6a4a', dress: '#5a5a3a', collar: '#c8c0a0', shawl: '#7a8a5a', glasses: 0, eye: '#3a3a2a', bg: '#c8d0b0' });
+  vary('innkeeper', 'dm_innkeeper', { name: 'Innkeeper Hesper', skin: '#f0c8a0', hair: '#3a2a3a', style: 'bun', ties: '#8a6ab8', moustache: 0, shirt: '#4a4a6a', apron: '#2a2a3e', eye: '#4a3a6a', bg: '#c8c0e0' });
+  vary('shopkeeper', 'dm_shopkeeper', { name: 'Tallow', skin: '#e0ac82', hair: '#e8dcc0', style: 'short', glasses: 'round', moustache: 1, shirt: '#6a5a7a', apron: '#3a3040', eye: '#3a2a1a', bg: '#d8d0e0' });
+  vary('traveler', 'lantern_keeper', { name: 'Keeper Ilse', skin: '#f4d0b0', hair: '#e8c060', style: 'braid', ties: '#ffd870', robe: '#2e2a4e', trim: '#ffd870', scarf: '#ffd870', eye: '#4a4a8a', bg: '#f0e0a8' });
+  vary('girl', 'pella', { name: 'Pella', hair: '#1e1e2a', style: 'twintails', ties: '#b9a8ff', dress: '#5a4a8a', skin: '#e0ac82', sailor: 0, collar: '#e8e0f0', eye: '#4a3a6a', bg: '#d0c8f0' });
+  vary('dad', 'cobb', { name: 'Cobb', skin: '#e0ac82', hair: '#2a2024', style: 'short', shirt: '#3a4a5a', collar: '#c8c0d0', beard: 1, brow: '#2a2024', stubble: 0, eye: '#3a2a1a', bg: '#c0c8d8' });
+  vary('mom', 'linnet', { name: 'Linnet', skin: '#f0c8a8', hair: '#8a8a92', style: 'ponytail', ties: '#6a8a6a', dress: '#4a6a6a', collar: '#e8e4dc', eye: '#3a5a4a', bg: '#c0d8d0' });
+  vary('grandma', 'edda', { name: 'Edda', skin: '#c88a60', hair: '#f0ece4', style: 'bun', ties: '#6a4a8a', dress: '#3a3a5a', collar: '#d8d0e8', glasses: 1, eye: '#3a2a1a', bg: '#d0c8e0' });
+  /* the seventh Warden: short silver hair, a deep violet robe with silver trim, a night-blue mantle, a moonstone */
+  C.nox = { name: 'Warden Nox Ardley', skin: '#e8c0a8', hair: '#d8d8ec', style: 'short', robe: '#2a2440', trim: '#c8c0f0', shawl: '#3e3466', pendant: '#f0f0ff',
+    pants: '#1e1a30', shoes: '#16121e', staff: 1, eye: '#8a7ad8', expr: 'smile', brow: '#c8c8dc', bg: '#c8c0e8' };
+  /* the Council captain: a grey coat, a gold sash of office, the closed-eye clasp of the grey cloaks */
+  C.captain = { name: 'Captain Stroud', skin: '#e3b08a', hair: '#3a3a42', style: 'hat', cap: '#5a5a66', shirt: '#7a7a86', collar: '#e0b040', stole: '#e0b040',
+    clasp: '#d0d4de', pants: '#3a3a42', shoes: '#1e1e24', moustache: 1, wide: 1, eye: '#3a3a4a', expr: 'flat', brow: '#3a3a42', bg: '#c8c8d0' };
+  /* chapter 9: Goldmere, the Glasshouse, the Mirror Gardens, Vael's garden and Halo Court */
+  vary('innkeeper', 'gm_innkeeper', { name: 'Innkeeper Bertram', skin: '#f0c8a0', hair: '#c8a050', band: '#e0b040', shirt: '#fff4e0', apron: '#c8a050', eye: '#3a5a3a', bg: '#fbe8b0' });
+  vary('shopkeeper', 'gm_shopkeeper', { name: 'Fennick', skin: '#e0ac82', hair: '#7a4a2a', style: 'short', glasses: 'round', moustache: 1, shirt: '#f4ecd8', apron: '#3a5a8a', eye: '#3a2a1a', bg: '#c8d8f0' });
+  vary('traveler', 'glass_keeper', { name: 'Glasswright Sabine', skin: '#d9a27a', hair: '#c8563a', style: 'bun', ties: '#9ad8ff', robe: '#e0ecf2', trim: '#7ac0e8', scarf: null, glasses: 'round', eye: '#3a5a8a', bg: '#d0ecf8' });
+  vary('elder', 'benedek', { name: 'Archivist Benedek', skin: '#f0c8a8', hair: '#e8e4dc', robe: '#5a3a2a', trim: '#e0c060', glasses: 'round', staff: 0, eye: '#3a3a2a', bg: '#e8d8b8' });
+  vary('mom', 'hester', { name: 'Hester', skin: '#e0ac82', hair: '#5a3a22', style: 'bun', ties: '#e0c060', dress: '#c87a8a', collar: '#fff4e0', eye: '#3a2a1a', bg: '#f4d0d8' });
+  vary('kid2', 'tobbe', { name: 'Tobbe', skin: '#f2c9a0', hair: '#c8a050', style: 'messy', shirt: '#5aa0d8', pants: '#e8e0d0', shoes: '#8a5a3a', freckles: 1, eye: '#3a5a8a', bg: '#c8e0f4' });
+  vary('guard', 'rowe', { name: 'Guard Rowe', skin: '#c88a60', hair: '#2a2024', cap: '#ecece4', shirt: '#f4ecd8', collar: '#e0b040', pants: '#c8a050', moustache: 0, stubble: 1, eye: '#3a2a1a', bg: '#f4e8c0' });
+  vary('elder', 'perrin', { name: 'Old Perrin', skin: '#c88a60', hair: '#f4f0e8', robe: '#4a6a5a', trim: '#d8c890', eye: '#3a2a1a', bg: '#d0e0c8' });
+  vary('gardener', 'wendel', { name: 'Gardener Wendel', skin: '#e0ac82', hair: '#8a8a92', style: 'hat', cap: '#e8d8a0', shirt: '#e8e0c8', pants: '#5a6a4a', apron: '#4a6a4a', freckles: 0, beard: 1, brow: '#8a8a92', eye: '#3a4a3a', expr: 'smile', bg: '#d8e8c0' });
+  vary('apprentice', 'lys', { name: 'Apprentice Lys', skin: '#f4d0b0', hair: '#f0d890', style: 'ponytail', ties: '#ffffff', robe: '#f4ecd8', trim: '#e0b040', sprout: null, freckles: 0, eye: '#3a7ad8', expr: 'grin', bg: '#fff0c0' });
+  /* the eighth Warden: a short black beard, an ivory robe with gold trim, a gold mantle, a sun-stone */
+  C.aurel = { name: 'Warden Aurel', skin: '#8a5a3e', hair: '#1e1e2a', style: 'short', beard: 1, brow: '#1e1e2a', robe: '#f4ecdc', trim: '#e8c050', shawl: '#f0c850',
+    pendant: '#fff4b0', pants: '#c8a868', shoes: '#6a4a2a', staff: 1, eye: '#6a4a1a', expr: 'smile', bg: '#ffe9a8' };
+  /* the ring holders of the tournament */
+  vary('dad', 'th1', { name: 'Brannock', skin: '#b87a52', hair: '#7a3a1a', style: 'short', shirt: '#8a4a2a', collar: '#d8b878', beard: 1, brow: '#7a3a1a', stubble: 0, wide: 1, eye: '#3a2a1a', bg: '#f0c8a0' });
+  vary('traveler', 'th2', { name: 'Elsbeth', skin: '#f4d0b0', hair: '#c8a050', style: 'ponytail', ties: '#3aa0a8', robe: '#9ad0f0', trim: '#ffffff', scarf: '#f4c040', goggles: '#8a5a32', eye: '#3a6a8a', bg: '#c8e8f8' });
+  vary('kid2', 'th3', { name: 'Tavi', skin: '#d9a27a', hair: '#2a2a3a', style: 'cap', cap: '#3a8a6a', shirt: '#3a6a9a', pants: '#4a4a5a', shoes: '#3a2a1a', freckles: 1, eye: '#3a2a1a', bg: '#c0e0d0' });
+  vary('boy', 'th4', { name: 'Corvin', skin: '#f0c8a8', hair: '#1e1e2a', style: 'messy', shirt: '#2a2a3a', inner: '#e8e0f0', pants: '#3a3a4a', shoes: '#2a2a30', goggles: null, eye: '#6a4a8a', expr: 'smile', bg: '#d0c8e0' });
+  var E = '#2a1c2e', GL = '#3a2e44', WH = '#fbf6f0', MO = '#a8443c';
 
   // ---------- sprite (authored at 2x: 56x56 real px, local centre x = 16, feet bottom at local y = 47) ----------
   function sHair(g, d, dir, P) {
@@ -557,6 +591,14 @@ window.H = window.H || {};
   ['agna', 'bask', 'rusk', 'ottar', 'tamsin'].forEach(function (k) { IDLE[k] = ['fold', 'stretch', 'yawn']; });
   ['briar', 'ottie', 'tilde'].forEach(function (k) { IDLE[k] = ['hop', 'swing', 'kick']; });
   IDLE.drummer = ['swing'];
+  /* chapters 8 and 9 */
+  ['dm_innkeeper', 'gm_innkeeper'].forEach(function (k) { IDLE[k] = ['mug']; });
+  ['dm_shopkeeper', 'gm_shopkeeper'].forEach(function (k) { IDLE[k] = ['coins']; });
+  ['wick', 'edda'].forEach(function (k) { IDLE[k] = ['knit']; });
+  ['benedek', 'perrin'].forEach(function (k) { IDLE[k] = ['beard']; });
+  ['cobb', 'linnet', 'hester', 'th1'].forEach(function (k) { IDLE[k] = ['fold', 'stretch', 'yawn']; });
+  ['pella', 'tobbe', 'th3'].forEach(function (k) { IDLE[k] = ['hop', 'swing', 'kick']; });
+  IDLE.wendel = ['water']; IDLE.rowe = ['spear'];
   function hsh(n) { var s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
 
   function sprite(d, dir, f, o) {

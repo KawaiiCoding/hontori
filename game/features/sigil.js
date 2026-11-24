@@ -6,7 +6,7 @@
  *
  * Public API:
  *   drawSigil(game, sigil, text, sub, { twist })   open the prompt; a Promise that resolves once it is drawn.
- *                                                  twist: a "draw.twist" id ('drift', 'mirror', 'quick') or a
+ *                                                  twist: a "draw.twist" id ('drift', 'mirror', 'quick', 'burn') or a
  *                                                  twist object
  *   installSigil(game)                             registers:
  *     "draw.twist"    "drift"   the page sways sideways while you draw, as in the wind of Gale Loft
@@ -14,12 +14,15 @@
  *                               the kid draws the shape the right way up
  *                     "quick"   a spark runs down a copper wire beside the page, as in the Storm Works; each
  *                               try must be finished before it reaches the end (10 seconds; the guide stays)
- *     words (content/shared/text.en.js): shared.feat.draw.mirror, shared.feat.draw.quick, shared.feat.draw.late
+ *                     "burn"    the line burns away behind the finger over the hot floor of the Ember Crucible
+ *                               (embers drift up under the guide); one sure stroke, judged as usual
+ *     words (content/shared/text.en.js): shared.feat.draw.mirror, shared.feat.draw.quick, shared.feat.draw.late,
+ *       shared.feat.draw.burn (each left out while the content has none)
  *     "story.command" "ext:draw"   { ext: 'draw', sigil: spellId, text: textId, params, twist }
  *                                  the script waits until it is drawn
  */
 
-import { drawPrompt, driftTwist, mirrorTwist, quickTwist, twistOf } from '../../systems/features/index.js';
+import { drawPrompt, driftTwist, mirrorTwist, quickTwist, burnTwist, twistOf } from '../../systems/features/index.js';
 import { sigils, drawSigil as paintCircle, RUNES } from '../battle-scene/sigils.js';
 import { SPELL_COLORS } from '../battle-scene/look.js';
 import { normalizeSpellId } from '../battle/spells.js';
@@ -46,6 +49,8 @@ const WIRE = '#b8682e';
 const WIRE_LIT = '#ffd27a';
 const SPARK = '#fff4c0';
 const QUICK_SECONDS = 10;
+const EMBER = ['#ffb35a', '#ff8a3c', '#ffe27a'];
+const BURN_GLOW = 'rgba(255,120,40,0.14)';
 
 /* a text the content may not have yet is left out rather than shown as its id */
 function words(game, id) {
@@ -110,6 +115,22 @@ function paintWire(g, look) {
   g.fillRect(x - 3 * flick, at + 3, 2, 3);
 }
 
+/* the hot floor of the Crucible under the page: a low glow and a few embers drifting up past the guide */
+function paintEmbers(g, look) {
+  const w = look.size * 1.9;
+  const bottom = look.cy + look.size * 0.95;
+  g.fillStyle = BURN_GLOW;
+  g.fillRect(look.cx - w / 2, bottom - look.size * 0.25, w, look.size * 0.25);
+  for (let i = 0; i < 9; i++) {
+    const rise = (look.seconds * (18 + (i % 4) * 6) + i * 53) % (look.size * 1.6);
+    const x = look.cx - w / 2 + ((i * 0.37 + 0.06) % 1) * w + Math.sin(look.seconds * 1.7 + i) * 4;
+    g.globalAlpha = Math.max(0, 1 - rise / (look.size * 1.6));
+    g.fillStyle = EMBER[i % EMBER.length];
+    g.fillRect(Math.round(x), Math.round(bottom - rise), 2, 2);
+  }
+  g.globalAlpha = 1;
+}
+
 export function drawSigil(game, sigil, text, sub, { twist } = {}) {
   const shape = normalizeSpellId(sigil) || 'veil';
   return drawPrompt(game, {
@@ -134,6 +155,9 @@ export function installSigil(game) {
   registry.add('draw.twist', 'quick', (options) => quickTwist({
     seconds: QUICK_SECONDS, paint: paintWire, note: words(game, 'shared.feat.draw.quick'), late: words(game, 'shared.feat.draw.late'), ...options,
   }));
+
+  /* the Ember Crucible: the line burns away behind the finger, so the shape is drawn in one sure stroke */
+  registry.add('draw.twist', 'burn', (options) => burnTwist({ paint: paintEmbers, note: words(game, 'shared.feat.draw.burn'), ...options }));
 
   registry.add('story.command', 'ext:draw', async (node, ctx) => {
     const sigil = ctx.value(node.sigil);

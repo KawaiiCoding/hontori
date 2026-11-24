@@ -11,7 +11,9 @@
  *     spell   { kind, accuracy }   one spell per turn; the turn stays open for a move
  *     switch  { index }            costs the turn (the foe acts), except the forced pick after a faint
  *     escape  {}                   wild battles only; a miss costs the turn and makes the next try easier
- *     item    { id }               'herb' (+1 mana, not at full mana), 'bread' (wild only, once: bind +0.15)
+ *     item    { id }               'herb' (+1 mana, not at full mana), 'bread' (wild only, once: bind +0.15), or a
+ *                                  thing whose effect is 'earthTreat' (TREAT_EFFECT): mends the hontori on the field
+ *                                  by half (an earth hontori fully); it costs the turn, the foe acts
  */
 
 import { setupBattle } from './setup.js';
@@ -63,8 +65,20 @@ function checkSwitch(b, p) {
   return null;
 }
 
+export const TREAT_EFFECT = 'earthTreat';
+
+function effectOf(b, id) {
+  const it = b.state.items.find((i) => i.id === id);
+  return it ? it.effect || null : null;
+}
+
 function checkItem(b, p) {
   const S = b.state;
+  if (effectOf(b, p.id) === TREAT_EFFECT) {
+    const m = me(b);
+    if (itemCount(b, p.id) <= 0 || m.fainted) return no('unavailable');
+    return m.hp < m.max ? null : no('well', 'refuseWell');
+  }
   if (p.id === 'herb') return itemCount(b, 'herb') > 0 && S.mana < S.maxMana ? null : no('unavailable');
   if (p.id === 'bread') return itemCount(b, 'bread') > 0 && !S.breadUsed && !S.trainer ? null : no('unavailable');
   return no('unknown');
@@ -126,7 +140,8 @@ export const hontoriRules = Object.freeze({
 
     escape(b) {
       const S = b.state;
-      const chance = escapeChance({ me: me(b), foe: foe(b), tries: S.escTries, quick: quickFoe(foe(b), me(b)) });
+      const chance = escapeChance({ me: me(b), foe: foe(b), tries: S.escTries, quick: quickFoe(foe(b), me(b)), step: S.stepped });
+      S.stepped = 0;
       if (b.random() < chance) {
         b.emit('escape', { success: true, chance });
         say(b, 'escaped');
@@ -141,7 +156,16 @@ export const hontoriRules = Object.freeze({
 
     item(b, p) {
       const S = b.state;
+      const treat = effectOf(b, p.id) === TREAT_EFFECT;
       useItem(b, p.id);
+      if (treat) {
+        const m = me(b);
+        const h = m.heal(m.el === 'earth' || m.el2 === 'earth' ? m.max : Math.ceil(m.max / 2));
+        b.emit('heal', { target: 'me', amount: h, source: 'treat' });
+        say(b, 'treat', { name: m.name });
+        runRound(b, [() => {}, () => foeAct(b)]);
+        return;
+      }
       if (p.id === 'herb') {
         S.mana++;
         b.emit('mana', { amount: 1, mana: S.mana, source: 'herb' });

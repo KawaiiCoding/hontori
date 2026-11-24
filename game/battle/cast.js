@@ -14,6 +14,8 @@
  *   stun    chance min(0.95, 0.75 gm): stunned, charge and guard lost
  *   sleep   chance min(0.9, 0.6 gm): asleep 2 turns, charge and guard lost
  *   revive  uses the element's material; hp = min(max, ceil(max / 2 x gm)), wakes
+ *   step    Swift Step: the next escape try this battle is much likelier (chances.escapeChance), never certain;
+ *           wild battles only
  *   bind    one try of 3 (chances.bindChance); sureBind makes the third try hold; the third miss lets the foe go
  * Events: spell { kind, target, grade, mul, cost, mana, exp, mastery, masteryUp }, heal, item,
  *   bindTry { chance, success, triesLeft }, status, say, end.
@@ -41,9 +43,14 @@ export function canCast(b, kind) {
   if (m.fainted) return no('fainted', 'refuseOnlyStar');
   if (kind === 'bind') {
     if (S.trainer || S.noCapture) return no('duel', 'refuseDuelBind');
+    if (S.noRoom) return no('noRoom', 'refuseNoRoom');
     if (f.hp / f.max > 0.35) return no('weaken', 'refuseWeaken');
   }
   if (kind === 'mend' && m.hp >= m.max && !m.has('asleep')) return no('well', 'refuseWell');
+  if (kind === 'step') {
+    if (S.trainer) return no('duel', 'refuseDuelEscape');
+    if (S.stepped) return no('stepped', 'refuseStepped');
+  }
   return SPELLS[kind] ? true : no('shape', 'refuseShape');
 }
 
@@ -137,5 +144,8 @@ export function castSpell(b, kind, accuracy) {
     say(b, 'revived', { material: MATERIAL_NAMES[mat] });
   } else if (kind === 'bind') {
     bind(b, acc, gm);
+  } else if (kind === 'step') {
+    S.stepped = gm;
+    say(b, 'step');
   }
 }

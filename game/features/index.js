@@ -20,14 +20,19 @@
  *                     ext:flight (flyby.js); ext:travel (travel.js); ext:gauntlet, ext:gauntletLeave (gauntlet.js)
  *   story.condition   ext:ring (rings.js); ext:full (unlock.js); ext:gauntlet (gauntlet.js)
  *   story.value       ext:fishWeight (fishing.js)
- *   trial.test        sight, sigil, push (trialTests.js); vanes (vanes.js); tide (tide.js); circuit (circuit.js)
- *   draw.twist        drift, mirror, quick (sigil.js)
+ *   trial.test        sight, sigil, push (trialTests.js); vanes (vanes.js); tide (tide.js); circuit (circuit.js);
+ *                     braziers (braziers.js, on systems/features/Braziers.js: its gate, layer, system, service
+ *                     "braziers", story.command ext:brazierLit and puzzle.reset)
+ *   draw.twist        drift, mirror, quick, burn (sigil.js)
  *   companion.entrance  chimney (entrance.js)
  *   title.action      code: "I have a code" on the title; the same row is added to panel "settings"
  *   closeup           blackboard: the Element Wheel (closeups.js)
  *   world.layer       features (floats.js); features:flights (systems/features/Flights.js);
  *                     features:gusts (vanes.js on systems/features/Gusts.js); features:tides (tide.js);
  *                     features:circuits (circuit.js); features:travel (travel.js)
+ *   (sanctum.js) save section sanctum; service sanctum; story.command ext:chooseCarry, ext:sanctum, ext:toFront;
+ *                     story.condition ext:sanctum, ext:carries
+ *   world.sight       lantern (lantern.js: the Lantern, and Lantern Oil, widen the light in a dark cave)
  *   gate              features:gusts, features:tides, features:circuits, features:travel
  *   service           gusts, tides, circuits { solved, reset }; travel { go, riding }; gauntlets { open, stage, leave }
  *   puzzle.reset      vanes, tide, circuit   (type -> (puzzleId) => owned and reset)
@@ -58,6 +63,9 @@ import { installTide } from './tide.js';
 import { installCircuit } from './circuit.js';
 import { installTravelling } from './travel.js';
 import { installGauntlet } from './gauntlet.js';
+import { installLantern } from './lantern.js';
+import { installSanctum } from './sanctum.js';
+import { installBrazierCourt } from './braziers.js';
 
 export { openUnlock, isFull } from './unlock.js';
 
@@ -95,6 +103,9 @@ export function install(game) {
   installCircuit(game);
   installTravelling(game);
   installGauntlet(game);
+  installLantern(game);
+  installSanctum(game);
+  installBrazierCourt(game);
   /* "I have a code": a row in the Menu and a link on the title, until the full journey is open */
   registry.add('title.action', 'code', {
     label: () => word(game, 'shared.feat.offer.code'),

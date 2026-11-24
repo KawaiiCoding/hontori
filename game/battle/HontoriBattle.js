@@ -22,10 +22,11 @@
  *   switchTargets()         indices that may come in now
  *   bindTriesLeft, team     team: { defeated, total } for the trainer's dots, or null
  *   herbs, breadReady       whether the Herb and Bread buttons are shown
+ *   treat                   { id, n } of a carried thing with the effect earthTreat (rules.js), or null
  */
 
 import { Battle } from '../../systems/battle/Battle.js';
-import { hontoriRules, tiredAll } from './rules.js';
+import { hontoriRules, tiredAll, TREAT_EFFECT } from './rules.js';
 import { shownIntent, hint, aliveOthers } from './turn.js';
 import { quickFoe } from './intent.js';
 import { escapeChance, escapeBars, BIND_TRIES } from './chances.js';
@@ -60,6 +61,10 @@ export class HontoriBattle extends Battle {
   get bindTriesLeft() { return BIND_TRIES - this.state.binds; }
   get team() { return this.state.team ? { defeated: this.state.teamIndex, total: this.state.team.length } : null; }
   get herbs() { return itemCount(this, 'herb'); }
+  get treat() {
+    const it = this.state.items.find((i) => i.effect === TREAT_EFFECT && (i.n == null || i.n > 0));
+    return it ? { id: it.id, n: it.n == null ? 1 : it.n } : null;
+  }
   get breadReady() { return itemCount(this, 'bread') > 0 && !this.state.breadUsed && !this.state.trainer; }
 
   hint() {
@@ -90,7 +95,7 @@ export class HontoriBattle extends Battle {
   }
 
   escapeChance() {
-    return escapeChance({ me: this.me, foe: this.foe, tries: this.state.escTries, quick: this.quick });
+    return escapeChance({ me: this.me, foe: this.foe, tries: this.state.escTries, quick: this.quick, step: this.state.stepped });
   }
 
   escapeBars() {

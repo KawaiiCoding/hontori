@@ -5,7 +5,7 @@
  *
  * Public API:
  *   SPELLS                  id -> { name, cost, on: 'me' | 'foe', desc, how, world? }
- *   BATTLE_SPELLS           the seven spells that can be cast in battle, in sheet order
+ *   BATTLE_SPELLS           the eight spells that can be cast in battle, in sheet order (step: Swift Step, chapter 7)
  *   MASTERY_XP              [0, 6, 16, 32, 56]: spell EXP for mastery 1 .. 5
  *   GRADES                  flawless / strong / weak: { name, mul, exp }
  *   gradeOf(accuracy)       'flawless' (>= 0.55), 'strong' (>= 0.25) or 'weak'; null counts as 0.5
@@ -27,11 +27,12 @@ export const SPELLS = Object.freeze({
   sleep: { name: 'Dream Veil', cost: 2, on: 'foe', desc: 'Foe may fall asleep', how: 'wave' },
   bind: { name: 'Binding Spiral', cost: 2, on: 'foe', desc: 'Bind a weak foe', how: 'spiral' },
   revive: { name: 'Dawn Star', cost: 3, on: 'me', desc: 'Revive with a material', how: 'star' },
+  step: { name: 'Swift Step', cost: 1, on: 'me', desc: 'Escape much likelier', how: 'seven' },
   veil: { name: 'Velum Aperi', cost: 0, on: 'me', desc: 'Lift the veil', how: 'V', world: true },
   fish: { name: 'Fishing Sigil', cost: 1, on: 'me', desc: 'Casts a line of light into water', how: 'hook', world: true }
 });
 
-export const BATTLE_SPELLS = Object.freeze(['mend', 'shield', 'boost', 'stun', 'sleep', 'bind', 'revive']);
+export const BATTLE_SPELLS = Object.freeze(['mend', 'shield', 'boost', 'stun', 'sleep', 'bind', 'revive', 'step']);
 
 export const MASTERY_XP = Object.freeze([0, 6, 16, 32, 56]);
 

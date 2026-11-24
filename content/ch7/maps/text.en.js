@@ -4,6 +4,7 @@
  */
 
 export default {
+  'ch7.map.cinderreach.label.south': 'To the Mothwood',
   'ch7.map.ash_road.label.1': 'Stone bridge',
   'ch7.map.ash_road.label.2': 'Ember lookout',
   'ch7.map.ash_road.label.3': 'Lava lake',

@@ -12,7 +12,8 @@
  *                                 its level (else lead level -1 (30%), +0 (42%) or +1 (28%))
  *     trainer    { name, key, spirit, level, stage, team: [{ spirit, level, stage }], noSwitch, ban, lesson,
  *                  school, noCapture }
- *     noCapture, sureBind (the third binding always holds), spells (a fixed spell list for this battle)
+ *     noCapture, sureBind (the third binding always holds), spells (a fixed spell list for this battle),
+ *     noRoom (the party is full and the Sanctum sealed: no binding)
  *     rules      [name]   the battle's rule names (content); the ring rules among them (ringRules.js) run
  *     wand       { mana, maxMana, level, spells, loadout, spellXp, spellMastery, perks }  (perks: growth.wandPerks)
  *     items      [{ id, n }]
@@ -59,6 +60,7 @@ export function setupBattle(b, s) {
   S.teamIndex = 0;
   S.noCapture = !!s.noCapture;
   S.sureBind = !!s.sureBind;
+  S.noRoom = !!s.noRoom;
   S.rules = ringRulesOf([...(Array.isArray(s.rules) ? s.rules : []), ...(TR && Array.isArray(TR.rules) ? TR.rules : [])]);
   S.flags = Object.assign({}, s.flags);
 
@@ -130,4 +132,5 @@ export function setupBattle(b, s) {
   S.forced = false;
   S.breadUsed = false;
   S.calm = 0;
+  S.stepped = 0;
 }

@@ -8,7 +8,11 @@
  *   new PlaceMusic(force, rows)   force(key | null) plays that song; rows are the PLACES data
  *   enter(mapId, env)             a map was entered (env.time is the hour)
  *   follow(env)                   the hour moved on: day and night tunes change over
- *   battle(kind)                  'duel' or 'wild' while a fight is on, null when it is over
+ *   battle(kind)                  'duel' or 'wild' while a fight is on, 'phase' when a trainer's hontori flares up
+ *                                 into its second phase (the row's `phase` song, else its duel song), null when
+ *                                 it is over. Any other text is taken too: the row's field of that name picks the
+ *                                 tune, else the text is itself a song key (a tournament round asks for
+ *                                 'tournament_2'). A key the synthesizer does not know plays the place's own music
  */
 
 import { isNight } from './places.js';
@@ -39,14 +43,15 @@ export class PlaceMusic {
   }
 
   battle(kind) {
-    this.#fight = kind === 'duel' || kind === 'wild' ? kind : null;
+    this.#fight = typeof kind === 'string' && kind ? kind : null;
     this.#apply();
   }
 
   /* the song key to play now, or null for the common music */
   #wanted() {
     const row = this.#row;
-    if (this.#fight) return (row && row[this.#fight]) || this.#fight;
+    if (this.#fight === 'phase') return (row && (row.phase || row.duel)) || 'duel';
+    if (this.#fight) return (row && typeof row[this.#fight] === 'string' && row[this.#fight]) || this.#fight;
     if (!row) return null;
     return (isNight(this.#hour) ? row.night || row.day : row.day) || null;
   }

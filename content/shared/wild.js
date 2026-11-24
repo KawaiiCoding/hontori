@@ -6,6 +6,9 @@
  * and raven by 1.6. Towns keep wild ones to tall grass, sand, flowers, water, fruit and the edges.
  */
 
+/* the kinds of the volcano country live only there (the starter's own family among them) */
+const FIRE_COUNTRY = ['ash_road', 'cinderreach', 'hearth_below'];
+
 export default {
   night: [19.5, 5.5],
   dusk: [[17.5, 19.5], [5.5, 7]],
@@ -142,7 +145,23 @@ export default {
     lampwisp: { f: { lamp: 3.2, metal: 0.8, statue: 0.6 }, day: 0.2, night: 2.4, wx: { fog: 1.6, rain: 1.4 }, rare: 0.35 },
     stormowl: { f: { field: 1.6, tree: 1, open: 1.4, metal: 1 }, day: 0.4, night: 1.8, wx: { rain: 2, wind: 2 }, rare: 0.35 },
     rustcat: { f: { wall: 1.8, path: 1.4, metal: 1.2, lamp: 1, statue: 0.6 }, day: 0.9, night: 1.3, wx: { clear: 1.1, rain: 0.8 }, rare: 0.8 },
-    mothspark: { f: { lamp: 2.4, shade: 1.4, tallgrass: 1, field: 0.8 }, day: 0.1, night: 2.6, wx: { rain: 1.6, fog: 1.4 }, rare: 0.4 }
+    mothspark: { f: { lamp: 2.4, shade: 1.4, tallgrass: 1, field: 0.8 }, day: 0.1, night: 2.6, wx: { rain: 1.6, fog: 1.4 }, rare: 0.4 },
+    cavebat: { f: { rock: 2, wall: 1.6, shade: 2, mushroom: 1 }, day: 0.1, night: 2.6, wx: { fog: 1.4, rain: 1.2 }, rare: 0.6 },
+    geodeling: { f: { rock: 2.6, wall: 1.4, shade: 0.8, statue: 0.6 }, day: 0.8, night: 1.3, wx: { clear: 1.2 }, rare: 0.4 },
+    burrowkit: { f: { path: 1.6, rock: 1.4, field: 1.2, garden: 0.8 }, day: 1, night: 0.8, wx: { rain: 0.8 }, rare: 0.85 },
+    slatehorn: { f: { rock: 2.4, path: 1.2, open: 0.8 }, day: 1.2, night: 0.6, wx: { clear: 1.1 }, rare: 0.5 },
+    mossmite: { f: { rock: 1.6, tallgrass: 1.4, shade: 1.2, mushroom: 1, tree: 0.6 }, day: 0.8, night: 1.1, wx: { rain: 1.8, fog: 1.2 }, rare: 0.8 },
+    pebblequail: { f: { tallgrass: 1.8, rock: 1.4, path: 1, field: 1 }, day: 1.3, night: 0.4, wx: { clear: 1.3, rain: 0.6 }, rare: 0.9 },
+    quartzsnail: { f: { rock: 2, wall: 1.4, shade: 1, water: 0.6 }, day: 0.6, night: 1.4, wx: { rain: 2, fog: 1.2 }, rare: 0.55 },
+    rumbletoad: { f: { water: 2, rock: 1.6, reeds: 1, sand: 0.6 }, day: 0.9, night: 1.2, wx: { rain: 2.2 }, rare: 0.5 },
+    cinderkit: { f: { warm: 2.4, path: 1, rock: 1, wall: 0.8 }, day: 1, night: 0.9, wx: { clear: 1.3, rain: 0.4 }, rare: 0.85, maps: FIRE_COUNTRY },
+    ashmoth: { f: { warm: 2, lamp: 1.6, open: 1, flowers: 0.6 }, day: 0.3, night: 2, wx: { wind: 1.8, clear: 1, rain: 0.4 }, rare: 0.5, maps: FIRE_COUNTRY },
+    magmapup: { f: { warm: 2.6, rock: 1.6, sand: 0.8 }, day: 1, night: 0.9, wx: { clear: 1.3, rain: 0.3 }, rare: 0.6, maps: FIRE_COUNTRY },
+    emberfinch: { f: { warm: 1.6, tree: 1.4, open: 1.2, flowers: 0.8 }, day: 1.4, night: 0.3, wx: { clear: 1.4, rain: 0.5 }, rare: 0.9, maps: FIRE_COUNTRY },
+    soothound: { f: { warm: 1.8, shade: 1.6, rock: 1, path: 0.8 }, day: 0.3, night: 2.2, wx: { fog: 1.6, clear: 0.9, rain: 0.5 }, rare: 0.45, maps: FIRE_COUNTRY },
+    flarefox: { f: { sand: 2.2, warm: 1.8, rock: 1, open: 0.8 }, day: 1.3, night: 0.6, wx: { clear: 1.6, rain: 0.3 }, rare: 0.4, maps: FIRE_COUNTRY },
+    kilnturtle: { f: { warm: 2.4, rock: 1.4, path: 0.8, wall: 0.6 }, day: 1, night: 1, wx: { clear: 1.2, rain: 0.5 }, rare: 0.45, maps: FIRE_COUNTRY },
+    sunflare: { f: { warm: 1.6, open: 1.6, flowers: 1, statue: 0.6 }, day: 1.6, night: 0.1, wx: { clear: 2, rain: 0.3, fog: 0.5 }, rare: 0.3, maps: FIRE_COUNTRY }
   },
   features: {
     props: {
@@ -166,6 +185,14 @@ export default {
       lamp_jar_open: 'lamp',
       lightning_rod: 'metal',
       lightning_rod_lit: 'metal',
+      brazier: 'warm',
+      brazier_lit: 'warm',
+      school_touch_fire: 'warm',
+      drum: 'rock',
+      drum_big: 'rock',
+      carving_stone: 'wall',
+      carving_stone_flame: 'wall',
+      school_touch_earth: 'rock',
       windchime: 'chime',
       log_pile: 'warm',
       campfire: 'warm',
@@ -187,7 +214,11 @@ export default {
       tallgrass: 'tallgrass',
       flowers: 'flowers',
       path: 'path',
-      cobble: 'path'
+      cobble: 'path',
+      /* the volcano country: ash and lava are warm ground (never sand: no sea kind strays here), cooled lava is rock */
+      ash: 'warm',
+      lava: 'warm',
+      cooled_lava: 'rock'
     }
   },
   defaults: { count: 5, countTown: 4, level: [1, 3], hidden: 0.22 }

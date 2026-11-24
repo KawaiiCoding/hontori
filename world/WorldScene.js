@@ -40,6 +40,9 @@
  *                     target: { kind: 'person', person } | { kind: 'prop' | 'building', type, object }
  *                             | { kind: 'tile', tile }
  *
+ * A map whose description has `dark` ({ level, sight, ... }) is drawn through the darkness pass (Darkness.js):
+ * only a circle around the player and the glow of each light show.
+ *
  * Registry kinds it reads:
  *   "map"    id -> map description
  *   "gate"   id -> function({ map, tx, ty, door, player }) returning true to refuse the player's step
@@ -47,6 +50,7 @@
  *   "world.layer"   id -> { update(dt, world), draw(ctx, world) }   both optional. update runs each
  *            fixed step while the world is on top; draw paints in view pixels after the particles
  *            (a compass arrow, a marker). Every call is guarded: a layer that throws is skipped.
+ *   "world.sight"   id -> (dark, world) => radius   how far the player sees on a dark map now (Darkness.js)
  */
 
 import { Scene } from '../core/Scene.js';
@@ -57,6 +61,7 @@ import { Environment } from './Environment.js';
 import { TileMap } from './TileMap.js';
 import { MapView } from './MapView.js';
 import { Atmosphere } from './Atmosphere.js';
+import { Darkness } from './Darkness.js';
 import { Player } from './Player.js';
 import { Person } from './Person.js';
 import { Companion } from './Companion.js';
@@ -88,6 +93,7 @@ export class WorldScene extends Scene {
 
   #view = null;
   #atmosphere;
+  #darkness = new Darkness();
   #fade = new Fade();
   #actors = [];
   #lights = [];
@@ -135,6 +141,7 @@ export class WorldScene extends Scene {
   resize(width, height) {
     this.camera.resize(width, height);
     this.#atmosphere.resize(width, height);
+    this.#darkness.resize(width, height);
     if (this.map) this.camera.snap(this.player.x, this.player.y - LOOK_ABOVE_FEET);
   }
 
@@ -148,6 +155,7 @@ export class WorldScene extends Scene {
     this.#runCompanion(dt);
     this.#breathe(dt);
     this.camera.follow(this.player.x, this.player.y - LOOK_ABOVE_FEET, dt);
+    if (this.#darkness.active) this.#darkness.update(dt, this.#darkness.sightOf(this, this.game.registry));
     this.#fade.update(dt);
     for (const layer of this.game.registry.all('world.layer')) {
       if (!layer.update || this.#failedLayers.has(layer)) continue;
@@ -177,6 +185,8 @@ export class WorldScene extends Scene {
 
   ambient(dt) {
     this.env.advance(dt, false);
+    /* the light follows the bag even while a dialog is open (a lantern given in a scene shows at once) */
+    if (this.#darkness.active) this.#darkness.update(dt, this.#darkness.sightOf(this, this.game.registry));
     this.#breathe(dt);
   }
 
@@ -191,7 +201,9 @@ export class WorldScene extends Scene {
     this.#atmosphere.drawLife(ctx, env);
     ctx.restore();
 
-    this.#atmosphere.drawSky(ctx, camera, env, this.#collectLights());
+    const lights = this.#collectLights();
+    this.#atmosphere.drawSky(ctx, camera, env, lights);
+    if (this.#darkness.active) this.#darkness.draw(ctx, camera, this.player, lights, env.t);
     this.#drawMark(ctx);
     this.#atmosphere.drawParticles(ctx, camera);
     for (const layer of this.game.registry.all('world.layer')) {
@@ -309,6 +321,7 @@ export class WorldScene extends Scene {
     this.camera.setBounds(map.pixelWidth, map.pixelHeight);
     this.camera.snap(player.x, player.y - LOOK_ABOVE_FEET);
     this.#atmosphere.enterMap(description);
+    this.#darkness.setDark(description.dark || null);
     this.#route = null;
     this.#followSchedules(true);
     game.bus.emit('map:enter', { map, scene: this });

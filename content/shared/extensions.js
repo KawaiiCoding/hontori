@@ -18,7 +18,10 @@ export default {
     flight: { args: ['what:string', 'bring?:string'] },
     travel: { args: ['to', 'via?', 'seconds?:number', 'during?', 'after?'] },
     gauntlet: { args: ['gauntlet:string', 'won?', 'lost?'] },
-    gauntletLeave: { args: ['gauntlet:string'] }
+    gauntletLeave: { args: ['gauntlet:string'] },
+    chooseCarry: { args: ['n:number', 'title:text', 'sub?:text', 'confirm?:text'] },
+    sanctum: { args: ['seal'] },
+    toFront: { args: ['kind:kind'] }
   },
   condition: {
     spell: { args: ['has:spell'] },
@@ -27,15 +30,17 @@ export default {
     mana: { args: ['lte?:number', 'lt?:number', 'gte?:number'] },
     full: { args: [] },
     capsule: { args: ['done?', 'free?'] },
-    gauntlet: { args: ['gauntlet:string', 'stage?:number'] }
+    gauntlet: { args: ['gauntlet:string', 'stage?:number'] },
+    sanctum: { args: ['sealed?', 'count?'] },
+    carries: { args: ['kind?:kind', 'element?:element'] }
   },
   value: {
     leadLevel: { args: ['add?:number', 'min?:number', 'none?:number'] },
     fishWeight: { args: ['index:number'] },
     capsule: { args: ['cost?'] }
   },
-  battleRule: ['noCapture', 'noSwitch', 'sureBind', 'practice', 'windSwap', 'tideRise', 'noRest'],
-  testType: { sight: { args: ['who:person'] }, sigil: { args: ['sigil:spell'] }, vanes: { args: ['puzzle:string'] }, tide: { args: ['puzzle:string'] }, circuit: { args: ['puzzle:string'] } },
+  battleRule: ['noCapture', 'noSwitch', 'sureBind', 'practice', 'windSwap', 'tideRise', 'noRest', 'wandDuel', 'heat'],
+  testType: { sight: { args: ['who:person'] }, sigil: { args: ['sigil:spell'] }, vanes: { args: ['puzzle:string'] }, tide: { args: ['puzzle:string'] }, circuit: { args: ['puzzle:string'] }, braziers: { args: ['puzzle:string'] } },
   awardRule: { wandTrial: { args: ['sigil:spell', 'count:number', 'twist?:string'] }, ringDuel: { args: ['trainer:trainer'] } },
   elements: ['water', 'fire', 'wind', 'grass', 'electric', 'earth', 'dark', 'light']
 };

@@ -8,7 +8,7 @@ export default {
   name: 'ch6.map.listening_cave',
   tileset: 'indoor',
   rest: false,
-  dark: { level: 0.94, sight: 26, lantern: { item: 'lantern', sight: 76 } },
+  dark: { level: 0.94, sight: 26, lantern: { item: 'lantern', sight: 76, oil: 112 } },
   legend: { S: 'cave_floor', V: 'cave_rock', W: 'cave_wall', K: 'cave_carving', P: 'cave_pool', M: 'cave_stalagmite', C: 'cave_crystal' },
   rows: [
     'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
@@ -57,7 +57,7 @@ export default {
     { type: 'glowcaps', x: 20, y: 35 }
   ],
   doors: [
-    { x: 22, y: 39, to: 'old_quarry', tx: 21, ty: 1, dir: 0 }
+    { x: 22, y: 39, to: 'old_quarry', tx: 21, ty: 2, dir: 0 }
   ],
   spawn: { x: 22, y: 38, dir: 1 },
   labels: [

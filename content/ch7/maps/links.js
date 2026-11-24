@@ -6,7 +6,8 @@
  */
 
 export default {
-  links: [],
+  links: [
+  ],
   states: [
     /* the lava stream runs across the Ash Road until Warden Harrow lays the stone bridge */
     {

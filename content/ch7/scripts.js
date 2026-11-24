@@ -164,6 +164,8 @@ export default {
   ],
 
   /* Cole and Mira arrive together; Cole has seen the jars and stands with the kid. No duel. */
+  /* Cole's and Mira's service in their Cinderreach phases (chapter 1 people): nothing more than their words */
+  'ch7.svc.friend': [{ stop: true }],
   'ch7.friends': [
     { move: 'mira', to: { player: [-1, -1] } },
     { move: 'cole', to: { player: [1, -1] } },

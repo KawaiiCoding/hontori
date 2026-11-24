@@ -14,12 +14,14 @@
  *                    "ext:leadLevel"   { ext: 'leadLevel', add, min, none }: max(min, lead level + add);
  *                                      `none` while the party is empty
  *   story.condition  "ext:lead"        { ext: 'lead', stage: { gte: 3 }, level: { ... } }
- *   story.command    "ext:addHontori"  { ext: 'addHontori', kind, level }: the hontori joins the party
+ *   story.command    "ext:addHontori"  { ext: 'addHontori', kind, level }: the hontori joins the party (a full
+ *                                      party: it rests in the Sanctum; a sealed Sanctum: a gentle line instead)
  *   system           "companion-rule"  shows the world's companion while the party has a lead, as its kind
  */
 
 import { compare } from '../../systems/story/Conditions.js';
 import { newMember } from '../battle/growth.js';
+import { noRoomLine } from '../features/sanctum.js';
 
 function partyOf(game) {
   const items = game.registry.get('service', 'items');
@@ -116,7 +118,20 @@ export function installParty(game) {
       console.warn(`Story: no hontori "${key}" can join`);
       return;
     }
-    party.add(newMember(key, Number(ctx.value(node.level)) || 1, kind.element));
+    const member = newMember(key, Number(ctx.value(node.level)) || 1, kind.element);
+    if (party.add(member) === 'full') {
+      /* a full party: it rests in the Sanctum, unless the Council has sealed it (a gentle line, nothing lost
+         from the story: the scene that gave it can be met again) */
+      const sanctum = game.registry.get('service', 'sanctum');
+      if (sanctum && sanctum.sealed()) {
+        const stage = kind.stages && kind.stages[0];
+        const name = stage && stage.name ? ctx.text(stage.name) : key;
+        game.ui.toast(noRoomLine(game, name));
+        return;
+      }
+      const kinds = game.save.state.kinds;
+      if (kinds && Array.isArray(kinds.resting)) kinds.resting.push(member);
+    }
     game.save.commit();
   });
 

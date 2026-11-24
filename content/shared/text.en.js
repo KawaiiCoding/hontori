@@ -556,6 +556,7 @@ export default {
   'shared.ui.spell.how.boost': 'Draw a sharp peak, up and down.',
   'shared.ui.spell.how.stun': 'Draw a zigzag, like lightning.',
   'shared.ui.spell.how.sleep': 'Draw a soft wave.',
+  'shared.ui.spell.how.step': 'Draw a seven: across, then down to the left.',
   'shared.ui.spell.how.bind': 'Draw a spiral, from the outside in.',
   'shared.ui.spell.how.revive': 'Draw a five-pointed star in one stroke.',
   'shared.ui.spell.equip': 'Take into battle',
@@ -581,6 +582,9 @@ export default {
   'shared.spell.sleep': 'Dream Veil',
   'shared.spell.sleep.desc': 'Foe may fall asleep',
   'shared.spell.how.wave': 'Draw a wave',
+  'shared.spell.step': 'Swift Step',
+  'shared.spell.step.desc': 'Escape much likelier',
+  'shared.spell.how.seven': 'Draw a seven: across, then down to the left',
   'shared.spell.bind': 'Binding Spiral',
   'shared.spell.bind.desc': 'Bind a weak foe',
   'shared.spell.how.spiral': 'Draw a spiral from the outside in',
@@ -1003,5 +1007,22 @@ export default {
   'shared.feat.wheel.weak': 'Weak to {list}.',
   'shared.feat.wheel.and': ' and ',
 
-  'shared.wild.tired': 'Too tired to fight tonight. A bed or a bowl would set it right.'
+  'shared.wild.tired': 'Too tired to fight tonight. A bed or a bowl would set it right.',
+  /* twists of the drawing prompt */
+  'shared.feat.draw.mirror': 'The guide shows mirrored, as in still water.',
+  'shared.feat.draw.quick': 'Finish before the spark reaches the end of the wire.',
+  'shared.feat.draw.late': 'The spark got there first. Try again.',
+  'shared.feat.draw.burn': 'The line burns away behind your finger. Draw it in one sure stroke.',
+  /* choosing who to carry, and the sealed Sanctum */
+  'shared.feat.carry.count': '{n} of {max} chosen',
+  'shared.feat.carry.locked': 'Always with you',
+  'shared.feat.carry.full': 'That is all the wand can carry. Unpick one first.',
+  'shared.feat.carry.back': 'Not yet',
+  'shared.feat.carry.level': 'Lv {level}',
+  'shared.ui.sanctum.sealed': 'Sealed by the Council',
+  'shared.ui.sanctum.sealed.sub': '{n} asleep under grey wax',
+  'shared.ui.sanctum.sealed.note': 'They sleep safe and still. The seal cannot be opened from here.',
+  'shared.ui.sanctum.sealed.tap': 'The wax holds. {name} sleeps on.',
+  'shared.ui.sanctum.sealed.rest': 'The Sanctum is sealed. Nobody can rest there now.',
+  'shared.feat.sanctum.noRoom': 'Your party is full and the Sanctum is sealed. {name} will have to wait.',
 };

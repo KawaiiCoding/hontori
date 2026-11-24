@@ -193,7 +193,10 @@ export default [
     phases: [
       { if: 'c3:kite:note', at: { map: 'kitewick', x: 25, y: 20, dir: 0 }, lines: ['ch3.p.cole.1', 'ch3.p.cole.2'], service: 'ch3.svc.cole' },
       /* chapter 5: after the scene with his father he stays in the ring-smith's house in Coilhaven */
-      { if: 'c5:cole', at: { map: 'coilhaven_h1', x: 6, y: 6, dir: 2 }, lines: ['ch5.p.cole.1', 'ch5.p.cole.2'], service: 'ch5.svc.cole' }
+      { if: 'c5:cole', at: { map: 'coilhaven_h1', x: 6, y: 6, dir: 2 }, lines: ['ch5.p.cole.1', 'ch5.p.cole.2'], service: 'ch5.svc.cole' },
+      /* chapter 7: he and Mira find the kid in Cinderreach, then rest at the tavern there */
+      { if: { all: ['c7:box', { not: 'c7:friends' }] }, at: { map: 'cinderreach', x: 28, y: 24, dir: 1 }, lines: ['ch7.p.cole.1', 'ch7.p.cole.2'], service: 'ch7.svc.friend' },
+      { if: 'c7:friends', at: { map: 'cinderreach_tavern', x: 5, y: 5, dir: 3 }, lines: ['ch7.p.cole.1', 'ch7.p.cole.2'], service: 'ch7.svc.friend' }
     ]
   },
   {
@@ -205,7 +208,10 @@ export default [
     service: 'ch1.svc.duel.mira',
     /* chapter 4: she has gone home to Tidewell, to her mother's house */
     phases: [
-      { if: 'c4:open', at: { map: 'tidewell_h1', x: 5, y: 4, dir: 0 }, lines: ['ch4.p.mira.1', 'ch4.p.mira.2'], service: 'ch4.svc.mira' }
+      { if: 'c4:open', at: { map: 'tidewell_h1', x: 5, y: 4, dir: 0 }, lines: ['ch4.p.mira.1', 'ch4.p.mira.2'], service: 'ch4.svc.mira' },
+      /* chapter 7: with Cole in Cinderreach */
+      { if: { all: ['c7:box', { not: 'c7:friends' }] }, at: { map: 'cinderreach', x: 31, y: 24, dir: 1 }, lines: ['ch7.p.mira.1', 'ch7.p.mira.2'], service: 'ch7.svc.friend' },
+      { if: 'c7:friends', at: { map: 'cinderreach_tavern', x: 9, y: 6, dir: 2 }, lines: ['ch7.p.mira.1', 'ch7.p.mira.2'], service: 'ch7.svc.friend' }
     ]
   },
   {
@@ -219,7 +225,10 @@ export default [
         if: 'c1:complete',
         at: { map: 'rootwood_hall', x: 5, y: 18, dir: 3 },
         lines: ['ch1.p.wren.3', 'ch1.p.wren.4']
-      }
+      },
+      /* chapter 6: an apprentice of Rootwood now, she comes through Stonehollow and loses hontori to the seal too */
+      { if: { all: ['c6:wren', { not: 'c6:wrenhome' }] }, at: { map: 'stonehollow_tavern', x: 5, y: 6, dir: 0 }, lines: ['ch6.p.wren.1', 'ch6.p.wren.2'] },
+      { if: { all: ['c6:sealed', { not: 'c6:wrenhome' }] }, at: { map: 'stonehollow', x: 33, y: 24, dir: 2 }, lines: ['ch6.p.wren.3', 'ch6.p.wren.4'] }
     ]
   },
   {

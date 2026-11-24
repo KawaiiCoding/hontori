@@ -19,7 +19,9 @@
  *   faceOf(key, stage)                the creature's face (a canvas) or null
  *   bars(member)                      [{ frac, kind, label, value }] health, stamina and EXP
  *   resting(), capacity()             the Sanctum's members; how many it holds (12, then 6 more per wand level)
- *   toSanctum(i), fromSanctum(j, swapWith), release(j)   -> true when done (a full Sanctum is said in a toast)
+ *   toSanctum(i), fromSanctum(j, swapWith), release(j)   -> true when done (a full Sanctum is said in a toast;
+ *                                     while it is sealed nothing is done and that is said instead)
+ *   sealed()                          the Council has sealed the Sanctum (service "sanctum", game/features/sanctum.js)
  *   memoryOf(key)                     'bound' | 'met' | 'unknown'
  *   mana()                            { n, max } (the mana service, else the save section)
  *   spendMana(n)                      -> true when there was enough
@@ -165,6 +167,21 @@ export class Roster {
     return SANCTUM_BASE + SANCTUM_PER_LEVEL * (this.wand().level - 1);
   }
 
+  sealed() {
+    try {
+      const sanctum = this.#game.registry.get('service', 'sanctum');
+      return !!(sanctum && sanctum.sealed());
+    } catch (error) {
+      return false;
+    }
+  }
+
+  #shut() {
+    if (!this.sealed()) return false;
+    this.#game.ui.toast(this.text('shared.ui.sanctum.sealed.rest'));
+    return true;
+  }
+
   #full() {
     if (this.resting().length < this.capacity()) return false;
     this.#game.ui.toast(this.text('shared.ui.sanctum.full'));
@@ -173,7 +190,7 @@ export class Roster {
 
   toSanctum(i) {
     const party = this.party;
-    if (!party || party.size() <= 1 || this.#full()) return false;
+    if (!party || party.size() <= 1 || this.#shut() || this.#full()) return false;
     const member = party.removeAt(i);
     if (!member) return false;
     this.resting().push(member);
@@ -185,7 +202,7 @@ export class Roster {
     const party = this.party;
     const resting = this.resting();
     const member = resting[j];
-    if (!party || !member) return false;
+    if (!party || !member || this.#shut()) return false;
     if (swapWith == null) {
       if (party.size() >= party.max) return false;
       resting.splice(j, 1);
@@ -204,7 +221,7 @@ export class Roster {
 
   release(j) {
     const resting = this.resting();
-    if (!resting[j]) return false;
+    if (!resting[j] || this.#shut()) return false;
     resting.splice(j, 1);
     this.commit();
     return true;

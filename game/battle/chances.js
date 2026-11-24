@@ -8,7 +8,8 @@
  *     0.05 + 0.45 * (1 - foe hp share) + 0.18 asleep + 0.12 stunned + 0.15 * accuracy
  *     - 0.07 * (foe level - your level) - 0.08 if the foe's element beats yours + 0.05 if yours beats the foe;
  *     then x wandPower x gradeMul + captureBonus + calm + (charm ? 0.05 : 0), clamped to 0.05 .. 0.85
- *   escapeChance({ me, foe, tries, quick })
+ *   escapeChance({ me, foe, tries, quick, step })   step: the grade multiplier of a Swift Step cast this turn
+ *                          (+STEP_BONUS x step), still at most 0.95
  *     0.4 + 0.08 * (your level - foe level) + 0.2 per failed try + 0.3 if the foe sleeps or is stunned
  *     - 0.1 if the foe moves first, clamped to 0.1 .. 0.95
  *   escapeBars(chance)     1 (< 0.4), 2 (< 0.7) or 3
@@ -33,9 +34,12 @@ export function bindChance(o) {
   return clamp(c * (o.wandPower || 1) * (o.gradeMul || 1) + (o.captureBonus || 0) + (o.calm || 0) + (o.charm ? CHARM_LUCK : 0), 0.05, 0.85);
 }
 
+/* Swift Step: much likelier, never certain (the clamp keeps every try below 0.95, world rule 33) */
+export const STEP_BONUS = 0.35;
+
 export function escapeChance(o) {
   const c = 0.4 + 0.08 * (o.me.level - o.foe.level) + 0.2 * (o.tries || 0)
-    + (o.foe.has('asleep') || o.foe.has('stun') ? 0.3 : 0) - (o.quick ? 0.1 : 0);
+    + (o.foe.has('asleep') || o.foe.has('stun') ? 0.3 : 0) - (o.quick ? 0.1 : 0) + STEP_BONUS * (o.step || 0);
   return clamp(c, 0.1, 0.95);
 }
 

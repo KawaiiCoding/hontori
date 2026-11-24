@@ -50,6 +50,20 @@ export const handlers = {
     this.message.say(e.text);
   },
 
+  /* a trainer's hontori flares up into its next phase (game/battle/phases.js): a hot flash on it and the
+     place's phase music (game/music/places.js `phase`); the music of the place comes back when the screen closes */
+  async phase() {
+    await this.settle();
+    const P = this.places.foe;
+    const color = ELEMENT_COLORS[this.view.foe.el] || '#ff8a3c';
+    this.stage.flash(color, 0.35);
+    this.stage.burst(P.x, P.y, color, 30, 1.6);
+    this.stage.shake(3);
+    const sound = this.game.sound;
+    if (sound && typeof sound.battle === 'function') sound.battle('phase');
+    await this.stage.wait(400);
+  },
+
   /* the tide of a flooded ring stands a little higher (ring rule tideRise) */
   tide(e) {
     this.setTide(e.level, e.max);

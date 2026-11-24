@@ -9,6 +9,7 @@
  *   night  the tune at night; leave out to use the day tune at night too
  *   duel   the tune of a duel fought on these maps; leave out to keep the common duel tune
  *   wild   the tune of a wild encounter on these maps; leave out to keep the common one
+ *   phase  the tune once a trainer's hontori flares up into its second phase; leave out to keep the duel tune
  *
  * Public API:
  *   PLACES          the rows
@@ -90,6 +91,41 @@ export const PLACES = [
   {
     maps: ['ember_crucible'],
     day: 'cinderreach_night',
-    duel: 'crucible_duel'
+    duel: 'crucible_duel',
+    /* the second phase of Brasa's lead (game/battle/phases.js) */
+    phase: 'crucible_duel_2'
+  },
+  /* chapter 8: the town where it is always evening; the clock is held at dusk inside it, so the day tune is its dusk */
+  {
+    maps: ['duskmere', 'duskmere_tavern', 'duskmere_shop', 'duskmere_h1', 'duskmere_h2', 'duskmere_h3', 'duskmere_h4', 'lantern_room'],
+    day: 'duskmere',
+    night: 'duskmere_night'
+  },
+  /* the dark wood is quiet whatever the hour, and so is the crater school */
+  {
+    maps: ['mothwood'],
+    day: 'duskmere_night'
+  },
+  {
+    maps: ['hollow_moon'],
+    day: 'duskmere_night',
+    duel: 'hollow_moon_duel'
+  },
+  /* chapter 9: the golden city, its gate, the small school and the mirror gardens */
+  {
+    maps: ['golden_gate', 'goldmere', 'goldmere_tavern', 'goldmere_shop', 'goldmere_h1', 'goldmere_h2', 'goldmere_h3', 'goldmere_h4', 'glasshouse', 'mirror_gardens'],
+    day: 'goldmere',
+    night: 'goldmere_night'
+  },
+  /* the court is calm between fights; the tournament rounds ask for their own tune (see PlaceMusic.battle) */
+  {
+    maps: ['halo_court'],
+    day: 'goldmere_night',
+    duel: 'halo_duel'
+  },
+  /* the garden of jars: one lullaby, day and night */
+  {
+    maps: ['vael_garden'],
+    day: 'vael_garden'
   }
 ];

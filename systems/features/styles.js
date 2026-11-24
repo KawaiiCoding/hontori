@@ -13,6 +13,7 @@
  *   .ft-story .frame .line .dots .tap .skip     the picture story
  *   .ft-draw .tip .sub             the drawing prompt over the dimmed world
  *   .ft-card                       a centred card (name entry, offer); .ft-card .pic .in .err .row .list
+ *   .ft-carry .count .grid .pick (.on .lock) .tick   the choose-who-comes card (CarryChoice.js)
  *   .ft-moment .msg .row           a full-screen moment with a message at the bottom (a growth)
  *   .ft-side                       a round button under the HUD column (riding)
  *   .ft-closewrap .ft-close .ft-closex   a close-up of a board; .ft-close.notes .cork .note (.big, blue, green, pink)
@@ -61,6 +62,21 @@ const CSS = `
 .ft-card .row{display:flex;gap:8px;margin-top:12px}
 .ft-card .row .ui-btn{flex:1;justify-content:center}
 .ft-card .ui-btn.wide{margin-top:8px}
+.ft-card .ui-btn.off{opacity:.45}
+
+.ft-carry{width:min(94%,440px)}
+.ft-carry .count{margin:2px 0 8px;font-size:15px;font-weight:900;color:var(--accent)}
+.ft-carry .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.ft-carry .pick{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;min-height:44px;
+  border-radius:14px;border:2px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);color:var(--text);font:inherit;cursor:pointer}
+.ft-carry .pick canvas{width:52px;height:52px;image-rendering:pixelated;opacity:.6}
+.ft-carry .pick b{font-size:13px;font-weight:900;line-height:1.15}
+.ft-carry .pick small{font-size:11px;font-weight:700;opacity:.8}
+.ft-carry .pick .tick{position:absolute;right:6px;top:6px;width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.3)}
+.ft-carry .pick.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.ft-carry .pick.on canvas{opacity:1}
+.ft-carry .pick.on .tick{background:var(--accent);border-color:var(--accent)}
+.ft-carry .pick.lock{cursor:default}
 
 .ft-moment{background:var(--title-edge)}
 .ft-moment .msg{position:absolute;left:16px;right:16px;bottom:calc(var(--sa-b) + 28px);text-align:center;font-size:clamp(16px,4.4cqmin,22px);

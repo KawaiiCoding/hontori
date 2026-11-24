@@ -37,6 +37,15 @@ function fromContent(game, key, find) {
   return null;
 }
 
+/* what a thing does (content items `effect`), or null */
+function effectOf(bag, id) {
+  try {
+    return (bag.book && typeof bag.book.effect === 'function' && bag.book.effect(id)) || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function addOnce(list, value) {
   if (value != null && !list.includes(value)) list.push(value);
 }
@@ -65,7 +74,8 @@ export function installBattles(game) {
         mana: mana.mana, maxMana: mana.maxMana, level: wand.level, spells, loadout: wand.loadout,
         spellXp: wand.spellXp, spellMastery: wand.spellMastery, perks: wandPerks(wand.level),
       },
-      items: bag ? bag.inventory.list().map((entry) => ({ id: entry.id, n: entry.n })) : [],
+      /* the effect lets the battle know a thing by what it does (an earth treat), not by its id */
+      items: bag ? bag.inventory.list().map((entry) => ({ id: entry.id, n: entry.n, effect: effectOf(bag, entry.id) })) : [],
       flags: { boundOnce: !!state.kinds.boundOnce },
     };
     let trainer = null;
@@ -78,10 +88,17 @@ export function installBattles(game) {
         key: trainer.look,
         team: (trainer.team || []).map((member) => ({
           spirit: member.kind, level: Math.max(1, Math.round(Number(ctx.value(member.level)) || 1)), stage: member.stage,
+          phases: Array.isArray(member.phases) ? member.phases.map((phase) => ({ at: phase.at, say: phase.say ? ctx.text(phase.say) : '' })) : undefined,
         })),
+        /* a caster duel's data (ring rule wandDuel) */
+        wand: trainer.wand,
         lesson: trainer.lesson,
         ban: trainer.ban,
-        school: trainer.school,
+        /* the banner of a great school (schema: school is the banner { name, el, col, rule }) */
+        school: trainer.school || (trainer.banner ? {
+          name: ctx.text(trainer.banner.name), el: trainer.banner.element, col: trainer.banner.color,
+          rule: trainer.banner.rule ? ctx.text(trainer.banner.rule) : '',
+        } : undefined),
         noSwitch: rules.includes('noSwitch'),
         noCapture: rules.includes('noCapture'),
       };
@@ -91,6 +108,9 @@ export function installBattles(game) {
       setup.level = Math.max(0, Math.round(Number(ctx.value(wild.level === undefined ? battle.level : wild.level)) || 0)) || undefined;
     }
     setup.noCapture = rules.includes('noCapture');
+    /* a full party while the Council keeps the Sanctum sealed: a binding has nowhere to go */
+    const sanctum = registry.get('service', 'sanctum');
+    setup.noRoom = !!(sanctum && sanctum.sealed() && bag && bag.party.size() >= bag.party.max);
     setup.sureBind = rules.includes('sureBind');
     /* the ring rules among them (game/battle/ringRules.js) run in the battle */
     setup.rules = rules;

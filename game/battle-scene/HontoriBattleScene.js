@@ -121,6 +121,12 @@ export class HontoriBattleScene extends BattleScene {
     ui.spellsButton = ui.bar.addButton({ label: label('spells'), picture: this.#icon('book'), onPress: () => this.#pressSpells() });
     ui.herb = ui.bar.addButton({ label: '', picture: this.#itemIcon('herb', 'sprout'), onPress: () => this.act((battle) => battle.useItem('herb')) });
     ui.bread = ui.bar.addButton({ label: label('bread'), picture: this.#itemIcon('bread', 'energy'), onPress: () => this.act((battle) => battle.useItem('bread')) });
+    /* a thing that mends the hontori on the field (an earth treat): shown while one is carried */
+    const treat = b.treat;
+    ui.treat = ui.bar.addButton({
+      label: '', picture: this.#itemIcon(treat ? treat.id : 'herb', 'heart'),
+      onPress: () => this.act((battle) => (battle.treat ? battle.useItem(battle.treat.id) : []))
+    });
     ui.bar.addGap();
     ui.switch = ui.bar.addButton({ label: label('switch'), picture: this.#icon('swap'), onPress: () => this.#pressSwitch() });
     ui.escape = ui.bar.addButton({ label: label('escape'), picture: this.#icon('run'), odds: true, onPress: () => this.#pressEscape() });
@@ -358,6 +364,13 @@ export class HontoriBattleScene extends BattleScene {
     ui.herb.setLabel(label('herb', { n: herbs }));
     ui.herb.setCount(herbs);
     ui.bread.hidden = !b.breadReady;
+    const treat = b.treat;
+    ui.treat.hidden = !treat;
+    if (treat) {
+      ui.treat.setLabel(label('treat', { n: treat.n }));
+      ui.treat.setCount(treat.n);
+      ui.treat.off = !idle || v.me.hp <= 0 || v.me.hp >= v.me.max;
+    }
     ui.switch.hidden = !b.canSwitch();
     ui.bar.fit();
     const out = v.me.hp <= 0;

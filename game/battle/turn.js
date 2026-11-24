@@ -3,11 +3,12 @@
  * Job: the round cycle and the endings (old src/battle.js beginTurn, runRound, nextFoe, win, lose, finish).
  *
  * Public API:
- *   beginTurn(b)          round + 1; cooldowns tick; +1 mana on rounds 3, 5, 7, ...; the ring rules' roundStart
+ *   beginTurn(b)          round + 1; cooldowns tick; +1 mana on rounds 3, 5, 7, ... (not under heat); the ring rules' roundStart
  *                         (ringRules.js: the wind may swap yours); the foe picks its intent
  *                         (it keeps the old one while stunned or asleep) and guards this round if that is it;
  *                         a fainted hontori with no Dawn Star to hand forces a switch, or loses when nobody is left
- *   runRound(b, steps)    the two halves of a round in order, then the round end: Deep Root heals 3, glow,
+ *   runRound(b, steps)    the two halves of a round in order (after each, a foe that still stands may enter its next
+ *                         phase: phases.js), then the round end: Deep Root heals 3, glow,
  *                         tailwind and shell count down, the foe's mist counts down, the foe's guard ends
  *   aliveOthers(b)        party indices, other than the one on the field, with hp above 0
  *   hint(b)               the helper line for the player's turn
@@ -26,7 +27,8 @@ import { reviveMaterial, SPELLS } from './spells.js';
 import { MOVES } from './moves.js';
 import { makeFoe } from './setup.js';
 import { me, foe, say, speciesOf, itemCount, can, costOf } from './common.js';
-import { runRingRules } from './ringRules.js';
+import { runRingRules, ringRefills } from './ringRules.js';
+import { checkPhases } from './phases.js';
 import { line } from './text.js';
 
 export function aliveOthers(b) {
@@ -45,7 +47,7 @@ export function hint(b) {
   const weak = f.hp / f.max <= 0.35;
   if (m.fainted) return can(b, 'revive') ? 'hintFaintedStar' : 'hintFainted';
   if (m.has('asleep')) return 'hintAsleep';
-  if (!S.trainer && can(b, 'bind') && weak && S.mana >= 2 && !S.spellUsed) return S.flags.boundOnce ? 'hintBind' : 'hintBindFirst';
+  if (!S.trainer && !S.noRoom && can(b, 'bind') && weak && S.mana >= 2 && !S.spellUsed) return S.flags.boundOnce ? 'hintBind' : 'hintBindFirst';
   if (!S.trainer && !S.known.includes('bind') && weak) return 'hintLearnBind';
   if (S.intent === 'charge' && can(b, 'shield')) return 'hintCharge';
   if (S.intent === 'unleash' && can(b, 'shield') && !m.has('shield') && !S.spellUsed) return 'hintUnleash';
@@ -61,7 +63,7 @@ export function beginTurn(b) {
   const S = b.state;
   const f = foe(b);
   b.startRound();
-  if (b.round > 1 && b.round % 2 === 1 && S.mana < S.maxMana) {
+  if (b.round > 1 && b.round % 2 === 1 && S.mana < S.maxMana && ringRefills(b)) {
     S.mana++;
     b.emit('mana', { amount: 1, mana: S.mana, source: 'round' });
   }
@@ -88,7 +90,11 @@ export function beginTurn(b) {
 }
 
 export function runRound(b, steps) {
-  const stop = b.runSteps(steps, () => (foe(b).fainted ? 'win' : me(b).fainted ? 'faint' : null));
+  const stop = b.runSteps(steps, () => {
+    if (foe(b).fainted) return 'win';
+    checkPhases(b);
+    return me(b).fainted ? 'faint' : null;
+  });
   if (stop === 'win') return win(b);
   if (stop === 'faint') {
     b.emit('faint', { target: 'me' });

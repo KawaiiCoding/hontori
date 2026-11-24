@@ -6,7 +6,9 @@
  * is hidden; this adapter adds nothing to that.
  *
  * The music of a place comes from game/music/: the common tunes of the current game everywhere, and the places listed in
- * game/music/places.js (Kitewick, Gale Loft) with their own. They are played through the synthesizer's battle(key) door, which
+ * game/music/places.js with their own (chapter 3: Kitewick and Gale Loft; chapter 4: Tidewell and Deepbell Hall; chapter 5:
+ * Coilhaven and the Storm Works; chapter 6: Stonehollow and Bedrock Hall; chapter 7: Cinderreach, the Hearth Below and the
+ * Ember Crucible). They are played through the synthesizer's battle(key) door, which
  * can force any song of its book; game/music/PlaceMusic.js decides the key, so a fight's tune and a place's tune never clash.
  *
  * Public API (class HontoriSound):
@@ -16,7 +18,8 @@
  *   follow(env)             let music and ambience follow the hour and the weather
  *   play(name)              a sound effect: 'step', 'bump', 'door', 'confirm', 'sparkle' ...
  *   note(midi)              one soft note (a chime, a music box)
- *   battle(kind)            the battle music: 'wild' or 'duel'; null goes back to the music of the place
+ *   battle(kind)            the battle music: 'wild' or 'duel', 'phase' for a trainer's second phase; null goes back to
+ *                           the music of the place
  *   setMuted(on)
  *
  * Without the legacy module every call does nothing: the game runs silent.
