@@ -57,7 +57,7 @@ export default {
     'gggggggggggggggggggggggggggggppggggggggggggggggggggggggggggg'
   ],
   things: {
-    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', w: 'well', f: 'flowerbed', k: 'cart', c: 'crate', a: 'barrel', o: 'log_pile', g: 'garden_bed', m: 'mailbox', M: 'market_stall', s: 'statue', l: 'lantern_string', y: 'laundry_line', t: 'fruit_tree', q: 'flower_patch', H: { building: 'house_a' }, I: { building: 'tavern' }, '$': { building: 'shop' }, G: { building: 'school' } },
+    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', w: 'well', f: 'flowerbed', k: 'cart', c: 'crate', a: 'barrel', o: 'log_pile', g: 'garden_bed', m: 'mailbox', M: 'market_stall', s: 'statue', l: 'lantern_string', y: 'laundry_line', t: 'fruit_tree', q: 'flower_patch', H: { building: 'house_a' }, I: { building: 'tavern' }, '$': { building: 'shop' }, G: { building: 'school_earth' } },
     rows: [
       'PRPPR.PRPRPRPPPPPPPRRPPPPRPPPP.PPRPRPP......PRPRPP.PRR.PP.RR',
       'RPPPPRRRPRP.RRPR.PRPRRP.PP.PRRRRPPP.PR......PPRPPPP.P.RRPP.R',

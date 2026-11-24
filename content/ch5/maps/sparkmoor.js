@@ -51,7 +51,7 @@ export default {
     'gggggggggggggggggggggggggggggggggggggggggggggggggggggggg'
   ],
   things: {
-    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', b: 'bench', c: 'crate', a: 'barrel', o: 'log_pile', s: 'statue', r: 'reeds', p: 'lilypad', n: 'mushroom_ring', G: { building: 'school' } },
+    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', b: 'bench', c: 'crate', a: 'barrel', o: 'log_pile', s: 'statue', r: 'reeds', p: 'lilypad', n: 'mushroom_ring', G: { building: 'school_electric' } },
     rows: [
       'PRP.PPPPPP.PRPPP..PPP.RPP.PPPP..P..P.PRPR.PRRPPP.RPPRP..',
       'PP.RR.RPP.RPP.RP.PPRRRPPPP.P..PPR..PPP.PRP.PPP..PPRPPP.P',

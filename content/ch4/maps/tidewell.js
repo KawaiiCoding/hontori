@@ -53,7 +53,7 @@ export default {
     'wwwwwwwwwwwwwwwwwwwwwwwwwwwwbbwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww'
   ],
   things: {
-    legend: { T: 'tree', P: 'pine', B: 'bush', R: 'rock', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', w: 'well', f: 'flowerbed', c: 'crate', a: 'barrel', o: 'log_pile', g: 'garden_bed', m: 'mailbox', M: 'market_stall', s: 'statue', l: 'lantern_string', y: 'laundry_line', r: 'reeds', p: 'lilypad', t: 'fruit_tree', e: 'cherry_tree', q: 'flower_patch', H: { building: 'house_a' }, I: { building: 'tavern' }, '$': { building: 'shop' }, G: { building: 'school' } },
+    legend: { T: 'tree', P: 'pine', B: 'bush', R: 'rock', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', w: 'well', f: 'flowerbed', c: 'crate', a: 'barrel', o: 'log_pile', g: 'garden_bed', m: 'mailbox', M: 'market_stall', s: 'statue', l: 'lantern_string', y: 'laundry_line', r: 'reeds', p: 'lilypad', t: 'fruit_tree', e: 'cherry_tree', q: 'flower_patch', H: { building: 'house_a' }, I: { building: 'tavern' }, '$': { building: 'shop' }, G: { building: 'school_water' } },
     rows: [
       '..TTT.T.TTPPTP...PPTPPP.P.......TPP.T.TT.TT.T.TP......................',
       'TP.TPT.PP.TTP...PTTT.TTP........T.TTP.T.TTTPPTPP......................',

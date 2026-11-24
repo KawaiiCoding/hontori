@@ -58,7 +58,7 @@ export default {
     'gggggggggggggggggggggggggggggggg'
   ],
   things: {
-    legend: { P: 'pine', B: 'bush', R: 'rock', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', s: 'statue', p: 'lilypad', q: 'flower_patch', G: { building: 'school' } },
+    legend: { P: 'pine', B: 'bush', R: 'rock', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', s: 'statue', p: 'lilypad', q: 'flower_patch', G: { building: 'school_wind' } },
     rows: [
       'PPPPPPR.RPP...RPR.PPPPR.RRPRPPPR',
       'PP....RPP.RPRPPPRR.PPPPPPPP...RR',

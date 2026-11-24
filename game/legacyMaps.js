@@ -17,6 +17,8 @@ import { withContentMaps } from './maps/index.js';
 
 const NEARBY = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1], [2, 0], [-2, 0]];
 const NO_GROUND_FOR_FIXTURES = new Set(['path', 'water', 'cobble']);
+/* buildings of the classic maps drawn as another type: Rootwood Hall wears its own hall, not the Academy's */
+const BUILDING_LOOK = { mossgrove: { school: 'school_grass' } };
 
 export function legacyMaps(art, legacy = window.H) {
   /* the chapters written as data (content/<chapter>/maps) follow, joined to these by their links */
@@ -31,7 +33,7 @@ function describe(id, map, art) {
     rows: map.ground.slice(),
     legend: { ...map.legend },
     props: (map.props || []).map((p) => ({ type: p.type, x: p.x, y: p.y })),
-    buildings: (map.buildings || []).map((b) => ({ type: b.type, x: b.x, y: b.y })),
+    buildings: (map.buildings || []).map((b) => ({ type: (BUILDING_LOOK[id] && BUILDING_LOOK[id][b.type]) || b.type, x: b.x, y: b.y })),
     people: people(map.npcs || []),
     doors: (map.doors || []).map((d) => ({ x: d.x, y: d.y, to: d.to, tx: d.tx, ty: d.ty, dir: d.dir || 0 })),
     spawn: { x: 1, y: 1, dir: 0, ...map.spawn },

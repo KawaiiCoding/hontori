@@ -55,7 +55,7 @@ export default {
     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaclllcaaa'
   ],
   things: {
-    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', w: 'well', f: 'flowerbed', k: 'cart', c: 'crate', a: 'barrel', o: 'log_pile', g: 'garden_bed', m: 'mailbox', M: 'market_stall', s: 'statue', l: 'lantern_string', y: 'laundry_line', H: { building: 'house_a' }, I: { building: 'tavern' }, '$': { building: 'shop' }, G: { building: 'school' } },
+    legend: { P: 'pine', B: 'bush', R: 'rock', W: 'stone_wall_h', L: 'lamp', S: 'sign', C: 'windchime', b: 'bench', w: 'well', f: 'flowerbed', k: 'cart', c: 'crate', a: 'barrel', o: 'log_pile', g: 'garden_bed', m: 'mailbox', M: 'market_stall', s: 'statue', l: 'lantern_string', y: 'laundry_line', H: { building: 'house_a' }, I: { building: 'tavern' }, '$': { building: 'shop' }, G: { building: 'school_fire' } },
     rows: [
       '.R.RR.....RR...............................RR............R',
       '..RR.RRR.RRRRRR.............................RR.RR........R',

@@ -14,7 +14,8 @@
  *
  * Scene parts:
  *   set      'orchard' | 'festival' | 'nightTown' | 'window'      the backdrop
- *   zoom     1 | 2                                                how close the camera stands
+ *   zoom     1 | 2                                                how close the camera stands; at 2 a person standing
+ *                                                                sideways is drawn in a three-quarter look
  *   horizon  [tall, wide]                                         where the ground line sits, as a share of the height
  *   light    'gold' | 'dusk' | 'night' | 'grey'                   the mood of the light
  *   haze     true                                                 the sun's warm haze (sets with a sun)
@@ -516,6 +517,10 @@ export function storyPainter(art) {
       pose: { scale: SPIRIT_SCALE, dir: 0, moving: false, sit: false, alpha: 1 },
       shown: true,
       look: { npc: true, seed: actor.seed == null ? 0.3 : actor.seed },
+      /* in a close shot a person who stands facing sideways turns a little to us: the front view with the eyes
+         towards that side (a three-quarter look), so the face is seen and not the side of the hair */
+      close: (scene.zoom || 1) >= 2,
+      face: { npc: true, seed: actor.seed == null ? 0.3 : actor.seed, glance: 1 },
     }));
     actors.sort((a, b) => (a.actor.y || 0) - (b.actor.y || 0));
     const extras = Array.isArray(scene.extras) ? scene.extras : [];
@@ -581,7 +586,9 @@ export function storyPainter(art) {
       g.translate(Math.round(state.x), Math.round((actor.y || 0) - state.lift));
       if (scale !== 1) g.scale(scale, scale);
       if (actor.person) {
-        art.drawPerson(g, actor.person, 0, 0, state.dir, state.frame, env, actor.clear ? undefined : state.look);
+        const turned = state.close && !state.moving && (state.dir === 2 || state.dir === 3);
+        if (turned) state.face.glance = state.dir === 3 ? 1 : -1;
+        art.drawPerson(g, actor.person, 0, 0, turned ? 0 : state.dir, state.frame, env, turned ? state.face : actor.clear ? undefined : state.look);
       } else {
         const pose = state.pose;
         pose.dir = state.sit ? 0 : state.dir;

@@ -230,7 +230,39 @@ window.H = window.H || {};
   /* Cole's father: a broad ring-smith in a leather apron, a ring of keys at his belt */
   vary('dad', 'bram_ashfield', { name: 'Master Ashfield', skin: '#d9a27a', hair: '#26283a', style: 'bandana', band: '#6a4426', shirt: '#8a4a3a', collar: null, apron: '#6a4426',
     keys: '#d8b050', beard: 1, brow: '#26283a', stubble: 0, wide: 1, eye: '#5a4a2a', expr: 'flat', bg: '#e8c8a0' });
-  var E = '#2a1c2e', GL = '#3a2e44', WH = '#fbf6f0', MO = '#a8443c';
+  /* chapter 6: the mountain road, Stonehollow, the Drum Circle, the Old Quarry and Bedrock Hall */
+  vary('farmer', 'tamsin', { name: 'Carter Tamsin', skin: '#d9a27a', hair: '#6a3a22', style: 'hat', cap: '#8a6a3a', shirt: '#4a6a8a', pants: '#4a3a2a', apron: '#a87a4a', stubble: 0, eye: '#3a2a1a', bg: '#d8c8a8' });
+  vary('innkeeper', 'sh_innkeeper', { name: 'Innkeeper Corra', skin: '#e0ac82', hair: '#8a3a2a', style: 'bun', ties: '#c8a050', moustache: 0, shirt: '#d8ccb4', apron: '#6a6a72', eye: '#3a2a1a', bg: '#d8ccc0' });
+  vary('shopkeeper', 'sh_shopkeeper', { name: 'Hobb', skin: '#c88a60', hair: '#4a3a2a', style: 'short', glasses: 0, moustache: 1, shirt: '#8a7a5a', apron: '#4a5a6a', eye: '#3a2a1a', bg: '#d0c8b0' });
+  vary('traveler', 'drummer', { name: 'Drummer Tova', skin: '#8a5a3e', hair: '#1e1e2a', style: 'bandana', band: '#c8563a', robe: '#a8603a', trim: '#f0d070', scarf: '#5a8a4a', eye: '#2a1a10', bg: '#f0c8a0' });
+  vary('elder', 'gorse', { name: 'Old Gorse', skin: '#d9a27a', hair: '#d0ccc4', style: 'hat', cap: '#7a6a4a', staff: 0, robe: '#6a5a4a', trim: '#b89a6a', pants: '#3a3028', shoes: '#2a2018', eye: '#3a3a2a', brow: '#e8e4dc', bg: '#e0d4b8' });
+  vary('girl', 'briar', { name: 'Briar', hair: '#8a4a2a', style: 'ponytail', dress: '#c87a3a', ties: '#6a9a4a', skin: '#e0ac82', sailor: 0, collar: '#f4ecd8', freckles: 1, eye: '#3a5a3a', bg: '#f0d0a8' });
+  vary('mom', 'agna', { name: 'Mason Agna', skin: '#c88a60', hair: '#3a2a22', style: 'bandana', band: '#a8a49a', dress: '#5a6a7a', collar: null, apron: '#b8a888', eye: '#3a2a1a', bg: '#d0d0c8' });
+  vary('dad', 'bask', { name: 'Quarryman Bask', skin: '#b87a52', hair: '#2a2420', style: 'cap', cap: '#c89a3a', shirt: '#7a5a3a', collar: '#e8dcc0', pants: '#4a4a52', stubble: 1, wide: 1, eye: '#3a2a1a', bg: '#e0d0b0' });
+  vary('kid2', 'ottie', { name: 'Ottie', skin: '#f2c9a0', hair: '#5a3a22', style: 'messy', shirt: '#6a8ab8', pants: '#5a4a3a', shoes: '#4a3a2a', freckles: 0, eye: '#3a4a6a', bg: '#c8d8f0' });
+  vary('mom', 'mara', { name: 'Mara', skin: '#f2c9a0', hair: '#5a3a22', style: 'braid', ties: '#c85a7a', dress: '#a85a7a', collar: '#f4ecd8', shawl: '#e8b0c0', eye: '#3a4a6a', bg: '#f0c8d8' });
+  vary('apprentice', 'dunn_hollow', { name: 'Apprentice Dunn', skin: '#c88a60', hair: '#3a2a22', style: 'ponytail', ties: '#d8a030', robe: '#8a6a3a', trim: '#e8d8a0', sprout: null, freckles: 1, eye: '#3a2a1a', bg: '#e8d8b0' });
+  /* the fifth Warden: a broad stone-grey mantle over an umber robe, an amber stone at her throat, a plain staff */
+  C.harrow = { name: 'Warden Harrow', skin: '#d9a27a', hair: '#a4a4ac', style: 'bun', ties: '#c8a050', robe: '#6a5440', trim: '#d8b878', shawl: '#8a8a80',
+    pendant: '#e8a040', pants: '#3a3028', shoes: '#2a2018', staff: 1, wide: 1, eye: '#5a4a2a', expr: 'smile', brow: '#c8c8d0', bg: '#e0d0b0' };
+  /* the Council envoy: a plain grey cloak, no hood, and a gold sash of office */
+  C.envoy = { name: 'Council envoy', skin: '#ecc4a4', hair: '#5a5a62', style: 'short', robe: '#8a8a96', trim: '#c8c8d2', stole: '#e0b040', pants: '#4a4a54',
+    shoes: '#2a2a30', moustache: 1, eye: '#4a4a5a', expr: 'flat', brow: '#5a5a62', bg: '#d0d0d8' };
+  /* chapter 7: the Ash Road, Cinderreach, the Smoke House, the Hearth Below and the Ember Crucible */
+  vary('dad', 'ottar', { name: 'Road-mender Ottar', skin: '#c88a60', hair: '#8a8a90', style: 'hat', cap: '#6a5a4a', shirt: '#8a5a3a', collar: '#e8dcc0', apron: '#5a5048', stubble: 0, beard: 1, brow: '#8a8a90', eye: '#3a2a1a', bg: '#d8c8b8' });
+  vary('innkeeper', 'cr_innkeeper', { name: 'Innkeeper Doro', skin: '#8a5a3e', hair: '#2a1a14', band: '#e07a2a', shirt: '#f0e0c8', apron: '#7a3a2a', eye: '#2a1a10', bg: '#f0c8a8' });
+  vary('shopkeeper', 'cr_shopkeeper', { name: 'Fenna', skin: '#f0c8a0', hair: '#c8582a', style: 'ponytail', ties: '#4a4a52', glasses: 0, shirt: '#d8a040', apron: '#5a4a4a', eye: '#3a5a3a', bg: '#f0dca8' });
+  vary('traveler', 'smoke_keeper', { name: 'Smoke Keeper Thane', skin: '#d9a27a', hair: '#4a4a52', style: 'short', robe: '#7a6a8a', trim: '#c8c0d8', scarf: '#b8b0c8', eye: '#3a3a4a', bg: '#d8d0e4' });
+  vary('shopkeeper', 'sefa', { name: 'Glassblower Sefa', skin: '#c88a60', hair: '#1e1e2a', style: 'bun', ties: '#3aa0a8', glasses: 'round', shirt: '#3a8a9a', apron: '#6a4a3a', eye: '#2a1a10', bg: '#b8e0e0' });
+  vary('elder', 'marro', { name: 'Old Marro', skin: '#b87a52', hair: '#e8e4dc', robe: '#7a4a3a', trim: '#d8a868', pants: '#3a2a22', eye: '#3a2a1a', bg: '#e8d0b8' });
+  vary('girl', 'tilde', { name: 'Tilde', hair: '#2a1a14', style: 'twintails', ties: '#f08a3a', dress: '#e05a3a', skin: '#b87a52', sailor: 0, collar: '#f4ecd8', eye: '#4a2a1a', bg: '#f8c8b0' });
+  vary('dad', 'rusk', { name: 'Rusk', skin: '#b87a52', hair: '#2a1a14', style: 'bandana', band: '#5a5a62', shirt: '#a8603a', collar: null, apron: '#4a3a32', stubble: 1, eye: '#2a1a10', bg: '#e0c0a0' });
+  vary('grandma', 'juno', { name: 'Juno', skin: '#8a5a3e', hair: '#ece8e0', style: 'bun', ties: '#f0a040', dress: '#c8703a', collar: '#f4ecd8', glasses: 0, shawl: '#e8c070', eye: '#2a1a10', bg: '#f4d8a8' });
+  vary('apprentice', 'kell', { name: 'Apprentice Kell', skin: '#b87a52', hair: '#2a1a14', style: 'bandana', band: '#e0602a', robe: '#a83a2a', trim: '#f0c060', sprout: null, freckles: 0, eye: '#5a2a1a', expr: 'grin', bg: '#f4c0a0' });
+  /* the sixth Warden: a charcoal robe with ember trim, an ember shawl over her shoulders, a warm stone at her throat */
+  C.brasa = { name: 'Warden Brasa', skin: '#8a5a3e', hair: '#3a1a16', style: 'ponytail', ties: '#f08030', robe: '#3a2a2e', trim: '#f08a3a', shawl: '#b8442e',
+    pendant: '#ffb040', pants: '#2a2024', shoes: '#1e1414', eye: '#a8502a', expr: 'smile', brow: '#3a1a16', bg: '#f0c8a0' };
+  var E ='#2a1c2e', GL = '#3a2e44', WH = '#fbf6f0', MO = '#a8443c';
 
   // ---------- sprite (authored at 2x: 56x56 real px, local centre x = 16, feet bottom at local y = 47) ----------
   function sHair(g, d, dir, P) {
@@ -517,6 +549,14 @@ window.H = window.H || {};
   ['lisel', 'nell', 'peg', 'joss', 'rudd', 'bram_ashfield'].forEach(function (k) { IDLE[k] = ['fold', 'stretch', 'yawn']; });
   ['jory', 'tib'].forEach(function (k) { IDLE[k] = ['hop', 'swing', 'kick']; });
   IDLE.suri = ['map'];
+  /* chapters 6 and 7 */
+  ['sh_innkeeper', 'cr_innkeeper'].forEach(function (k) { IDLE[k] = ['mug']; });
+  ['sh_shopkeeper', 'cr_shopkeeper'].forEach(function (k) { IDLE[k] = ['coins']; });
+  ['gorse', 'marro'].forEach(function (k) { IDLE[k] = ['beard']; });
+  ['juno', 'mara'].forEach(function (k) { IDLE[k] = ['knit']; });
+  ['agna', 'bask', 'rusk', 'ottar', 'tamsin'].forEach(function (k) { IDLE[k] = ['fold', 'stretch', 'yawn']; });
+  ['briar', 'ottie', 'tilde'].forEach(function (k) { IDLE[k] = ['hop', 'swing', 'kick']; });
+  IDLE.drummer = ['swing'];
   function hsh(n) { var s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
 
   function sprite(d, dir, f, o) {
@@ -1091,7 +1131,7 @@ window.H = window.H || {};
     names: Object.keys(C).reduce(function (o, k) { o[k] = C[k].name; return o; }, {}),
     idles: Object.keys(ACT).filter(function (k) { return k !== 'talk'; }),
     // (x,y) = feet centre in logical px. Art is 2x: 56x56 real px drawn into a 28x28 logical box.
-    // opts (NPCs): { npc, seed 0..1, idle: action name, talking }
+    // opts (NPCs): { npc, seed 0..1, idle: action name, talking, glance: -1 | 1 (front view: eyes to that side) }
     draw: function (ctx, key, x, y, dir, frame, env, opts) {
       if (!C[key]) key = 'kid';
       dir = (dir | 0) & 3; var f = ((Math.floor(frame || 0) % 4) + 4) % 4, d = C[key];
@@ -1128,6 +1168,8 @@ window.H = window.H || {};
           }
         }
       }
+      /* opts.glance (-1 or 1): the eyes look that way in the front view (a three-quarter look in a picture story) */
+      if (opts && (opts.glance === 1 || opts.glance === -1) && dir === 0 && !o.nd) { o.lk = opts.glance; o.ws = 0; }
       if (d.scarf) {
         o.wl = wv < 0.35 ? 0 : wv < 0.65 ? 1 : 2;
         o.sp = Math.floor(t * (o.wl ? 9 : 3.5)) & 3;
