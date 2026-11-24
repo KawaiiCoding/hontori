@@ -107,3 +107,14 @@ New rules are added here as they are given. When something in the code disagrees
 89. Capsule machines (one free turn per machine per in-game day, never for money or coins, no duplicates); the first prize of the Emberbrook machine is always the Straw Hat; saddle blankets can only be won once the kid owns a saddle give things you can see and use: hats your lead hontori wears, centred on its head; saddle blanket colours; wand inks for the sigil line; keepsakes for your room. Hontori never wear scarves.
 90. The grey letter in Emberbrook comes by a paper bird that glides past and drops the letter at the kid's feet. Paper birds are how the Council sends word.
 91. In Kitewick an old pine stands on a small islet south of the kite post; the stuck letter of The Lost Kite hangs in it.
+92. Orlen Vael's seal is on the old order that sank the Deepbell bell so no one would hear hontori sing. The kid keeps the brass plate as proof. The bell's crying spirit, a bellfish, was Rook's "lost little cry".
+93. Mira's mother Lisel is asked about the V and says "not yet" (rule 71: it only works on the willing).
+94. Cole's father, Master Ashfield, is a ring-smith in Coilhaven.
+95. The lamp jars of Coilhaven are sealed with the same grey closed-eye wax as Lumen's well. The V breaks the seal and frees the spark inside.
+96. In Coilhaven the kid learns that the Archmage's Token guides the grey cloaks to them, and chooses to keep it or drop it in the river. Speaking out in the square or staying quiet (rule 81's choice) is remembered by the people of the city.
+97. The carvings in the Listening Cave show people and hontori side by side: the old law is only one lifetime old. Granny Burr's husband copied them. The woman with a fox in the carvings matches the statue in Emberbrook.
+98. Apprentice Dunn of Bedrock Hall is Foreman Dunn's daughter. Warden Harrow lays a stone bridge over the Ash Road for ring holders.
+99. The sealed Sanctum is "asleep, not gone": the Council's order is kept in the bag, and The Sleeping Sanctum quest stays open until the seal is broken in chapter 8.
+100. The kid's grandmother was named Ida. She was a Wonder who hid her wand; the kid's own hontori fled its emptied nest in the Hearth Below and chose the house where she once left a light on. Dad finds her wand box behind the hearth stone; it holds her note and a letter from young Orlen Vael, who trained with her under the first Wonder. Her wand still works.
+101. Warden Brasa of the Ember Crucible keeps the old nests in the Hearth Below warm, waiting for the hontori to come back.
+102. The opening picture story has seven panels: a child and a spirit sharing an apple; a festival shared by people and hontori; the grey closed-eye seal of the law draining the colour; the same spirit waiting unseen; the fox searching the night; the one lit window, yours; the V of light opening the seal. It advances by itself after each line is read and can always be skipped.
