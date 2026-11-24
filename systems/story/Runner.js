@@ -350,7 +350,17 @@ export class StoryRunner {
 
   #personSpeaker(def, person) {
     if (!def) return { id: '', name: '', look: person ? person.look : null, color: null };
-    const name = def.name ? this.text(def.name) : '';
+    /* a phase may give the person another shown name (the grey cloak, once their name is known) */
+    let nameId = def.name;
+    for (const phase of def.phases || []) {
+      if (!phase || !phase.name) continue;
+      try {
+        if (this.test(phase.if, {})) nameId = phase.name;
+      } catch (error) {
+        /* a phase that cannot be tested keeps the name before it */
+      }
+    }
+    const name = nameId ? this.text(nameId) : '';
     return { id: def.id, name, look: def.look || (person && person.look) || null, color: def.color || null };
   }
 

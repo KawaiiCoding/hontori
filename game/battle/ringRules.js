@@ -34,6 +34,10 @@
  *   heat       THE HEAT (Ember Crucible): the wand gets no mana back from the rounds; only what it holds at the
  *              start (and herbs carried in) can be spent. The Warden's lead may flare up in a second phase
  *              (a team member's `phases`, phases.js), which the screen answers with the place's phase music.
+ *   blind      BLIND (Hollow Moon): the foe's plan is hidden (turn.js shownIntent answers 'hidden') unless the
+ *              Lantern Sigil shows it, and one spell slot is sealed for the duel (the last of the loadout that is
+ *              not the Lantern Sigil); emits sealedSlot { kind }
+ *   pure       PURE (Halo Court): no binding and no items (cast.js, rules.js)
  *   wandDuel   WAND TO WAND (Bedrock Hall): named here so it is a known ring rule; a battle under it is not a
  *              hontori battle at all but a WandDuel (wandDuel.js), which the battle screen starts instead.
  */
@@ -157,3 +161,24 @@ defineRingRule('heat', {
 });
 
 defineRingRule('wandDuel', {});
+
+/* the last slot of the loadout that is not the Lantern Sigil (so the plan can always be lit), if there is one */
+function slotToSeal(b) {
+  const loadout = b.state.loadout || [];
+  for (let i = loadout.length - 1; i >= 0; i--) if (loadout[i] !== 'lantern') return loadout[i];
+  return null;
+}
+
+defineRingRule('blind', {
+  begin(b) {
+    b.state.sealedSpell = slotToSeal(b);
+    if (b.state.sealedSpell) b.emit('sealedSlot', { kind: b.state.sealedSpell });
+    say(b, 'blindBegin');
+  },
+});
+
+defineRingRule('pure', {
+  begin(b) {
+    say(b, 'pureBegin');
+  },
+});

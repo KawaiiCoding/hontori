@@ -26,7 +26,7 @@ import { escapeChance } from './chances.js';
 import { BREAD_CALM } from './chances.js';
 import { staCost } from './moves.js';
 import { matrix, weatherMul, weatherWhy } from './elements.js';
-import { me, foe, say, itemCount, useItem } from './common.js';
+import { me, foe, say, itemCount, useItem, hasRule } from './common.js';
 import { line } from './text.js';
 import { runRingRules } from './ringRules.js';
 
@@ -74,6 +74,7 @@ function effectOf(b, id) {
 
 function checkItem(b, p) {
   const S = b.state;
+  if (hasRule(b, 'pure')) return no('pure', 'refusePureItem');
   if (effectOf(b, p.id) === TREAT_EFFECT) {
     const m = me(b);
     if (itemCount(b, p.id) <= 0 || m.fainted) return no('unavailable');

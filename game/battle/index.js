@@ -23,5 +23,6 @@ export { battleRewards } from './rewards.js';
 export { TEXT, line } from './text.js';
 export { defineRingRule, ringRulesOf, ringPower, ringRefills, RING_RULES, TIDE_MAX, TIDE_STEP } from './ringRules.js';
 export { checkPhases, phasePower, PHASE_POWER } from './phases.js';
+export { setupAlly, allyView } from './ally.js';
 export { WandDuel, wandDuelRules, clash, isWandDuel, WAND_SPELLS, ANSWER, STRIKE, STRIKE_FLAWLESS, ECHO } from './wandDuel.js';
 export { bringIn } from './swap.js';

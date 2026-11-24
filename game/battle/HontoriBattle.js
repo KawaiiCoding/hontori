@@ -22,6 +22,10 @@
  *   switchTargets()         indices that may come in now
  *   bindTriesLeft, team     team: { defeated, total } for the trainer's dots, or null
  *   herbs, breadReady       whether the Herb and Bread buttons are shown
+ *   double                  { ally, partner } in a double battle (ally.js allyView), each null otherwise
+ *   pure                    the ring rule pure is on (no items, no binding)
+ *   sealedSpell             the spell whose slot the rule blind sealed, or null
+ *   foreseen                { now, next } while the Lantern Sigil shows the foe's plan, or null
  *   treat                   { id, n } of a carried thing with the effect earthTreat (rules.js), or null
  */
 
@@ -33,8 +37,9 @@ import { escapeChance, escapeBars, BIND_TRIES } from './chances.js';
 import { staCost } from './moves.js';
 import { tolerance } from './spells.js';
 import { checkSpell } from './cast.js';
-import { spellMastery, costOf, itemCount } from './common.js';
+import { spellMastery, costOf, itemCount, hasRule } from './common.js';
 import { line } from './text.js';
+import { allyView } from './ally.js';
 
 export class HontoriBattle extends Battle {
   constructor(setup, options) {
@@ -60,12 +65,17 @@ export class HontoriBattle extends Battle {
   get quick() { return quickFoe(this.foe, this.me); }
   get bindTriesLeft() { return BIND_TRIES - this.state.binds; }
   get team() { return this.state.team ? { defeated: this.state.teamIndex, total: this.state.team.length } : null; }
-  get herbs() { return itemCount(this, 'herb'); }
+  get herbs() { return this.pure ? 0 : itemCount(this, 'herb'); }
+  get pure() { return hasRule(this, 'pure'); }
+  get sealedSpell() { return this.state.sealedSpell; }
+  get foreseen() { return this.state.foresee > 0 ? { now: this.state.intent, next: this.state.nextIntent } : null; }
+  get double() { return allyView(this); }
   get treat() {
+    if (this.pure) return null;
     const it = this.state.items.find((i) => i.effect === TREAT_EFFECT && (i.n == null || i.n > 0));
     return it ? { id: it.id, n: it.n == null ? 1 : it.n } : null;
   }
-  get breadReady() { return itemCount(this, 'bread') > 0 && !this.state.breadUsed && !this.state.trainer; }
+  get breadReady() { return !this.pure && itemCount(this, 'bread') > 0 && !this.state.breadUsed && !this.state.trainer; }
 
   hint() {
     const id = hint(this);

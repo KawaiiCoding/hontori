@@ -8,12 +8,20 @@
  * It knows no game: the battles are the story's own `battle` command, the save point is the game's.
  *
  * Public API:
- *   installGauntlets(game, { snapshot, restore, command, leave, condition })
+ *   installGauntlets(game, { snapshot, restore, command, leave, condition, ...kind })
  *       snapshot()       what to keep at a save point (plain data, it is saved)
  *       restore(data)    put it back
  *       command, leave, condition   the story names to register (defaults "gauntlet", "gauntlet:leave",
  *                        "gauntlet"; a game passes its extension names, e.g. "ext:gauntlet")
- *     returns the Gauntlets object below (also registry "service" "gauntlets": { open(id), stage(id), leave(id) })
+ *     another kind of run (a tournament) uses the same machine under its own names:
+ *       contentKey (default 'gauntlets'), section (save section, 'gauntlet'), idKey (the id's key in a node,
+ *       'gauntlet'), stagesKey ('stages'), stageKey (the condition's key, 'stage'), stageBase (the number of the
+ *       first battle in the condition, 0), service ('gauntlets'), system ('features:gauntlet')
+ *       onStage({ def, index, ctx })   optional, awaited before each battle's save point (a board between rounds)
+ *       dress(battle, { def, step, index })   optional: what this battle carries besides (its tune, a twist)
+ *       onEnd({ def, won })  optional, after the run ends either way
+ *     A def may also carry `between: [commands]`, run after each battle won when another follows.
+ *     returns the Gauntlets object below (also registry "service" <service>: { open(id), stage(id), leave(id) })
  *
  * Content `gauntlets`: { id: { venue: mapId | [mapIds], rules: [battle rule], done: flag,
  *     stages: [{ battle: { opponent, rules }, before: [commands], won: [commands] }], left: textId, onLeave: [commands] } }
@@ -49,7 +57,7 @@ export class Gauntlets {
     if (!this.#defs) {
       this.#defs = {};
       for (const folder of this.#game.registry.all('content')) {
-        const table = folder && folder.gauntlets;
+        const table = folder && folder[this.#o.contentKey];
         if (table && typeof table === 'object') for (const [id, def] of Object.entries(table)) if (def && !this.#defs[id]) this.#defs[id] = def;
       }
     }
@@ -57,7 +65,7 @@ export class Gauntlets {
   }
 
   #runs() {
-    const section = this.#game.save.state.gauntlet;
+    const section = this.#game.save.state[this.#o.section];
     if (section && (!section.runs || typeof section.runs !== 'object')) section.runs = {};
     return section ? section.runs : {};
   }
@@ -109,19 +117,31 @@ export class Gauntlets {
     return true;
   }
 
+  async #hook(name, arg) {
+    const fn = this.#o[name];
+    if (typeof fn !== 'function') return undefined;
+    try {
+      return await fn(arg);
+    } catch (error) {
+      console.warn(`Gauntlet: ${name} failed`, error);
+      return undefined;
+    }
+  }
+
   async run(node, ctx) {
     const story = ctx.story;
-    const id = ctx.value(node.gauntlet);
+    const id = ctx.value(node[this.#o.idKey]);
     const def = this.#all()[id];
-    if (!def || !Array.isArray(def.stages) || !def.stages.length) {
-      story.warnOnce(`gauntlet:${id}`, `Gauntlet: there is no gauntlet "${id}" with battles`);
+    const stages = def && def[this.#o.stagesKey];
+    if (!def || !Array.isArray(stages) || !stages.length) {
+      story.warnOnce(`gauntlet:${id}`, `Gauntlet: there is no ${this.#o.idKey} "${id}" with battles`);
       return undefined;
     }
     const branch = (list) => (Array.isArray(list) && list.length ? ctx.run(list) : undefined);
     if (def.done && story.flag(def.done)) return branch(node.won);
     const runs = this.#runs();
     let run = runs[id];
-    if (!run || !Number.isInteger(run.stage) || run.stage < 0 || run.stage >= def.stages.length) {
+    if (!run || !Number.isInteger(run.stage) || run.stage < 0 || run.stage >= stages.length) {
       run = { stage: 0, keep: null };
       runs[id] = run;
     } else if (run.keep != null) {
@@ -129,8 +149,10 @@ export class Gauntlets {
       this.#putBack(run.keep);
     }
     const extra = Array.isArray(def.rules) ? def.rules : [];
-    for (let stage = run.stage; stage < def.stages.length; stage++) {
-      const step = def.stages[stage] || {};
+    for (let stage = run.stage; stage < stages.length; stage++) {
+      const step = stages[stage] || {};
+      await this.#hook('onStage', { def, index: stage, ctx });
+      if (story.ended(ctx)) return 'stop';
       run.stage = stage;
       run.keep = this.#keep();
       this.#commit();
@@ -139,6 +161,13 @@ export class Gauntlets {
       }
       const battle = { ...(step.battle || {}) };
       battle.rules = [...extra, ...(Array.isArray(battle.rules) ? battle.rules : [])];
+      if (typeof this.#o.dress === 'function') {
+        try {
+          Object.assign(battle, this.#o.dress(battle, { def, step, index: stage }) || {});
+        } catch (error) {
+          console.warn('Gauntlet: dress failed', error);
+        }
+      }
       ctx.battle = null;
       await ctx.run([{ battle }]);
       if (story.ended(ctx)) return 'stop';
@@ -146,15 +175,20 @@ export class Gauntlets {
       if (!result.won) {
         this.#putBack(run.keep);
         this.#commit();
+        await this.#hook('onEnd', { def, won: false });
         return branch(node.lost);
       }
       if (Array.isArray(step.won) && step.won.length) {
         if ((await ctx.run(step.won)) === 'stop' || story.ended(ctx)) return 'stop';
       }
+      if (stage < stages.length - 1 && Array.isArray(def.between) && def.between.length) {
+        if ((await ctx.run(def.between)) === 'stop' || story.ended(ctx)) return 'stop';
+      }
     }
     delete runs[id];
     if (def.done) story.setFlag(def.done, true);
     this.#commit();
+    await this.#hook('onEnd', { def, won: true });
     return branch(node.won);
   }
 
@@ -185,23 +219,30 @@ export class Gauntlets {
   }
 }
 
+const KIND = {
+  contentKey: 'gauntlets', section: 'gauntlet', idKey: 'gauntlet', stagesKey: 'stages', stageKey: 'stage', stageBase: 0,
+  service: 'gauntlets', system: 'features:gauntlet',
+};
+
 export function installGauntlets(game, options = {}) {
-  const gauntlets = new Gauntlets(game, options);
+  const o = { ...KIND, ...options };
+  const gauntlets = new Gauntlets(game, o);
   const { registry } = game;
-  const command = options.command || 'gauntlet';
-  const leave = options.leave || 'gauntlet:leave';
-  const condition = options.condition || 'gauntlet';
-  game.save.define('gauntlet', { runs: {} });
+  const command = o.command || 'gauntlet';
+  const leave = o.leave || 'gauntlet:leave';
+  const condition = o.condition || 'gauntlet';
+  game.save.define(o.section, { runs: {} });
   registry.add('story.command', command, (node, ctx) => gauntlets.run(node, ctx));
   registry.add('story.command', leave, (node, ctx) => {
-    gauntlets.leave(ctx.value(node.gauntlet));
+    gauntlets.leave(ctx.value(node[o.idKey]));
   });
   registry.add('story.condition', condition, (node, ctx) => {
-    const id = ctx.value(node.gauntlet);
+    const id = ctx.value(node[o.idKey]);
     if (!gauntlets.open(id)) return false;
-    return node.stage === undefined || gauntlets.stage(id) === Number(ctx.value(node.stage));
+    const want = node[o.stageKey];
+    return want === undefined || gauntlets.stage(id) + o.stageBase === Number(ctx.value(want));
   });
-  registry.add('system', 'features:gauntlet', gauntlets);
-  registry.add('service', 'gauntlets', { open: (id) => gauntlets.open(id), stage: (id) => gauntlets.stage(id), leave: (id) => gauntlets.leave(id) });
+  registry.add('system', o.system, gauntlets);
+  registry.add('service', o.service, { open: (id) => gauntlets.open(id), stage: (id) => gauntlets.stage(id), leave: (id) => gauntlets.leave(id) });
   return gauntlets;
 }

@@ -22,6 +22,7 @@ export default {
     'VVVVVVVSVVVVVV'
   ],
   props: [
+    { type: 'bookshelf', x: 6, y: 2 },
     { type: 'window', x: 2, y: 1 }, { type: 'blackboard', x: 3, y: 1 }, { type: 'element_banner', x: 6, y: 1 }, { type: 'lantern_hang', x: 8, y: 1 },
     { type: 'herb_rack', x: 10, y: 1 }, { type: 'window', x: 12, y: 1 }, { type: 'fireplace', x: 9, y: 2 }, { type: 'firewood', x: 11, y: 2 },
     { type: 'stove', x: 1, y: 2 }, { type: 'barrel_in', x: 12, y: 2 }, { type: 'crystal_orb', x: 5, y: 2 }, { type: 'school_desk', x: 3, y: 5 },

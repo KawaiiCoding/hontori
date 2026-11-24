@@ -123,3 +123,5 @@ New rules are added here as they are given. When something in the code disagrees
 105. The law has a hidden last line: it stands "until eight Wardens ask to undo it". This is why the eight ring votes matter.
 106. Vael's garden in Goldmere holds jars of sleeping hontori, sealed with gold wax stamped with the closed eye.
 107. In the final round of the Ring Tournament Cole refuses Vael's apprenticeship in public and stands with the kid. The chapter 5 choice decides who stands up in the crowd: Coilhaven's workers if the kid spoke, only Pim if the kid stayed quiet.
+108. The first Wander's pupils were the first people to be called Wanders.
+109. Books on shelves across the land keep the old lore and small true hints; a Wander can find and keep them in the Library of the Backpack.

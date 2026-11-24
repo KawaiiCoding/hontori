@@ -10,7 +10,8 @@
  *       setup    the battle setup of game/battle/setup.js (party, enemy and level, or trainer; wand, items,
  *                flags, noCapture, sureBind, spells). Left out, `species` is read from the shared content and
  *                `env` from the world scene that is on top (its hour, weather and whether it is indoors).
- *       options  { biome, tutorial, joinsParty, rewards, random }
+ *       options  { biome, tutorial, joinsParty, rewards, random, music }
+ *                music       a tune of its own for this battle (a song key), else the duel or wild tune
  *                biome       'meadow' | 'forest' | 'river' | 'indoor' (default from env.indoor)
  *                tutorial    true in the player's first wild battle
  *                joinsParty  true: a bound hontori joins the party; false: it rests in the wand
@@ -68,7 +69,8 @@ export function startBattle(game, setup, options) {
   }
   const battle = new HontoriBattle(full, { random: o.random });
   return openBattle(game, {
-    battle, env: full.env, species: full.species, biome: o.biome, tutorial: !!o.tutorial, joinsParty: o.joinsParty, rewards: o.rewards
+    battle, env: full.env, species: full.species, biome: o.biome, tutorial: !!o.tutorial, joinsParty: o.joinsParty, rewards: o.rewards,
+    music: o.music
   }, SCENE_ID);
 }
 

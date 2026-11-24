@@ -13,7 +13,8 @@
  *     trainer    { name, key, spirit, level, stage, team: [{ spirit, level, stage }], noSwitch, ban, lesson,
  *                  school, noCapture }
  *     noCapture, sureBind (the third binding always holds), spells (a fixed spell list for this battle),
- *     noRoom (the party is full and the Sanctum sealed: no binding)
+ *     noRoom (the party is full and the Sanctum sealed: no binding), twist ('flawless'),
+ *     mode ('ally') with ally { name, key, team } (a double battle: ally.js)
  *     rules      [name]   the battle's rule names (content); the ring rules among them (ringRules.js) run
  *     wand       { mana, maxMana, level, spells, loadout, spellXp, spellMastery, perks }  (perks: growth.wandPerks)
  *     items      [{ id, n }]
@@ -29,6 +30,7 @@ import { staMax } from './growth.js';
 import { ELEMENTS } from './elements.js';
 import { speciesOf, cap } from './common.js';
 import { ringRulesOf } from './ringRules.js';
+import { setupAlly } from './ally.js';
 
 const DEFAULT_LEAD = { key: 'hontori', level: 1, hp: 20, maxHp: 20 };
 
@@ -61,6 +63,12 @@ export function setupBattle(b, s) {
   S.noCapture = !!s.noCapture;
   S.sureBind = !!s.sureBind;
   S.noRoom = !!s.noRoom;
+  /* a drawing twist on this battle ('flawless': only Flawless sigils take effect) */
+  S.twist = typeof s.twist === 'string' ? s.twist : null;
+  S.foresee = 0;
+  setupAlly(b, s);
+  S.nextIntent = null;
+  S.sealedSpell = null;
   S.rules = ringRulesOf([...(Array.isArray(s.rules) ? s.rules : []), ...(TR && Array.isArray(TR.rules) ? TR.rules : [])]);
   S.flags = Object.assign({}, s.flags);
 

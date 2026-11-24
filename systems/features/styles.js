@@ -14,6 +14,7 @@
  *   .ft-draw .tip .sub             the drawing prompt over the dimmed world
  *   .ft-card                       a centred card (name entry, offer); .ft-card .pic .in .err .row .list
  *   .ft-carry .count .grid .pick (.on .lock) .tick   the choose-who-comes card (CarryChoice.js)
+ *   .ft-board .rows .row (.in .out .next .you)        the board between rounds (Standings.js)
  *   .ft-moment .msg .row           a full-screen moment with a message at the bottom (a growth)
  *   .ft-side                       a round button under the HUD column (riding)
  *   .ft-closewrap .ft-close .ft-closex   a close-up of a board; .ft-close.notes .cork .note (.big, blue, green, pink)
@@ -77,6 +78,18 @@ const CSS = `
 .ft-carry .pick.on canvas{opacity:1}
 .ft-carry .pick.on .tick{background:var(--accent);border-color:var(--accent)}
 .ft-carry .pick.lock{cursor:default}
+
+.ft-board{width:min(94%,420px)}
+.ft-board .rows{display:flex;flex-direction:column;gap:6px;margin:10px 0 4px;text-align:left}
+.ft-board .row{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:10px;padding:6px 10px;border-radius:12px;
+  background:rgba(0,0,0,.22);border:2px solid rgba(255,255,255,.1)}
+.ft-board .row canvas{width:40px;height:40px;image-rendering:pixelated}
+.ft-board .row b{font-size:15px;font-weight:900}
+.ft-board .row small{font-size:12px;font-weight:800;opacity:.85}
+.ft-board .row.out{opacity:.45}
+.ft-board .row.out b{text-decoration:line-through}
+.ft-board .row.next{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.ft-board .row.you{border-color:color-mix(in srgb,var(--accent) 60%,#ffffff 20%)}
 
 .ft-moment{background:var(--title-edge)}
 .ft-moment .msg{position:absolute;left:16px;right:16px;bottom:calc(var(--sa-b) + 28px);text-align:center;font-size:clamp(16px,4.4cqmin,22px);

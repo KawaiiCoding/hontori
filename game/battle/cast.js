@@ -14,6 +14,11 @@
  *   stun    chance min(0.95, 0.75 gm): stunned, charge and guard lost
  *   sleep   chance min(0.9, 0.6 gm): asleep 2 turns, charge and guard lost
  *   revive  uses the element's material; hp = min(max, ceil(max / 2 x gm)), wakes
+ *   lantern the foe's intent this turn and the next shows (also under the rule blind); the next one is drawn now
+ *   mirror  asleep: wakes yours and puts the foe to sleep (2 turns); else a mirror waits 2 rounds and sends the
+ *           next sleep spell back (fight.js)
+ *   (rule pure: no binding; a sealed slot under blind cannot be cast; twist flawless: a sigil that is not
+ *   Flawless fades with no cost and no effect, event fizzle { kind, grade })
  *   step    Swift Step: the next escape try this battle is much likelier (chances.escapeChance), never certain;
  *           wild battles only
  *   bind    one try of 3 (chances.bindChance); sureBind makes the third try hold; the third miss lets the foe go
@@ -24,7 +29,8 @@
 import { SPELLS, BATTLE_SPELLS, GRADES, gradeOf, reviveMaterial, MATERIAL_NAMES } from './spells.js';
 import { bindChance, BIND_TRIES } from './chances.js';
 import { finish } from './turn.js';
-import { me, foe, say, itemCount, useItem, spellMastery, costOf, can } from './common.js';
+import { me, foe, say, itemCount, useItem, spellMastery, costOf, can, hasRule } from './common.js';
+import { pickIntent } from './intent.js';
 import { line } from './text.js';
 
 function no(reason, id, vars) {
@@ -47,6 +53,8 @@ export function canCast(b, kind) {
     if (f.hp / f.max > 0.35) return no('weaken', 'refuseWeaken');
   }
   if (kind === 'mend' && m.hp >= m.max && !m.has('asleep')) return no('well', 'refuseWell');
+  if (kind === 'lantern' && S.foresee > 0) return no('foreseen', 'refuseForeseen');
+  if (kind === 'mirror' && m.has('mirror')) return no('mirrored', 'refuseMirrored');
   if (kind === 'step') {
     if (S.trainer) return no('duel', 'refuseDuelEscape');
     if (S.stepped) return no('stepped', 'refuseStepped');
@@ -57,6 +65,8 @@ export function canCast(b, kind) {
 export function checkSpell(b, kind) {
   const S = b.state;
   if (!BATTLE_SPELLS.includes(kind) || !can(b, kind)) return no('shape', 'refuseShape');
+  if (S.sealedSpell && S.sealedSpell === kind) return no('sealed', 'refuseSealed', { spell: SPELLS[kind].name });
+  if (kind === 'bind' && hasRule(b, 'pure')) return no('pure', 'refusePure');
   if (kind === 'bind' && (S.trainer || S.noCapture)) {
     return no('repel', 'repel', { trainer: (S.trainer && S.trainer.name) || 'Owner' });
   }
@@ -96,10 +106,16 @@ export function castSpell(b, kind, accuracy) {
   const m = me(b);
   const f = foe(b);
   const cost = costOf(b, kind);
-  S.spellUsed = true;
-  S.mana -= cost;
   const acc = accuracy == null ? 0.5 : accuracy;
   const grade = gradeOf(acc);
+  /* the twist flawless: only a Flawless sigil takes effect; any other fades, costing nothing, and may be drawn again */
+  if (S.twist === 'flawless' && grade !== 'flawless') {
+    b.emit('fizzle', { kind, grade });
+    say(b, 'flawlessOnly');
+    return;
+  }
+  S.spellUsed = true;
+  S.mana -= cost;
   const G = GRADES[grade];
   const gm = G.mul;
   const before = spellMastery(b, kind);
@@ -147,5 +163,23 @@ export function castSpell(b, kind, accuracy) {
   } else if (kind === 'step') {
     S.stepped = gm;
     say(b, 'step');
+  } else if (kind === 'lantern') {
+    /* the foe's plan for this turn and the next one shows, even under blind */
+    S.foresee = 2;
+    const held = f.has('stun') || f.has('asleep');
+    S.nextIntent = held ? S.intent : pickIntent(f, m, S.intent, b.round + 1, b.random);
+    b.emit('foresee', { now: S.intent, next: S.nextIntent });
+    say(b, 'lanternLit');
+  } else if (kind === 'mirror') {
+    if (m.has('asleep')) {
+      m.set('asleep', 0);
+      f.set('asleep', 2);
+      f.set('charged', 0);
+      f.set('guard', 0);
+      say(b, 'mirrorBack');
+    } else {
+      m.set('mirror', 2);
+      say(b, 'mirrorReady');
+    }
   }
 }

@@ -3,7 +3,9 @@
  * check.mjs  (Hontori: features)
  * Job: prove every world puzzle of the content fair before it ships: the wind vanes (type "vanes"), the tide
  * wheels ("tide"), the power lines ("circuit") and the brazier courts ("braziers": every brazier and carving
- * can be reached, the order names each brazier once, and a way to light one can always be had). Each puzzle is checked on its own map as the content builds
+ * can be reached, the order names each brazier once, and a way to light one can always be had), the mirror
+ * gardens ("mirrors": some leaning of the mirrors brings the beam home) and the watchers' ground ("watchers": the
+ * goal can be reached unseen from the start and from every shadow). Each puzzle is checked on its own map as the content builds
  * it (solid ground, props and buildings), from its `start` tile (else the map's spawn), with the engine's
  * provers (systems/features: checkGustField, checkTideField, checkCircuitField): from every state the player
  * can reach, the goal can still be reached, and nothing stands on water or walls.
@@ -23,10 +25,12 @@ import { checkGustField } from '../../systems/features/GustField.js';
 import { checkTideField } from '../../systems/features/TideField.js';
 import { checkCircuitField } from '../../systems/features/CircuitField.js';
 import { checkBrazierField } from '../../systems/features/BrazierField.js';
+import { checkMirrorField } from '../../systems/features/MirrorField.js';
+import { checkWatcherField } from '../../systems/features/WatcherField.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '../..');
-const PROVERS = { vanes: checkGustField, tide: checkTideField, circuit: checkCircuitField, braziers: checkBrazierField, push: checkPush };
+const PROVERS = { vanes: checkGustField, tide: checkTideField, circuit: checkCircuitField, braziers: checkBrazierField, push: checkPush, mirrors: checkMirrorField, watchers: checkWatcherField };
 const PUSH_LIMIT = 200000;
 
 /* a push puzzle (world/PushPuzzle.js): every pile and pad on open ground, and from the start every pad can be
@@ -179,7 +183,8 @@ export function provePuzzle(def, map) {
   const walkable = (x, y) => x >= 0 && y >= 0 && x < map.w && y < map.h && !map.solid[y][x];
   const start = def.start || (map.spawn ? [map.spawn.x, map.spawn.y] : null);
   if ((def.type || 'push') === 'push') return checkPush(def, { walkable, start });
-  return prove(def, { walkable, start, canLight: () => canLight(def) });
+  const inside = (x, y) => x >= 0 && y >= 0 && x < map.w && y < map.h;
+  return prove(def, { walkable, start, inside, canLight: () => canLight(def) });
 }
 
 /* the content folders the game loads, and any chapter folder written since */

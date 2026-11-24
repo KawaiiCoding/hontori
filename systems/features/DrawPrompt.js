@@ -21,7 +21,8 @@
  *                    ink already drawn rides along, so the player has to follow the page (twists.js)
  *                    It may also show the guide another way (guide), paint under it (paint), give each try a
  *                    time limit (limit, with the words `late` when a try runs out), let the ink fade behind the
- *                    finger (fade, in drawing pixels) and words of its own (note):
+ *                    finger (fade, in drawing pixels), hide the ink while drawing (hideInk), ask for a cleaner
+ *                    drawing (minAccuracy, with the words `rough` for one that is not) and words of its own (note):
  *                    see twists.js
  *     }
  */
@@ -99,6 +100,7 @@ export class DrawPromptScene extends ScreenScene {
     });
     this.#surface.color = o.color;
     if (o.twist && Number(o.twist.fade) > 0) this.#surface.fade = Number(o.twist.fade);
+    if (o.twist && o.twist.hideInk) this.#surface.hidden = true;
   }
 
   exit() {
@@ -293,15 +295,22 @@ export class DrawPromptScene extends ScreenScene {
   #judge(trail) {
     const o = this.#o;
     let kind = null;
+    let accuracy = 1;
     try {
-      kind = o.recognizer ? o.recognizer.recognize(trail, [o.shape]) : o.shape;
+      if (o.recognizer && typeof o.recognizer.score === 'function') {
+        const s = o.recognizer.score(trail, [o.shape]);
+        kind = s && s.kind;
+        accuracy = s && Number.isFinite(s.accuracy) ? s.accuracy : 1;
+      } else kind = o.recognizer ? o.recognizer.recognize(trail, [o.shape]) : o.shape;
     } catch (error) {
       kind = null;
     }
-    if (kind !== o.shape) {
+    /* a twist may ask for a cleaner drawing than the shape alone (only the best grade counts) */
+    const rough = kind === o.shape && o.twist && Number(o.twist.minAccuracy) > 0 && accuracy < Number(o.twist.minAccuracy);
+    if (kind !== o.shape || rough) {
       const late = this.#left(performance.now()) === 0;
       this.#tryAt = performance.now();
-      if (this.#tip) this.#tip.textContent = (late && o.twist && o.twist.late) || o.retry || '';
+      if (this.#tip) this.#tip.textContent = (rough && o.twist.rough) || (late && o.twist && o.twist.late) || o.retry || '';
       this.#surface.ash();
       this.#sound(o.sounds.miss);
       return;

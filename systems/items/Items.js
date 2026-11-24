@@ -18,7 +18,8 @@
  *   earn(n, why), pay(n)                 why: a text id, or false for no toast; pay: true if paid
  *   save()                               commit the game (guarded)
  *   bagView(tab, close)                  the bag as data for ui/BagPanel.js
- *   shopView(shopId)                     the shop as data for ui/ShopPanel.js (null for an unknown shop)
+ *   shopView(shopId)                     the shop as data for ui/ShopPanel.js (null for an unknown shop); a shop's
+ *                                        `sellRate` (content, default 1) multiplies what the trade pouch sells for
  *   worldMapId()                         the map the player stands on, or null
  */
 
@@ -323,7 +324,9 @@ export class Items {
         },
       });
     }
-    const pouch = this.inventory.pouchValue();
+    /* a shop may pay more (or less) for the trade pouch than the book's sell-back value: content `sellRate` */
+    const rate = Number(shop.sellRate) > 0 ? Number(shop.sellRate) : 1;
+    const pouch = Math.round(this.inventory.pouchValue() * rate);
     return {
       id: shop.id,
       title: keeper ? this.text(keeper.name) : this.word('shopTitle'),
@@ -341,7 +344,7 @@ export class Items {
         desc: pouch ? this.word('shopPouchWorth', { coins: coins(pouch) }) : t('emptyPouch'),
         value: pouch,
         run: () => {
-          const value = this.inventory.sellPouch();
+          const value = Math.round(this.inventory.sellPouch() * rate);
           if (!value) return t('emptyPouch');
           this.money.add(value);
           this.#sound('confirm');

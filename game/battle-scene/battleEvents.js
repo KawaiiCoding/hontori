@@ -89,6 +89,8 @@ export const handlers = {
   async turn(e) {
     await this.settle();
     this.view.intent = e.intent;
+    /* the Lantern Sigil's look ahead belongs to the round it was drawn in */
+    if (e.round !== this.view.nextRound) this.view.next = null;
     this.view.quick = e.quick;
     this.forced = !!e.forced;
     this.refresh();

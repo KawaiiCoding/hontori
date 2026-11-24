@@ -22,6 +22,7 @@ export default {
     'VVVVVVVKVVVVVV'
   ],
   props: [
+    { type: 'bookshelf', x: 7, y: 2 },
     { type: 'window', x: 2, y: 1 }, { type: 'blackboard', x: 4, y: 1 }, { type: 'window', x: 7, y: 1 }, { type: 'window', x: 9, y: 1 },
     { type: 'element_banner', x: 12, y: 1 }, { type: 'leaf_window', x: 10, y: 1 }, { type: 'potted_tree', x: 1, y: 2 }, { type: 'crystal_orb', x: 4, y: 2 },
     { type: 'plant', x: 6, y: 2 }, { type: 'plant', x: 9, y: 2 }, { type: 'potted_tree', x: 12, y: 2 }, { type: 'school_desk', x: 3, y: 5 },

@@ -60,6 +60,9 @@ export default {
       'RRPPPRRPP......PPRRPR.RP'
     ]
   },
+  props: [
+    { type: 'bookstack', x: 6, y: 12 }
+  ],
   doors: [
     { x: 11, y: 21, to: 'stonehollow', tx: 40, ty: 1, dir: 0 }, { x: 12, y: 21, to: 'stonehollow', tx: 41, ty: 1, dir: 0 }
   ],

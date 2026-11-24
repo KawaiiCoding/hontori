@@ -17,5 +17,7 @@ import pickups from './pickups.js';
 import screens from './screens.js';
 import rules from './rules.js';
 import text from './text.en.js';
+import lore from './lore.js';
+import loreText from './text.lore.en.js';
 
-export default { id: 'ch1', title: 'ch1.quest.academy', people, events, scripts, quests, trainers, trials, shops, wild, interactions, objects, pickups, screens, doors: rules.doors, rest: rules.rest, text };
+export default { id: 'ch1', title: 'ch1.quest.academy', people, events, scripts, quests, trainers, trials, shops, wild, interactions, objects, pickups, screens, doors: rules.doors, rest: rules.rest, lore, text: { ...text, ...loreText } };

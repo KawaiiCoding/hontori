@@ -18,7 +18,7 @@
  * Install order (build): the engine's scenes, save sections and HUD; the maps; the content folders
  * and their quests; the story system and Hontori's part of it; the quests (after the HUD); the
  * items; the time lane; Hontori's answers about the party; the battle screen and its starter; the
- * panels, the world lane, the features and the capsule machines; then the stand-ins for what no system owns yet. Systems start in that order when the game starts.
+ * panels, the world lane, the features, the capsule machines and the readable books; then the stand-ins for what no system owns yet. Systems start in that order when the game starts.
  *
  * URL parameters:
  *   scene=<map id>     skip the title and start on this map (for example scene=village); the story
@@ -61,6 +61,7 @@ import { install as installPanels } from './panels/index.js';
 import { install as installWorld } from './world/index.js';
 import { install as installFeatures } from './features/index.js';
 import { install as installCapsules } from './capsules/index.js';
+import { install as installLore } from './lore/index.js';
 import { clearOldGame } from './oldGame.js';
 
 export const CONFIG = {
@@ -127,6 +128,7 @@ export function build({ canvas, root, storage, config, debug = false }) {
   installWorld(game);
   installFeatures(game);
   installCapsules(game);
+  installLore(game);
 
   /* last: stand-ins for what no system owns (none grants progress) */
   installPending(game);

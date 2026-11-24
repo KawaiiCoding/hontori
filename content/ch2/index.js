@@ -16,5 +16,7 @@ import interactions from './interactions.js';
 import objects from './objects.js';
 import puzzles from './puzzles.js';
 import text from './text.en.js';
+import lore from './lore.js';
+import loreText from './text.lore.en.js';
 
-export default { id: 'ch2', title: 'ch2.quest.leaf', people, events, scripts, quests, trainers, trials, shops, wild, interactions, objects, puzzles, laterFlags: ['ch3:open'], text };
+export default { id: 'ch2', title: 'ch2.quest.leaf', people, events, scripts, quests, trainers, trials, shops, wild, interactions, objects, puzzles, laterFlags: ['ch3:open'], lore, text: { ...text, ...loreText } };

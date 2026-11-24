@@ -455,6 +455,65 @@ const wandOf = (spells) => ({ mana: 3, maxMana: 3, spells, loadout: spells, perk
   ok('an earth hontori is mended fully', full && full.amount === mole.me.max - 1);
 }
 
+/* chapters 8 and 9: blind, the Lantern and Mirror Sigils, pure, flawless and the double battle (mode ally) */
+{
+  const duel = (rules, spells, extra) => new HontoriBattle(Object.assign({ party: [lead('fox', 8), lead('frog', 8)], species, env: day,
+    trainer: { name: 'Nox', key: 'girl', team: [{ spirit: 'raven', level: 6 }, { spirit: 'mole', level: 6 }], noCapture: true },
+    noCapture: true, rules, wand: { ...wandOf(spells), mana: 6, maxMana: 6 }, items: [{ id: 'herb', n: 2 }] }, extra || {}), { random: seeded(7) });
+  const bl = duel(['blind'], ['mend', 'shield', 'lantern', 'stun']);
+  const open = bl.begin();
+  ok('blind: the plan is hidden', bl.intent === 'hidden' && open.some((e) => e.type === 'say' && e.id === 'blindBegin'), bl.intent);
+  ok('blind: the last slot that is not the lantern is sealed', bl.sealedSpell === 'stun' && bl.canCast('stun') !== true && bl.canCast('lantern') === true);
+  const lit = bl.castSpell('lantern', 0.7);
+  const seen = lit.find((e) => e.type === 'foresee');
+  ok('the Lantern Sigil shows this turn and the next, even under blind', seen && seen.next && bl.intent !== 'hidden' && bl.foreseen && bl.foreseen.next === seen.next, bl.intent);
+  bl.me.hp = bl.me.max;
+  const next = bl.useMove(0).find((e) => e.type === 'turn');
+  ok('the foreseen plan is the one that comes, and still shows', next && next.intent === seen.next && next.foreseen, next);
+  bl.me.hp = bl.me.max;
+  const after = bl.useMove(0).find((e) => e.type === 'turn');
+  ok('then the plan is hidden again', after && after.intent === 'hidden', after);
+  const mr = duel([], ['mirror']);
+  mr.begin();
+  mr.me.set('asleep', 1);
+  mr.castSpell('mirror', 0.7);
+  ok('the Mirror Sigil sends sleep back', !mr.me.has('asleep') && mr.foe.has('asleep'));
+  const ward = duel([], ['mirror']);
+  ward.begin();
+  ward.castSpell('mirror', 0.7);
+  ok('a mirror waits when nothing is on yours', ward.me.has('mirror') && ward.canCast('mirror') !== true);
+  const pure = duel(['pure'], ['mend', 'bind']);
+  pure.begin();
+  ok('pure: no items, no binding', pure.herbs === 0 && pure.useItem('herb')[0].type === 'refused' && pure.castSpell('bind', 0.9)[0].type === 'refused');
+  const fl = duel([], ['mend'], { twist: 'flawless' });
+  fl.begin();
+  fl.me.hp = 1;
+  const mana = fl.mana;
+  const weak = fl.castSpell('mend', 0.3);
+  ok('flawless: a strong sigil fades, costing nothing', weak.some((e) => e.type === 'fizzle') && fl.mana === mana && fl.me.hp === 1);
+  const good = fl.castSpell('mend', 0.8);
+  ok('flawless: a Flawless one works', good.some((e) => e.type === 'spell') && fl.me.hp > 1);
+  const ally = duel([], ['mend'], { mode: 'ally', ally: { name: 'Nox', key: 'girl', team: [{ spirit: 'raven', level: 8 }] },
+    trainer: { name: 'Stroud', key: 'boy', team: [{ spirit: 'raven', level: 14 }, { spirit: 'mole', level: 14 }], noCapture: true } });
+  ally.begin();
+  ok('ally: both foes and the ally are on the field', ally.double.ally && ally.double.partner && ally.double.ally.owner === 'Nox');
+  const first = ally.useMove(0);
+  ok('ally: the ally and the second foe act each round', first.some((e) => e.type === 'sideMove' && e.side === 'ally') && first.some((e) => e.type === 'sideMove' && e.side === 'foe2'));
+  ally.foe.hp = 1;
+  ally.state.partner.hp = ally.state.partner.max;
+  for (let i = 0; i < 4 && !ally.over && ally.foe.key === 'raven'; i++) {
+    ally.me.hp = ally.me.max;
+    ally.useMove(0);
+  }
+  ok('ally: when the front foe falls, the second steps up', ally.foe.key === 'mole' && !ally.double.partner, ally.foe.key);
+  const full = duel([], ['mend'], { mode: 'ally', ally: { name: 'Nox', key: 'girl', team: [{ spirit: 'raven', level: 8 }] } });
+  play(full, simple, 300);
+  ok('a double battle plays to its end', full.over && full.errors.length === 0, full.result);
+  const blindFull = duel(['blind'], ['mend', 'lantern', 'shield', 'stun']);
+  play(blindFull, simple, 300);
+  ok('a blind duel plays to its end', blindFull.over && blindFull.errors.length === 0, blindFull.result);
+}
+
 console.log('hontori battle rules: ' + passed + ' passed, ' + failed + ' failed');
 export { failed };
 if (import.meta.url === 'file://' + process.argv[1]) {

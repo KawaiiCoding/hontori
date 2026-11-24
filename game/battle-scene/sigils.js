@@ -59,6 +59,10 @@ export const SHAPES = Object.freeze({
   },
   /* Swift Step: a seven, right along the top and then a long stride down to the left */
   step: { points: [[0, 0], [1, 0], [0.3, 1]], maxCorners: 2 },
+  /* the Lantern Sigil: a ring with one line hanging down (round from the bottom, then straight down) */
+  lantern: { points: arc(28, Math.PI / 2, Math.PI / 2 + Math.PI * 2, 0.5, 0.45, 0.42, 0.42).concat([[0.5, 1.45]]), maxCorners: 2 },
+  /* the Mirror Sigil: a frame, and a line back through it (round the square from the top left, then corner to corner) */
+  mirror: { points: [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0], [1, 1]], minCorners: 3 },
   /* the veil spell: a V, opening the curtain */
   veil: { points: [[0, 0], [0.5, 1], [1, 0]] },
   /* the fishing sigil: a hook, straight down, then curling up to the left */

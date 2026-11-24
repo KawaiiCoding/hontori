@@ -63,6 +63,8 @@ export function check(folders, opts = {}) {
   if (world) for (const id of Object.keys(R.maps)) if (!world.maps[id]) bad('shared.maps', `map "${id}" is not in the world`);
   const ctx = { R, bad, notes, world, flagsSet, spellsLearned };
   const ext = opts.extensions ? opts.extensions(ctx) : null;
+  /* the declared battle modes and drawing twists (shared/extensions.js) */
+  const known = (folders.find((f) => f && f.extensions) || {}).extensions || {};
 
   // ---------- references
   const isMap = (id, where) => { if (!R.maps[id]) bad(where, `unknown map "${id}"`); };
@@ -145,6 +147,13 @@ export function check(folders, opts = {}) {
         else if (b.wild) { isKind(b.wild.kind, where); value(b.wild.level, where); }
         else bad(where, 'a battle needs an opponent or a wild kind');
         (b.rules || []).forEach((r) => (ext ? ext.check('battleRule', r, where) : null));
+        /* a double battle beside someone: their name, look and hontori */
+        if (b.mode !== undefined && !(known.battleMode || []).includes(b.mode)) bad(where, `unknown battle mode "${b.mode}"`);
+        if (b.mode === 'ally') {
+          if (!b.ally) bad(where, 'a battle in mode ally needs ally: { name, look, team }');
+          else { isText(b.ally.name, where); isLook(b.ally.look, where); (b.ally.team || []).forEach((m) => { isKind(m.kind, where); value(m.level, where); }); }
+        }
+        if (b.twist !== undefined && !(known.twist || []).includes(b.twist)) bad(where, `unknown twist "${b.twist}"`);
         for (const k of ['won', 'lost', 'fled', 'captured', 'else']) if (c[k]) script(c[k], `${where}.${k}`);
         if (c.after && !['wake', 'restore'].includes(c.after)) bad(where, `battle after "${c.after}"`);
         break;
@@ -244,6 +253,32 @@ export function check(folders, opts = {}) {
       script(stage.won || [], sw + '.won');
     });
   }
+  /* tournaments: rounds of duels with a board between them (game/features/tournament.js) */
+  for (const f of folders) for (const [id, g] of Object.entries(f.tournaments || {})) {
+    const w = 'tournament ' + id;
+    [].concat(g.venue || []).forEach((m) => isMap(m, w));
+    (g.rules || []).forEach((r) => (ext ? ext.check('battleRule', r, w) : null));
+    if (g.done) flagsSet.add(g.done);
+    for (const k of ['left', 'title']) if (g[k]) isText(g[k], w);
+    script(g.onLeave || [], w + '.onLeave');
+    script(g.between || [], w + '.between');
+    if (!Array.isArray(g.rounds) || !g.rounds.length) bad(w, 'a tournament needs rounds');
+    (g.bracket || []).forEach((e, i) => {
+      if (!e || (e.who !== 'player' && !R.people[e.who] && !R.trainers[e.who])) bad(`${w} bracket ${i}`, `unknown entrant "${e && e.who}"`);
+      if (e && e.out !== undefined && !(Number.isInteger(e.out) && e.out >= 1)) bad(`${w} bracket ${i}`, 'out is the round they fall in, from 1');
+    });
+    if (Array.isArray(g.bracket) && !g.bracket.some((e) => e && e.who === 'player')) bad(w, 'the bracket needs the player');
+    (g.rounds || []).forEach((round, i) => {
+      const rw = `${w} round ${i + 1}`;
+      const b = round.battle || {};
+      if (!R.trainers[b.opponent]) bad(rw, `unknown trainer "${b.opponent}"`);
+      (b.rules || []).forEach((r) => (ext ? ext.check('battleRule', r, rw) : null));
+      if (round.name) isText(round.name, rw);
+      if (round.twist !== undefined && !(known.twist || []).includes(round.twist)) bad(rw, `unknown twist "${round.twist}"`);
+      script(round.before || [], rw + '.before');
+      script(round.won || [], rw + '.won');
+    });
+  }
   for (const [id, p] of Object.entries(R.puzzles)) { const w = 'puzzle ' + id; isMap(p.map, w); script(p.onSolve || [], w); flagsSet.add(p.solved); if ((p.type || 'push') === 'push' && p.boxes.length < p.pads.length) bad(w, 'fewer piles than pads'); }
   for (const tr of Object.values(R.trials)) if (tr.passed && tr.entrance && tr.entrance.every((x) => x.type !== 'push')) flagsSet.add(tr.passed);
   for (const m of Object.keys(R.maps)) flagsSet.add(FLAG_SET_BY_ENGINE(m));
@@ -258,7 +293,7 @@ export function check(folders, opts = {}) {
     if (!p.at && !p.spawned) bad(w, 'no place and not spawned');
     cond(p.goneIf, w);
     const variants = [{ at: p.at, schedule: p.schedule, tag: 'base' }];
-    (p.phases || []).forEach((ph, i) => { cond(ph.if, w); variants.push({ at: ph.at || p.at, schedule: ph.schedule || p.schedule, tag: 'phase ' + i }); });
+    (p.phases || []).forEach((ph, i) => { cond(ph.if, w); if (ph.name) isText(ph.name, w); variants.push({ at: ph.at || p.at, schedule: ph.schedule || p.schedule, tag: 'phase ' + i }); });
     for (const v of variants) {
       for (let h = 0; h < 24; h += 0.5) {
         const hit = slotsAt(v.schedule, h);
@@ -338,6 +373,32 @@ export function check(folders, opts = {}) {
     if (!it.effect) bad('item ' + id, 'given or sold but has no effect');
     if (!it.desc && !it.use) notes.push(`item ${id}: no description or use text in the bag`);
   }
+  // ---------- lore: readable books (systems/lore): ids, text, kinds, and every shelf on a real book prop
+  const LORE_KINDS = new Set(['lore', 'hint', 'notes']), LORE_PROPS = new Set(['bookshelf', 'bookstack']);
+  const books = {}, shelfAt = new Set();
+  for (const f of folders) for (const [id, b] of Object.entries((f.lore && f.lore.books) || {})) {
+    const where = `${f.id}.lore.${id}`;
+    if (books[id]) bad(where, `book id "${id}" is defined twice`);
+    books[id] = b;
+    isText(b.title, where);
+    if (b.kind !== undefined && !LORE_KINDS.has(b.kind)) bad(where, `unknown book kind "${b.kind}"`);
+    if (!Array.isArray(b.pages) || b.pages.length < 1) bad(where, 'a book needs pages');
+    else b.pages.forEach((page) => isText(page, where));
+  }
+  const shelved = new Set();
+  for (const f of folders) ((f.lore && f.lore.shelves) || []).forEach((s, i) => {
+    const where = `${f.id}.lore.shelves[${i}]`;
+    if (!books[s.book]) bad(where, `unknown book "${s.book}"`);
+    shelved.add(s.book);
+    isMap(s.map, where);
+    const key = `${s.map}:${s.x}:${s.y}`;
+    if (shelfAt.has(key)) bad(where, `two books on one shelf at ${key}`);
+    shelfAt.add(key);
+    const m = world && world.maps[s.map];
+    if (m && Array.isArray(m.props) && !m.props.some((p) => LORE_PROPS.has(p.type) && p.x === s.x && p.y === s.y)) bad(where, `no bookshelf or book stack at ${key}`);
+  });
+  for (const id of Object.keys(books)) if (!shelved.has(id)) notes.push(`book ${id}: on no shelf`);
+
   for (const id of Object.keys(R.items)) if (!given.has(id) && !['wand', 'ember_dust', 'novice_cert', 'grey_letter', 'ring_leaf'].includes(id)) {
     const seen = JSON.stringify(Object.values(R.events)) + JSON.stringify(R.scripts);
     if (!seen.includes(`'${id}'`) && !seen.includes(`"${id}"`)) notes.push(`item ${id}: nothing gives or sells it`);
@@ -365,7 +426,7 @@ export function loadWorld(src = path.join(HERE, '../src/'), contentMaps = [], li
       for (const p of m.props || []) { if (gone.some((g) => g.type === p.type && g.x === p.x && g.y === p.y)) continue; const i = info(p.type); if (!i || !i.solid || i.decor) continue; for (let y = 0; y < (i.fh || 1); y++) for (let x = 0; x < (i.fw || 1); x++) if (solid[p.y + y]) solid[p.y + y][p.x + x] = true; }
       for (const b of m.buildings || []) { const i = H.buildings.info[b.type]; for (let y = 0; y < i.fh; y++) for (let x = 0; x < i.fw; x++) if (solid[b.y + y]) solid[b.y + y][b.x + x] = true; }
       for (const [x, y] of m.passable || []) solid[y][x] = false;
-      maps[id] = { w: m.w, h: m.h, solid, ground };
+      maps[id] = { w: m.w, h: m.h, solid, ground, props: (m.props || []).map((p) => ({ type: p.type, x: p.x, y: p.y })) };
     }
     return { maps, looks: new Set(H.chars.keys) };
   } catch (e) {

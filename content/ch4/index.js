@@ -20,6 +20,8 @@ import interactions from './interactions.js';
 import puzzles from './puzzles.js';
 import items from './items.js';
 import text from './text.en.js';
+import lore from './lore.js';
+import loreText from './text.lore.en.js';
 import mapFolder from './maps/index.js';
 
 export default {
@@ -40,5 +42,6 @@ export default {
   items,
   maps: mapFolder.maps,
   links: mapFolder.links,
-  text: { ...mapFolder.text, ...text }
+  lore,
+  text: { ...mapFolder.text, ...text, ...loreText }
 };

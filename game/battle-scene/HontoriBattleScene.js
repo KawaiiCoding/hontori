@@ -14,13 +14,15 @@
  *       tutorial    the player's first wild battle: the moves, then the Spells button, then the intent glow
  *       joinsParty  true when a bound hontori joins the party, false when it rests in the wand (the closing line)
  *       rewards     { partySize, coins, pursePaid } for game/battle battleRewards, or (report) => that
+ *       music       optional: the tune for this battle (a song key or 'duel'), else duel or wild
  *   finished        a Promise of { result, report, rewards } (see index.js)
  *
  * For battleEvents.js and spellFx.js (the scene's working parts):
- *   view            what is shown now: { me, foe (actors, see fighters.js), mana, maxMana, intent, quick }
+ *   view            what is shown now: { me, foe (actors, see fighters.js), mana, maxMana, intent, next (the Lantern
+ *                   Sigil's next turn), quick };  sides: { ally, foe2 } of a double battle (sides.js)
  *   places          { me, foe }: { x, y (body centre), gy (ground), sc } in art pixels;  uiTop: where the interface begins
  *   message, tail, forced, drawn, incoming
- *   refresh(), settle(), stageApi(from, to), buildMoves(), refreshSpell(kind), openParty(forced), closeTrays(),
+ *   sealSpell(kind), refresh(), settle(), stageApi(from, to), buildMoves(), refreshSpell(kind), openParty(forced), closeTrays(),
  *   showMatchup(event), setTeamOut(count), advanceTutorial(), tipOnce(id, afterMs), firstTime(id),
  *   captureLine(report), finish(endEvent)
  */
@@ -36,6 +38,7 @@ import {
 import { matrix, battleRewards, line, SPELLS, BATTLE_SPELLS } from '../battle/index.js';
 import { Arena } from './arena.js';
 import { handlers } from './battleEvents.js';
+import { sideHandlers, newSides, placeSides, paintSides } from './sides.js';
 import { newActor, fillActor, settle, drawFighter } from './fighters.js';
 import { sigils, sigilSvg, RUNES } from './sigils.js';
 import { drawGuide } from './spellFx.js';
@@ -59,8 +62,9 @@ const ME = { x: 0.3, gy: 0.655, sc: 1.8 };
 const STRIP_ENV = { t: 0, time: 12, weather: 'clear' };
 
 export class HontoriBattleScene extends BattleScene {
-  handlers = handlers;
-  view = { me: newActor('me'), foe: newActor('foe'), mana: 0, maxMana: 0, intent: 'strike', quick: false };
+  handlers = { ...handlers, ...sideHandlers };
+  view = { me: newActor('me'), foe: newActor('foe'), mana: 0, maxMana: 0, intent: 'strike', next: null, quick: false };
+  sides = null;
   places = { me: { x: 0, y: 0, gy: 0, sc: ME.sc }, foe: { x: 0, y: 0, gy: 0, sc: FOE.sc } };
   uiTop = 0;
   tail = 0;
@@ -84,6 +88,7 @@ export class HontoriBattleScene extends BattleScene {
   #escapeArmed = false;
   #ended = false;
   #outcome = null;
+  #sealed = null;
 
   /* ---------- the scene ---------- */
 
@@ -103,6 +108,7 @@ export class HontoriBattleScene extends BattleScene {
     const { art } = this.game;
     const v = this.view;
     this.#trainer = b.trainer;
+    this.sides = newSides(b);
     fillActor(v.me, b.me);
     fillActor(v.foe, b.foe);
     v.mana = b.mana;
@@ -141,7 +147,8 @@ export class HontoriBattleScene extends BattleScene {
     this.message.say('');
     this.refresh();
     const sound = this.game.sound;
-    if (typeof sound.battle === 'function') sound.battle(this.#trainer ? 'duel' : 'wild');
+    /* a battle may name its own tune (a tournament round); else the duel or wild tune of the place */
+    if (typeof sound.battle === 'function') sound.battle(this.params.music || (this.#trainer ? 'duel' : 'wild'));
   }
 
   layout() {
@@ -153,6 +160,7 @@ export class HontoriBattleScene extends BattleScene {
     places.me.x = Math.round(W * ME.x);
     places.me.gy = Math.round(H * ME.gy);
     for (const p of [places.foe, places.me]) p.y = p.gy - 10 * p.sc - 2;
+    placeSides(this);
     this.uiTop = (this.cssHeight - UI_HEIGHT) / stage.unit;
     this.#arena = new Arena(W, H, this.#biome, this.#env, places);
     if (this.#tide >= 0) this.#arena.setTide(this.#tide);
@@ -213,6 +221,7 @@ export class HontoriBattleScene extends BattleScene {
   paintActors(g) {
     const { art } = this.game;
     const T = this.stage.time;
+    paintSides(g, this, T, this.#env);
     drawFighter(g, art, this.view.foe, this.places.foe, T, this.#env, false);
     drawFighter(g, art, this.view.me, this.places.me, T, this.#env, true);
   }
@@ -281,7 +290,8 @@ export class HontoriBattleScene extends BattleScene {
     }
     const events = this.battle.castSpell(kind, score.accuracy);
     const refused = events[0] && events[0].type === 'refused' ? events[0] : null;
-    if (refused) {
+    if (events[0] && events[0].type === 'fizzle') surface.ash();
+    else if (refused) {
       surface.ash();
       if (refused.reason !== 'repel') this.game.sound.play('bump');
     } else {
@@ -396,9 +406,11 @@ export class HontoriBattleScene extends BattleScene {
     else {
       const key = v.foe.status.stun ? 'stunned' : v.foe.status.asleep ? 'asleep' : v.intent;
       const it = INTENTS[key] || INTENTS.strike;
-      const first = v.quick && key !== 'stunned' && key !== 'asleep' ? label('movesFirst') : '';
+      const first = v.quick && key !== 'stunned' && key !== 'asleep' && key !== 'hidden' ? label('movesFirst') : '';
+      /* the Lantern Sigil shows the next turn too */
+      const then = v.next && INTENTS[v.next] ? label('thenIntent', { word: INTENTS[v.next].word }) : '';
       ui.intent.set({
-        drawing: it.drawing, word: it.word, note: it.note + first, color: it.color,
+        drawing: it.drawing, word: it.word, note: it.note + first + then, color: it.color,
         pulse: this.#tutorial === 2 || key === 'unleash' || key === 'charge'
       });
     }
@@ -591,9 +603,15 @@ export class HontoriBattleScene extends BattleScene {
     return { name: actor.name, level: label('level', { n: actor.level }), bars, badges, edge, tags };
   }
 
+  /* rule blind: this spell's slot is sealed for the duel */
+  sealSpell(kind) {
+    this.#sealed = kind;
+    this.refreshSpell(kind);
+  }
+
   #chip(kind) {
     return {
-      picture: sigilSvg(kind, SPELL_COLORS[kind]), name: SPELLS[kind].name, note: SPELL_NOTES[kind] || '',
+      picture: sigilSvg(kind, SPELL_COLORS[kind]), name: SPELLS[kind].name, note: kind === this.#sealed ? label('sealed') : SPELL_NOTES[kind] || '',
       cost: this.battle.spellCost(kind), level: this.battle.mastery(kind), levels: 5
     };
   }

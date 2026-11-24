@@ -16,7 +16,8 @@
  *                    "kinds"  { seen: [kind], bound: [kind], resting: [member], boundOnce, purses: { key: true }, battles }
  *   scene            "battle" (game/battle-scene)
  *   service          "battle" { start(battle, ctx, node) -> Promise<result> }   the story's battle command calls it
- *        battle: { opponent: trainerId } | { wild: { kind, level } }, with rules: [name] (schema section 9)
+ *        battle: { opponent: trainerId } | { wild: { kind, level } }, with rules: [name] (schema section 9);
+ *        also mode: 'ally' with ally: { name, look, team } (a double battle), twist: 'flawless', music: songKey
  *        result: { result, won, captured, lost, fled, wild, opponent }; also emitted as "battle:end"
  *   story.command    "ext:learn"   { ext: 'learn', spell }: the spell joins the wand's spells
  *   story.condition  "ext:spell"   { ext: 'spell', has: spellId }
@@ -107,6 +108,19 @@ export function installBattles(game) {
       setup.enemy = ctx.value(wild.kind) || undefined;
       setup.level = Math.max(0, Math.round(Number(ctx.value(wild.level === undefined ? battle.level : wild.level)) || 0)) || undefined;
     }
+    /* a double battle beside someone (mode ally): their name, look and hontori (game/battle/ally.js) */
+    if (battle.mode === 'ally' && battle.ally) {
+      setup.mode = 'ally';
+      setup.ally = {
+        name: battle.ally.name ? ctx.text(battle.ally.name) : '',
+        key: battle.ally.look,
+        team: (battle.ally.team || []).map((member) => ({
+          spirit: member.kind, level: Math.max(1, Math.round(Number(ctx.value(member.level)) || 1)), stage: member.stage,
+        })),
+      };
+    }
+    /* a drawing twist on the whole battle ('flawless'), from the command or a tournament round */
+    if (typeof battle.twist === 'string') setup.twist = battle.twist;
     setup.noCapture = rules.includes('noCapture');
     /* a full party while the Council keeps the Sanctum sealed: a binding has nowhere to go */
     const sanctum = registry.get('service', 'sanctum');
@@ -185,6 +199,8 @@ export function installBattles(game) {
       const joins = !!bag && size < bag.party.max;
       const world = ctx.story.world;
       const outcome = await startBattle(game, setup, {
+        /* a battle may name its own tune (a tournament round: 'tournament', 'tournament_2' ...) */
+        music: typeof spec.music === 'string' ? spec.music : undefined,
         /* the command may name the ground (a wild one met in tall grass); indoors is always indoors */
         biome: world && world.env.indoor ? 'indoor' : spec.biome || undefined,
         tutorial: !trainer && state.kinds.battles === 0,

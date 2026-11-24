@@ -193,6 +193,7 @@ export default {
       }
     ],
     bookshelf: [
+      { if: { ext: 'read', book: 'here' }, then: [{ sound: 'page' }, { ext: 'read', book: 'here' }] },
       {
         then: [
           { sound: 'page' },
@@ -1846,6 +1847,7 @@ export default {
       }
     ],
     bookstack: [
+      { if: { ext: 'read', book: 'here' }, then: [{ sound: 'page' }, { ext: 'read', book: 'here' }] },
       {
         then: [
           {

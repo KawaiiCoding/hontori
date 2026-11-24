@@ -13,6 +13,8 @@
  *     onHum()             called now and then while the stroke grows (a soft sound)
  *   })
  *   color               the ink colour (the scene may change it while the stroke grows)
+ *   hidden              true: the stroke being drawn shows no ink at all (only what comes of it: the ash of a
+ *                       miss still shows)
  *   fade                0: the whole stroke shows; else only its last `fade` art pixels, the older part
  *                       fading out behind the finger (the whole stroke is still handed over and judged)
  *   drawing             a stroke is being drawn
@@ -54,6 +56,7 @@ export function inkStroke(g, points, width, color, alpha) {
 export class SigilSurface {
   color = '#ffe6b0';
   fade = 0;
+  hidden = false;
   drawing = false;
   trail = [];
 
@@ -130,7 +133,8 @@ export class SigilSurface {
   }
 
   draw(g, width) {
-    if (this.trail.length > 1) {
+    if (this.hidden && this.drawing) return;
+    if (this.trail.length > 1 && !(this.hidden && !this.drawing)) {
       if (this.fade > 0) this.#drawFading(g, width);
       else inkStroke(g, this.trail, width, this.color, 1);
     }

@@ -87,6 +87,26 @@ export default {
       shape: 'seven',
       howText: 'shared.spell.how.seven'
     },
+    lantern: {
+      id: 'lantern',
+      name: 'shared.spell.lantern',
+      cost: 1,
+      color: '#ffd27a',
+      on: 'foe',
+      desc: 'shared.spell.lantern.desc',
+      shape: 'lantern',
+      howText: 'shared.spell.how.lantern'
+    },
+    mirror: {
+      id: 'mirror',
+      name: 'shared.spell.mirror',
+      cost: 2,
+      color: '#e8f4ff',
+      on: 'me',
+      desc: 'shared.spell.mirror.desc',
+      shape: 'mirror',
+      howText: 'shared.spell.how.mirror'
+    },
     veil: {
       id: 'veil',
       name: 'shared.spell.veil',
@@ -110,5 +130,5 @@ export default {
       world: true
     }
   },
-  battleOrder: ['mend', 'shield', 'boost', 'stun', 'sleep', 'bind', 'revive', 'step']
+  battleOrder: ['mend', 'shield', 'boost', 'stun', 'sleep', 'bind', 'revive', 'step', 'lantern', 'mirror']
 };

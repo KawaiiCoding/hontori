@@ -7,7 +7,8 @@
  *                         (ringRules.js: the wind may swap yours); the foe picks its intent
  *                         (it keeps the old one while stunned or asleep) and guards this round if that is it;
  *                         a fainted hontori with no Dawn Star to hand forces a switch, or loses when nobody is left
- *   runRound(b, steps)    the two halves of a round in order (after each, a foe that still stands may enter its next
+ *   runRound(b, steps)    the two halves of a round in order (in a double battle, ally.js, then the ally's and the
+ *                         second foe's) (after each, a foe that still stands may enter its next
  *                         phase: phases.js), then the round end: Deep Root heals 3, glow,
  *                         tailwind and shell count down, the foe's mist counts down, the foe's guard ends
  *   aliveOthers(b)        party indices, other than the one on the field, with hp above 0
@@ -26,9 +27,10 @@ import { pickIntent, quickFoe } from './intent.js';
 import { reviveMaterial, SPELLS } from './spells.js';
 import { MOVES } from './moves.js';
 import { makeFoe } from './setup.js';
-import { me, foe, say, speciesOf, itemCount, can, costOf } from './common.js';
+import { me, foe, say, speciesOf, itemCount, can, costOf, hasRule } from './common.js';
 import { runRingRules, ringRefills } from './ringRules.js';
 import { checkPhases } from './phases.js';
+import { sideSteps, promotePartner } from './ally.js';
 import { line } from './text.js';
 
 export function aliveOthers(b) {
@@ -37,7 +39,11 @@ export function aliveOthers(b) {
 
 export function shownIntent(b) {
   const f = foe(b);
-  return f.has('stun') ? 'stunned' : f.has('asleep') ? 'asleep' : b.state.intent;
+  if (f.has('stun')) return 'stunned';
+  if (f.has('asleep')) return 'asleep';
+  /* rule blind: the plan is hidden, unless the Lantern Sigil shows it */
+  if (hasRule(b, 'blind') && !(b.state.foresee > 0)) return 'hidden';
+  return b.state.intent;
 }
 
 export function hint(b) {
@@ -46,7 +52,8 @@ export function hint(b) {
   const f = foe(b);
   const weak = f.hp / f.max <= 0.35;
   if (m.fainted) return can(b, 'revive') ? 'hintFaintedStar' : 'hintFainted';
-  if (m.has('asleep')) return 'hintAsleep';
+  if (m.has('asleep')) return can(b, 'mirror') && !S.spellUsed ? 'hintMirror' : 'hintAsleep';
+  if (shownIntent(b) === 'hidden') return can(b, 'lantern') && !S.spellUsed ? 'hintLantern' : 'hintBlind';
   if (!S.trainer && !S.noRoom && can(b, 'bind') && weak && S.mana >= 2 && !S.spellUsed) return S.flags.boundOnce ? 'hintBind' : 'hintBindFirst';
   if (!S.trainer && !S.known.includes('bind') && weak) return 'hintLearnBind';
   if (S.intent === 'charge' && can(b, 'shield')) return 'hintCharge';
@@ -56,7 +63,7 @@ export function hint(b) {
 
 export function emitTurn(b) {
   const id = hint(b);
-  b.emit('turn', { round: b.round, intent: shownIntent(b), quick: quickFoe(foe(b), me(b)), forced: b.state.forced, hint: id, hintText: line(id) });
+  b.emit('turn', { round: b.round, intent: shownIntent(b), foreseen: b.state.foresee > 0, quick: quickFoe(foe(b), me(b)), forced: b.state.forced, hint: id, hintText: line(id) });
 }
 
 export function beginTurn(b) {
@@ -69,9 +76,12 @@ export function beginTurn(b) {
   }
   S.spellUsed = false;
   S.forced = false;
+  if (S.foresee > 0) S.foresee--;
   if (b.round > 1) runRingRules(b, 'roundStart');
   const m = me(b);
-  if (!(f.has('stun') || f.has('asleep'))) S.intent = pickIntent(f, m, S.lastIntent, b.round, b.random);
+  /* a plan the Lantern Sigil already showed is the one that comes */
+  if (!(f.has('stun') || f.has('asleep'))) S.intent = S.nextIntent || pickIntent(f, m, S.lastIntent, b.round, b.random);
+  S.nextIntent = null;
   f.set('guard', S.intent === 'guard' && !f.has('stun') && !f.has('asleep'));
   if (m.fainted && !(can(b, 'revive') && S.mana >= costOf(b, 'revive') && itemCount(b, reviveMaterial(m.el)) > 0)) {
     const options = aliveOthers(b);
@@ -90,7 +100,7 @@ export function beginTurn(b) {
 }
 
 export function runRound(b, steps) {
-  const stop = b.runSteps(steps, () => {
+  const stop = b.runSteps([...steps, ...sideSteps(b)], () => {
     if (foe(b).fainted) return 'win';
     checkPhases(b);
     return me(b).fainted ? 'faint' : null;
@@ -107,7 +117,7 @@ export function runRound(b, steps) {
     m.tick('root');
     if (h) b.emit('heal', { target: 'me', amount: h, source: 'root' });
   }
-  for (const k of ['glow', 'tail', 'harden']) m.tick(k);
+  for (const k of ['glow', 'tail', 'harden', 'mirror']) m.tick(k);
   f.tick('mist');
   f.set('guard', 0);
   b.emit('roundEnd', { round: b.round });
@@ -133,6 +143,8 @@ function nextFoe(b) {
 function win(b) {
   const S = b.state;
   b.emit('faint', { target: 'foe' });
+  /* a double battle (mode ally): the second foe on the field steps up first */
+  if (promotePartner(b)) return beginTurn(b);
   if (S.team && S.teamIndex < S.team.length - 1) return nextFoe(b);
   if (S.trainer) say(b, 'wellFought', { trainer: S.trainer.name || 'Rival' });
   finish(b, 'won');

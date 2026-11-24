@@ -160,6 +160,12 @@ export function foeAct(b) {
     if (m.has('veil')) {
       m.set('veil', 0);
       say(b, 'hexVeil');
+    } else if (m.has('mirror')) {
+      /* the Mirror Sigil sends the sleep back */
+      m.set('mirror', 0);
+      f.set('asleep', 2);
+      f.set('charged', 0);
+      say(b, 'hexMirror');
     } else if (b.random() < 0.45) {
       m.set('asleep', 1);
       say(b, 'hexSleep');

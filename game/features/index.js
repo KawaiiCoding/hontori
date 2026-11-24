@@ -21,6 +21,8 @@
  *   story.condition   ext:ring (rings.js); ext:full (unlock.js); ext:gauntlet (gauntlet.js)
  *   story.value       ext:fishWeight (fishing.js)
  *   trial.test        sight, sigil, push (trialTests.js); vanes (vanes.js); tide (tide.js); circuit (circuit.js);
+ *                     watchers (watchers.js, on systems/features/Watchers.js); mirrors (mirrors.js, on
+ *                     systems/features/Mirrors.js);
  *                     braziers (braziers.js, on systems/features/Braziers.js: its gate, layer, system, service
  *                     "braziers", story.command ext:brazierLit and puzzle.reset)
  *   draw.twist        drift, mirror, quick, burn (sigil.js)
@@ -32,6 +34,10 @@
  *                     features:circuits (circuit.js); features:travel (travel.js)
  *   (sanctum.js) save section sanctum; service sanctum; story.command ext:chooseCarry, ext:sanctum, ext:toFront;
  *                     story.condition ext:sanctum, ext:carries
+ *   (tournament.js) story.command ext:tournament, ext:tournamentLeave; story.condition ext:tournament; service
+ *                     tournaments; system features:tournament; save section tournament
+ *   (wandGems.js) save section wandGems; the item effect manaPlus; world.layer features:heldClock (maps that
+ *                     hold their hour and weather: content `always`)
  *   world.sight       lantern (lantern.js: the Lantern, and Lantern Oil, widen the light in a dark cave)
  *   gate              features:gusts, features:tides, features:circuits, features:travel
  *   service           gusts, tides, circuits { solved, reset }; travel { go, riding }; gauntlets { open, stage, leave }
@@ -66,6 +72,10 @@ import { installGauntlet } from './gauntlet.js';
 import { installLantern } from './lantern.js';
 import { installSanctum } from './sanctum.js';
 import { installBrazierCourt } from './braziers.js';
+import { installWandGems } from './wandGems.js';
+import { installWatcherGround } from './watchers.js';
+import { installMirrorGarden } from './mirrors.js';
+import { installTournament } from './tournament.js';
 
 export { openUnlock, isFull } from './unlock.js';
 
@@ -106,6 +116,10 @@ export function install(game) {
   installLantern(game);
   installSanctum(game);
   installBrazierCourt(game);
+  installWandGems(game);
+  installWatcherGround(game);
+  installMirrorGarden(game);
+  installTournament(game);
   /* "I have a code": a row in the Menu and a link on the title, until the full journey is open */
   registry.add('title.action', 'code', {
     label: () => word(game, 'shared.feat.offer.code'),

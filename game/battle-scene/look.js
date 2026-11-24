@@ -32,12 +32,12 @@ export const BADGE_COLORS = Object.freeze({
 
 export const SPELL_COLORS = Object.freeze({
   mend: '#9cf0a6', shield: '#8fd8ff', boost: '#ffb35a', stun: '#ffe27a', sleep: '#b9a8ff', bind: '#ffd98a',
-  revive: '#fff0d0', veil: '#ffd98a', fish: '#7fd8ff', step: '#c8f0ff'
+  revive: '#fff0d0', veil: '#ffd98a', fish: '#7fd8ff', step: '#c8f0ff', lantern: '#ffd27a', mirror: '#e8f4ff'
 });
 
 export const SPELL_NOTES = Object.freeze({
   mend: 'Heal', shield: 'Block', boost: 'Power up', stun: 'Stun', sleep: 'Sleep', bind: 'Capture', revive: 'Revive',
-  veil: 'Lift veil', step: 'Escape'
+  veil: 'Lift veil', step: 'Escape', lantern: 'See plan', mirror: 'Send back'
 });
 
 /* the stamina one breath gives back, shown on the Catch breath button (the rule is in game/battle/fight.js) */
@@ -53,13 +53,14 @@ export const INTENTS = Object.freeze({
   heal: { word: 'Healing', color: '#9cf0a6', note: 'restores itself', drawing: '<path d="M15 6 L15 24 M6 15 L24 15"/>' },
   hex: { word: 'Sleep spell', color: '#c49aff', note: 'yours may fall asleep', drawing: '<path d="M4 15 Q15 4 26 15 Q15 26 4 15 Z"/><circle cx="15" cy="15" r="3"/>' },
   asleep: { word: 'Asleep', color: '#b9a8ff', note: 'cannot act', drawing: '<path d="M8 8 L16 8 L8 16 L16 16 M17 16 L23 16 L17 22 L23 22"/>' },
+  hidden: { word: 'Hidden', color: '#a8a4c8', note: 'its plan is unseen', drawing: '<path d="M4 15 Q15 6 26 15 Q15 24 4 15 Z"/><path d="M6 24 L24 6"/>' },
   stunned: { word: 'Stunned', color: '#ffe27a', note: 'cannot act', drawing: '<path d="M15 4 L18 12 L26 12 L19 17 L22 25 L15 20 L8 25 L11 17 L4 12 L12 12 Z"/>' }
 });
 
 export const STATUS_TAGS = Object.freeze({
   asleep: ['Asleep', '#b9a8ff'], stun: ['Stunned', '#ffe27a'], shield: ['Warded', '#8fd8ff'], boost: ['Rallied', '#ffb35a'],
   root: ['Rooted', '#7ed957'], glow: ['Glow', '#ff8a3c'], harden: ['Shell', '#c9935a'], tail: ['Tailwind', '#9ff0e0'],
-  veil: ['Veiled', '#a070ff'], mist: ['Misted', '#cfe9ff'], guard: ['Guard', '#8fd8ff'], charged: ['Charged', '#ffcf5a']
+  veil: ['Veiled', '#a070ff'], mirror: ['Mirror', '#e8f4ff'], mist: ['Misted', '#cfe9ff'], guard: ['Guard', '#8fd8ff'], charged: ['Charged', '#ffcf5a']
 });
 
 export const END_CARDS = Object.freeze({
@@ -98,6 +99,8 @@ export const LABELS = Object.freeze({
   fainted: 'Fainted',
   asleep: 'Asleep',
   movesFirst: ', moves first',
+  thenIntent: '. Next: {word}',
+  sealed: 'Sealed',
   ringDuel: 'Ring Duel',
   ownerRing: '{name} - Ring Duel',
   rule: 'Rule: {rule}',

@@ -23,12 +23,14 @@ import extensions from './extensions.js';
 import capsules from './capsules.js';
 import world from './world.js';
 import text from './text.en.js';
+import lore from './lore.js';
+import loreText from './text.lore.en.js';
 import kindText from './text.kinds.en.js';
 import capsuleText from './text.capsules.en.js';
 
 export default {
   id: 'shared', items, voices, maps, kinds, spells, money, forage, waters, wildHabitats: wild, goods: shops.goods, shopFlow: shops.flow,
   interactions: { ...interactions.handlers, ...capsules.interactions }, aliases: { ...interactions.aliases, ...capsules.aliases },
-  helpers, pickup, scripts, extensions, world, capsules,
-  text: { ...text, ...kindText, ...capsuleText },
+  helpers, pickup, scripts, extensions, world, capsules, lore,
+  text: { ...text, ...kindText, ...capsuleText, ...loreText },
 };

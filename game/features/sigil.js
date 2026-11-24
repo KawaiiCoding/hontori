@@ -14,6 +14,8 @@
  *                               the kid draws the shape the right way up
  *                     "quick"   a spark runs down a copper wire beside the page, as in the Storm Works; each
  *                               try must be finished before it reaches the end (10 seconds; the guide stays)
+ *                     "unseen"  no line shows while drawing, only the result (Hollow Moon)
+ *                     "flawless" only a Flawless drawing counts (Halo Court)
  *                     "burn"    the line burns away behind the finger over the hot floor of the Ember Crucible
  *                               (embers drift up under the guide); one sure stroke, judged as usual
  *     words (content/shared/text.en.js): shared.feat.draw.mirror, shared.feat.draw.quick, shared.feat.draw.late,
@@ -22,7 +24,7 @@
  *                                  the script waits until it is drawn
  */
 
-import { drawPrompt, driftTwist, mirrorTwist, quickTwist, burnTwist, twistOf } from '../../systems/features/index.js';
+import { drawPrompt, driftTwist, mirrorTwist, quickTwist, burnTwist, unseenTwist, flawlessTwist, twistOf } from '../../systems/features/index.js';
 import { sigils, drawSigil as paintCircle, RUNES } from '../battle-scene/sigils.js';
 import { SPELL_COLORS } from '../battle-scene/look.js';
 import { normalizeSpellId } from '../battle/spells.js';
@@ -49,6 +51,9 @@ const WIRE = '#b8682e';
 const WIRE_LIT = '#ffd27a';
 const SPARK = '#fff4c0';
 const QUICK_SECONDS = 10;
+/* the accuracy of a Flawless grade (game/battle/spells.js gradeOf) */
+const FLAWLESS = 0.55;
+const ROUGH = 'Clean, but not flawless. Again, slowly.';
 const EMBER = ['#ffb35a', '#ff8a3c', '#ffe27a'];
 const BURN_GLOW = 'rgba(255,120,40,0.14)';
 
@@ -158,6 +163,13 @@ export function installSigil(game) {
 
   /* the Ember Crucible: the line burns away behind the finger, so the shape is drawn in one sure stroke */
   registry.add('draw.twist', 'burn', (options) => burnTwist({ paint: paintEmbers, note: words(game, 'shared.feat.draw.burn'), ...options }));
+
+  /* Hollow Moon: no line shows while drawing, only the result */
+  registry.add('draw.twist', 'unseen', (options) => unseenTwist({ note: words(game, 'shared.feat.draw.unseen'), ...options }));
+  /* Halo Court: only a Flawless sigil counts (the battle grade's threshold, game/battle/spells.js) */
+  registry.add('draw.twist', 'flawless', (options) => flawlessTwist({
+    accuracy: FLAWLESS, note: words(game, 'shared.feat.draw.flawless'), rough: words(game, 'shared.feat.draw.rough') || ROUGH, ...options,
+  }));
 
   registry.add('story.command', 'ext:draw', async (node, ctx) => {
     const sigil = ctx.value(node.sigil);

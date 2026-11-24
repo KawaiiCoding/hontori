@@ -11,6 +11,7 @@
  *   itemCount(b, id)         how many of an item the battle may still use
  *   useItem(b, id)           take one; emits { type: 'item', id, left }
  *   spellMastery(b, kind), costOf(b, kind), can(b, kind)   (can: the spell is in the battle loadout)
+ *   hasRule(b, id)           that ring rule is on in this battle (blind, pure ...)
  */
 
 import { ELEMENTS } from './elements.js';
@@ -61,6 +62,10 @@ export function spellMastery(b, kind) {
 
 export function costOf(b, kind) {
   return spellCost(kind, spellMastery(b, kind), b.state.perks);
+}
+
+export function hasRule(b, id) {
+  return Array.isArray(b.state.rules) && b.state.rules.includes(id);
 }
 
 export function can(b, kind) {

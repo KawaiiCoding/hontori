@@ -9,6 +9,8 @@
  *   guide(points)                         the guide as it is shown (the stroke is still judged against the shape)
  *   paint(g, look)                        drawn under the guide, in screen pixels; look: { seconds, width, height,
  *                                         cx, cy, size, color, left (0..1 of the time left, or null), drawing }
+ *   hideInk                               true: no ink while drawing
+ *   minAccuracy, rough                    only a drawing this clean counts; the words after a rougher one
  *   fade                                  drawing pixels of ink that stay visible behind the finger; the older
  *                                         part of the stroke fades away (it still counts when it is judged)
  *   limit                                 seconds for one try; when they run out the try is lost (`late` says so)
@@ -26,6 +28,9 @@
  *   quickTwist({ seconds, paint, note, late })   each try must be finished within `seconds` (default 10)
  *   burnTwist({ fade, paint, note })   the line burns away behind the finger (default: the last 70 drawing
  *        pixels show), so the shape must be drawn in one sure stroke; it is judged like any other stroke
+ *   unseenTwist({ paint, note })   no ink shows while drawing: only what comes of it (the shape is judged as usual)
+ *   flawlessTwist({ accuracy, note, rough })   only a drawing at least that clean counts (the recogniser's
+ *        accuracy, default 0.55); a rougher one of the right shape is a miss with the words `rough`
  *   twistOf(game, id, options)   the twist registered under "draw.twist" id, made with options, or null
  *        registry kind "draw.twist": id -> (options) => twist
  */
@@ -58,6 +63,14 @@ export function quickTwist({ seconds = 10, paint, note, late } = {}) {
 
 export function burnTwist({ fade = 70, paint, note } = {}) {
   return { fade: Math.max(20, Number(fade) || 70), paint, note };
+}
+
+export function unseenTwist({ paint, note } = {}) {
+  return { hideInk: true, paint, note };
+}
+
+export function flawlessTwist({ accuracy = 0.55, paint, note, rough } = {}) {
+  return { minAccuracy: Math.max(0.05, Math.min(0.99, Number(accuracy) || 0.55)), paint, note, rough };
 }
 
 export function twistOf(game, id, options) {

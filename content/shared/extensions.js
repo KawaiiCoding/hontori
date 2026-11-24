@@ -21,7 +21,10 @@ export default {
     gauntletLeave: { args: ['gauntlet:string'] },
     chooseCarry: { args: ['n:number', 'title:text', 'sub?:text', 'confirm?:text'] },
     sanctum: { args: ['seal'] },
-    toFront: { args: ['kind:kind'] }
+    toFront: { args: ['kind:kind'] },
+    tournament: { args: ['tournament:string', 'won?', 'lost?'] },
+    tournamentLeave: { args: ['tournament:string'] },
+    read: { args: ['book:string'] }
   },
   condition: {
     spell: { args: ['has:spell'] },
@@ -32,15 +35,21 @@ export default {
     capsule: { args: ['done?', 'free?'] },
     gauntlet: { args: ['gauntlet:string', 'stage?:number'] },
     sanctum: { args: ['sealed?', 'count?'] },
-    carries: { args: ['kind?:kind', 'element?:element'] }
+    carries: { args: ['kind?:kind', 'element?:element'] },
+    tournament: { args: ['tournament:string', 'round?:number'] },
+    read: { args: ['book:string'] }
   },
   value: {
     leadLevel: { args: ['add?:number', 'min?:number', 'none?:number'] },
     fishWeight: { args: ['index:number'] },
     capsule: { args: ['cost?'] }
   },
-  battleRule: ['noCapture', 'noSwitch', 'sureBind', 'practice', 'windSwap', 'tideRise', 'noRest', 'wandDuel', 'heat'],
-  testType: { sight: { args: ['who:person'] }, sigil: { args: ['sigil:spell'] }, vanes: { args: ['puzzle:string'] }, tide: { args: ['puzzle:string'] }, circuit: { args: ['puzzle:string'] }, braziers: { args: ['puzzle:string'] } },
-  awardRule: { wandTrial: { args: ['sigil:spell', 'count:number', 'twist?:string'] }, ringDuel: { args: ['trainer:trainer'] } },
+  battleRule: ['noCapture', 'noSwitch', 'sureBind', 'practice', 'windSwap', 'tideRise', 'noRest', 'wandDuel', 'heat', 'blind', 'pure'],
+  testType: { sight: { args: ['who:person'] }, sigil: { args: ['sigil:spell'] }, vanes: { args: ['puzzle:string'] }, tide: { args: ['puzzle:string'] }, circuit: { args: ['puzzle:string'] }, braziers: { args: ['puzzle:string'] }, watchers: { args: ['puzzle:string'] }, mirrors: { args: ['puzzle:string'] } },
+  awardRule: { wandTrial: { args: ['sigil:spell', 'count:number', 'twist?:string'] }, ringDuel: { args: ['trainer:trainer'] }, tournament: { args: ['tournament:string'] } },
+  /* battle modes (a battle command's `mode`), drawing twists (`twist` of ext:draw, a wand trial or a battle) and item
+     effects the game layer gives meaning to */
+  battleMode: ['ally'],
+  twist: ['drift', 'mirror', 'quick', 'burn', 'unseen', 'flawless'],
   elements: ['water', 'fire', 'wind', 'grass', 'electric', 'earth', 'dark', 'light']
 };

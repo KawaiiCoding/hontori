@@ -109,6 +109,7 @@ export function checkStory(story) {
     condition(def.goneIf, where);
     for (const phase of def.phases || []) {
       condition(phase.if, where);
+      if (phase.name && !knownText(phase.name)) report(where, `missing text "${phase.name}"`);
       if (phase.service && !library.scripts[phase.service]) report(where, `no script "${phase.service}"`);
     }
   }
