@@ -38,7 +38,7 @@ import {
 import { matrix, battleRewards, line, SPELLS, BATTLE_SPELLS } from '../battle/index.js';
 import { Arena } from './arena.js';
 import { handlers } from './battleEvents.js';
-import { sideHandlers, newSides, placeSides, paintSides } from './sides.js';
+import { sideHandlers, newSides, placeSides, paintSides, trainerX } from './sides.js';
 import { newActor, fillActor, settle, drawFighter } from './fighters.js';
 import { sigils, sigilSvg, RUNES } from './sigils.js';
 import { drawGuide } from './spellFx.js';
@@ -100,6 +100,8 @@ export class HontoriBattleScene extends BattleScene {
     this.#tutorial = params.tutorial ? 0 : -1;
     const saved = this.game.save.state && this.game.save.state.battleScene;
     this.#saved = saved || { guideOff: false, told: {} };
+    /* a double battle's extra hontori, known before the first layout places them */
+    this.sides = newSides(params.battle);
     return params.battle;
   }
 
@@ -108,7 +110,6 @@ export class HontoriBattleScene extends BattleScene {
     const { art } = this.game;
     const v = this.view;
     this.#trainer = b.trainer;
-    this.sides = newSides(b);
     fillActor(v.me, b.me);
     fillActor(v.foe, b.foe);
     v.mana = b.mana;
@@ -215,7 +216,7 @@ export class HontoriBattleScene extends BattleScene {
     const tr = this.#trainer;
     if (!tr) return;
     const P = this.places.foe;
-    this.game.art.drawPerson(g, tr.key || 'kid', P.x + 28, P.gy - 4, 0, 0, { t: T, time: this.#env.time }, { npc: true, seed: 0.3 });
+    this.game.art.drawPerson(g, tr.key || 'kid', trainerX(this), P.gy - 4 - (this.sides && this.sides.foe2 ? 6 : 0), 0, 0, { t: T, time: this.#env.time }, { npc: true, seed: 0.3 });
   }
 
   paintActors(g) {

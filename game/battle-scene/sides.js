@@ -9,7 +9,9 @@
  *   SIDE_PLACES              { ally, foe2 }: { x, gy, sc } as shares of the stage, like the scene's own places
  *   newSides(battle)         { ally, foe2 } actors from battle.double (null when there is none)
  *   placeSides(scene)        fill scene.places.ally / foe2 from the stage size (call from layout)
- *   paintSides(g, scene, T, env)   the two extra hontori with their bars (call from paintActors, before the others)
+ *   paintSides(g, scene, T, env)   the two extra hontori with their health bars (call from paintActors, before the
+ *                            others)
+ *   trainerX(scene)          where the trainer stands: behind the first foe, or between both foes
  *   sideHandlers             { sideMove, sideDamage, sideFaint, sideUp, foresee, fizzle, sealedSlot } for the scene
  */
 
@@ -18,9 +20,11 @@ import { line } from '../battle/text.js';
 import { handlers as baseHandlers } from './battleEvents.js';
 
 export const SIDE_PLACES = Object.freeze({
-  ally: { x: 0.11, gy: 0.6, sc: 1.35 },
-  foe2: { x: 0.88, gy: 0.34, sc: 1.15 },
+  ally: { x: 0.14, gy: 0.42, sc: 1.15 },
+  foe2: { x: 0.84, gy: 0.33, sc: 1.15 },
 });
+/* in a double battle the first foe stands a little to the left, so both fit */
+const FOE_X = 0.54;
 
 const BAR_W = 26;
 const HIT_FADE = 2.5;
@@ -37,6 +41,7 @@ export function newSides(battle) {
 
 export function placeSides(scene) {
   const { stage, places } = scene;
+  if (scene.sides && scene.sides.foe2 && places.foe) places.foe.x = Math.round(stage.width * FOE_X);
   for (const id of ['ally', 'foe2']) {
     const o = SIDE_PLACES[id];
     const gy = Math.round(stage.height * o.gy);
@@ -82,11 +87,12 @@ export function paintSides(g, scene, T, env) {
     }
     g.globalAlpha = 1;
     bar(g, x, P.gy + 3, a);
-    g.font = `bold 6px ${scene.stage.font || 'sans-serif'}`;
-    g.textAlign = 'center';
-    g.fillStyle = '#ffffff';
-    g.fillText(a.owner ? `${a.owner}` : a.name, x, P.gy + 12);
   }
+}
+
+export function trainerX(scene) {
+  const P = scene.places;
+  return scene.sides && scene.sides.foe2 && P.foe2 ? Math.round((P.foe.x + P.foe2.x) / 2) : P.foe.x + 28;
 }
 
 function actorAt(scene, id) {

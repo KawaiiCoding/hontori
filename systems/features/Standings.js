@@ -30,7 +30,7 @@ export class StandingsScene extends ScreenScene {
     if (sub) element('p', '', card, sub);
     const list = element('div', 'rows', card);
     for (const row of Array.isArray(rows) ? rows : []) {
-      const line = element('div', `row ${row.state || 'in'}`, list);
+      const line = element('div', `row s-${row.state || 'in'}`, list);
       const face = element('canvas', '', line);
       face.width = FACE;
       face.height = FACE;

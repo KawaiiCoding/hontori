@@ -14,7 +14,7 @@
  *   .ft-draw .tip .sub             the drawing prompt over the dimmed world
  *   .ft-card                       a centred card (name entry, offer); .ft-card .pic .in .err .row .list
  *   .ft-carry .count .grid .pick (.on .lock) .tick   the choose-who-comes card (CarryChoice.js)
- *   .ft-board .rows .row (.in .out .next .you)        the board between rounds (Standings.js)
+ *   .ft-board .rows .row (.s-in .s-out .s-next .s-you)        the board between rounds (Standings.js)
  *   .ft-moment .msg .row           a full-screen moment with a message at the bottom (a growth)
  *   .ft-side                       a round button under the HUD column (riding)
  *   .ft-closewrap .ft-close .ft-closex   a close-up of a board; .ft-close.notes .cork .note (.big, blue, green, pink)
@@ -86,10 +86,10 @@ const CSS = `
 .ft-board .row canvas{width:40px;height:40px;image-rendering:pixelated}
 .ft-board .row b{font-size:15px;font-weight:900}
 .ft-board .row small{font-size:12px;font-weight:800;opacity:.85}
-.ft-board .row.out{opacity:.45}
-.ft-board .row.out b{text-decoration:line-through}
-.ft-board .row.next{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
-.ft-board .row.you{border-color:color-mix(in srgb,var(--accent) 60%,#ffffff 20%)}
+.ft-board .row.s-out{opacity:.45}
+.ft-board .row.s-out b{text-decoration:line-through}
+.ft-board .row.s-next{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.ft-board .row.s-you{border-color:color-mix(in srgb,var(--accent) 60%,#ffffff 20%)}
 
 .ft-moment{background:var(--title-edge)}
 .ft-moment .msg{position:absolute;left:16px;right:16px;bottom:calc(var(--sa-b) + 28px);text-align:center;font-size:clamp(16px,4.4cqmin,22px);
