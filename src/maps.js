@@ -117,7 +117,7 @@ window.H = window.H || {};
       { type: 'chair', x: 21, y: 3 },
       { type: 'toybox', x: 24, y: 2 },
       { type: 'telescope', x: 26, y: 2 },
-      { type: 'kid_bed', x: 28, y: 2 },
+      { type: 'kid_bed', x: 28, y: 5 },
       { type: 'plant', x: 28, y: 9 },
       { type: 'wardrobe', x: 21, y: 9 },
       // ---- linen & reading nook

@@ -41,7 +41,7 @@ const DEFAULT_SCALE = 3;
 const END_FADE_MS = 600;
 /* the last panel stays a moment longer before the game begins by itself */
 const LAST_EXTRA_MS = 600;
-const ACTIVE_FPS = 30;
+const ACTIVE_FPS = 60;
 const RESTING_FPS = 8;
 /* the largest picture, in story pixels, however wide or tall the screen is */
 const MAX_SIDE = 420;

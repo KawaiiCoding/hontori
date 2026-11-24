@@ -3,7 +3,8 @@
  * Job: a hontori on the field: the engine Fighter plus elements, attack, stamina and stage.
  *
  * Public API:
- *   STATUS_NAMES          asleep, stun, shield, boost, root, glow, harden, tail, veil, mist, guard, charged
+ *   STATUS_NAMES          asleep, stun, shield, boost, root, glow, harden, tail, veil, mist, guard, charged, mirror
+ *                         (mirror: a Mirror Sigil waiting to send the next status aimed at it back)
  *   foeMaxHp(level)       15 + 3 * level
  *   new HontoriFighter({ side, key, element, element2, name, level, hp, maxHp, atk, stage, sta, staMax })
  *   el, el2, atk, stage, sta, staMax   plus everything a Fighter has
@@ -15,7 +16,7 @@
 
 import { Fighter } from '../../systems/battle/fighter.js';
 
-export const STATUS_NAMES = Object.freeze(['asleep', 'stun', 'shield', 'boost', 'root', 'glow', 'harden', 'tail', 'veil', 'mist', 'guard', 'charged']);
+export const STATUS_NAMES = Object.freeze(['asleep', 'stun', 'shield', 'boost', 'root', 'glow', 'harden', 'tail', 'veil', 'mist', 'guard', 'charged', 'mirror']);
 
 export function foeMaxHp(level) {
   return 15 + level * 3;

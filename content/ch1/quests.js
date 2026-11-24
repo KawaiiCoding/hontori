@@ -9,7 +9,7 @@ export default [
     icon: 'night',
     title: 'ch1.quest.night',
     desc: 'ch1.quest.night.desc',
-    steps: [{ id: 'bed', text: 'ch1.quest.night.bed', done: 'c1:morning', target: [{ map: 'home', x: 28, y: 3 }] }]
+    steps: [{ id: 'bed', text: 'ch1.quest.night.bed', done: 'c1:morning', target: [{ map: 'home', x: 28, y: 6 }] }]
   },
   {
     id: 'academy',
@@ -56,7 +56,7 @@ export default [
         id: 'pond',
         text: { pick: [[{ hour: [18, 5] }, 'ch1.quest.paw.pond.night']], else: 'ch1.quest.paw.pond.day' },
         done: 'c1:pond',
-        target: [{ if: { hour: [18, 5] }, map: 'village', x: 9, y: 10 }, { map: 'home', x: 28, y: 2 }]
+        target: [{ if: { hour: [18, 5] }, map: 'village', x: 9, y: 10 }, { map: 'home', x: 28, y: 5 }]
       },
       { id: 'bind', text: 'ch1.quest.paw.bind', done: 'c1:brook', target: [{ map: 'village', x: 9, y: 10 }] }
     ]

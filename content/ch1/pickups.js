@@ -9,7 +9,7 @@ export default {
   list: [
     { item: 'lantern', map: 'home', x: 3, y: 16 },
     { item: 'cookbook', map: 'home', x: 1, y: 3 },
-    { item: 'teddy', map: 'home', x: 28, y: 3, row: 4 },
+    { item: 'teddy', map: 'home', x: 28, y: 6, row: 7 },
     { item: 'map', map: 'home', x: 21, y: 2 },
     { item: 'compass', map: 'home', x: 22, y: 2 },
     { item: 'bread', map: 'home', x: 4, y: 5, row: 6, respawn: 'daily' },
