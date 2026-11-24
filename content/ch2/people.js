@@ -82,6 +82,8 @@ export default [
     look: 'greycloak',
     at: null,
     lines: ['ch2.p.greycloak.1'],
-    spawned: true
+    spawned: true,
+    /* chapter 8: the cloak changes sides and gives a name */
+    phases: [{ if: 'c8:merrit', name: 'ch8.name.merrit' }]
   }
 ];

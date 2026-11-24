@@ -4,6 +4,7 @@
  */
 
 export default {
+  'ch8.map.cinderreach.label.south': 'To the Mothwood',
   'ch8.map.mothwood.label.1': 'Moth glade',
   'ch8.map.mothwood.label.2': 'Black stream',
   'ch8.map.mothwood.label.3': 'To Cinderreach',

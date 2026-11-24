@@ -7,7 +7,7 @@ export default {
   id: 'duskmere',
   name: 'ch8.map.duskmere',
   tileset: 'outdoor',
-  always: { time: 19.4, weather: 'clear' },
+  always: { time: 18.5, weather: 'clear' },
   legend: { g: 'grass', t: 'tallgrass', f: 'flowers', p: 'path', c: 'cobble', w: 'water', s: 'sand', a: 'ash' },
   rows: [
     'gggggggggggggggggggggggggggppggggggggggggggggggggggggggg',
@@ -142,7 +142,7 @@ export default {
     { type: 'watch_lamp', x: 31, y: 44 }, { type: 'watch_lamp', x: 39, y: 44 }, { type: 'watch_lamp', x: 48, y: 46 }, { type: 'watch_lamp', x: 40, y: 49 },
     { type: 'school_touch_dark', x: 33, y: 27 }, { type: 'school_touch_dark', x: 39, y: 27 }
   ],
-  start: { time: 19.4, weather: 'clear' },
+  start: { time: 18.5, weather: 'clear' },
   school: { door: [36, 27], element: 'dark', name: 'ch8.map.lantern_room' },
   spots: {
     square: [27, 20],

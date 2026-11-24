@@ -20,7 +20,10 @@ export default [
           { from: 21, to: 24, x: 15, y: 11, dir: 0, lines: ['ch1.p.mom.9', 'ch1.p.mom.10'] },
           { from: 0, to: 6, away: true }
         ]
-      }
+      },
+      /* chapter 9: come to Goldmere to watch the tournament (they can see, which is against his law) */
+      { if: 'c9:family', at: { map: 'goldmere', x: 30, y: 26, dir: 3 }, schedule: null, lines: ['ch9.p.mom.1', 'ch9.p.mom.2'] },
+      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 11, dir: 3 }, schedule: null, lines: ['ch9.p.mom.3', 'ch9.p.mom.4'] }
     ]
   },
   {
@@ -39,7 +42,10 @@ export default [
           { from: 21, to: 24, x: 18, y: 8, dir: 2, lines: ['ch1.p.dad.9', 'ch1.p.dad.10'] },
           { from: 0, to: 6, away: true }
         ]
-      }
+      },
+      /* chapter 9: come to Goldmere to watch the tournament (they can see, which is against his law) */
+      { if: 'c9:family', at: { map: 'goldmere', x: 31, y: 26, dir: 3 }, schedule: null, lines: ['ch9.p.dad.1', 'ch9.p.dad.2'] },
+      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 12, dir: 3 }, schedule: null, lines: ['ch9.p.dad.3', 'ch9.p.dad.4'] }
     ]
   },
   {
@@ -196,7 +202,11 @@ export default [
       { if: 'c5:cole', at: { map: 'coilhaven_h1', x: 6, y: 6, dir: 2 }, lines: ['ch5.p.cole.1', 'ch5.p.cole.2'], service: 'ch5.svc.cole' },
       /* chapter 7: he and Mira find the kid in Cinderreach, then rest at the tavern there */
       { if: { all: ['c7:box', { not: 'c7:friends' }] }, at: { map: 'cinderreach', x: 28, y: 24, dir: 1 }, lines: ['ch7.p.cole.1', 'ch7.p.cole.2'], service: 'ch7.svc.friend' },
-      { if: 'c7:friends', at: { map: 'cinderreach_tavern', x: 5, y: 5, dir: 3 }, lines: ['ch7.p.cole.1', 'ch7.p.cole.2'], service: 'ch7.svc.friend' }
+      { if: 'c7:friends', at: { map: 'cinderreach_tavern', x: 5, y: 5, dir: 3 }, lines: ['ch7.p.cole.1', 'ch7.p.cole.2'], service: 'ch7.svc.friend' },
+      /* chapter 9: in Goldmere's plaza, then at the edge of the tournament ring */
+      { if: { all: ['c9:gate', { not: 'c9:tourney' }] }, at: { map: 'goldmere', x: 34, y: 20, dir: 3 }, schedule: null, lines: ['ch9.p.cole.1', 'ch9.p.cole.2'] },
+      { if: 'c9:tourney', at: { map: 'halo_court', x: 13, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.cole.3', 'ch9.p.cole.4'] },
+      { if: 'c9:ring', at: { map: 'halo_court', x: 13, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.cole.5', 'ch9.p.cole.6'] }
     ]
   },
   {
@@ -211,7 +221,11 @@ export default [
       { if: 'c4:open', at: { map: 'tidewell_h1', x: 5, y: 4, dir: 0 }, lines: ['ch4.p.mira.1', 'ch4.p.mira.2'], service: 'ch4.svc.mira' },
       /* chapter 7: with Cole in Cinderreach */
       { if: { all: ['c7:box', { not: 'c7:friends' }] }, at: { map: 'cinderreach', x: 31, y: 24, dir: 1 }, lines: ['ch7.p.mira.1', 'ch7.p.mira.2'], service: 'ch7.svc.friend' },
-      { if: 'c7:friends', at: { map: 'cinderreach_tavern', x: 9, y: 6, dir: 2 }, lines: ['ch7.p.mira.1', 'ch7.p.mira.2'], service: 'ch7.svc.friend' }
+      { if: 'c7:friends', at: { map: 'cinderreach_tavern', x: 9, y: 6, dir: 2 }, lines: ['ch7.p.mira.1', 'ch7.p.mira.2'], service: 'ch7.svc.friend' },
+      /* chapter 9: in Goldmere's plaza, then at the edge of the tournament ring */
+      { if: { all: ['c9:gate', { not: 'c9:tourney' }] }, at: { map: 'goldmere', x: 37, y: 20, dir: 2 }, schedule: null, lines: ['ch9.p.mira.1', 'ch9.p.mira.2'] },
+      { if: 'c9:tourney', at: { map: 'halo_court', x: 21, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.mira.3', 'ch9.p.mira.4'] },
+      { if: 'c9:ring', at: { map: 'halo_court', x: 21, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.mira.5', 'ch9.p.mira.6'] }
     ]
   },
   {

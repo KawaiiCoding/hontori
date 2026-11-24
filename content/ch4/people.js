@@ -47,7 +47,12 @@ export default [
     look: 'lisel',
     at: P.h1Lisel,
     lines: ['ch4.p.lisel.1', 'ch4.p.lisel.2'],
-    phases: [{ if: 'c4:lisel', lines: ['ch4.p.lisel.3', 'ch4.p.lisel.4'] }]
+    phases: [
+      { if: 'c4:lisel', lines: ['ch4.p.lisel.3', 'ch4.p.lisel.4'] },
+      /* chapter 9: she comes to Goldmere, ready to see */
+      { if: 'c9:family', at: { map: 'goldmere', x: 41, y: 26, dir: 2 }, schedule: null, lines: ['ch9.p.lisel.1', 'ch9.p.lisel.2'] },
+      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 14, dir: 3 }, schedule: null, lines: ['ch9.p.lisel.3', 'ch9.p.lisel.4'] }
+    ]
   },
   {
     id: 'sava',

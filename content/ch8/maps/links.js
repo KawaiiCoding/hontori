@@ -11,7 +11,7 @@ export default {
       map: 'cinderreach',
       without: [{ type: 'stone_wall_h', x: 29, y: 42 }, { type: 'stone_wall_h', x: 30, y: 42 }, { type: 'rock', x: 30, y: 43 }],
       doors: [{ x: 29, y: 43, to: 'mothwood', tx: 21, ty: 1, dir: 0 }, { x: 30, y: 43, to: 'mothwood', tx: 22, ty: 1, dir: 0 }],
-      labels: [{ x: 29, y: 42, name: 'ch7.map.cinderreach.label.south' }]
+      labels: [{ x: 29, y: 42, name: 'ch8.map.cinderreach.label.south' }]
     }
   ],
   states: [

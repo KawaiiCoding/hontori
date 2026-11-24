@@ -45,8 +45,10 @@ import ch4 from '../../content/ch4/maps/index.js';
 import ch5 from '../../content/ch5/maps/index.js';
 import ch6 from '../../content/ch6/maps/index.js';
 import ch7 from '../../content/ch7/maps/index.js';
+import ch8 from '../../content/ch8/maps/index.js';
+import ch9 from '../../content/ch9/maps/index.js';
 
-export const MAP_FOLDERS = [ch3, ch4, ch5, ch6, ch7];
+export const MAP_FOLDERS = [ch3, ch4, ch5, ch6, ch7, ch8, ch9];
 
 const EMPTY = '.';
 let testCondition = null;

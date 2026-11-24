@@ -7,7 +7,7 @@ export default {
   id: 'duskmere_h3',
   name: 'ch8.map.duskmere_h3',
   tileset: 'indoor',
-  always: { time: 19.4, weather: 'clear' },
+  always: { time: 18.5, weather: 'clear' },
   legend: { F: 'floor_wood', R: 'rug', W: 'wall', V: 'void' },
   rows: [
     'VWWWWWWWWWWWWV',

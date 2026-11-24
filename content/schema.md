@@ -41,6 +41,8 @@ Every string a player can see is a text id. `text.en.js` is a flat table `{ 'ch1
 - `phases` are checked in order; every phase whose condition holds overrides the fields it names (the last one wins). A phase is how a person's words, place or day change with the story.
 - One person is in one place: for every hour and every reachable state, at most one placement is active (checked: slots of one schedule do not overlap; a person placed on two maps must have those placements separated by conditions or hours).
 
+A phase may also change the person's display name (`name: id`): someone who gives their name later in the story.
+
 ## 4. Conditions
 
 A condition is data. A bare string is a flag.
@@ -161,6 +163,10 @@ A folder may also hold `doors: [{ map, to, if }]` (a door that exists only while
 
 **Battle setup.** The battle command maps one to one onto the game's battle setup (`game/battle/setup.js`): `wild.kind` -> `enemy`, `wild.level` -> `level`; a trainer gives `trainer: { name, key: look, team: [{ spirit: kind, level, stage }], lesson, ban, school: banner { name, el: element, col: color, rule } }`; the rules `noCapture`, `noSwitch`, `sureBind` become the setup flags of the same name (`noCapture` on the trainer and the battle). `practice` and `purse` are applied after the battle by the content system (healing and money), not by the setup.
 
+**Battle options (Hontori, chapters 8 and 9).** A `battle` command may also carry `mode: 'ally'` with `ally: { name: id, look, team: [{ kind, level, stage }] }` (a double battle: someone fights beside the player), `twist: 'flawless'` (a drawing twist on the whole battle) and `music: songKey` (a tune of its own). A trainer's team member may carry `phases: [{ at: share of health, say: id }]`, and a wand duel reads the trainer's `wand: { focus, kidFocus, pattern }`.
+
+**Runs of battles.** `gauntlets: { id: { venue, rules, done, left, stages: [{ battle, before, won }], onLeave } }` is a run of battles with a save point before each (a lost battle is tried again from that battle). `tournaments: { id: { venue, rules, done, left, title, bracket: [{ who: 'player' | person or trainer id, out: round }], between: [commands], rounds: [{ name, battle: { opponent }, twist, before, won }] } }` is the same with a standings board between rounds (shown to the player as the Champions' Board): `bracket` lists every entrant and the round they fall in, `between` runs before the board. Both are started by their extension command (section 14) and checked by `content/check.mjs`.
+
 ## 10. Shops
 
 ```js
@@ -168,6 +174,8 @@ A folder may also hold `doors: [{ map, to, if }]` (a door that exists only while
   greet: id, sell: { label, labelEmpty, empty, done }, leave: id, cancel: id, short: id }
 goods list: [ { item, price: value, if: <cond>, hideOwned: true, tip: id } ]
 ```
+
+A shop may carry `sellRate` (default 1): what the trade pouch sells for there is multiplied by it (a town that pays more for finds from other lands).
 
 The flow: greet with the money in hand, then Buy, Sell the trade pouch, or Nothing. Buy lists the goods whose `if` holds (`hideOwned` hides what is already owned), with price and "(not enough)". Paying gives the item, a toast and the item's `tip`.
 
@@ -177,7 +185,7 @@ The flow: greet with the money in hand, then Buy, Sell the trade pouch, or Nothi
 wild: { whisperwood: { count: 6, level: [2, 4], zones: [ { x, y, r, kind, w } ], hidden: 0.22 } }
 ```
 
-Which kinds appear is weighted by the shared habitat table (`shared/wild.js`: per kind, feature weights, day and night factors, weather factors and rarity) and the map's zones. `forage` tables map a prop type to the things it may hide, once a day per spot. `waters` map a map to its fish (id, name, value, weight range, night only) and the kinds that bite.
+Which kinds appear is weighted by the shared habitat table (`shared/wild.js`: per kind, feature weights, day and night factors, weather factors and rarity) and the map's zones. A habitat may name `maps: [map id ...]`: that kind lives only on those maps (a far country's creatures stay in it). `forage` tables map a prop type to the things it may hide, once a day per spot. `waters` map a map to its fish (id, name, value, weight range, night only) and the kinds that bite.
 
 ## 12. Trials, puzzles and picture stories
 
@@ -191,6 +199,8 @@ story: { prologue: { panels: [ { text, gold, scene: { sky, ground, actors: [...]
 A trial: `{ venue: mapId, door: { map, to }, passed: flag, teacher: personId, teaches: [spellId], entrance: [ { type, who, intro, ask, wrong, fail, pass, ... } ], onPass: [commands], award: { item, flag, ring } }`. `passed` is the one flag that says the entrance was passed; `entrance` tests run in order and all must be passed in one go; `award` is what graduating gives.
 
 A trial's entrance tests and its award rules are named types from a library; the core supplies `push` puzzles and the `sigil`-free generic tests (`choice`), the game layer registers the rest (section 14). A picture story is a list of panels: one line of text and a scene described by named painter parts.
+
+Puzzle types of the game layer (each proved fair by `node game/features/check.mjs`): `vanes`, `tide`, `circuit`, `braziers`, `watchers` (patrols with light cones and shadows to hide in; a catch is a gentle reset to the last shadow) and `mirrors` (turn mirrors to bounce a beam to its target). A content map may carry `dark: { level, sight, lantern: { item, sight, oil } }` (a dark map with a circle of light) and `always: { time, weather }` (the clock and weather are held there: a town where it is always evening).
 
 ## 13. Extensions
 
@@ -218,3 +228,11 @@ A game layer registers each extension with a name, the kind (`command`, `conditi
 | `sigil` | testType | `{ type: 'sigil', sigil, ... }` | draw a known sigil |
 | `wandTrial` | awardRule | `{ type: 'wandTrial', sigil, count, ... }` | draw a sigil n times to wake n things |
 | `ringDuel` | awardRule | `{ type: 'ringDuel', trainer, rules }` | a duel whose win earns the ring |
+| `travel` | command | `{ ext: 'travel', to, via, seconds, during, after }` | a ride over a crossing map (the ferry) |
+| `gauntlet`, `tournament` | command | `{ ext: 'gauntlet' \| 'tournament', gauntlet \| tournament: id, won, lost }` | run the battles in a row from where the run stands |
+| `gauntlet`, `tournament` | condition | `{ ext: 'gauntlet', gauntlet: id, stage }`, `{ ext: 'tournament', tournament: id, round }` | a run is open (and stands at that battle) |
+| `chooseCarry`, `sanctum`, `toFront` | command | `{ ext: 'chooseCarry', n, title, sub, confirm, then, else }`, `{ ext: 'sanctum', seal }`, `{ ext: 'toFront', kind }` | choose who walks along; seal or open the Sanctum; that kind leads |
+| `sanctum`, `carries` | condition | `{ ext: 'sanctum', sealed, count }`, `{ ext: 'carries', kind, element }` | the Sanctum's state; a party member of that kind or element |
+| `windSwap`, `tideRise`, `noRest`, `wandDuel`, `heat`, `blind`, `pure` | battleRule | in `rules` | the ring rules of the great schools |
+| `vanes`, `tide`, `circuit`, `braziers`, `watchers`, `mirrors` | testType | `{ type, puzzle: id }` | passed once that puzzle is solved |
+| `tournament` | awardRule | `{ type: 'tournament', tournament: id, done }` | a tournament whose win earns the ring |

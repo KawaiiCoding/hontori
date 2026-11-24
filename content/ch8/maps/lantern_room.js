@@ -8,7 +8,7 @@ export default {
   name: 'ch8.map.lantern_room',
   tileset: 'indoor',
   rest: false,
-  always: { time: 19.4, weather: 'clear' },
+  always: { time: 18.5, weather: 'clear' },
   legend: { F: 'floor_wood', W: 'wall', V: 'void', B: 'carpet_blue' },
   rows: [
     'VWWWWWWWWWWWWV',

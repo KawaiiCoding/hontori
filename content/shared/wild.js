@@ -8,6 +8,10 @@
 
 /* the kinds of the volcano country live only there (the starter's own family among them) */
 const FIRE_COUNTRY = ['ash_road', 'cinderreach', 'hearth_below'];
+/* the dark kinds the Council hunts are met only around Duskmere (where it is dim at every hour, so their
+   `day` is 1), the light kinds only around the golden city */
+const DUSK_COUNTRY = ['mothwood', 'duskmere', 'hollow_moon'];
+const GOLD_COUNTRY = ['golden_gate', 'goldmere', 'mirror_gardens', 'vael_garden'];
 
 export default {
   night: [19.5, 5.5],
@@ -161,7 +165,23 @@ export default {
     soothound: { f: { warm: 1.8, shade: 1.6, rock: 1, path: 0.8 }, day: 0.3, night: 2.2, wx: { fog: 1.6, clear: 0.9, rain: 0.5 }, rare: 0.45, maps: FIRE_COUNTRY },
     flarefox: { f: { sand: 2.2, warm: 1.8, rock: 1, open: 0.8 }, day: 1.3, night: 0.6, wx: { clear: 1.6, rain: 0.3 }, rare: 0.4, maps: FIRE_COUNTRY },
     kilnturtle: { f: { warm: 2.4, rock: 1.4, path: 0.8, wall: 0.6 }, day: 1, night: 1, wx: { clear: 1.2, rain: 0.5 }, rare: 0.45, maps: FIRE_COUNTRY },
-    sunflare: { f: { warm: 1.6, open: 1.6, flowers: 1, statue: 0.6 }, day: 1.6, night: 0.1, wx: { clear: 2, rain: 0.3, fog: 0.5 }, rare: 0.3, maps: FIRE_COUNTRY }
+    sunflare: { f: { warm: 1.6, open: 1.6, flowers: 1, statue: 0.6 }, day: 1.6, night: 0.1, wx: { clear: 2, rain: 0.3, fog: 0.5 }, rare: 0.3, maps: FIRE_COUNTRY },
+    duskling: { f: { tallgrass: 1.6, flowers: 1, shade: 1.4, field: 0.8 }, day: 1, night: 2.4, wx: { clear: 1.4, fog: 1.2 }, rare: 0.85, maps: DUSK_COUNTRY },
+    mothlight: { f: { lamp: 2.4, shade: 1.4, tree: 1, flowers: 0.8 }, day: 1, night: 2.6, wx: { fog: 1.6, clear: 1 }, rare: 0.7, maps: DUSK_COUNTRY },
+    shadepup: { f: { shade: 2, tree: 1.2, path: 0.8, tallgrass: 1 }, day: 1, night: 2.2, wx: { fog: 1.4, clear: 1.1 }, rare: 0.6, maps: DUSK_COUNTRY },
+    gloomowl: { f: { tree: 2.2, shade: 1.4, mushroom: 1 }, day: 1, night: 2.6, wx: { fog: 1.6, clear: 1.1 }, rare: 0.65, maps: DUSK_COUNTRY },
+    nightfin: { f: { water: 3, bridge: 1, reeds: 0.6 }, day: 1, night: 2.4, wx: { clear: 1.3, fog: 1.2 }, rare: 0.45, maps: DUSK_COUNTRY },
+    veilcat: { f: { shade: 1.4, statue: 1.2, wall: 1, flowers: 0.8 }, day: 1, night: 1.6, wx: { fog: 2, clear: 1 }, rare: 0.35, maps: DUSK_COUNTRY },
+    shadeboar: { f: { mushroom: 2.6, tree: 1.4, shade: 1.2, garden: 0.8 }, day: 1, night: 1.6, wx: { rain: 1.6, fog: 1.2 }, rare: 0.55, maps: DUSK_COUNTRY },
+    cindershade: { f: { lamp: 1.8, warm: 1.6, shade: 1.4, statue: 0.8 }, day: 1, night: 2.4, wx: { clear: 1.2, wind: 0.5, rain: 0.5 }, rare: 0.4, maps: DUSK_COUNTRY },
+    sunkit: { f: { flowers: 2, open: 1.4, garden: 1.2, statue: 0.6 }, day: 1.6, night: 0.2, wx: { clear: 1.8, rain: 0.5 }, rare: 0.7, maps: GOLD_COUNTRY },
+    glimmerbee: { f: { flowers: 3, garden: 1.6, fruit: 1 }, day: 1.5, night: 0.2, wx: { clear: 1.6, rain: 0.3, wind: 0.6 }, rare: 0.85, maps: GOLD_COUNTRY },
+    halofawn: { f: { tree: 1.4, tallgrass: 1.4, flowers: 1.2, garden: 0.8 }, day: 1.3, night: 0.5, wx: { clear: 1.4, fog: 1.2 }, rare: 0.5, maps: GOLD_COUNTRY },
+    prismbird: { f: { open: 1.6, statue: 1.2, water: 1, flowers: 0.8 }, day: 1.4, night: 0.3, wx: { rain: 1.8, clear: 1.2 }, rare: 0.4, maps: GOLD_COUNTRY },
+    dawnpup: { f: { path: 1.4, garden: 1.2, warm: 1.2, open: 1 }, day: 1.5, night: 0.4, wx: { clear: 1.6, rain: 0.6 }, rare: 0.6, maps: GOLD_COUNTRY },
+    glasssnail: { f: { garden: 1.6, wall: 1.2, statue: 1.2, water: 0.6 }, day: 0.8, night: 1.2, wx: { rain: 2, clear: 1 }, rare: 0.55, maps: GOLD_COUNTRY },
+    brightcarp: { f: { water: 3, bridge: 1.2, lilypad: 1, statue: 0.4 }, day: 1.3, night: 0.6, wx: { clear: 1.4, rain: 1.2 }, rare: 0.5, maps: GOLD_COUNTRY },
+    starcat: { f: { lamp: 1.6, statue: 1.2, wall: 1, open: 1 }, day: 0.6, night: 1.6, wx: { clear: 2, rain: 0.8 }, rare: 0.4, maps: GOLD_COUNTRY }
   },
   features: {
     props: {
@@ -185,6 +205,15 @@ export default {
       lamp_jar_open: 'lamp',
       lightning_rod: 'metal',
       lightning_rod_lit: 'metal',
+      watch_lamp: 'lamp',
+      sun_lamp: 'lamp',
+      fountain: 'water',
+      birdbath: 'water',
+      garden_jar: 'statue',
+      garden_jar_empty: 'statue',
+      banner_pole: 'statue',
+      school_touch_dark: 'lamp',
+      school_touch_light: 'statue',
       brazier: 'warm',
       brazier_lit: 'warm',
       school_touch_fire: 'warm',

@@ -8,7 +8,7 @@ export default {
   name: 'ch8.map.hollow_moon',
   tileset: 'indoor',
   rest: false,
-  always: { time: 19.4, weather: 'clear' },
+  always: { time: 18.5, weather: 'clear' },
   legend: { F: 'floor_wood', K: 'floor_stone', W: 'wall', V: 'void', S: 'floor_stone', B: 'carpet_blue' },
   rows: [
     'VWWWWWWWWWWWWWWWWWWWWWWWWWWWWWV',

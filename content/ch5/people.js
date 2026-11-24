@@ -65,7 +65,9 @@ export default [
     ],
     phases: [
       { if: 'c5:spoke', lines: ['ch5.p.joss.5', 'ch5.p.joss.6'] },
-      { if: 'c5:quiet', lines: ['ch5.p.joss.7', 'ch5.p.joss.8'] }
+      { if: 'c5:quiet', lines: ['ch5.p.joss.7', 'ch5.p.joss.8'] },
+      /* chapter 9: the workers who remember the square stand up in the crowd at Halo Court */
+      { if: { all: ['c9:crowd', 'c5:spoke'] }, at: { map: 'halo_court', x: 28, y: 14, dir: 2 }, schedule: null, lines: ['ch9.p.joss.1', 'ch9.p.joss.2'] }
     ]
   },
   {
@@ -92,7 +94,8 @@ export default [
     lines: ['ch5.p.rudd.1', 'ch5.p.rudd.2'],
     phases: [
       { if: 'c5:spoke', lines: ['ch5.p.rudd.3', 'ch5.p.rudd.4'] },
-      { if: 'c5:quiet', lines: ['ch5.p.rudd.5', 'ch5.p.rudd.6'] }
+      { if: 'c5:quiet', lines: ['ch5.p.rudd.5', 'ch5.p.rudd.6'] },
+      { if: { all: ['c9:crowd', 'c5:spoke'] }, at: { map: 'halo_court', x: 28, y: 16, dir: 2 }, schedule: null, lines: ['ch9.p.rudd.1', 'ch9.p.rudd.2'] }
     ]
   },
   {
@@ -120,7 +123,9 @@ export default [
     lines: ['ch5.p.pim.1', 'ch5.p.pim.2'],
     phases: [
       { if: { all: ['c5:pim', 'c5:spoke'] }, lines: ['ch5.p.pim.3', 'ch5.p.pim.4'] },
-      { if: { all: ['c5:pim', 'c5:quiet'] }, lines: ['ch5.p.pim.5', 'ch5.p.pim.6'] }
+      { if: { all: ['c5:pim', 'c5:quiet'] }, lines: ['ch5.p.pim.5', 'ch5.p.pim.6'] },
+      /* chapter 9: Pim comes to Halo Court whatever was chosen in the square */
+      { if: 'c9:crowd', at: { map: 'halo_court', x: 28, y: 13, dir: 2 }, schedule: null, lines: ['ch9.p.pim.1', 'ch9.p.pim.2'] }
     ]
   },
   {

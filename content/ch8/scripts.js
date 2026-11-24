@@ -169,7 +169,7 @@ export default {
     { spawn: 'greycloak', at: { map: 'duskmere', x: P.dmCloak.x, y: P.dmCloak.y, dir: 0 } },
     { flag: 'c8:came' },
     { move: 'captain', to: { player: [0, -2] } },
-    { move: 'greycloak', to: { player: [1, -3] } },
+    { move: 'greycloak', to: { player: [2, -2] } },
     { move: 'nox', to: { player: [-1, 0] } },
     { face: 'captain', dir: 'player' },
     { say: 'ch8.ev.attack.2', who: 'captain' },

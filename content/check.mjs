@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-export const ORDER = ['shared', 'prologue', 'ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7'];
+export const ORDER = ['shared', 'prologue', 'ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8', 'ch9'];
 
 const COMMANDS = new Set(['say', 'choose', 'if', 'branch', 'cycle', 'random', 'repeat', 'set', 'run', 'stop', 'pass', 'give', 'take', 'find',
   'money', 'spend', 'flag', 'unflag', 'mark', 'quest', 'battle', 'move', 'face', 'place', 'spawn', 'remove', 'companion', 'wait', 'fade', 'blackout',
@@ -414,7 +414,7 @@ export function loadWorld(src = path.join(HERE, '../src/'), contentMaps = [], li
     const win = { document: doc, addEventListener() {}, setTimeout: () => 0, setInterval: () => 0, requestAnimationFrame: () => 0, performance: { now: () => 0 }, localStorage: { getItem: () => null, setItem() {} }, location: { search: '', pathname: '/' }, navigator: { userAgent: '' }, console: { log() {}, warn() {} }, devicePixelRatio: 1, innerWidth: 400, innerHeight: 800, getComputedStyle: () => ({}), Image: function () { return stub(); } };
     win.window = win;
     const ctx = vm.createContext(win);
-    for (const f of ['characters', 'spirits', 'props_outdoor', 'outdoor_plus', 'props_ch45', 'props_ch67', 'buildings', 'furniture', 'interior_plus', 'hall_props', 'walltops', 'maps', 'village', 'whisperwood', 'mossgrove', 'interiors_props', 'interiors']) vm.runInContext(fs.readFileSync(src + f + '.js', 'utf8'), ctx, { filename: f });
+    for (const f of ['characters', 'spirits', 'props_outdoor', 'outdoor_plus', 'props_ch45', 'props_ch67', 'props_ch89', 'buildings', 'furniture', 'interior_plus', 'hall_props', 'walltops', 'maps', 'village', 'whisperwood', 'mossgrove', 'interiors_props', 'interiors']) vm.runInContext(fs.readFileSync(src + f + '.js', 'utf8'), ctx, { filename: f });
     const H = win.H, maps = {};
     const info = (t) => (H.propsOutdoor && H.propsOutdoor.info && H.propsOutdoor.info[t]) || (H.furniture && H.furniture.info && H.furniture.info[t]) || null;
     /* the maps written as data (map descriptions: rows instead of ground) are read the same way */

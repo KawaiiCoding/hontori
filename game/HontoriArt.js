@@ -33,7 +33,8 @@
  *     buildingBounds(type)
  *     drawBuilding(ctx, type, px, py, env)
  *   People and creatures
- *     knowsLook(look)
+ *     knowsLook(look)                  a person's look, or the key of a hontori (a person may be one: it is then
+ *                                      drawn and shown as that hontori)
  *     drawPerson(ctx, look, x, y, dir, frame, env, pose)   pose: { npc, seed, idle, talking } or undefined
  *     drawCreature(ctx, key, x, y, env, pose)              a hontori; pose: { scale, dir, moving, sit, noShadow }
  *     portrait(kind, key, stage)       a canvas with the face of a 'person' or a 'creature' (stage: the
@@ -110,6 +111,7 @@ const PROBE_ENVS = [
 
 export class HontoriArt {
   #h;
+  #creatures = null;
   #itemUrls = new Map();
   #bounds = new Map();
   #probe = null;
@@ -212,11 +214,22 @@ export class HontoriArt {
 
   /* ---------- people and creatures ---------- */
 
+  /* a person may be a hontori (a lost pup with a name tag): its look is the kind's key */
+  #isCreature(look) {
+    if (this.#h.chars.data[look]) return false;
+    if (!this.#creatures) this.#creatures = new Set((this.#h.spirits.list || []).map((entry) => entry.key));
+    return this.#creatures.has(look);
+  }
+
   knowsLook(look) {
-    return !!this.#h.chars.data[look];
+    return !!this.#h.chars.data[look] || this.#isCreature(look);
   }
 
   drawPerson(ctx, look, x, y, dir, frame, env, pose) {
+    if (this.#isCreature(look)) {
+      this.#h.spirits.draw(ctx, look, x, y, env, { dir, sit: true });
+      return;
+    }
     this.#h.chars.draw(ctx, look, x, y, dir, frame, env, pose);
   }
 
@@ -225,6 +238,7 @@ export class HontoriArt {
   }
 
   portrait(kind, key, stage) {
+    if (kind !== 'creature' && this.#isCreature(key)) return this.#h.spirits.portrait(key, stage);
     return kind === 'creature' ? this.#h.spirits.portrait(key, stage) : this.#h.chars.portrait(key);
   }
 
