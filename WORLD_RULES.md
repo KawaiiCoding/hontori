@@ -125,3 +125,7 @@ New rules are added here as they are given. When something in the code disagrees
 107. In the final round of the Ring Tournament Cole refuses Vael's apprenticeship in public and stands with the kid. The chapter 5 choice decides who stands up in the crowd: Coilhaven's workers if the kid spoke, only Pim if the kid stayed quiet.
 108. The first Wander's pupils were the first people to be called Wanders.
 109. Books on shelves across the land keep the old lore and small true hints; a Wander can find and keep them in the Library of the Backpack.
+110. The Council keeps three rules it took from the schools: no switching, no rest, and the blind duel. Councillor Hale wrote the faint hidden last line of the old law on purpose.
+111. Orlen Vael was a Wander who closed his own eyes; the grey closed eye on every seal is his. Grandma Ida's spirit friend was the oldest jar in his garden.
+112. At the end the city is asked first, then every Wander the kid met draws the Great V together. Mercy is offered to Vael and never forced; the player chooses. The first line of the new law is the player's choice.
+113. After the end the world stays open: the Emberbrook fair, rematches with the eight Wardens, and the rarest hontori, which fill the wand memory to 100.

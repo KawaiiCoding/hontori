@@ -6,14 +6,17 @@
  * flags instead (setup.js).
  *
  * Public API:
- *   defineRingRule(id, hooks)   hooks: { begin(b), roundStart(b), power(b, fighter), refill(b) }
- *                               begin runs once after the opening lines, before the first round;
+ *   defineRingRule(id, hooks)   hooks: { setup(b), begin(b), roundStart(b), phase(b), spell(b, kind, grade),
+ *                               power(b, fighter), refill(b) }
+ *                               setup runs once at the end of the battle's setup (it may shape the loadout);
+ *                               begin runs once after the opening lines, before the first round; phase runs when a
+ *                               trainer's hontori enters a later phase (phases.js); spell after a spell took effect;
  *                               roundStart runs at the start of every round after the first, before the foe
  *                               picks its intent; both may emit events. power answers a multiplier for the
  *                               damage that fighter deals (1: no change); refill answers false when the
  *                               wand gets no mana back from the rounds
  *   ringRulesOf(ids)            the ids among them that name a ring rule (unknown names are left out)
- *   runRingRules(b, hook)       call that hook of every ring rule of this battle (b.state.rules); a rule
+ *   runRingRules(b, hook, ...args)   call that hook of every ring rule of this battle (b.state.rules); a rule
  *                               that throws is reported in b.errors through the engine and skipped
  *   ringPower(b, fighter)       the product of every ring rule's power for that fighter (1 when none), times
  *                               the power of a foe that has flared up in a later phase (phases.js)
@@ -38,6 +41,13 @@
  *              Lantern Sigil shows it, and one spell slot is sealed for the duel (the last of the loadout that is
  *              not the Lantern Sigil); emits sealedSlot { kind }
  *   pure       PURE (Halo Court): no binding and no items (cast.js, rules.js)
+ *   seal       THE SEAL (the Vael Athenaeum, the Grand Archmage): the V (the first spell, `veil`) joins the loadout
+ *              and can never be sealed. At the start of each of the foe's turns after the first, one spell of the
+ *              loadout is sealed (the last one not yet sealed), until only the V is left; emits sealedSlot { kind }.
+ *              The fight has two phases (a team member's `phases`, phases.js): when phase two begins a veil of
+ *              VEIL_LAYERS layers closes around the foe, and every layer makes the blows of yours (and an ally's)
+ *              VEIL_STEP weaker. Each V drawn in phase two breaks one layer (a Flawless V two); emits
+ *              veilShield { layers, max, change: 'up' | 'crack', by }. In phase one the V shines but the veil holds.
  *   wandDuel   WAND TO WAND (Bedrock Hall): named here so it is a known ring rule; a battle under it is not a
  *              hontori battle at all but a WandDuel (wandDuel.js), which the battle screen starts instead.
  */
@@ -46,6 +56,7 @@ import { me, say } from './common.js';
 import { bringIn } from './swap.js';
 import { aliveOthers } from './turn.js';
 import { phasePower } from './phases.js';
+import { SPELLS } from './spells.js';
 
 const RULES = new Map();
 export const RING_RULES = [];
@@ -88,12 +99,12 @@ export function ringRefills(b) {
   return true;
 }
 
-export function runRingRules(b, hook) {
+export function runRingRules(b, hook, ...args) {
   for (const id of b.state.rules || []) {
     const rule = RULES.get(id);
     if (!rule || typeof rule[hook] !== 'function') continue;
     try {
-      rule[hook](b);
+      rule[hook](b, ...args);
     } catch (error) {
       b.emit('error', { message: `ring rule ${id}: ${error && error.message}` });
     }
@@ -174,6 +185,64 @@ defineRingRule('blind', {
     b.state.sealedSpell = slotToSeal(b);
     if (b.state.sealedSpell) b.emit('sealedSlot', { kind: b.state.sealedSpell });
     say(b, 'blindBegin');
+  },
+});
+
+export const VEIL_LAYERS = 3;
+export const VEIL_STEP = 0.2;
+
+/* the last spell of the loadout that is neither the V nor sealed yet */
+function nextToSeal(S) {
+  for (let i = S.loadout.length - 1; i >= 0; i--) {
+    const k = S.loadout[i];
+    if (k !== 'veil' && !S.sealed.includes(k)) return k;
+  }
+  return null;
+}
+
+defineRingRule('seal', {
+  setup(b) {
+    const S = b.state;
+    if (!S.extraSpells.includes('veil')) S.extraSpells.push('veil');
+    if (!S.known.includes('veil')) S.known.push('veil');
+    S.loadout = ['veil', ...S.loadout.filter((k) => k !== 'veil')];
+    S.spellTargets = Object.assign({}, S.spellTargets, { veil: 'foe' });
+    S.sealPhase = 1;
+    S.veil = 0;
+  },
+  begin(b) {
+    say(b, 'sealBegin');
+  },
+  roundStart(b) {
+    const S = b.state;
+    const kind = nextToSeal(S);
+    if (!kind) return;
+    S.sealed.push(kind);
+    b.emit('sealedSlot', { kind });
+    say(b, nextToSeal(S) ? 'sealOne' : 'sealLast', { spell: SPELLS[kind] ? SPELLS[kind].name : kind });
+  },
+  phase(b) {
+    const S = b.state;
+    if (S.sealPhase === 2) return;
+    S.sealPhase = 2;
+    S.veil = VEIL_LAYERS;
+    b.emit('veilShield', { layers: S.veil, max: VEIL_LAYERS, change: 'up', by: 0 });
+    say(b, 'veilUp');
+  },
+  spell(b, kind, grade) {
+    const S = b.state;
+    if (kind !== 'veil') return;
+    if (S.sealPhase !== 2) return say(b, 'veilHolds');
+    if (!(S.veil > 0)) return say(b, 'veilOpen');
+    const by = Math.min(S.veil, grade === 'flawless' ? 2 : 1);
+    S.veil -= by;
+    b.emit('veilShield', { layers: S.veil, max: VEIL_LAYERS, change: 'crack', by });
+    say(b, S.veil > 0 ? 'veilCracks' : 'veilBroken', { n: S.veil });
+  },
+  power(b, fighter) {
+    const layers = b.state.veil || 0;
+    if (!layers || !fighter || fighter.side === 'foe') return 1;
+    return Math.max(0.2, 1 - VEIL_STEP * layers);
   },
 });
 

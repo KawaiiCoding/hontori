@@ -13,7 +13,7 @@ import {
   HontoriBattle, HontoriFighter, matrix, weatherMul, hit, rollMiss, intentWeights, pickIntent, quickFoe,
   bindChance, escapeChance, escapeBars, need, hpAt, atkAt, staMax, stageFor, newMember, award, applyEvolve,
   wandAward, wandPerks, gradeOf, masteryOf, spellCost, tolerance, staCost, movesFor, battleRewards, foeMaxHp,
-  ringRulesOf, RING_RULES, TIDE_MAX, TIDE_STEP, WandDuel, clash, isWandDuel, ANSWER, STRIKE, STRIKE_FLAWLESS, ECHO,
+  ringRulesOf, RING_RULES, TIDE_MAX, TIDE_STEP, VEIL_LAYERS, VEIL_STEP, WandDuel, clash, isWandDuel, ANSWER, STRIKE, STRIKE_FLAWLESS, ECHO,
   PHASE_POWER, SPELLS, BATTLE_SPELLS
 } from './index.js';
 
@@ -512,6 +512,54 @@ const wandOf = (spells) => ({ mana: 3, maxMana: 3, spells, loadout: spells, perk
   const blindFull = duel(['blind'], ['mend', 'lantern', 'shield', 'stun']);
   play(blindFull, simple, 300);
   ok('a blind duel plays to its end', blindFull.over && blindFull.errors.length === 0, blindFull.result);
+}
+
+/* chapter 10: the seal of the Grand Archmage, in two phases */
+{
+  const team = [{ spirit: 'raven', level: 14 }, { spirit: 'mole', level: 14, phases: [{ at: 0.5, say: 'Then see nothing.' }] }];
+  const setup = () => ({ party: [lead('fox', 12), lead('frog', 12)], species, env: day,
+    trainer: { name: 'Vael', key: 'orlen', team, rules: ['seal'], noCapture: true }, noCapture: true,
+    wand: { ...wandOf(['mend', 'shield', 'boost', 'stun']), mana: 6, maxMana: 6 } });
+  ok('seal is a ring rule', ringRulesOf(['seal']).join() === 'seal');
+  const b = new HontoriBattle(setup(), { random: seeded(5) });
+  const open = b.begin();
+  ok('seal: the V joins the loadout first and says so', b.loadout[0] === 'veil' && b.castable[0] === 'veil' && open.some((e) => e.type === 'say' && e.id === 'sealBegin'), b.loadout);
+  ok('seal: nothing is sealed in the first round', b.sealed.length === 0 && b.canCast('stun') === true);
+  const order = [];
+  for (let i = 0; i < 8 && !b.over; i++) {
+    b.me.hp = b.me.max;
+    b.me.sta = b.me.staMax;
+    b.foe.hp = b.foe.max;
+    for (const e of b.useMove(0)) if (e.type === 'sealedSlot') order.push(e.kind);
+  }
+  ok('seal: one spell each turn, last first, until only the V is left', order.join() === 'stun,boost,shield,mend', order);
+  ok('seal: a sealed spell is refused, the V never is', b.canCast('mend') !== true && b.canCast('stun') !== true && b.canCast('veil') === true);
+  const early = b.castSpell('veil', 0.7);
+  ok('seal: in phase one the V shines but the veil holds', early.some((e) => e.type === 'say' && e.id === 'veilHolds') && !b.veil);
+  ok('seal: the V costs no mana', early.some((e) => e.type === 'spell' && e.cost === 0));
+  /* on to the second hontori and its half health: phase two */
+  b.foe.hp = 1;
+  b.me.hp = b.me.max;
+  b.useMove(0);
+  let up = null;
+  for (let i = 0; i < 30 && !b.over && !up; i++) {
+    b.me.hp = b.me.max;
+    b.me.sta = b.me.staMax;
+    up = b.useMove(0).find((e) => e.type === 'veilShield');
+  }
+  ok('seal: phase two raises a veil of three layers', up && up.change === 'up' && up.layers === VEIL_LAYERS && b.veil && b.veil.layers === VEIL_LAYERS, up);
+  ok('seal: the veil weakens your blows, not his', near(ringPowerOf(b, b.me), 1 - VEIL_STEP * VEIL_LAYERS) && ringPowerOf(b, b.foe) === PHASE_POWER);
+  ok('seal: the hint points to the V', b.hint().id === 'hintVeil', b.hint().id);
+  const crack = b.castSpell('veil', 0.4).find((e) => e.type === 'veilShield');
+  ok('seal: a strong V breaks one layer', crack && crack.change === 'crack' && crack.by === 1 && b.veil.layers === VEIL_LAYERS - 1, crack);
+  b.me.hp = b.me.max;
+  b.useMove(0);
+  const flawless = b.over ? null : b.castSpell('veil', 0.9).find((e) => e.type === 'veilShield');
+  ok('seal: a Flawless V breaks two, and the blows land in full', b.over || (flawless && flawless.by === 2 && !b.veil && ringPowerOf(b, b.me) === 1), flawless);
+  /* a whole fight with a simple player who draws the V whenever it may */
+  const full = new HontoriBattle(setup(), { random: seeded(9) });
+  play(full, (x) => (x.veil && x.canCast('veil') === true ? x.castSpell('veil', 0.5) : simple(x)), 400);
+  ok('a sealed duel plays to its end with no errors', full.over && full.errors.length === 0, [full.result, full.errors.map(String)]);
 }
 
 console.log('hontori battle rules: ' + passed + ' passed, ' + failed + ' failed');

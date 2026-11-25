@@ -56,7 +56,12 @@ export default [
     look: 'orlen',
     at: null,
     lines: ['ch3.p.orlen.1'],
-    spawned: true
+    spawned: true,
+    phases: [
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: 'c10:mercy', lines: ['ch10.p.orlen.mercy'] },
+      { if: 'c10:nomercy', lines: ['ch10.p.orlen.closed'] }
+    ]
   },
   {
     id: 'kw_innkeeper',
@@ -142,7 +147,12 @@ export default [
     name: 'ch3.name.zephra',
     look: 'zephra',
     at: { map: 'gale_loft', x: 13, y: 8, dir: 0 },
-    lines: ['ch3.p.zephra.1', 'ch3.p.zephra.2']
+    lines: ['ch3.p.zephra.1', 'ch3.p.zephra.2'],
+    phases: [
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 11, y: 23, dir: 1 }, schedule: null, lines: ['ch10.p.zephra.1', 'ch10.p.zephra.2'] },
+      { if: 'c10:law', lines: ['ch10.p.zephra.3', 'ch10.p.zephra.4'] }
+    ]
   },
   {
     id: 'sef',

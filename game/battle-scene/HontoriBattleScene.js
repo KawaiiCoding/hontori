@@ -19,7 +19,7 @@
  *
  * For battleEvents.js and spellFx.js (the scene's working parts):
  *   view            what is shown now: { me, foe (actors, see fighters.js), mana, maxMana, intent, next (the Lantern
- *                   Sigil's next turn), quick };  sides: { ally, foe2 } of a double battle (sides.js)
+ *                   Sigil's next turn), quick, veil ({ layers, max, hit }: the foe's veil under the rule seal) };  sides: { ally, foe2 } of a double battle (sides.js)
  *   places          { me, foe }: { x, y (body centre), gy (ground), sc } in art pixels;  uiTop: where the interface begins
  *   message, tail, forced, drawn, incoming
  *   sealSpell(kind), refresh(), settle(), stageApi(from, to), buildMoves(), refreshSpell(kind), openParty(forced), closeTrays(),
@@ -41,7 +41,7 @@ import { handlers } from './battleEvents.js';
 import { sideHandlers, newSides, placeSides, paintSides, trainerX } from './sides.js';
 import { newActor, fillActor, settle, drawFighter } from './fighters.js';
 import { sigils, sigilSvg, RUNES } from './sigils.js';
-import { drawGuide } from './spellFx.js';
+import { drawGuide, drawVeil } from './spellFx.js';
 import {
   ELEMENT_COLORS, SPELL_COLORS, SPELL_NOTES, INTENTS, STATUS_TAGS, END_CARDS, BREATH_GAIN, label, elementBadge, edgeOf, ringCrest
 } from './look.js';
@@ -63,7 +63,7 @@ const STRIP_ENV = { t: 0, time: 12, weather: 'clear' };
 
 export class HontoriBattleScene extends BattleScene {
   handlers = { ...handlers, ...sideHandlers };
-  view = { me: newActor('me'), foe: newActor('foe'), mana: 0, maxMana: 0, intent: 'strike', next: null, quick: false };
+  view = { me: newActor('me'), foe: newActor('foe'), mana: 0, maxMana: 0, intent: 'strike', next: null, quick: false, veil: { layers: 0, max: 0, hit: 0 } };
   sides = null;
   places = { me: { x: 0, y: 0, gy: 0, sc: ME.sc }, foe: { x: 0, y: 0, gy: 0, sc: FOE.sc } };
   uiTop = 0;
@@ -88,7 +88,7 @@ export class HontoriBattleScene extends BattleScene {
   #escapeArmed = false;
   #ended = false;
   #outcome = null;
-  #sealed = null;
+  #sealed = new Set();
 
   /* ---------- the scene ---------- */
 
@@ -114,7 +114,7 @@ export class HontoriBattleScene extends BattleScene {
     fillActor(v.foe, b.foe);
     v.mana = b.mana;
     v.maxMana = b.maxMana;
-    this.#castable = BATTLE_SPELLS.filter((k) => b.loadout.includes(k));
+    this.#castable = Array.isArray(b.castable) ? b.castable : BATTLE_SPELLS.filter((k) => b.loadout.includes(k));
 
     const ui = this.#ui;
     ui.intent = new BattleIntent(root);
@@ -224,6 +224,7 @@ export class HontoriBattleScene extends BattleScene {
     const T = this.stage.time;
     paintSides(g, this, T, this.#env);
     drawFighter(g, art, this.view.foe, this.places.foe, T, this.#env, false);
+    drawVeil(g, this.view.veil, this.places.foe, T);
     drawFighter(g, art, this.view.me, this.places.me, T, this.#env, true);
   }
 
@@ -601,18 +602,19 @@ export class HontoriBattleScene extends BattleScene {
     const tags = [];
     for (const k of Object.keys(STATUS_TAGS)) if (actor.status[k]) tags.push({ text: STATUS_TAGS[k][0], color: STATUS_TAGS[k][1] });
     if (mine && actor.hp <= 0) tags.push({ text: label('fainted'), color: '#ff8a7a' });
+    if (!mine && this.view.veil.layers > 0) tags.push({ text: label('veilTag', { n: this.view.veil.layers }), color: '#d8e6ff' });
     return { name: actor.name, level: label('level', { n: actor.level }), bars, badges, edge, tags };
   }
 
-  /* rule blind: this spell's slot is sealed for the duel */
+  /* rule blind or seal: this spell's slot is sealed for the duel */
   sealSpell(kind) {
-    this.#sealed = kind;
+    this.#sealed.add(kind);
     this.refreshSpell(kind);
   }
 
   #chip(kind) {
     return {
-      picture: sigilSvg(kind, SPELL_COLORS[kind]), name: SPELLS[kind].name, note: kind === this.#sealed ? label('sealed') : SPELL_NOTES[kind] || '',
+      picture: sigilSvg(kind, SPELL_COLORS[kind]), name: SPELLS[kind].name, note: this.#sealed.has(kind) ? label('sealed') : SPELL_NOTES[kind] || '',
       cost: this.battle.spellCost(kind), level: this.battle.mastery(kind), levels: 5
     };
   }

@@ -24,6 +24,9 @@
  *                    finger (fade, in drawing pixels), hide the ink while drawing (hideInk), ask for a cleaner
  *                    drawing (minAccuracy, with the words `rough` for one that is not) and words of its own (note):
  *                    see twists.js
+ *       scale        optional: the guide and its circle this many times larger (a drawing across the whole screen)
+ *       forgive      optional: after this many misses, the next stroke is taken whatever its shape (a moment that
+ *                    must never fail; 0 takes the first stroke). onDrawn({ matched, accuracy }) hears how it went
  *     }
  */
 
@@ -60,6 +63,7 @@ export class DrawPromptScene extends ScreenScene {
   #page = { x: 0, y: 0 };
   #moved = { x: 0, y: 0 };
   #tryAt = 0;
+  #misses = 0;
   #look = { seconds: 0, width: 0, height: 0, cx: 0, cy: 0, size: 0, color: '', left: null, drawing: false };
 
   constructor(game) {
@@ -136,7 +140,7 @@ export class DrawPromptScene extends ScreenScene {
     const o = this.#o;
     const now = performance.now();
     const t = (now - this.#started) / 1000;
-    const s = Math.min(width, height) * 0.5;
+    const s = Math.min(width, height) * 0.5 * this.#scale();
     const cx = width / 2 + this.#page.x;
     const cy = height * 0.54 + this.#page.y;
     g.clearRect(0, 0, width, height);
@@ -163,6 +167,11 @@ export class DrawPromptScene extends ScreenScene {
     }
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
+  }
+
+  #scale() {
+    const k = Number(this.#o && this.#o.scale);
+    return k > 0 ? Math.min(2, k) : 1;
   }
 
   /* the share of this try's time still left (1 .. 0), or null without a time limit */
@@ -307,7 +316,11 @@ export class DrawPromptScene extends ScreenScene {
     }
     /* a twist may ask for a cleaner drawing than the shape alone (only the best grade counts) */
     const rough = kind === o.shape && o.twist && Number(o.twist.minAccuracy) > 0 && accuracy < Number(o.twist.minAccuracy);
-    if (kind !== o.shape || rough) {
+    const matched = kind === o.shape && !rough;
+    /* a moment that must never fail takes a stroke anyway once enough tries were missed */
+    const forgiven = !matched && Array.isArray(trail) && trail.length >= 6 && Number.isFinite(Number(o.forgive)) && o.forgive !== null && this.#misses >= Number(o.forgive);
+    if (!matched && !forgiven) {
+      this.#misses++;
       const late = this.#left(performance.now()) === 0;
       this.#tryAt = performance.now();
       if (this.#tip) this.#tip.textContent = (rough && o.twist.rough) || (late && o.twist && o.twist.late) || o.retry || '';
@@ -316,6 +329,13 @@ export class DrawPromptScene extends ScreenScene {
       return;
     }
     this.#won = performance.now();
+    if (typeof o.onDrawn === 'function') {
+      try {
+        o.onDrawn({ matched, accuracy: matched ? accuracy : 0 });
+      } catch (error) {
+        /* the listener's trouble is not the prompt's */
+      }
+    }
     if (this.#tip) this.#tip.textContent = '';
     this.#surface.drop();
     this.#sound(o.sounds.ok);

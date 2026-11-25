@@ -5,9 +5,11 @@
  * engine's drawing prompt (systems/features/DrawPrompt.js), its twists, and the story extensions that ask for one.
  *
  * Public API:
- *   drawSigil(game, sigil, text, sub, { twist })   open the prompt; a Promise that resolves once it is drawn.
- *                                                  twist: a "draw.twist" id ('drift', 'mirror', 'quick', 'burn') or a
- *                                                  twist object
+ *   drawSigil(game, sigil, text, sub, { twist, scale, forgive, onDrawn })   open the prompt; a Promise that resolves
+ *                                                  once it is drawn. twist: a "draw.twist" id ('drift', 'mirror',
+ *                                                  'quick', 'burn') or a twist object; scale, forgive, onDrawn: see
+ *                                                  systems/features/DrawPrompt.js (a larger guide; a moment that
+ *                                                  never fails; how the drawing went)
  *   installSigil(game)                             registers:
  *     "draw.twist"    "drift"   the page sways sideways while you draw, as in the wind of Gale Loft
  *                     "mirror"  the guide shows upside down in a pool of still water, as in Deepbell Hall;
@@ -136,7 +138,7 @@ function paintEmbers(g, look) {
   g.globalAlpha = 1;
 }
 
-export function drawSigil(game, sigil, text, sub, { twist } = {}) {
+export function drawSigil(game, sigil, text, sub, { twist, scale, forgive, onDrawn } = {}) {
   const shape = normalizeSpellId(sigil) || 'veil';
   return drawPrompt(game, {
     shape: sigils.has(shape) ? shape : 'veil',
@@ -149,6 +151,9 @@ export function drawSigil(game, sigil, text, sub, { twist } = {}) {
     marks: RUNES,
     sounds: SOUNDS,
     twist: typeof twist === 'string' ? twistOf(game, twist) : twist || undefined,
+    scale,
+    forgive,
+    onDrawn,
   });
 }
 

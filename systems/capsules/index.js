@@ -8,7 +8,8 @@
  *   x, y, prop }] } (content/shared/capsules.js describes the fields).
  *
  * Public API:
- *   install(game, { reveal, refund })   -> the Capsules rules (also registered as service "capsuleRules")
+ *   install(game, { reveal, refund, series })   -> the Capsules rules (also registered as service "capsuleRules")
+ *        series: more series the game builds itself (prizes got another way than a machine, see grant)
  *        reveal(prize, seriesId, ctx): a Promise, shown after every turn (the script waits for it)
  *        refund(n): give coins back (only if a paid turn found nothing, which the script prevents)
  *   machineFor(game, target)            the machine being used ({ map, type, x, y } of a story target)
@@ -59,9 +60,10 @@ function today(game) {
   }
 }
 
-export function install(game, { reveal, refund } = {}) {
+export function install(game, { reveal, refund, series } = {}) {
   const { registry } = game;
   const book = bookOf(game);
+  if (series && typeof series === 'object') for (const [id, s] of Object.entries(series)) if (!book.series[id]) book.series[id] = s;
   game.save.define('capsules', SAVE);
   const rules = new Capsules(book, () => game.save.state.capsules, (type, payload) => game.bus.emit(type, payload));
   registry.add('service', 'capsuleRules', rules);

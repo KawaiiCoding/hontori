@@ -239,6 +239,9 @@ window.H = window.H || {};
        school_fire      the Ember Crucible dark stone, a forge stack with a glowing furnace mouth and a hot chimney lip
        school_dark      Hollow Moon        dark stone, a ribbed observatory dome with its slit open and a telescope, violet windows
        school_light     Halo Court         white marble and gold, a colonnade, an arena drum with a gold dome and a halo on a spire
+     the Athenaeum (athenaeum, 13 x 7): the Archmage's great library at the top of its stair: pale stone wings with tall
+     windows under slate roofs, a high central tower with a round window and the gold closed eye of the Council, a gold
+     lantern cap, a portico of four columns before the arched door,
      and the cave mouth (cave_mouth, 3 x 2): a rock face with a timbered mine mouth, its opening the doorway tile.
      Each wears its element's crest. Day and night like every building (lit windows from 18:30). */
   var PALE = ['#3a3e4a', '#8a909e', '#b4bac6', '#d2d6e0', '#eef0f4'];
@@ -258,6 +261,8 @@ window.H = window.H || {};
   ROOF.sea = ['#0c2030', '#164466', '#20628e', '#3484b0', '#6cb8d8'];
   ROOF.copper = ['#162e2a', '#2a5e52', '#3e8a74', '#5eae92', '#e0a066'];
   ROOF.ember = ['#1a0e10', '#3e1a1a', '#5a2622', '#7a3428', '#a24a34'];
+  ROOF.slate = ['#14161e', '#262a38', '#363c50', '#4a5268', '#6e7890'];
+  var ATH = ['#5a5a62', '#9a9aa4', '#bcbcc4', '#d6d6dc', '#eeeef2'];
 
   /* a block wall: P = [mortar, shade, base, light, highlight], blocks bw x bh, the right side falls into shade */
   function masonry(c, x0, y0, w, h, P, bw, bh, seed) {
@@ -321,6 +326,7 @@ window.H = window.H || {};
     mountain: function (c, x, y) { px(c, [0, -3, -1, -2, 0, -2, 1, -2, -2, -1, -1, -1, 0, -1, 1, -1, 2, -1, -3, 0, -2, 0, -1, 0, 0, 0, 1, 0, 2, 0, 3, 0, -4, 1, -3, 1, -2, 1, -1, 1, 0, 1, 1, 1, 2, 1, 3, 1, 4, 1], '#f0b040', x, y); px(c, [0, -3, -1, -2, 0, -2], '#fff4d0', x, y); },
     moon: function (c, x, y) { px(c, [-1, -4, 0, -4, 1, -4, -2, -3, -1, -3, -3, -2, -2, -2, -3, -1, -2, -1, -3, 0, -2, 0, -3, 1, -2, 1, -2, 2, -1, 2, -1, 3, 0, 3, 1, 3, 2, 2], '#f0ecff', x, y); px(c, [3, -3, 2, -1], '#ffffff', x, y); },
     halo: function (c, x, y) { px(c, [-2, -3, -1, -3, 0, -3, 1, -3, 2, -3, -3, -2, 3, -2, -4, -1, 4, -1, -4, 0, 4, 0, -4, 1, 4, 1, -3, 2, 3, 2, -2, 3, -1, 3, 0, 3, 1, 3, 2, 3], '#ffe680', x, y); px(c, [0, -1, -1, 0, 0, 0, 1, 0, 0, 1], '#ffffff', x, y); },
+    eye: function (c, x, y) { px(c, [-4, -1, -3, 0, -2, 1, -1, 1, 0, 1, 1, 1, 2, 1, 3, 0, 4, -1, -3, 2, -1, 3, 1, 3, 3, 2], '#ffe680', x, y); px(c, [-2, -2, -1, -2, 0, -2, 1, -2, 2, -2], '#fff8d0', x, y); },
     flame: function (c, x, y) { px(c, [0, -4, 0, -3, 1, -3, -1, -2, 0, -2, 1, -2, -2, -1, -1, -1, 0, -1, 1, -1, 2, -1, -2, 0, -1, 0, 0, 0, 1, 0, 2, 0, -2, 1, -1, 1, 0, 1, 1, 1, 2, 1, -1, 2, 0, 2, 1, 2], '#ffb030', x, y); px(c, [0, -1, 0, 0, -1, 0, 0, 1, 1, 1, 0, 2], '#fff090', x, y); }
   };
   /* the arched stone doorway of a great school, in the hall's own stone, then the door; rune: keystone colours [day, night] */
@@ -676,6 +682,42 @@ window.H = window.H || {};
       });
       archway(c, Lt, H, n, ROOF.gold, MARBLE, ['#fff0a0', '#ffffff']);
       foot(c, 1, H, 158);
+    },
+    athenaeum: function (c, Lt, n, H) {
+      var W = Lt.fw * T, wy = H - Lt.wallH, cx = W / 2;
+      /* the wings: pale stone under slate roofs, tall windows lit warm at night */
+      masonry(c, 1, wy, W - 2, Lt.wallH, ATH, 12, 5, 21);
+      roof(c, 1, Lt.roofTop, W - 2, wy - Lt.roofTop + 2, ROOF.slate, 12);
+      [8, 24, 40, 160, 176, 192].forEach(function (x) { tallWindow(c, x, wy + 14, 8, 24, n, ATH[1]); });
+      /* the tower: a tall stone body rising through the roof, a round window, the gold eye, a gold lantern cap */
+      var tw = 60, tx = cx - tw / 2, ty = 56;
+      masonry(c, tx, ty, tw, wy - ty + 18, ATH, 10, 5, 22);
+      R(c, tx - 3, ty - 3, tw + 6, 5, OUT); R(c, tx - 2, ty - 2, tw + 4, 3, ATH[4]); R(c, tx - 2, ty + 1, tw + 4, 1, '#e8c050');
+      cone(c, cx, ty - 2, 26, 32, ROOF.slate, 4);
+      R(c, cx - 7, ty - 40, 14, 12, OUT); R(c, cx - 6, ty - 39, 12, 10, '#e8c050'); R(c, cx - 6, ty - 39, 12, 2, '#fff0a0');
+      R(c, cx - 3, ty - 36, 6, 6, n ? '#fff6cc' : '#c8962a'); R(c, cx - 0.5, ty - 36, 1, 6, '#9a6a1a');
+      R(c, cx - 1, ty - 48, 2, 9, OUT); R(c, cx - 0.5, ty - 48, 1, 8, '#e8c050');
+      disc(c, cx, ty - 50, 2, OUT); disc(c, cx, ty - 50, 1, '#fff0a0');
+      /* the round window: gold leading over glass, warm at night */
+      var ry = ty + 26;
+      disc(c, cx, ry, 15, OUT); disc(c, cx, ry, 14, ATH[1]); disc(c, cx, ry, 12, n ? '#ffd27a' : '#5a86b0');
+      for (var a = 0; a < 8; a++) { var t = a / 8 * Math.PI; for (var k = -11; k <= 11; k++) R(c, Math.round(cx + Math.cos(t) * k), Math.round(ry + Math.sin(t) * k), 1, 1, '#c8962a'); }
+      disc(c, cx, ry, 4, OUT); disc(c, cx, ry, 3, n ? '#fff6cc' : '#8cc0e6');
+      if (!n) { R(c, cx - 8, ry - 7, 2, 1, '#d8f0ff'); R(c, cx - 9, ry - 6, 1, 2, '#d8f0ff'); }
+      crest(c, cx, ty + 46, '#6a6a78', '#4e4e5c', 'eye');
+      [[tx + 6, ty + 14], [tx + tw - 14, ty + 14]].forEach(function (p) { tallWindow(c, p[0], p[1], 8, 22, n, ATH[1]); });
+      /* the portico: a pediment on four columns before the door */
+      var py = wy - 6, pl = cx - 34, pr = cx + 34;
+      for (var Y = 0; Y < 14; Y++) { var pw = Math.round(Y * 2.6); R(c, cx - pw - 1, py - 14 + Y, pw * 2 + 2, 1, OUT); R(c, cx - pw, py - 14 + Y, pw * 2, 1, Y > 11 ? '#e8c050' : ATH[Y % 5 === 4 ? 2 : 3]); }
+      R(c, pl - 2, py - 1, pr - pl + 4, 6, OUT); R(c, pl - 1, py, pr - pl + 2, 4, ATH[4]); R(c, pl - 1, py + 3, pr - pl + 2, 1, '#c8962a');
+      [pl, pl + 12, pr - 18, pr - 6].forEach(function (x) {
+        R(c, x - 1, py + 5, 8, H - py - 8, OUT); R(c, x, py + 5, 6, H - py - 8, ATH[3]); R(c, x, py + 5, 1, H - py - 8, ATH[4]); R(c, x + 4, py + 5, 2, H - py - 8, ATH[1]);
+        R(c, x - 2, py + 5, 10, 3, '#e8c050'); R(c, x - 2, py + 5, 10, 1, '#fff0a0'); R(c, x - 2, H - 7, 10, 3, ATH[2]);
+      });
+      /* two grey Council banners either side of the portico */
+      banner(c, pl - 16, wy + 12, '#5e5e6c', '#7e7e8c', 'eye'); banner(c, pr + 8, wy + 12, '#5e5e6c', '#7e7e8c', 'eye');
+      archway(c, Lt, H, n, ROOF.slate, ATH, ['#fff0a0', '#ffffff']);
+      foot(c, 1, H, W - 2);
     }
   };
   /* a window of violet glass: dim by day, glowing lavender by night */
@@ -822,7 +864,9 @@ window.H = window.H || {};
       glow: [[15, 144, 30, '#b9a8ff'], [37, 144, 30, '#b9a8ff'], [136, 144, 30, '#b9a8ff'], [151, 144, 30, '#b9a8ff'], [62, 104, 20, '#b9a8ff'], [114, 104, 20, '#b9a8ff']],
       vwin: [[8, 14, 16], [30, 14, 16], [130, 12, 16], [145, 12, 16]] },
     school_light: { hall: 1, fw: 10, fh: 6, ext: 100, wallH: 56, roofTop: 104, win: [[16, 14, 16], [142, 14, 16]], wide: true,
-      glow: [[64, 75, 22, '#ffd27a'], [112, 75, 22, '#ffd27a']] }
+      glow: [[64, 75, 22, '#ffd27a'], [112, 75, 22, '#ffd27a']] },
+    athenaeum: { hall: 1, fw: 13, fh: 7, ext: 120, wallH: 62, roofTop: 120, win: [], wide: true,
+      glow: [[12, 196, 26, '#ffc070'], [28, 196, 26, '#ffc070'], [44, 196, 26, '#ffc070'], [164, 196, 26, '#ffc070'], [180, 196, 26, '#ffc070'], [196, 196, 26, '#ffc070'], [104, 82, 30, '#ffd27a'], [104, 22, 16, '#fff0a0']] }
   };
 
   /* ---------- sprite sheets (window.H.sheets, group 'outdoor') ----------
@@ -830,7 +874,7 @@ window.H = window.H || {};
        bld:<type>D, bld:<type>N   the whole building by day / by night (lit windows and door, from 18:30 to
                                   6:00), drawn at half size (the canvas is 2x). Types: house_player house_a
                                   tavern shop school, the halls school_grass school_wind school_water
-                                  school_electric school_earth school_fire school_dark school_light, and cave_mouth. The tavern and the shop are cached without their sign board.
+                                  school_electric school_earth school_fire school_dark school_light, athenaeum, and cave_mouth. The tavern and the shop are cached without their sign board.
        bld:<type>S<D|N><j>        tavern and shop sign board, by day / night, cut into its 4 strips j = 0..3
                                   (each strip swings by its own offset), drawn at half size
      Chosen at draw time: day or night, the sign swing. Stays painted every frame (continuous): the contact

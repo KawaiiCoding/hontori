@@ -95,7 +95,10 @@ export default [
     lines: ['ch8.p.nox.1', 'ch8.p.nox.2'],
     phases: [
       { if: { all: ['c8:nox', { not: 'c8:captain' }] }, at: P.dmNox, lines: ['ch8.p.nox.3', 'ch8.p.nox.4'] },
-      { if: 'c8:ring', lines: ['ch8.p.nox.5', 'ch8.p.nox.6'] }
+      { if: 'c8:ring', lines: ['ch8.p.nox.5', 'ch8.p.nox.6'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 10, y: 12, dir: 3 }, schedule: null, lines: ['ch10.p.nox.1', 'ch10.p.nox.2'] },
+      { if: 'c10:law', lines: ['ch10.p.nox.3', 'ch10.p.nox.4'] }
     ]
   },
   {

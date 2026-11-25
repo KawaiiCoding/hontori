@@ -12,7 +12,8 @@
  * What it registers:
  *   everything of systems/capsules (save section "capsules", service "capsuleRules", the story's
  *   ext "capsule"), the machine props (game.art.addProp), panel "capsules", the album row in the Menu,
- *   system and world.layer "capsules:room", system "capsules:wear"
+ *   system and world.layer "capsules:room", system "capsules:wear", system "capsules:keepsakes" (items with
+ *   effect `keepsake` { slot, look, place } are one more series of the album, owned while carried)
  *   service "capsules" (also window.H.capsules, read by the riding art):
  *     drawOn(ctx, kind, x, y, opts)   paint what the lead wears over a creature drawn with the same place and
  *                                     pose; opts: the pose with `env` (or the legacy call (ctx, kind, x, y, env, pose))
@@ -60,11 +61,14 @@ export function install(game) {
     }
   };
   const words = wordsOf(game);
+  const keepsakes = keepsakeSeries(game);
   const book = bookOf(game);
+  Object.assign(book.series, keepsakes);
   const prizes = {};
   for (const series of Object.values(book.series)) for (const p of series.prizes || []) prizes[p.id] = p;
 
   const rules = installRules(game, {
+    series: keepsakes,
     reveal: (prize) => showReveal(game, {
       prize,
       rare: !!prize.rare,
@@ -161,9 +165,46 @@ export function install(game) {
     if (lead && lead.key === actor.key) wear.drawOn(ctx, actor.key, x, y, env, pose);
   });
 
+  /* a keepsake item (bought or given) joins the album at once, and on load for an older save */
+  const grantCarried = () => {
+    try {
+      const inventory = itemsOf(game) && itemsOf(game).inventory;
+      if (!inventory) return;
+      let changed = false;
+      for (const s of Object.values(keepsakes)) for (const p of s.prizes) if (inventory.has(p.id) && rules.grant(p.id)) changed = true;
+      if (changed) game.save.commit();
+    } catch (error) {
+      console.warn('capsules: a keepsake could not join the album', error);
+    }
+  };
+  game.registry.add('system', 'capsules:keepsakes', {
+    start() {
+      game.bus.on('inventory:change', ({ n }) => {
+        if (!(n < 0)) grantCarried();
+      });
+      game.bus.on('map:enter', grantCarried);
+    },
+  });
+
   installRoom(game, rules, prizes);
   installAlbum(game, { rules, prizes, words, text, drawOn: dress, lead: () => leadOf(game) });
   return service;
+}
+
+/* the items with effect keepsake (content items: { slot, look, place }) as one series of prizes with no machine:
+   they are bought or given, never drawn */
+export const KEEPSAKE_EFFECT = 'keepsake';
+const KEEPSAKE_SERIES = 'keepsakes';
+
+function keepsakeSeries(game) {
+  const list = [];
+  for (const folder of game.registry.all('content')) {
+    for (const item of Object.values((folder && folder.items) || {})) {
+      if (!item || item.effect !== KEEPSAKE_EFFECT || !item.slot || !item.look) continue;
+      list.push({ id: item.id, slot: item.slot, look: item.look, color: item.color, place: item.place, name: item.name, desc: item.desc || item.use });
+    }
+  }
+  return list.length ? { [KEEPSAKE_SERIES]: { name: 'shared.capsule.series.keepsakes', price: 0, prizes: list } } : {};
 }
 
 /* every prize has its words and a picture, every keepsake a place on a map that exists */

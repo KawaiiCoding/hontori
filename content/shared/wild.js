@@ -181,7 +181,24 @@ export default {
     dawnpup: { f: { path: 1.4, garden: 1.2, warm: 1.2, open: 1 }, day: 1.5, night: 0.4, wx: { clear: 1.6, rain: 0.6 }, rare: 0.6, maps: GOLD_COUNTRY },
     glasssnail: { f: { garden: 1.6, wall: 1.2, statue: 1.2, water: 0.6 }, day: 0.8, night: 1.2, wx: { rain: 2, clear: 1 }, rare: 0.55, maps: GOLD_COUNTRY },
     brightcarp: { f: { water: 3, bridge: 1.2, lilypad: 1, statue: 0.4 }, day: 1.3, night: 0.6, wx: { clear: 1.4, rain: 1.2 }, rare: 0.5, maps: GOLD_COUNTRY },
-    starcat: { f: { lamp: 1.6, statue: 1.2, wall: 1, open: 1 }, day: 0.6, night: 1.6, wx: { clear: 2, rain: 0.8 }, rare: 0.4, maps: GOLD_COUNTRY }
+    starcat: { f: { lamp: 1.6, statue: 1.2, wall: 1, open: 1 }, day: 0.6, night: 1.6, wx: { clear: 2, rain: 0.8 }, rare: 0.4, maps: GOLD_COUNTRY },
+    /* chapter 10: sixteen rare kinds, met only after the ending (after: a story flag, world/Habitat.js), at levels 28 to 30 */
+    narlet: { f: { water: 3, bridge: 1, sand: 0.6 }, day: 1.1, night: 0.8, wx: { clear: 1.3, fog: 1.2 }, rare: 0.22, maps: ['tidewell', 'saltmarsh', 'coast_road'], after: 'c10:complete', level: [28, 30] },
+    driftmoo: { f: { water: 3, reeds: 1.2, lilypad: 1.2 }, day: 1.2, night: 0.6, wx: { rain: 1.4, clear: 1.1 }, rare: 0.25, maps: ['mossgrove', 'saltmarsh', 'mirror_gardens'], after: 'c10:complete', level: [28, 30] },
+    coalcub: { f: { tree: 1.8, warm: 1.6, rock: 0.8 }, day: 0.8, night: 1.2, wx: { clear: 1.2, rain: 0.5 }, rare: 0.25, maps: ['whisperwood', 'mountain_road', 'ash_road'], after: 'c10:complete', level: [28, 30] },
+    fanlet: { f: { flowers: 1.8, garden: 1.4, warm: 1.2, open: 0.8 }, day: 1.5, night: 0.3, wx: { clear: 1.6, rain: 0.4 }, rare: 0.22, maps: ['village', 'ash_road', 'golden_gate'], after: 'c10:complete', level: [28, 30] },
+    whirrlet: { f: { flowers: 3, chime: 1.4, open: 0.8 }, day: 1.5, night: 0.2, wx: { wind: 1.6, clear: 1.3, rain: 0.4 }, rare: 0.25, maps: ['windrest', 'whistling_pass', 'mirror_gardens'], after: 'c10:complete', level: [28, 30] },
+    hopsail: { f: { sand: 2, open: 1.6, rock: 1, tallgrass: 0.8 }, day: 0.6, night: 1.6, wx: { wind: 2, clear: 1.2 }, rare: 0.22, maps: ['whistling_pass', 'coast_road', 'ash_road'], after: 'c10:complete', level: [28, 30] },
+    mossbara: { f: { water: 1.6, tallgrass: 1.6, reeds: 1.2, garden: 1 }, day: 1.2, night: 0.7, wx: { rain: 1.6, clear: 1 }, rare: 0.25, maps: ['mossgrove', 'saltmarsh', 'village'], after: 'c10:complete', level: [28, 30] },
+    acornap: { f: { tree: 2.4, tallgrass: 1, fruit: 1.2, mushroom: 0.8 }, day: 0.5, night: 1.6, wx: { clear: 1.1, fog: 1.2 }, rare: 0.22, maps: ['whisperwood', 'mothwood', 'village'], after: 'c10:complete', level: [28, 30] },
+    coilemur: { f: { tree: 1.6, lamp: 1.6, metal: 1.4 }, day: 1, night: 1, wx: { rain: 2, wind: 1.3 }, rare: 0.22, maps: ['sparkmoor', 'coilhaven', 'whisperwood'], after: 'c10:complete', level: [28, 30] },
+    glimslug: { f: { water: 2.6, rock: 1, metal: 0.8 }, day: 0.6, night: 1.5, wx: { rain: 2.2, fog: 1.2 }, rare: 0.2, maps: ['tidewell', 'coast_road', 'sparkmoor'], after: 'c10:complete', level: [28, 30] },
+    stripelet: { f: { rock: 2, path: 1, tree: 0.8, field: 0.8 }, day: 0.5, night: 1.6, wx: { clear: 1.1, rain: 0.8 }, rare: 0.25, maps: ['mountain_road', 'old_quarry', 'whisperwood'], after: 'c10:complete', level: [28, 30] },
+    wombit: { f: { rock: 2.2, tallgrass: 1, wall: 1, shade: 0.8 }, day: 0.8, night: 1.3, wx: { rain: 1.2, fog: 1.1 }, rare: 0.22, maps: ['old_quarry', 'listening_cave', 'mossgrove'], after: 'c10:complete', level: [28, 30] },
+    moonblink: { f: { tree: 2.2, shade: 1.6, mushroom: 1 }, day: 0.1, night: 2.6, wx: { clear: 1.3, fog: 1.4 }, rare: 0.2, maps: ['mothwood', 'whisperwood', 'hollow_moon'], after: 'c10:complete', level: [28, 30] },
+    duskdown: { f: { water: 2.6, reeds: 1.4, lilypad: 0.8 }, day: 0.4, night: 1.8, wx: { fog: 1.6, clear: 1.1 }, rare: 0.22, maps: ['mossgrove', 'saltmarsh', 'tidewell'], after: 'c10:complete', level: [28, 30] },
+    sunfleece: { f: { open: 2, tallgrass: 1.2, rock: 0.8, field: 1 }, day: 1.5, night: 0.4, wx: { clear: 1.6, wind: 1.2 }, rare: 0.22, maps: ['whistling_pass', 'mountain_road', 'golden_gate'], after: 'c10:complete', level: [28, 30] },
+    gladlet: { f: { flowers: 1.6, tallgrass: 1.2, garden: 1, open: 0.8 }, day: 1.5, night: 0.3, wx: { clear: 1.8, rain: 0.5 }, rare: 0.25, maps: ['village', 'mirror_gardens', 'kitewick'], after: 'c10:complete', level: [28, 30] }
   },
   features: {
     props: {

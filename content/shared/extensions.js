@@ -24,7 +24,10 @@ export default {
     toFront: { args: ['kind:kind'] },
     tournament: { args: ['tournament:string', 'won?', 'lost?'] },
     tournamentLeave: { args: ['tournament:string'] },
-    read: { args: ['book:string'] }
+    read: { args: ['book:string'] },
+    greatV: { args: ['who', 'text:text', 'sub?:text', 'done?:text', 'weak?:text'] },
+    law: { args: ['title:text', 'lines', 'sub?:text', 'confirm?:text', 'yes?:text', 'back?:text'] },
+    ending: { args: ['story:string', 'credits?:string'] }
   },
   condition: {
     spell: { args: ['has:spell'] },
@@ -44,7 +47,7 @@ export default {
     fishWeight: { args: ['index:number'] },
     capsule: { args: ['cost?'] }
   },
-  battleRule: ['noCapture', 'noSwitch', 'sureBind', 'practice', 'windSwap', 'tideRise', 'noRest', 'wandDuel', 'heat', 'blind', 'pure'],
+  battleRule: ['noCapture', 'noSwitch', 'sureBind', 'practice', 'windSwap', 'tideRise', 'noRest', 'wandDuel', 'heat', 'blind', 'pure', 'seal'],
   testType: { sight: { args: ['who:person'] }, sigil: { args: ['sigil:spell'] }, vanes: { args: ['puzzle:string'] }, tide: { args: ['puzzle:string'] }, circuit: { args: ['puzzle:string'] }, braziers: { args: ['puzzle:string'] }, watchers: { args: ['puzzle:string'] }, mirrors: { args: ['puzzle:string'] } },
   awardRule: { wandTrial: { args: ['sigil:spell', 'count:number', 'twist?:string'] }, ringDuel: { args: ['trainer:trainer'] }, tournament: { args: ['tournament:string'] } },
   /* battle modes (a battle command's `mode`), drawing twists (`twist` of ext:draw, a wand trial or a battle) and item

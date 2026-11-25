@@ -44,7 +44,12 @@ export default [
     name: 'ch2.name.fern',
     look: 'warden',
     at: { map: 'rootwood_hall', x: 13, y: 12, dir: 0 },
-    lines: ['ch2.p.fern.1', 'ch2.p.fern.2']
+    lines: ['ch2.p.fern.1', 'ch2.p.fern.2'],
+    phases: [
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 9, y: 23, dir: 1 }, schedule: null, lines: ['ch10.p.fern.1', 'ch10.p.fern.2'] },
+      { if: 'c10:law', lines: ['ch10.p.fern.3', 'ch10.p.fern.4'] }
+    ]
   },
   {
     id: 'bryn',
@@ -84,6 +89,10 @@ export default [
     lines: ['ch2.p.greycloak.1'],
     spawned: true,
     /* chapter 8: the cloak changes sides and gives a name */
-    phases: [{ if: 'c8:merrit', name: 'ch8.name.merrit' }]
+    phases: [
+      { if: 'c8:merrit', name: 'ch8.name.merrit' },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: 'c10:fallen', lines: ['ch10.p.merrit.1', 'ch10.p.merrit.2'] }
+    ]
   }
 ];

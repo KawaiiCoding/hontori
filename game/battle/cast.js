@@ -17,7 +17,8 @@
  *   lantern the foe's intent this turn and the next shows (also under the rule blind); the next one is drawn now
  *   mirror  asleep: wakes yours and puts the foe to sleep (2 turns); else a mirror waits 2 rounds and sends the
  *           next sleep spell back (fight.js)
- *   (rule pure: no binding; a sealed slot under blind cannot be cast; twist flawless: a sigil that is not
+ *   veil    the V: only in a battle whose ring rule brings it in (seal, ringRules.js), which gives it its effect
+ *   (rule pure: no binding; a sealed slot under blind or seal cannot be cast; twist flawless: a sigil that is not
  *   Flawless fades with no cost and no effect, event fizzle { kind, grade })
  *   step    Swift Step: the next escape try this battle is much likelier (chances.escapeChance), never certain;
  *           wild battles only
@@ -26,10 +27,11 @@
  *   bindTry { chance, success, triesLeft }, status, say, end.
  */
 
-import { SPELLS, BATTLE_SPELLS, GRADES, gradeOf, reviveMaterial, MATERIAL_NAMES } from './spells.js';
+import { SPELLS, GRADES, gradeOf, reviveMaterial, MATERIAL_NAMES } from './spells.js';
 import { bindChance, BIND_TRIES } from './chances.js';
 import { finish } from './turn.js';
-import { me, foe, say, itemCount, useItem, spellMastery, costOf, can, hasRule } from './common.js';
+import { me, foe, say, itemCount, useItem, spellMastery, costOf, can, hasRule, isBattleSpell, isSealed } from './common.js';
+import { runRingRules } from './ringRules.js';
 import { pickIntent } from './intent.js';
 import { line } from './text.js';
 
@@ -64,8 +66,8 @@ export function canCast(b, kind) {
 
 export function checkSpell(b, kind) {
   const S = b.state;
-  if (!BATTLE_SPELLS.includes(kind) || !can(b, kind)) return no('shape', 'refuseShape');
-  if (S.sealedSpell && S.sealedSpell === kind) return no('sealed', 'refuseSealed', { spell: SPELLS[kind].name });
+  if (!isBattleSpell(b, kind) || !can(b, kind)) return no('shape', 'refuseShape');
+  if (isSealed(b, kind)) return no('sealed', 'refuseSealed', { spell: SPELLS[kind].name });
   if (kind === 'bind' && hasRule(b, 'pure')) return no('pure', 'refusePure');
   if (kind === 'bind' && (S.trainer || S.noCapture)) {
     return no('repel', 'repel', { trainer: (S.trainer && S.trainer.name) || 'Owner' });
@@ -123,7 +125,9 @@ export function castSpell(b, kind, accuracy) {
   S.wandExp += G.exp;
   const mastery = spellMastery(b, kind);
   S.spellMastery[kind] = mastery;
-  b.emit('spell', { kind, target: SPELLS[kind].on, grade, mul: gm, cost, mana: S.mana, exp: G.exp, mastery, masteryUp: mastery > before });
+  /* a ring rule may aim a spell elsewhere (the V under seal goes to the foe's veil) */
+  const target = (S.spellTargets && S.spellTargets[kind]) || SPELLS[kind].on;
+  b.emit('spell', { kind, target, grade, mul: gm, cost, mana: S.mana, exp: G.exp, mastery, masteryUp: mastery > before });
   say(b, 'spellName', { spell: SPELLS[kind].name });
   if (kind === 'mend') {
     const h = m.heal(Math.round(7 * S.wandPower * gm));
@@ -182,4 +186,6 @@ export function castSpell(b, kind, accuracy) {
       say(b, 'mirrorReady');
     }
   }
+  /* the ring rules answer a spell of their own (seal: the V cracks the veil) */
+  runRingRules(b, 'spell', kind, grade);
 }

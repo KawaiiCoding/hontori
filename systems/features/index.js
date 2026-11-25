@@ -17,7 +17,9 @@
  * Registry kinds it reads: "picture.painter" (main), "trial.test" (type), "service" "items" and "story"
  *
  * Also exported for other pieces of a game: ScreenScene, openScreen, drawPrompt, askName, chooseCarry (the
- * choose-who-comes screen, CarryChoice.js), openOffer, Entitlement,
+ * choose-who-comes screen, CarryChoice.js), chooseLine (choose one line, with a confirm step, LineChoice.js),
+ * openGroupDrawing (a ring drawn stroke by stroke by many people, GroupDrawing.js), rollCredits (Credits.js),
+ * playPictureStory (PictureStory.js), openOffer, Entitlement,
  * and the pieces a game installs with its own look: installGusts (wind-vane puzzles, Gusts.js), GustField and
  * checkGustField (their rules and fairness proof), installFlights and fly (things flying over the world,
  * Flights.js), driftTwist, mirrorTwist, quickTwist, burnTwist and twistOf (twists of the drawing prompt, twists.js),
@@ -44,6 +46,10 @@ export { chooseCarry, CarryChoiceScene } from './CarryChoice.js';
 export { installBraziers, Braziers } from './Braziers.js';
 export { installHeldClock } from './HeldClock.js';
 export { showStandings, StandingsScene } from './Standings.js';
+export { chooseLine, LineChoiceScene } from './LineChoice.js';
+export { openGroupDrawing, GroupDrawingScene } from './GroupDrawing.js';
+export { rollCredits, CreditsScene } from './Credits.js';
+export { playPictureStory } from './PictureStory.js';
 export { installMirrors, Mirrors } from './Mirrors.js';
 export { MirrorField, checkMirrorField } from './MirrorField.js';
 export { installWatchers, Watchers } from './Watchers.js';

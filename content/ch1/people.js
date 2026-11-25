@@ -23,7 +23,10 @@ export default [
       },
       /* chapter 9: come to Goldmere to watch the tournament (they can see, which is against his law) */
       { if: 'c9:family', at: { map: 'goldmere', x: 30, y: 26, dir: 3 }, schedule: null, lines: ['ch9.p.mom.1', 'ch9.p.mom.2'] },
-      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 11, dir: 3 }, schedule: null, lines: ['ch9.p.mom.3', 'ch9.p.mom.4'] }
+      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 11, dir: 3 }, schedule: null, lines: ['ch9.p.mom.3', 'ch9.p.mom.4'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 14, y: 16, dir: 3 }, schedule: null, lines: ['ch10.p.mom.1', 'ch10.p.mom.2'] },
+      { if: 'c10:law', at: { map: 'home', x: 13, y: 6, dir: 3 }, schedule: null, lines: ['ch10.p.mom.3', 'ch10.p.mom.4'] }
     ]
   },
   {
@@ -45,7 +48,10 @@ export default [
       },
       /* chapter 9: come to Goldmere to watch the tournament (they can see, which is against his law) */
       { if: 'c9:family', at: { map: 'goldmere', x: 31, y: 26, dir: 3 }, schedule: null, lines: ['ch9.p.dad.1', 'ch9.p.dad.2'] },
-      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 12, dir: 3 }, schedule: null, lines: ['ch9.p.dad.3', 'ch9.p.dad.4'] }
+      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 12, dir: 3 }, schedule: null, lines: ['ch9.p.dad.3', 'ch9.p.dad.4'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 18, y: 16, dir: 2 }, schedule: null, lines: ['ch10.p.dad.1', 'ch10.p.dad.2'] },
+      { if: 'c10:law', at: { map: 'home', x: 17, y: 6, dir: 2 }, schedule: null, lines: ['ch10.p.dad.3', 'ch10.p.dad.4'] }
     ]
   },
   {
@@ -206,7 +212,11 @@ export default [
       /* chapter 9: in Goldmere's plaza, then at the edge of the tournament ring */
       { if: { all: ['c9:gate', { not: 'c9:tourney' }] }, at: { map: 'goldmere', x: 34, y: 20, dir: 3 }, schedule: null, lines: ['ch9.p.cole.1', 'ch9.p.cole.2'] },
       { if: 'c9:tourney', at: { map: 'halo_court', x: 13, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.cole.3', 'ch9.p.cole.4'] },
-      { if: 'c9:ring', at: { map: 'halo_court', x: 13, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.cole.5', 'ch9.p.cole.6'] }
+      { if: 'c9:ring', at: { map: 'halo_court', x: 13, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.cole.5', 'ch9.p.cole.6'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 19, y: 15, dir: 2 }, schedule: null, lines: ['ch10.p.cole.1', 'ch10.p.cole.2'] },
+      { if: { all: ['c10:law', { not: 'c10:jars' }] }, at: { map: 'vael_garden', x: 21, y: 13, dir: 3 }, schedule: null, lines: ['ch10.p.cole.3', 'ch10.p.cole.4'] },
+      { if: 'c10:jars', at: { map: 'village', x: 36, y: 27, dir: 3 }, schedule: null, lines: ['ch10.p.cole.5', 'ch10.p.cole.6'] }
     ]
   },
   {
@@ -225,7 +235,11 @@ export default [
       /* chapter 9: in Goldmere's plaza, then at the edge of the tournament ring */
       { if: { all: ['c9:gate', { not: 'c9:tourney' }] }, at: { map: 'goldmere', x: 37, y: 20, dir: 2 }, schedule: null, lines: ['ch9.p.mira.1', 'ch9.p.mira.2'] },
       { if: 'c9:tourney', at: { map: 'halo_court', x: 21, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.mira.3', 'ch9.p.mira.4'] },
-      { if: 'c9:ring', at: { map: 'halo_court', x: 21, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.mira.5', 'ch9.p.mira.6'] }
+      { if: 'c9:ring', at: { map: 'halo_court', x: 21, y: 17, dir: 1 }, schedule: null, lines: ['ch9.p.mira.5', 'ch9.p.mira.6'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 13, y: 15, dir: 3 }, schedule: null, lines: ['ch10.p.mira.1', 'ch10.p.mira.2'] },
+      { if: { all: ['c10:law', { not: 'c10:jars' }] }, at: { map: 'vael_garden', x: 21, y: 11, dir: 3 }, schedule: null, lines: ['ch10.p.mira.3', 'ch10.p.mira.4'] },
+      { if: 'c10:jars', at: { map: 'village', x: 10, y: 27, dir: 3 }, schedule: null, lines: ['ch10.p.mira.5', 'ch10.p.mira.6'] }
     ]
   },
   {
@@ -242,7 +256,10 @@ export default [
       },
       /* chapter 6: an apprentice of Rootwood now, she comes through Stonehollow and loses hontori to the seal too */
       { if: { all: ['c6:wren', { not: 'c6:wrenhome' }] }, at: { map: 'stonehollow_tavern', x: 5, y: 6, dir: 0 }, lines: ['ch6.p.wren.1', 'ch6.p.wren.2'] },
-      { if: { all: ['c6:sealed', { not: 'c6:wrenhome' }] }, at: { map: 'stonehollow', x: 33, y: 24, dir: 2 }, lines: ['ch6.p.wren.3', 'ch6.p.wren.4'] }
+      { if: { all: ['c6:sealed', { not: 'c6:wrenhome' }] }, at: { map: 'stonehollow', x: 33, y: 24, dir: 2 }, lines: ['ch6.p.wren.3', 'ch6.p.wren.4'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 11, y: 13, dir: 3 }, schedule: null, lines: ['ch10.p.wren.1', 'ch10.p.wren.2'] },
+      { if: 'c10:jars', at: { map: 'village', x: 44, y: 27, dir: 2 }, schedule: null, lines: ['ch10.p.wren.3', 'ch10.p.wren.4'] }
     ]
   },
   {

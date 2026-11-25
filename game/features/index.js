@@ -36,6 +36,8 @@
  *                     story.condition ext:sanctum, ext:carries
  *   (tournament.js) story.command ext:tournament, ext:tournamentLeave; story.condition ext:tournament; service
  *                     tournaments; system features:tournament; save section tournament
+ *   (finale.js) story.command ext:greatV, ext:law, ext:ending; content key credits; the story flags for the
+ *                     music rows with `after` (game.sound.useFlags)
  *   (wandGems.js) save section wandGems; the item effect manaPlus; world.layer features:heldClock (maps that
  *                     hold their hour and weather: content `always`)
  *   world.sight       lantern (lantern.js: the Lantern, and Lantern Oil, widen the light in a dark cave)
@@ -76,6 +78,7 @@ import { installWandGems } from './wandGems.js';
 import { installWatcherGround } from './watchers.js';
 import { installMirrorGarden } from './mirrors.js';
 import { installTournament } from './tournament.js';
+import { installFinale } from './finale.js';
 
 export { openUnlock, isFull } from './unlock.js';
 
@@ -120,6 +123,7 @@ export function install(game) {
   installWatcherGround(game);
   installMirrorGarden(game);
   installTournament(game);
+  installFinale(game);
   /* "I have a code": a row in the Menu and a link on the title, until the full journey is open */
   registry.add('title.action', 'code', {
     label: () => word(game, 'shared.feat.offer.code'),

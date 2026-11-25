@@ -25,6 +25,7 @@ const ANNOUNCING = new Set(['introWild', 'introDuel', 'moveName', 'foeUses', 'fo
 const GREEN = '#9cf0a6';
 const BLUE = '#9fd0ff';
 const VIOLET = '#b9a8ff';
+const VEIL = '#d8e6ff';
 const other = (side) => (side === 'me' ? 'foe' : 'me');
 
 /* the next line of the rules, shown now instead of in its turn */
@@ -62,6 +63,30 @@ export const handlers = {
     const sound = this.game.sound;
     if (sound && typeof sound.battle === 'function') sound.battle('phase');
     await this.stage.wait(400);
+  },
+
+  /* rule seal: the veil of glass around the foe closes in phase two, and the V drawn cracks it (spellFx.js drawVeil) */
+  async veilShield(e) {
+    await this.settle();
+    const P = this.places.foe;
+    const veil = this.view.veil;
+    veil.max = e.max;
+    if (e.change === 'up') {
+      veil.layers = e.layers;
+      this.stage.flash(VEIL, 0.3);
+      this.stage.burst(P.x, P.y, VEIL, 20, 1.2);
+      this.game.sound.play('spell');
+    } else {
+      veil.layers = e.layers;
+      veil.hit = this.stage.time;
+      this.stage.flash('#ffffff', 0.45);
+      this.stage.shake(4);
+      for (let i = 0; i < 2 + 2 * (e.by || 1); i++) this.stage.after(i * 90, () => this.stage.burst(P.x + (i % 2 ? 12 : -12), P.y - 4, i % 2 ? VEIL : '#ffffff', 12, 1.4));
+      this.stage.float(P.x, P.y - 24, label(e.layers > 0 ? 'floatVeil' : 'floatVeilBroken', { n: e.layers }), VEIL, true);
+      this.game.sound.play('sparkle');
+    }
+    this.refresh();
+    await this.stage.wait(500);
   },
 
   /* the tide of a flooded ring stands a little higher (ring rule tideRise) */

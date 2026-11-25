@@ -51,7 +51,11 @@ export default [
       { if: 'c4:lisel', lines: ['ch4.p.lisel.3', 'ch4.p.lisel.4'] },
       /* chapter 9: she comes to Goldmere, ready to see */
       { if: 'c9:family', at: { map: 'goldmere', x: 41, y: 26, dir: 2 }, schedule: null, lines: ['ch9.p.lisel.1', 'ch9.p.lisel.2'] },
-      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 14, dir: 3 }, schedule: null, lines: ['ch9.p.lisel.3', 'ch9.p.lisel.4'] }
+      { if: 'c9:tourney', at: { map: 'halo_court', x: 6, y: 14, dir: 3 }, schedule: null, lines: ['ch9.p.lisel.3', 'ch9.p.lisel.4'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 12, y: 14, dir: 3 }, schedule: null, lines: ['ch10.p.lisel.1', 'ch10.p.lisel.2'] },
+      { if: { all: ['c10:law', { not: 'c10:jars' }] }, at: { map: 'vael_garden', x: 22, y: 11, dir: 3 }, schedule: null, lines: ['ch10.p.lisel.3', 'ch10.p.lisel.4'] },
+      { if: 'c10:jars', at: P.h1Lisel, schedule: null, lines: ['ch10.p.lisel.5', 'ch10.p.lisel.6'] }
     ]
   },
   {
@@ -119,6 +123,11 @@ export default [
     look: 'maren',
     at: P.tdMaren,
     lines: ['ch4.p.maren.1', 'ch4.p.maren.2'],
-    phases: [{ if: 'c4:bell', at: P.hallMaren, lines: ['ch4.p.maren.3', 'ch4.p.maren.4'] }]
+    phases: [
+      { if: 'c4:bell', at: P.hallMaren, lines: ['ch4.p.maren.3', 'ch4.p.maren.4'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 23, y: 23, dir: 1 }, schedule: null, lines: ['ch10.p.maren.1', 'ch10.p.maren.2'] },
+      { if: 'c10:law', lines: ['ch10.p.maren.3', 'ch10.p.maren.4'] }
+    ]
   }
 ];

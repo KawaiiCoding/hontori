@@ -12,6 +12,9 @@
  *   breakFree(scene), slipAway(scene)       a failed spiral; the foe leaving after the last one
  *   repelHand(scene)                        the open hand and its golden ward over the foe
  *   drawGuide(g, kind, seconds, width, height)   the dashed shape and the dot gliding along it
+ *   drawVeil(g, veil, P, seconds)           the veil of glass around the foe under the rule seal: one ring of panes per
+ *                                           layer (veil { layers, max, hit }: hit is the time of the last crack, which
+ *                                           flashes the rings white for a moment); nothing while there are no layers
  */
 
 import { element } from '../../ui/dom.js';
@@ -205,4 +208,31 @@ export function drawGuide(g, kind, seconds, width, height) {
   g.beginPath();
   g.arc(x, y, 1.8, 0, 7);
   g.fill();
+}
+
+const VEIL_GLASS = '#d8e6ff';
+const VEIL_PANES = 7;
+const VEIL_FLASH = 0.5;
+
+export function drawVeil(g, veil, P, seconds) {
+  if (!veil || !(veil.layers > 0) || !P) return;
+  const flash = veil.hit > 0 ? Math.max(0, 1 - (seconds - veil.hit) / VEIL_FLASH) : 0;
+  const s = P.sc || 1;
+  g.save();
+  g.lineCap = 'butt';
+  for (let i = 0; i < veil.layers; i++) {
+    const rx = (19 + i * 5) * s;
+    const ry = rx * 0.86;
+    const turn = seconds * (i % 2 ? -0.35 : 0.3) + i * 0.7;
+    g.lineWidth = Math.max(1, 1.4 * s);
+    g.strokeStyle = flash > 0 ? '#ffffff' : VEIL_GLASS;
+    g.globalAlpha = 0.32 + 0.1 * Math.sin(seconds * 1.6 + i) + 0.5 * flash;
+    for (let p = 0; p < VEIL_PANES; p++) {
+      const a0 = turn + (p / VEIL_PANES) * Math.PI * 2;
+      g.beginPath();
+      g.ellipse(P.x, P.y, rx, ry, 0, a0, a0 + (Math.PI * 2) / VEIL_PANES - 0.16);
+      g.stroke();
+    }
+  }
+  g.restore();
 }

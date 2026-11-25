@@ -138,7 +138,7 @@ A script is an array of commands. Each command is an object with one verb key; o
 | `{ door: { map, to }, block: true }` | the player tries a door; `block` keeps them out (the event explains why) |
 | `{ battleEnd: { wild: true } }` | a battle of that kind ended |
 
-Entering a map sets the flag `visited:<map>`. `once` defaults to true and is saved as flag `ev:<id>`. Events are tried in load order; the first that matches runs. A person, prop or tile with no matching event falls back to its interaction handlers (section 8).
+Entering a map sets the flag `visited:<map>`. `once` defaults to true and is saved as flag `ev:<id>`. Events are tried in load order; the first that matches runs. An event with `priority: n` (default 0) is tried before every event of a lower priority: a late chapter uses it so an earlier chapter's talk event never catches the talk first (the Wardens' rematches after the end). A person, prop or tile with no matching event falls back to its interaction handlers (section 8).
 
 ## 8. Interactions
 
@@ -185,7 +185,7 @@ The flow: greet with the money in hand, then Buy, Sell the trade pouch, or Nothi
 wild: { whisperwood: { count: 6, level: [2, 4], zones: [ { x, y, r, kind, w } ], hidden: 0.22 } }
 ```
 
-Which kinds appear is weighted by the shared habitat table (`shared/wild.js`: per kind, feature weights, day and night factors, weather factors and rarity) and the map's zones. A habitat may name `maps: [map id ...]`: that kind lives only on those maps (a far country's creatures stay in it). `forage` tables map a prop type to the things it may hide, once a day per spot. `waters` map a map to its fish (id, name, value, weight range, night only) and the kinds that bite.
+Which kinds appear is weighted by the shared habitat table (`shared/wild.js`: per kind, feature weights, day and night factors, weather factors and rarity) and the map's zones. A habitat may name `maps: [map id ...]`: that kind lives only on those maps (a far country's creatures stay in it). `after: flag` keeps a kind away until that story flag is set (the rare ones after the ending), and `level: [min, max]` gives it its own levels instead of the map's. `forage` tables map a prop type to the things it may hide, once a day per spot. `waters` map a map to its fish (id, name, value, weight range, night only) and the kinds that bite.
 
 ## 12. Trials, puzzles and picture stories
 
@@ -201,6 +201,8 @@ A trial: `{ venue: mapId, door: { map, to }, passed: flag, teacher: personId, te
 A trial's entrance tests and its award rules are named types from a library; the core supplies `push` puzzles and the `sigil`-free generic tests (`choice`), the game layer registers the rest (section 14). A picture story is a list of panels: one line of text and a scene described by named painter parts.
 
 Puzzle types of the game layer (each proved fair by `node game/features/check.mjs`): `vanes`, `tide`, `circuit`, `braziers`, `watchers` (patrols with light cones and shadows to hide in; a catch is a gentle reset to the last shadow) and `mirrors` (turn mirrors to bounce a beam to its target). A content map may carry `dark: { level, sight, lantern: { item, sight, oil } }` (a dark map with a circle of light) and `always: { time, weather }` (the clock and weather are held there: a town where it is always evening).
+
+**Credits.** `credits: { id: { title, end, skip, sections: [{ head, people: [person or voice ids], kinds: [keys] | 'seen' | 'all', lines: [text ids] }] } }` is the roll the `ending` command shows: people by their current name and face, kinds by their first stage's name and face (`seen`: every kind the journey has met, in that order). `content/check.mjs` checks every id, and that every `ending` names a story and credits that exist.
 
 ## 13. Extensions
 
@@ -236,3 +238,8 @@ A game layer registers each extension with a name, the kind (`command`, `conditi
 | `windSwap`, `tideRise`, `noRest`, `wandDuel`, `heat`, `blind`, `pure` | battleRule | in `rules` | the ring rules of the great schools |
 | `vanes`, `tide`, `circuit`, `braziers`, `watchers`, `mirrors` | testType | `{ type, puzzle: id }` | passed once that puzzle is solved |
 | `tournament` | awardRule | `{ type: 'tournament', tournament: id, done }` | a tournament whose win earns the ring |
+| `seal` | battleRule | in `rules` (the Grand Archmage) | the V (`veil`) joins the loadout and is never sealed; from round 2 one other spell is sealed each turn, the last slot first. Two phases: a team member's `phases: [{ at: 0.5, say }]` starts phase two, when a veil of three layers closes round the foe (each makes your blows 20% weaker); each V drawn then breaks one layer (a Flawless V two) |
+| `greatV` | command | `{ ext: 'greatV', who: [person or voice ids], text, sub, done, weak }` | each one in `who` adds a stroke of a great ring, face and name shown; then the kid draws the V large (one retry, then any stroke counts); the veil lifts with `done`, or the gentler `weak` for a shaky V |
+| `law` | command | `{ ext: 'law', title, sub, lines: [{ text, flag }], confirm, yes, back }` | choose one line, then confirm it; the chosen line's flag is set and the others' removed; there is no way out without a choice |
+| `ending` | command | `{ ext: 'ending', story: storyId, credits: creditsId }` | the ending's music, the picture story, then the credits (skippable); the script goes on in the world |
+| `keepsake` | item effect | `{ effect: 'keepsake', slot: 'hat' \| 'keepsake', look, place: { map, x, y, lift } }` | carried, the item joins the Capsule Album's Keepsakes: a hat is worn by the lead, a keepsake stands at `place` |

@@ -10,6 +10,9 @@
  *   duel   the tune of a duel fought on these maps; leave out to keep the common duel tune
  *   wild   the tune of a wild encounter on these maps; leave out to keep the common one
  *   phase  the tune once a trainer's hontori flares up into its second phase; leave out to keep the duel tune
+ *   after  a story flag: the row only counts once that flag is set (PlaceMusic.useFlags), and then before the
+ *          rows without one (a map may be in one row with `after` and one without). night: null plays the
+ *          common music at night
  *
  * Public API:
  *   PLACES          the rows
@@ -127,5 +130,28 @@ export const PLACES = [
   {
     maps: ['vael_garden'],
     day: 'vael_garden'
+  },
+  /* chapter 10: the stair, the grand hall and its three Council chambers */
+  {
+    maps: ['athenaeum_stair', 'athenaeum', 'council_east', 'council_west', 'council_high'],
+    day: 'athenaeum',
+    duel: 'council_duel',
+    /* the Council's duels ask for their tune by name (content gauntlets: battle.music 'council') */
+    council: 'council_duel'
+  },
+  /* the Grand Archmage's study: his duel, and its second phase */
+  {
+    maps: ['vael_study'],
+    day: 'athenaeum',
+    duel: 'vael_duel',
+    vael: 'vael_duel',
+    phase: 'vael_duel_2'
+  },
+  /* after the end: the Emberbrook fair by day; at night the village keeps its own music */
+  {
+    maps: ['village'],
+    after: 'c10:complete',
+    day: 'fair',
+    night: null
   }
 ];

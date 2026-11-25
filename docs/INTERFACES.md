@@ -573,3 +573,29 @@ A command, condition or value that no system owns is registered through `pending
 ### Debug
 
 `?scene=...&flags=intro,...` gives an empty journey the fire hontori and the wand; `level=<n>` sets its level.
+
+## 16. Chapter 10: the finale
+
+### Kinds and commands
+
+| Kind | Id | Value |
+|---|---|---|
+| `story.command` | `ext:greatV`, `ext:law`, `ext:ending` (`game/features/finale.js`) | see content/schema.md section 14 |
+| `system` | `capsules:keepsakes` (`game/capsules/index.js`) | items with effect `keepsake` are one more album series (no machine), granted while carried |
+| content key | `credits` | the roll of the `ending` command (content/schema.md section 12) |
+
+### Battle
+
+Ring rule `seal` (`game/battle/ringRules.js`). Ring rules gained three hooks: `setup(b)` at the end of the battle's setup (it may shape the loadout), `phase(b)` when a trainer's hontori enters a later phase (`phases.js` `checkPhases` now answers true when one began), and `spell(b, kind, grade)` after a spell took effect. `state.extraSpells` lists spells a rule brings into the battle (the V), `state.sealed` the spells sealed one by one, `state.spellTargets` a spell aimed elsewhere. `HontoriBattle` adds `castable`, `sealed` and `veil` ({ layers, max } or null); the scene draws the veil round the foe (`spellFx.js drawVeil`) and plays the event `veilShield { layers, max, change: 'up' | 'crack', by }`.
+
+### Engine additions
+
+- `systems/features`: `chooseLine` (LineChoice.js: choose one line with a confirm step), `openGroupDrawing` (GroupDrawing.js: a ring drawn stroke by stroke, then `lift`), `rollCredits` (Credits.js: a CSS-driven roll at 4 frames a second, skippable), `playPictureStory(game, id, text)`. `drawPrompt` takes `scale` (a larger guide), `forgive` (after that many misses any stroke is taken) and `onDrawn({ matched, accuracy })`.
+- `systems/capsules`: `Capsules.grant(id)` (a prize bought or given), `install(game, { series })` (series a game builds itself).
+- `systems/story/Library.js`: events are ordered by `priority` (default 0), load order within one priority.
+- `world/Habitat.js`: a habitat's `after` flag (with `table.has(flag)`) and its own `level` range.
+
+### Music
+
+`game/music/places.js` rows may carry `after: flag`: such a row counts only once the flag is set, before the map's plain row (`night: null` keeps the common music at night). `PlaceMusic.useFlags(test)`, reached through `HontoriSound.useFlags`, which `finale.js` wires to the story flags. Chapter 10 rows: the Athenaeum and its chambers (`athenaeum`, duel and `council` `council_duel`), Vael's study (`vael` `vael_duel`, phase `vael_duel_2`; a battle's `music: 'council'` or `'vael'` picks the row field of that name), the village after `c10:complete` (`fair`); `ending` plays through the `ending` command.
+

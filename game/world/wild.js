@@ -128,7 +128,9 @@ export class Wild {
     if (world.map.indoor || !place) return;
     const table = this.#habitats();
     this.#place = place;
-    this.#habitat = new Habitat(world.map, this.#game.art, table, place);
+    /* a kind with `after` lives here only once that story flag is set (the rare ones after the ending) */
+    const story = storyOf(this.#game);
+    this.#habitat = new Habitat(world.map, this.#game.art, { ...table, has: (flag) => !!(story && story.flag(flag)) }, place);
     if (!this.#byMap.has(world.map.id)) this.#byMap.set(world.map.id, []);
     this.list = this.#byMap.get(world.map.id);
     for (const roamer of this.list) roamer.settle();

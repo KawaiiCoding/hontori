@@ -296,6 +296,19 @@ window.H = window.H || {};
   vary('traveler', 'th2', { name: 'Elsbeth', skin: '#f4d0b0', hair: '#c8a050', style: 'ponytail', ties: '#3aa0a8', robe: '#9ad0f0', trim: '#ffffff', scarf: '#f4c040', goggles: '#8a5a32', eye: '#3a6a8a', bg: '#c8e8f8' });
   vary('kid2', 'th3', { name: 'Tavi', skin: '#d9a27a', hair: '#2a2a3a', style: 'cap', cap: '#3a8a6a', shirt: '#3a6a9a', pants: '#4a4a5a', shoes: '#3a2a1a', freckles: 1, eye: '#3a2a1a', bg: '#c0e0d0' });
   vary('boy', 'th4', { name: 'Corvin', skin: '#f0c8a8', hair: '#1e1e2a', style: 'messy', shirt: '#2a2a3a', inner: '#e8e0f0', pants: '#3a3a4a', shoes: '#2a2a30', goggles: null, eye: '#6a4a8a', expr: 'smile', bg: '#d0c8e0' });
+  /* chapter 10: the Athenaeum. The three Councillors wear the Council's grey with a gold sash, each in a chamber colour */
+  C.cn_brand = { name: 'Councillor Brand', skin: '#d9a27a', hair: '#3a3a42', style: 'short', robe: '#6e6e7c', trim: '#3e6cb0', stole: '#e0b040',
+    clasp: '#d0d4de', pants: '#3a3a46', shoes: '#1e1e24', beard: 1, brow: '#3a3a42', wide: 1, eye: '#3a4a6a', expr: 'flat', bg: '#c0c8dc' };
+  C.cn_vesk = { name: 'Councillor Vesk', skin: '#f0c8a8', hair: '#c8c0b8', style: 'bun', ties: '#c88430', robe: '#7e7e8c', trim: '#c88430', stole: '#e0b040',
+    pendant: '#e8b060', pants: '#3a3a46', shoes: '#2a2a30', eye: '#6a4a2a', expr: 'flat', brow: '#a8a098', bg: '#e0d0b8' };
+  C.cn_hale = { name: 'Councillor Hale', skin: '#c88a60', hair: '#e8e4dc', style: 'hood', hood: '#5a4490', robe: '#6a6a78', trim: '#8a74c0', clasp: '#d0d4de',
+    pants: '#2a2a36', shoes: '#1e1e24', eye: '#5a4a7a', expr: 'closed', bg: '#d0c8e4' };
+  /* the kind attendant of the stair's rest landing, and the stall keepers of the Emberbrook fair */
+  vary('grandma', 'attendant', { name: 'Attendant Odile', skin: '#e0ac82', hair: '#e8e4dc', style: 'bandana', band: '#c8443a', dress: '#4a6a8a', collar: '#f4ecd8', glasses: 0, shawl: '#e0c060', eye: '#3a2a1a', bg: '#f0d0b8' });
+  vary('shopkeeper', 'fair_1', { name: 'Hatter Maple', skin: '#f2c9a0', hair: '#6a3a22', style: 'ponytail', ties: '#3a8a6a', glasses: 0, shirt: '#5ab08a', apron: '#f4ead0', eye: '#3a5a3a', bg: '#c8ecd8' });
+  vary('shopkeeper', 'fair_2', { name: 'Framer Osk', skin: '#c88a60', hair: '#2a2024', style: 'short', glasses: 'round', moustache: 1, shirt: '#6a8ae0', apron: '#8e5f33', eye: '#2a1a10', bg: '#c8d4f4' });
+  vary('shopkeeper', 'fair_3', { name: 'Lampwright Della', skin: '#e0ac82', hair: '#c8582a', style: 'bun', ties: '#ffd27a', glasses: 0, shirt: '#e86a5a', apron: '#3b4058', eye: '#3a2a1a', bg: '#f4d0c0' });
+  vary('shopkeeper', 'fair_4', { name: 'Sweetmaker Pip', skin: '#f4d0b0', hair: '#e0b050', style: 'messy', glasses: 0, shirt: '#d878b0', apron: '#f4ead0', freckles: 1, eye: '#3a5a8a', bg: '#f4d0e4' });
   var E = '#2a1c2e', GL = '#3a2e44', WH = '#fbf6f0', MO = '#a8443c';
 
   // ---------- sprite (authored at 2x: 56x56 real px, local centre x = 16, feet bottom at local y = 47) ----------

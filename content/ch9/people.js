@@ -107,7 +107,12 @@ export default [
     look: 'aurel',
     at: P.hcAurel,
     lines: ['ch9.p.aurel.1', 'ch9.p.aurel.2'],
-    phases: [{ if: 'c9:ring', lines: ['ch9.p.aurel.3', 'ch9.p.aurel.4'] }]
+    phases: [
+      { if: 'c9:ring', lines: ['ch9.p.aurel.3', 'ch9.p.aurel.4'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 22, y: 12, dir: 2 }, schedule: null, lines: ['ch10.p.aurel.1', 'ch10.p.aurel.2'] },
+      { if: 'c10:law', lines: ['ch10.p.aurel.3', 'ch10.p.aurel.4'] }
+    ]
   },
   { id: 'th1', name: 'ch9.name.th1', look: 'th1', at: P.hcTh[0], lines: ['ch9.p.th1.1', 'ch9.p.th1.2'] },
   { id: 'th2', name: 'ch9.name.th2', look: 'th2', at: P.hcTh[1], lines: ['ch9.p.th2.1', 'ch9.p.th2.2'] },

@@ -18,6 +18,7 @@
  *   follow(env)             let music and ambience follow the hour and the weather
  *   play(name)              a sound effect: 'step', 'bump', 'door', 'confirm', 'sparkle' ...
  *   note(midi)              one soft note (a chime, a music box)
+ *   useFlags(test)          test(flag): the story flags, so a place's music may change after a story moment (the fair)
  *   battle(kind)            the battle music: 'wild' or 'duel', 'phase' for a trainer's second phase; null goes back to
  *                           the music of the place
  *   setMuted(on)
@@ -68,6 +69,10 @@ export class HontoriSound {
     if (!this.#audio) return;
     this.#audio.update(env);
     this.#guard(() => this.#music && this.#music.follow(env));
+  }
+
+  useFlags(test) {
+    this.#guard(() => this.#music && this.#music.useFlags(test));
   }
 
   play(name) {

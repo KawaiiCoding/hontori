@@ -105,7 +105,10 @@ export default [
     lines: ['ch7.p.brasa.1', 'ch7.p.brasa.2'],
     phases: [
       { if: 'c7:brasa', at: P.ecBrasa, lines: ['ch7.p.brasa.3', 'ch7.p.brasa.4'] },
-      { if: 'c7:ring', at: P.ecBrasa, lines: ['ch7.p.brasa.5', 'ch7.p.brasa.6'] }
+      { if: 'c7:ring', at: P.ecBrasa, lines: ['ch7.p.brasa.5', 'ch7.p.brasa.6'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 26, y: 8, dir: 0 }, schedule: null, lines: ['ch10.p.brasa.1', 'ch10.p.brasa.2'] },
+      { if: 'c10:law', lines: ['ch10.p.brasa.3', 'ch10.p.brasa.4'] }
     ]
   }
 ];

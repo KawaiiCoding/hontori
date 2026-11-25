@@ -8,7 +8,9 @@
  *   new Library(folders)      folders: content folder objects in load order (shared first)
  *   text                      { id: string }, every folder's text merged
  *   people                    Map id -> person (schema section 3)
- *   events                    [event] in load order (schema section 7)
+ *   events                    [event] in load order (schema section 7); an event with a higher `priority`
+ *                             (a number, default 0) comes before every lower one, so a late chapter's talk
+ *                             (a rematch after the end) is not caught by an earlier chapter's event
  *   scripts                   { id: [command] }
  *   handlers(type)            the interaction handlers of a type (schema section 8), later folders first;
  *                             an alias shares the handlers of the type it names
@@ -43,6 +45,9 @@ export class Library {
   constructor(folders) {
     this.folders = folders;
     for (const folder of folders) this.#add(folder || {});
+    const rank = (event) => (event && Number.isFinite(event.priority) ? event.priority : 0);
+    /* a stable sort: load order stays within each priority */
+    this.events = this.events.map((event, i) => [event, i]).sort((a, b) => rank(b[0]) - rank(a[0]) || a[1] - b[1]).map(([event]) => event);
   }
 
   handlerKey(type) {

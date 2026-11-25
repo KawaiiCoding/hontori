@@ -8,12 +8,14 @@
  * Public API:
  *   new Habitat(map, art, table, place)
  *        map: a TileMap; art: the art provider (building footprints)
- *        table: { night: [from, to], dusk: [[from, to]...], base, habitats: { kind: { f, day, night, wx, rare, maps } },
+ *        table: { night: [from, to], dusk: [[from, to]...], base, habitats: { kind: { f, day, night, wx, rare, maps,
+ *                 after, level } }, has(flag) }   after: a flag; the kind lives here only once has(flag) answers
+ *                 true (no has: never). level: [min, max], the kind's own levels instead of the place's
  *                 features: { props: { type: feature }, tiles: { tile: feature } },
  *                 warmBuildings: [type] }   warmBuildings: buildings with a big hearth (warmer around them)
  *        place: { level: [min, max], zones: [{ x, y, r, kind, w }] }
  *   kinds                         the kinds that can live here (every kind of the table, less those whose
- *                                 `maps` list leaves this map out)
+ *                                 `maps` list leaves this map out or whose `after` flag is not set)
  *   isNight(hour), isDusk(hour)
  *   weights(tx, ty, env, factor)  { kind: score }; factor(kind) -> number scales a kind (a lantern)
  *   pick(tx, ty, env, factor, random)   { kind, level, score }
@@ -44,9 +46,18 @@ export class Habitat {
     this.#place = place;
     /* a kind that names its maps (`maps: [map id ...]`) lives only there: a far country's creatures stay in it */
     this.kinds = Object.keys(table.habitats || {}).filter((kind) => {
-      const only = table.habitats[kind] && table.habitats[kind].maps;
-      return !Array.isArray(only) || only.includes(map.id);
+      const habit = table.habitats[kind] || {};
+      if (habit.after && !this.#has(habit.after)) return false;
+      return !Array.isArray(habit.maps) || habit.maps.includes(map.id);
     });
+  }
+
+  #has(flag) {
+    try {
+      return typeof this.#table.has === 'function' && !!this.#table.has(flag);
+    } catch (error) {
+      return false;
+    }
   }
 
   isNight(hour) {
@@ -95,10 +106,11 @@ export class Habitat {
         break;
       }
     }
-    const [low, high] = this.#place.level || [1, 3];
-    let level = low + Math.floor(random() * (high - low + 1));
     const habit = this.#table.habitats[kind] || {};
-    if ((habit.rare ?? 1) < 0.5) level += 1;
+    const own = Array.isArray(habit.level) && habit.level.length === 2;
+    const [low, high] = own ? habit.level : this.#place.level || [1, 3];
+    let level = low + Math.floor(random() * (high - low + 1));
+    if (!own && (habit.rare ?? 1) < 0.5) level += 1;
     return { kind, level, score: weights[kind] || 0 };
   }
 

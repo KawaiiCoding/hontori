@@ -9,6 +9,8 @@
  * Public API:
  *   installPictureStory(game)   registers the command { story: storyId } (registry "story.command" "story")
  *   class PictureStoryScene     the scene; enter({ story, text }) with the story data and a text function
+ *   playPictureStory(game, id, text)   play the content story of that id (text: id -> words); a Promise of true when
+ *                               it ends, or false when there is no such story
  *
  * Registry kind it reads:
  *   "picture.painter" "main"   { paint(g, scene, env, k, size), forget() }: paint one panel's scene in the
@@ -310,6 +312,13 @@ function storyOf(game, id) {
     if (table && table[id]) return table[id];
   }
   return null;
+}
+
+export async function playPictureStory(game, id, text) {
+  const story = storyOf(game, id);
+  if (!story) return false;
+  await openScreen(game, new PictureStoryScene(game), { story, text: typeof text === 'function' ? text : (textId) => textId });
+  return true;
 }
 
 export function installPictureStory(game) {

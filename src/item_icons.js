@@ -2,7 +2,8 @@ window.H = window.H || {};
 // Clear pixel icons for world items that had none of their own: every fish, the forest finds, the merchant pouch,
 // chapters 4 and 5: tide_ring, spark_ring, ferry_ticket, night_hook, bell_order; chapters 6 and 7: stone_ring,
 // flame_ring, lantern_oil, miner_rope, dug_treat, carving_chisel, burr_page, sanctum_order, heat_cloak, grandma_wand,
-// grandma_letter, vael_young_letter; chapters 8 and 9: moon_ring, halo_ring, favour_token, garden_key.
+// grandma_letter, vael_young_letter; chapters 8 and 9: moon_ring, halo_ring, favour_token, garden_key; chapter 10:
+// archmage_ring, charter, and the fair keepsakes fair_hat, fair_frame, fair_lantern, fair_sweets.
 // Rule: every item in the world is shown by an icon that looks like the thing itself.
 // API: H.itemIcons = { has(id), draw(g, id) (16 x 16 at 1x), url(id, scale) }
 (function () {
@@ -227,6 +228,45 @@ window.H = window.H || {};
     for (var i = 0; i < 7; i++) { P(g, 6 + i, 6 + i, OL, 3, 3); }
     for (i = 0; i < 7; i++) P(g, 7 + i, 7 + i, '#e0b048', 1, 1);
     P(g, 11, 13, OL, 3, 3); P(g, 12, 14, '#e0b048', 1, 1); P(g, 13, 10, OL, 3, 3); P(g, 14, 11, '#e0b048', 1, 1);
+  };
+  /* ---------- chapter 10 ---------- */
+  /* the Archmage's Ring: a white-gold band with a clear stone, the closed eye now open: a small V cut over it */
+  DRAW.archmage_ring = function (g) {
+    ring(g, ['#e8e0c8', '#fffaf0', '#a89870', '#d8f0ff', '#ffffff', '#7ab8e0']);
+    P(g, 6, 2, '#2a5a9a', 1, 1); P(g, 7, 3, '#2a5a9a', 1, 1); P(g, 8, 3, '#2a5a9a', 1, 1); P(g, 9, 2, '#2a5a9a', 1, 1);
+  };
+  /* the Wander's Charter: a cream scroll unrolled, lines of writing, a gold V seal and a ribbon */
+  DRAW.charter = function (g) {
+    P(g, 2, 1, OL, 12, 14); P(g, 1, 2, OL, 14, 2); P(g, 1, 12, OL, 14, 2);
+    P(g, 3, 2, '#f4ecd4', 10, 12); P(g, 2, 2, '#d8c8a0', 12, 1); P(g, 2, 13, '#d8c8a0', 12, 1); P(g, 3, 3, '#fffaf0', 3, 1);
+    for (var y = 4; y < 10; y += 2) P(g, 4, y, '#8a7a6a', 8, 1);
+    P(g, 9, 9, OL, 5, 5); P(g, 10, 10, '#e0b048', 3, 3); P(g, 10, 10, '#c8443a', 1, 1); P(g, 12, 10, '#c8443a', 1, 1); P(g, 11, 11, '#c8443a', 1, 1);
+    P(g, 10, 14, '#c8443a', 1, 2); P(g, 12, 14, '#c8443a', 1, 2);
+  };
+  /* a fair hat: a round straw hat with a green ribbon */
+  DRAW.fair_hat = function (g) {
+    P(g, 1, 9, OL, 14, 4); P(g, 2, 10, '#e8c870', 12, 2); P(g, 2, 10, '#f8e0a0', 5, 1);
+    P(g, 4, 3, OL, 8, 7); P(g, 5, 4, '#e8c870', 6, 5); P(g, 5, 4, '#f8e0a0', 3, 2);
+    P(g, 5, 7, '#3a8a6a', 6, 2); P(g, 11, 8, '#3a8a6a', 2, 3);
+  };
+  /* a picture frame: a gold frame round a small painted meadow */
+  DRAW.fair_frame = function (g) {
+    P(g, 1, 2, OL, 14, 12); P(g, 2, 3, '#c8962a', 12, 10); P(g, 2, 3, '#e8c050', 12, 1); P(g, 2, 3, '#e8c050', 1, 10);
+    P(g, 4, 5, '#9ad0f0', 8, 4); P(g, 4, 9, '#6ab048', 8, 2); P(g, 9, 6, '#fff0a0', 2, 2); P(g, 5, 8, '#e86a8a', 1, 1);
+  };
+  /* a little lantern for the home: an iron cap and ring, warm glass */
+  DRAW.fair_lantern = function (g) {
+    P(g, 6, 0, OL, 4, 3); P(g, 7, 1, '#59607e', 2, 1);
+    P(g, 4, 3, OL, 8, 2); P(g, 3, 5, OL, 10, 9); P(g, 4, 14, OL, 8, 2);
+    P(g, 5, 3, '#3b4058', 6, 1); P(g, 4, 5, '#3b4058', 1, 9); P(g, 11, 5, '#3b4058', 1, 9); P(g, 5, 14, '#3b4058', 6, 1);
+    P(g, 5, 5, '#ffd27a', 6, 9); P(g, 6, 6, '#fff4c0', 2, 4); P(g, 7, 9, '#ff9a40', 2, 3);
+  };
+  /* a jar of fair sweets: glass, a cork, round sweets in three colours */
+  DRAW.fair_sweets = function (g) {
+    P(g, 5, 1, OL, 6, 3); P(g, 6, 2, '#b07a44', 4, 1);
+    P(g, 3, 4, OL, 10, 11); P(g, 4, 5, '#d8eef4', 8, 9);
+    P(g, 5, 8, '#e86a8a', 2, 2); P(g, 8, 9, '#f4c040', 2, 2); P(g, 6, 11, '#6ac0a0', 2, 2); P(g, 9, 12, '#a878d8', 2, 1);
+    P(g, 4, 5, '#ffffff', 1, 4);
   };
   Object.keys(FISH).forEach(function (k) { DRAW[k] = function (g) { fish(g, FISH[k]); }; });
   var urls = {};

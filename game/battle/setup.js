@@ -15,7 +15,8 @@
  *     noCapture, sureBind (the third binding always holds), spells (a fixed spell list for this battle),
  *     noRoom (the party is full and the Sanctum sealed: no binding), twist ('flawless'),
  *     mode ('ally') with ally { name, key, team } (a double battle: ally.js)
- *     rules      [name]   the battle's rule names (content); the ring rules among them (ringRules.js) run
+ *     rules      [name]   the battle's rule names (content); the ring rules among them (ringRules.js) run;
+ *                          their setup hook runs last, once the battle is built
  *     wand       { mana, maxMana, level, spells, loadout, spellXp, spellMastery, perks }  (perks: growth.wandPerks)
  *     items      [{ id, n }]
  *     flags      { boundOnce }
@@ -29,7 +30,7 @@ import { normalizeSpellId } from './spells.js';
 import { staMax } from './growth.js';
 import { ELEMENTS } from './elements.js';
 import { speciesOf, cap } from './common.js';
-import { ringRulesOf } from './ringRules.js';
+import { ringRulesOf, runRingRules } from './ringRules.js';
 import { setupAlly } from './ally.js';
 
 const DEFAULT_LEAD = { key: 'hontori', level: 1, hp: 20, maxHp: 20 };
@@ -69,6 +70,9 @@ export function setupBattle(b, s) {
   setupAlly(b, s);
   S.nextIntent = null;
   S.sealedSpell = null;
+  /* the spells a ring rule seals one by one (seal), and the ones it brings into the battle (the V under seal) */
+  S.sealed = [];
+  S.extraSpells = [];
   S.rules = ringRulesOf([...(Array.isArray(s.rules) ? s.rules : []), ...(TR && Array.isArray(TR.rules) ? TR.rules : [])]);
   S.flags = Object.assign({}, s.flags);
 
@@ -141,4 +145,6 @@ export function setupBattle(b, s) {
   S.breadUsed = false;
   S.calm = 0;
   S.stepped = 0;
+  /* a ring rule may shape the battle once it is built (seal adds the V to the loadout) */
+  runRingRules(b, 'setup');
 }

@@ -53,6 +53,8 @@ export function hint(b) {
   const weak = f.hp / f.max <= 0.35;
   if (m.fainted) return can(b, 'revive') ? 'hintFaintedStar' : 'hintFainted';
   if (m.has('asleep')) return can(b, 'mirror') && !S.spellUsed ? 'hintMirror' : 'hintAsleep';
+  /* rule seal, phase two: the V is the way through the veil */
+  if (hasRule(b, 'seal') && S.veil > 0 && !S.spellUsed) return 'hintVeil';
   if (shownIntent(b) === 'hidden') return can(b, 'lantern') && !S.spellUsed ? 'hintLantern' : 'hintBlind';
   if (!S.trainer && !S.noRoom && can(b, 'bind') && weak && S.mana >= 2 && !S.spellUsed) return S.flags.boundOnce ? 'hintBind' : 'hintBindFirst';
   if (!S.trainer && !S.known.includes('bind') && weak) return 'hintLearnBind';
@@ -102,7 +104,7 @@ export function beginTurn(b) {
 export function runRound(b, steps) {
   const stop = b.runSteps([...steps, ...sideSteps(b)], () => {
     if (foe(b).fainted) return 'win';
-    checkPhases(b);
+    if (checkPhases(b)) runRingRules(b, 'phase');
     return me(b).fainted ? 'faint' : null;
   });
   if (stop === 'win') return win(b);

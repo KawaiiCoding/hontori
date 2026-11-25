@@ -14,7 +14,8 @@
  *             cinderreach, cinderreach_night, hearth_below, crucible_duel, crucible_duel_2,
  *             duskmere, duskmere_night, hollow_moon_duel,
  *             goldmere, goldmere_night, halo_duel, vael_garden,
- *             tournament, tournament_2, tournament_3, tournament_4 }
+ *             tournament, tournament_2, tournament_3, tournament_4,
+ *             athenaeum, council_duel, vael_duel, vael_duel_2, ending, fair }
  *
  * kitewick        a town tune for Kitewick, the hamlet on stilts: a lilting 3/4 in D, floating high, with the raised
  *                 fourth (G sharp) over the chord on the second step, the airy colour of a wide open sky.
@@ -70,6 +71,19 @@
  *                 same shape turned upside down, a mirror; the middle is long high notes, the halo; then a breath.
  * vael_garden     the lullaby of the garden of jars: 3/4 in C major in the music box voice, sweet but a little too still;
  *                 the F minor bar and the flat chords of the middle section are the sleeping spirits behind glass.
+ * athenaeum       the Vael Athenaeum of chapter 10 (the stair, the hall, the Council chambers, the study): a slow, stately 4/4
+ *                 in E flat. Each phrase climbs by steps, like the long stair and the shelves; the middle section turns to
+ *                 C minor, the hush of a reading room, and closes on G to lead back home.
+ * council_duel    the three Council duels: 4/4 in A minor. Every phrase starts with the same short rising figure, three
+ *                 judges each saying it once; the middle sings in D minor; the third section is the breath.
+ * vael_duel       the Grand Archmage, phase one: the Athenaeum's climbing phrases turned to D minor, patient and closed,
+ *                 like a hand on a book; the third section is long notes.
+ * vael_duel_2     phase two (PlaceMusic.battle('phase'), the row's `phase`): a whole step higher and quicker, and a new
+ *                 section in the major, the V shining through the veil.
+ * ending          the ending and the credits (ext:ending asks for it with sound.battle('ending')): a slow 3/4 in G major,
+ *                 warm and plain, colour coming back; the middle turns once through F, the flat seventh, and comes home.
+ * fair            the Emberbrook fair after the end (the village row with `after: 'c10:complete'`): a skipping 4/4 in F
+ *                 major, a dotted step before each run, bright but never loud.
  * tournament, tournament_2, tournament_3, tournament_4
  *                 the four rounds of the Ring Tournament. One processional in D major with four sections (the herald, the
  *                 field, a breath, a hush); each round plays them in a new order and a little higher and quicker
@@ -371,6 +385,101 @@ const TOURNAMENT = {
   }
 };
 
+/* the Vael Athenaeum: a stately climb in E flat; each phrase steps up like a stair of books */
+const ATHENAEUM = {
+  A: {
+    ch: 'Eb Bb Cm Ab Eb Bb Ab,Bb Eb',
+    mel: 'Eb5:1 G5:1 Bb5:2 | D5:1 F5:1 Bb5:2 | C5:1 Eb5:1 G5:1.5 F5:.5 | Ab5:2 C6:1 Ab5:1 | ' +
+         'G5:1.5 Bb5:.5 Eb6:2 | D6:1 Bb5:1 F5:2 | Ab5:1 C6:1 Bb5:1 D6:1 | Eb6:3 Bb5:1'
+  },
+  /* the answer, a little higher, through G minor */
+  A2: {
+    ch: 'Eb Gm Ab Bb Cm Ab Fm,Bb Eb',
+    mel: 'G5:1 Bb5:1 Eb6:2 | D6:1.5 Bb5:.5 G5:2 | C6:1 Ab5:1 Eb5:1 Ab5:1 | Bb5:2 F5:1 D5:1 | ' +
+         'Eb5:1 G5:1 C6:1.5 Bb5:.5 | Ab5:1 C6:1 Eb6:2 | F5:1 Ab5:1 D6:1 Bb5:1 | Eb6:2 G5:2'
+  },
+  /* the reading room: C minor and long notes; the close on G leads home */
+  B: {
+    ch: 'Cm Ab Eb Bb Cm Fm G G',
+    mel: 'C6:2 Eb6:2 | C6:1.5 Ab5:.5 Eb5:2 | G5:2 Bb5:1 Eb6:1 | D6:2 F5:2 | ' +
+         'Eb5:1 G5:1 C6:2 | Ab5:1.5 F5:.5 C5:2 | B4:1 D5:1 G5:2 | G5:2 F5:1 D5:1'
+  }
+};
+
+/* the Council: the same short rising figure opens every phrase, three judges in turn, in A minor */
+const COUNCIL_DUEL = {
+  A: {
+    ch: 'Am F C G Am F E E',
+    mel: 'A5:.5 C6:.5 E6:1 C6:1 A5:1 | F5:.5 A5:.5 C6:1 A5:1 F5:1 | G5:.5 C6:.5 E6:1 G6:1 E6:1 | D6:1.5 B5:.5 G5:2 | ' +
+         'A5:.5 C6:.5 E6:1 A6:1 E6:1 | F6:1 E6:.5 D6:.5 C6:1 A5:1 | G#5:1 B5:1 E6:1 D6:1 | B5:2 G#5:1 E5:1'
+  },
+  B: {
+    ch: 'Dm Am G C F Dm E Am',
+    mel: 'F5:1 A5:1 D6:2 | C6:1.5 A5:.5 E5:2 | D5:1 G5:1 B5:2 | C6:1.5 E6:.5 G5:2 | ' +
+         'A5:1 C6:1 F6:2 | E6:1 D6:1 A5:2 | G#5:1 B5:1 D6:1 B5:1 | A5:3 E5:1'
+  },
+  /* the breath: two beats a note */
+  C: {
+    ch: 'Am Em F C Dm Am E Am',
+    mel: 'A5:2 E5:2 | B5:2 G5:2 | C6:2 A5:2 | G5:2 E5:2 | F5:2 A5:2 | E5:2 C6:2 | B5:2 G#5:2 | A5:4'
+  }
+};
+
+/* the Grand Archmage: the Athenaeum's climb in D minor; phase two adds the major section D, the V shining through */
+const VAEL_DUEL = {
+  A: {
+    ch: 'Dm Bb Gm A Dm Bb Gm,A Dm',
+    mel: 'D5:1 F5:1 A5:2 | D5:1 F5:1 Bb5:2 | G5:1 Bb5:1 D6:1.5 C6:.5 | C#6:2 E6:1 A5:1 | ' +
+         'A5:1.5 D6:.5 F6:2 | F6:1 D6:1 Bb5:2 | Bb5:1 G5:1 E5:1 C#6:1 | D6:3 A5:1'
+  },
+  B: {
+    ch: 'F C Dm A Bb F Gm A',
+    mel: 'A5:2 C6:1 F6:1 | E6:1.5 C6:.5 G5:2 | F5:1 A5:1 D6:2 | C#6:1.5 E6:.5 A5:2 | ' +
+         'D6:1 Bb5:1 F5:1 Bb5:1 | C6:1 A5:1 F5:2 | G5:1 Bb5:1 D6:1 G6:1 | E6:2 C#6:1 A5:1'
+  },
+  /* the closed book: long notes */
+  C: {
+    ch: 'Dm Gm Bb A Dm Gm A Dm',
+    mel: 'D6:2 A5:2 | Bb5:2 G5:2 | F5:2 D6:2 | E6:2 C#6:2 | F6:2 D6:2 | Bb5:2 D6:2 | C#6:2 E6:2 | D6:4'
+  },
+  /* the light through the veil: the same climb in the major */
+  D: {
+    ch: 'D A Bm G D A G,A D',
+    mel: 'F#5:1 A5:1 D6:2 | E6:1.5 C#6:.5 A5:2 | B5:1 D6:1 F#6:2 | G6:1.5 D6:.5 B5:2 | ' +
+         'A5:1 D6:1 F#6:1 A6:1 | E6:1 C#6:1 A5:2 | B5:1 D6:1 C#6:1 E6:1 | D6:4'
+  }
+};
+
+/* the ending: plain and warm in G major, colour coming back; the middle turns once through F and comes home */
+const ENDING = {
+  A: {
+    ch: 'G D Em C G D C,D G',
+    mel: 'B5:2 D6:1 | A5:2 F#5:1 | G5:1 B5:1 E6:1 | E6:2 C6:1 | D6:1.5 B5:.5 G5:1 | A5:1 D6:1 F#5:1 | E5:1 G5:1 A5:1 | G5:3'
+  },
+  A2: {
+    ch: 'G Bm C G Em Am D G',
+    mel: 'D6:1 B5:1 G5:1 | F#5:2 D6:1 | E6:1.5 C6:.5 G5:1 | B5:2 D6:1 | G6:1.5 E6:.5 B5:1 | C6:1 A5:1 E5:1 | F#5:1 A5:1 D6:1 | G5:2 D5:1'
+  },
+  B: {
+    ch: 'C G Am Em F C D D',
+    mel: 'E6:2 G6:1 | D6:2 B5:1 | C6:1 A5:1 E6:1 | B5:2 G5:1 | A5:1 C6:1 F6:1 | E6:1.5 C6:.5 G5:1 | F#5:1 A5:1 D6:1 | A5:2 F#5:1'
+  }
+};
+
+/* the fair: a skipping step in F major, a dotted pair before each run */
+const FAIR = {
+  A: {
+    ch: 'F C F Bb F C Bb,C F',
+    mel: 'C5:.75 F5:.25 A5:1 C6:1 A5:1 | G5:.75 E5:.25 C5:1 G5:2 | A5:.75 C6:.25 F6:1 C6:1 A5:1 | Bb5:1 D6:1 F6:1 D6:1 | ' +
+         'C6:.75 A5:.25 F5:1 A5:1 C6:1 | E6:1 G5:1 C6:2 | D6:1 Bb5:1 C6:1 E5:1 | F5:3 -:1'
+  },
+  B: {
+    ch: 'Bb F Gm C Bb F Gm,C F',
+    mel: 'D6:.75 Bb5:.25 F5:1 Bb5:2 | A5:.75 C6:.25 F6:1 C6:2 | G5:.75 Bb5:.25 D6:1 Bb5:1 G5:1 | E5:1 G5:1 C6:2 | ' +
+         'F6:1 D6:1 Bb5:1 D6:1 | C6:1 A5:1 F5:2 | G5:1 Bb5:1 E6:1 C6:1 | F6:2 C6:2'
+  }
+};
+
 export const SONGS = {
   kitewick: {
     bpm: 88, bpb: 3, style: 'pastoral', transpose: 0, form: ['A', 'A2', 'B', 'A2'],
@@ -537,5 +646,30 @@ export const SONGS = {
   tournament_4: {
     bpm: 100, bpb: 4, style: 'duel', transpose: 0, form: ['D', 'B', 'C', 'D', 'A', 'D'],
     sections: TOURNAMENT
+  },
+  athenaeum: {
+    bpm: 74, bpb: 4, style: 'pastoral', transpose: 0, form: ['A', 'A2', 'B', 'A2'],
+    sections: ATHENAEUM
+  },
+  council_duel: {
+    bpm: 108, bpb: 4, style: 'duel', transpose: 0, form: ['A', 'B', 'C', 'A', 'B'],
+    sections: COUNCIL_DUEL
+  },
+  vael_duel: {
+    bpm: 100, bpb: 4, style: 'duel', transpose: 0, form: ['A', 'B', 'C', 'A', 'B'],
+    sections: VAEL_DUEL
+  },
+  /* phase two: a whole step higher and quicker, no long-note section, and the major section twice */
+  vael_duel_2: {
+    bpm: 112, bpb: 4, style: 'duel', transpose: 2, form: ['B', 'A', 'D', 'A', 'D'],
+    sections: VAEL_DUEL
+  },
+  ending: {
+    bpm: 58, bpb: 3, style: 'pastoral', transpose: 0, form: ['A', 'A2', 'B', 'A2', 'A'],
+    sections: ENDING
+  },
+  fair: {
+    bpm: 112, bpb: 4, style: 'pastoral', transpose: 0, form: ['A', 'A', 'B', 'A'],
+    sections: FAIR
   }
 };

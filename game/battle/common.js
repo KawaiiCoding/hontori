@@ -12,11 +12,15 @@
  *   useItem(b, id)           take one; emits { type: 'item', id, left }
  *   spellMastery(b, kind), costOf(b, kind), can(b, kind)   (can: the spell is in the battle loadout)
  *   hasRule(b, id)           that ring rule is on in this battle (blind, pure ...)
+ *   isBattleSpell(b, kind)   a spell that can be cast in this battle: BATTLE_SPELLS, plus the spells a ring rule
+ *                            brings in (state.extraSpells: the V under seal)
+ *   castable(b)              the loadout's spells that can be cast in this battle, in sheet order (extra ones first)
+ *   isSealed(b, kind)        that spell's slot is sealed (rule blind: sealedSpell; rule seal: the list sealed)
  */
 
 import { ELEMENTS } from './elements.js';
 import { line } from './text.js';
-import { masteryOf, spellCost } from './spells.js';
+import { masteryOf, spellCost, BATTLE_SPELLS } from './spells.js';
 
 export const me = (b) => b.fighter('me');
 export const foe = (b) => b.fighter('foe');
@@ -70,4 +74,20 @@ export function hasRule(b, id) {
 
 export function can(b, kind) {
   return b.state.loadout.includes(kind);
+}
+
+export function isBattleSpell(b, kind) {
+  const extra = b.state.extraSpells;
+  return BATTLE_SPELLS.includes(kind) || (Array.isArray(extra) && extra.includes(kind));
+}
+
+export function castable(b) {
+  const S = b.state;
+  const extra = Array.isArray(S.extraSpells) ? S.extraSpells : [];
+  return [...extra, ...BATTLE_SPELLS.filter((k) => !extra.includes(k))].filter((k) => S.loadout.includes(k));
+}
+
+export function isSealed(b, kind) {
+  const S = b.state;
+  return (!!S.sealedSpell && S.sealedSpell === kind) || (Array.isArray(S.sealed) && S.sealed.includes(kind));
 }

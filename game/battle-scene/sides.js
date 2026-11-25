@@ -15,7 +15,8 @@
  *   sideHandlers             { sideMove, sideDamage, sideFaint, sideUp, foresee, fizzle, sealedSlot } for the scene
  */
 
-import { ELEMENT_COLORS } from './look.js';
+import { ELEMENT_COLORS, label } from './look.js';
+import { SPELLS } from '../battle/spells.js';
 import { line } from '../battle/text.js';
 import { handlers as baseHandlers } from './battleEvents.js';
 
@@ -160,7 +161,14 @@ export const sideHandlers = {
     this.game.sound.play('bump');
   },
 
+  /* a spell slot sealed (rule blind at the start, rule seal each turn): the chip says so, and a word over yours */
   sealedSlot(e) {
     this.sealSpell(e.kind);
+    if (this.battle.round > 1) {
+      const P = this.places.me;
+      const spell = SPELLS[e.kind] ? SPELLS[e.kind].name : e.kind;
+      this.stage.float(P.x, P.y - 22, label('floatSealed', { spell }), '#c8c0ff', true);
+      this.game.sound.play('bump');
+    }
   },
 };

@@ -18,11 +18,13 @@
  *   freeToday(day)            the free turn of that day is still there
  *   turn(seriesId, { free, day })   -> the prize drawn, or null (the series is done, or the free turn is
  *                             gone). A new prize is put on at once when its slot is empty.
+ *   grant(id)                 own a prize got another way (bought, given): put on at once when its slot is
+ *                             empty, or set out in a `many` slot; true when it was new
  *   slotOf(id), many(slot)
  *   worn(slot)                a `many` slot: the ids shown; else the id worn or null
  *   isWorn(id), wear(id), takeOff(id), toggle(id)   only owned prizes; true when something changed
  *
- * Events it emits: "capsules:change" { why: 'turn' | 'wear' | 'off', id }
+ * Events it emits: "capsules:change" { why: 'turn' | 'grant' | 'wear' | 'off', id }
  */
 
 export const SAVE = { owned: [], worn: {}, shown: [], freeDays: {}, turns: 0 };
@@ -137,6 +139,18 @@ export class Capsules {
     else if (slot && !state.worn[slot]) state.worn[slot] = prize.id;
     this.#emit('capsules:change', { why: 'turn', id: prize.id });
     return prize;
+  }
+
+  grant(id) {
+    const prize = this.prize(id);
+    if (!prize || this.owns(id)) return false;
+    const state = this.#state();
+    state.owned.push(id);
+    const slot = prize.slot;
+    if (this.many(slot)) state.shown.push(id);
+    else if (slot && !state.worn[slot]) state.worn[slot] = id;
+    this.#emit('capsules:change', { why: 'grant', id });
+    return true;
   }
 
   /* every prize left has the same chance, a rare one a quarter of it */

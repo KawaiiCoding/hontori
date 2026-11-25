@@ -50,8 +50,8 @@ for (const row of PLACES) {
   if (!Array.isArray(row.maps) || !row.maps.length) bad('places: a row has no maps');
   for (const id of row.maps || []) {
     if (typeof id !== 'string' || !id) bad(`places: unreadable map id ${id}`);
-    else if (seenMaps.has(id)) bad(`places: map ${id} is in two rows`);
-    seenMaps.set(id, true);
+    else if (!row.after && seenMaps.has(id)) bad(`places: map ${id} is in two rows`);
+    if (!row.after) seenMaps.set(id, true);
   }
   for (const field of ['day', 'night', 'duel', 'wild']) {
     if (row[field] && !SONGS[row[field]] && !['duel', 'wild'].includes(row[field])) bad(`places: ${field} names a missing song ${row[field]}`);

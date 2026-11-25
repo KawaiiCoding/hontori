@@ -122,7 +122,12 @@ export default [
     look: 'harrow',
     at: P.hallHarrow,
     lines: ['ch6.p.harrow.1', 'ch6.p.harrow.2'],
-    phases: [{ if: 'c6:bridge', lines: ['ch6.p.harrow.3', 'ch6.p.harrow.4'] }]
+    phases: [
+      { if: 'c6:bridge', lines: ['ch6.p.harrow.3', 'ch6.p.harrow.4'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 6, y: 8, dir: 0 }, schedule: null, lines: ['ch10.p.harrow.1', 'ch10.p.harrow.2'] },
+      { if: 'c10:law', lines: ['ch10.p.harrow.3', 'ch10.p.harrow.4'] }
+    ]
   },
   {
     id: 'envoy',

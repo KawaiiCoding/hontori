@@ -199,6 +199,58 @@ const ICONS = {
     ], 1, 4, { R: [G.red], W: [G.white, 4], C: [G.cream], X: [G.wood] });
     g.dot(6, 10, '#fff4d8');
   },
+  /* the keepsakes of the Emberbrook fair (chapter 10, item effect keepsake) */
+  wander_hat(g) {
+    g.bmp([
+      '........S......',
+      '.......SBS.....',
+      '........B......',
+      '.......BBB.....',
+      '......BBBBB....',
+      '.....BBBBBBB...',
+      '....YYYYYYYYY..',
+      '.BBBBBBBBBBBBBB',
+      '..DDDDDDDDDDDD.'
+    ], 0, 3, { B: [G.blue], Y: [G.gold, 3], D: [G.blue, 1], S: [G.gold, 4] });
+    g.dot(8, 6, '#e0f2ff');
+    g.dot(7, 9, '#fff8c8');
+  },
+  picture_frame(g) {
+    g.bmp([
+      'WWWWWWWWWWW',
+      'WSYSSSSSYSW',
+      'WSSYSSSYSSW',
+      'WSSSYSYSSSW',
+      'WSSSSYSSSSW',
+      'WLLSLSSLSLW',
+      'WLLLLLLLLLW',
+      'WWWWWWWWWWW'
+    ], 2, 4, { W: [G.wood, 3], S: [G.blue, 3], Y: [G.gold, 3], L: [G.cream, 2] });
+  },
+  window_lantern(g) {
+    g.bmp([
+      '...HHH...',
+      '..H...H..',
+      '.MMMMMMM.',
+      '.MGGGGGM.',
+      '.MGYYYGM.',
+      '.MGYYYGM.',
+      '.MGGGGGM.',
+      '.MMMMMMM.',
+      '..MMMMM..'
+    ], 3, 4, { H: [G.metal, 1], M: [G.metal, 1], G: [G.glass, 3], Y: [G.gold, 3] });
+  },
+  sweet_jar(g) {
+    g.bmp([
+      '...CCCCC...',
+      '..GGGGGGG..',
+      '.GEGEGYGEG.',
+      '.GEEPGEEEG.',
+      '.GEEYEEPGG.',
+      '.GEEEEGEEG.',
+      '..GGGGGGG..'
+    ], 2, 5, { C: [G.red, 3], G: [G.glass, 3], E: [G.leaf, 3], P: [G.pink, 3], Y: [G.gold, 3] });
+  },
 };
 
 export function iconCanvas(prize) {
@@ -237,6 +289,7 @@ const HATS = {
   flower_crown: { rows: ['P.W.Y.W.P', 'LLLLLLLLL'], map: { P: [G.pink, 3], W: [G.white, 4], Y: [G.gold, 3], L: [G.leaf] }, sink: 1 },
   chef_hat: { rows: ['.WW.WW.', 'WWWWWWW', 'WWWWWWW', '.WWWWW.', '.WWWWW.', '.CCCCC.'], map: { W: [G.white], C: [G.cream] }, sink: 2 },
   toadstool: { rows: ['...RRR...', '.RRWRRWR.', 'RWRRRRRRR', 'RRRRRWRRR', '.SSSSSSS.'], map: { R: [G.red], W: [G.white, 4], S: [G.cream, 2] }, sink: 2 },
+  wander_hat: { rows: ['...SSS...', '....B....', '....B....', '...BBB...', '..BBBBB..', '.YYYYYYY.', 'BBBBBBBBB'], map: { B: [G.blue], Y: [G.gold, 3], S: [G.gold, 4] }, sink: 2 },
 };
 
 export function hatSprite(look, color) {
@@ -281,6 +334,28 @@ const KEEPSAKES = {
     },
   },
 };
+
+/* the fair's keepsakes (chapter 10): a framed picture on the wall, a lantern for the window, a jar of sweets */
+Object.assign(KEEPSAKES, {
+  picture_frame: {
+    w: 12, h: 10, ax: 6, ay: 10, light: null,
+    paint(g) {
+      g.bmp(['WWWWWWWWWW', 'WYSSSSSSYW', 'WSYSSSSYSW', 'WSSYSSYSSW', 'WSSSYYSSSW', 'WLSLLSLLSW', 'WWWWWWWWWW'], 1, 2, { W: [G.wood, 3], S: [G.blue, 3], Y: [G.gold, 3], L: [G.cream, 2] });
+    },
+  },
+  window_lantern: {
+    w: 9, h: 12, ax: 4.5, ay: 12, light: '#ffd890',
+    paint(g) {
+      g.bmp(['..HHH..', '.H...H.', 'MMMMMMM', 'MGGGGGM', 'MGYYYGM', 'MGYYYGM', 'MGGGGGM', 'MMMMMMM', '.MMMMM.'], 1, 2, { H: [G.metal, 1], M: [G.metal, 1], G: [G.glass, 3], Y: [G.gold, 3] });
+    },
+  },
+  sweet_jar: {
+    w: 11, h: 10, ax: 5.5, ay: 10, light: null,
+    paint(g) {
+      g.bmp(['..CCCCC..', '.GGGGGGG.', 'GEGEGYGEG', 'GEEPGEEEG', 'GEEYEEPGG', 'GEEEEGEEG', '.GGGGGGG.'], 1, 2, { C: [G.red, 3], G: [G.glass, 3], E: [G.leaf, 3], P: [G.pink, 3], Y: [G.gold, 3] });
+    },
+  },
+});
 
 export function keepsake(look) {
   const def = KEEPSAKES[look];

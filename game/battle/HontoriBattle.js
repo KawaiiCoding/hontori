@@ -25,6 +25,9 @@
  *   double                  { ally, partner } in a double battle (ally.js allyView), each null otherwise
  *   pure                    the ring rule pure is on (no items, no binding)
  *   sealedSpell             the spell whose slot the rule blind sealed, or null
+ *   sealed                  every spell sealed so far (blind and seal)
+ *   castable                the loadout's spells that can be cast in this battle (the V too under seal)
+ *   veil                    { layers, max } of the foe's veil under seal in phase two, or null
  *   foreseen                { now, next } while the Lantern Sigil shows the foe's plan, or null
  *   treat                   { id, n } of a carried thing with the effect earthTreat (rules.js), or null
  */
@@ -37,7 +40,8 @@ import { escapeChance, escapeBars, BIND_TRIES } from './chances.js';
 import { staCost } from './moves.js';
 import { tolerance } from './spells.js';
 import { checkSpell } from './cast.js';
-import { spellMastery, costOf, itemCount, hasRule } from './common.js';
+import { spellMastery, costOf, itemCount, hasRule, castable } from './common.js';
+import { VEIL_LAYERS } from './ringRules.js';
 import { line } from './text.js';
 import { allyView } from './ally.js';
 
@@ -68,6 +72,9 @@ export class HontoriBattle extends Battle {
   get herbs() { return this.pure ? 0 : itemCount(this, 'herb'); }
   get pure() { return hasRule(this, 'pure'); }
   get sealedSpell() { return this.state.sealedSpell; }
+  get sealed() { return [...(this.state.sealedSpell ? [this.state.sealedSpell] : []), ...(this.state.sealed || [])]; }
+  get castable() { return castable(this); }
+  get veil() { return this.state.veil > 0 ? { layers: this.state.veil, max: VEIL_LAYERS } : null; }
   get foreseen() { return this.state.foresee > 0 ? { now: this.state.intent, next: this.state.nextIntent } : null; }
   get double() { return allyView(this); }
   get treat() {

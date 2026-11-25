@@ -125,7 +125,10 @@ export default [
       { if: { all: ['c5:pim', 'c5:spoke'] }, lines: ['ch5.p.pim.3', 'ch5.p.pim.4'] },
       { if: { all: ['c5:pim', 'c5:quiet'] }, lines: ['ch5.p.pim.5', 'ch5.p.pim.6'] },
       /* chapter 9: Pim comes to Halo Court whatever was chosen in the square */
-      { if: 'c9:crowd', at: { map: 'halo_court', x: 28, y: 13, dir: 2 }, schedule: null, lines: ['ch9.p.pim.1', 'ch9.p.pim.2'] }
+      { if: 'c9:crowd', at: { map: 'halo_court', x: 28, y: 13, dir: 2 }, schedule: null, lines: ['ch9.p.pim.1', 'ch9.p.pim.2'] },
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 21, y: 13, dir: 2 }, schedule: null, lines: ['ch10.p.pim.1', 'ch10.p.pim.2'] },
+      { if: 'c10:law', at: { map: 'storm_works', x: 15, y: 21, dir: 0 }, schedule: null, lines: ['ch10.p.pim.3', 'ch10.p.pim.4'] }
     ]
   },
   {
@@ -141,7 +144,12 @@ export default [
     name: 'ch5.name.volta',
     look: 'volta',
     at: { map: 'storm_works', x: 15, y: 8, dir: 0 },
-    lines: ['ch5.p.volta.1', 'ch5.p.volta.2']
+    lines: ['ch5.p.volta.1', 'ch5.p.volta.2'],
+    phases: [
+      /* chapter 10: the Athenaeum hall, Vael's garden, then home or the fair */
+      { if: { all: ['c10:vael', { not: 'c10:law' }] }, at: { map: 'athenaeum', x: 25, y: 23, dir: 1 }, schedule: null, lines: ['ch10.p.volta.1', 'ch10.p.volta.2'] },
+      { if: 'c10:law', lines: ['ch10.p.volta.3', 'ch10.p.volta.4'] }
+    ]
   },
   {
     id: 'greycloak_road1',
